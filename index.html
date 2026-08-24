@@ -8,6 +8,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="src/styles.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#16302B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 </head>
 <body>
 
@@ -73,7 +79,10 @@
 <script src="src/content/facts.js"></script>
 <script src="src/content/anim.js"></script>
 <script src="src/content/copy.js"></script>
+<script src="src/content/competencies.js"></script>
 <script src="src/core/log.js"></script>
+<script src="src/core/store.js"></script>
+<script src="src/core/profiles.js"></script>
 <script src="src/core/speech.js"></script>
 <script src="src/core/matcher.js"></script>
 <script src="src/core/adaptive.js"></script>
@@ -86,5 +95,14 @@
 <script src="src/ui/opening.js"></script>
 <script src="src/ui/handlers.js"></script>
 <script src="src/app.js"></script>
+
+<!-- Cache the shell so the demo runs with the phone in airplane mode. -->
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('[sw] registration failed', err));
+  });
+}
+</script>
 </body>
 </html>

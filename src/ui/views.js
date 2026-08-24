@@ -3,12 +3,26 @@ const $ = id => document.getElementById(id);
 function render(){ $('screen').innerHTML = VIEWS[S.screen](); if(AFTER[S.screen]) AFTER[S.screen](); }
 function go(s){ S.screen=s; S.ctx={}; render(); }
 
+/* ---------- profile switcher, lives on the home screen ---------- */
+function profileSwitcher(){
+  const chips = S.profiles.map((p,i)=>`
+    <button class="profilechip ${i===S.activeProfile?'sel':''}" onclick="switchProfile(${i})">
+      <span class="pic">${p.game? gameById(p.game).ic : '🧒'}</span>${p.name||'?'}
+    </button>`).join('');
+  const add = S.profiles.length < MAX_PROFILES
+    ? `<button class="profilechip add" onclick="go('greet')">
+        <span class="pic">➕</span>${S.lang==='hi'?'नया':'Add'}</button>`
+    : '';
+  return `<div class="profilebar">${chips}${add}</div>`;
+}
+
 const VIEWS = {
 
 /* ---------- 1. WHO ARE YOU ---------- */
 greet(){
   return `
-  <div style="text-align:center;padding:44px 6px 0">
+  ${S.profiles.length? `<button class="back" onclick="go('home')">← ${t('back')}</button>`:''}
+  <div style="text-align:center;padding:${S.profiles.length?'12px':'44px'} 6px 0">
     <div style="font-size:64px;animation:peek 1.1s cubic-bezier(.34,1.7,.5,1) both;display:inline-block">👋</div>
     <div class="display" style="font-size:26px;margin-top:14px">${S.lang==='hi'?'नमस्ते! मैं तख़्ती हूँ।':'Hi! I am Takhti.'}</div>
     <div class="muted" style="margin:6px 0 20px">${S.lang==='hi'?'मैं तुम्हें क्या बुलाऊँ?':'What should I call you?'}</div>
@@ -24,6 +38,7 @@ greet(){
 /* ---------- 2. PICK YOUR GAME ---------- */
 pick(){
   return `
+  ${S.game? `<button class="back" onclick="go('home')">← ${t('back')}</button>`:''}
   <div class="display" style="font-size:23px;margin-top:4px">${S.lang==='hi'?`${S.name}, तुम्हें कौन सा खेल सबसे अच्छा लगता है?`:`${S.name}, which game do you love most?`}</div>
   <div class="muted" style="margin-top:4px">${S.lang==='hi'?'हर दिन इसी से शुरुआत होगी।':'Every day will start with it.'}</div>
   <div class="gamegrid">
@@ -90,8 +105,10 @@ home(){
   const lv = S.levels;
   const rungs = n => [1,2,3,4,5,6].map(i=>`<div class="rung ${i<n?'done':i===n?'now':''}"></div>`).join('');
   return `
+  ${profileSwitcher()}
   <div class="hello display">${t('hello')}${S.name} 👋</div>
-  <div class="muted">${t('level')} ${lv.read} · ${t('read')} &nbsp;|&nbsp; ${t('level')} ${lv.math} · ${t('count')}</div>
+  <div class="muted">${t('level')} ${lv.read} · ${t('read')} · ${competencyName('read',lv.read)}</div>
+  <div class="muted">${t('level')} ${lv.math} · ${t('count')} · ${competencyName('math',lv.math)}</div>
   ${S.game? `<button class="btn ghost" style="margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px"
       onclick="go('open')"><span style="font-size:20px">${gameById(S.game).ic}</span>
       ${S.lang==='hi'?'आज का '+gameById(S.game).hi+' पल फिर देखो':'Replay today\u2019s '+gameById(S.game).en+' moment'}</button>`:''}
@@ -117,7 +134,34 @@ home(){
     ${S.lang==='hi'?'इस हफ़्ते':'THIS WEEK'}</div>
   ${weekStrip()}
   ${S.queue.length? `<div class="chit"><b>${S.queue.length} question${S.queue.length>1?'s':''} waiting</b>Will be answered when signal arrives.</div>`:''}
-  <button class="btn ghost" style="margin-top:14px" onclick="go('parent')">${t('parent')} →</button>`;
+  <button class="btn ghost" style="margin-top:14px" onclick="go('parentlock')">${t('parent')} →</button>`;
+},
+
+/* ---------- PARENT PIN GATE ---------- */
+parentlock(){
+  const hasPin = !!S.parentPin;
+  const err = S.ctx.pinErr;
+  return `
+  <button class="back" onclick="go('home')">← ${t('back')}</button>
+  <div style="text-align:center;padding:26px 6px 0">
+    <div style="font-size:44px">🔒</div>
+    <div class="display" style="font-size:19px;margin-top:10px">
+      ${hasPin
+        ? (S.lang==='hi'?'माता-पिता का पिन डालें':'Enter the parent PIN')
+        : (S.lang==='hi'?'माता-पिता के लिए 4 अंकों का पिन बनाएँ':'Set a 4-digit PIN for the parent dashboard')}
+    </div>
+    <div class="muted" style="margin:6px 0 18px">
+      ${hasPin
+        ? (S.lang==='hi'?'सिर्फ़ माता-पिता ही आगे जा सकते हैं':'Keeps this dashboard for grown-ups only')
+        : (S.lang==='hi'?'अगली बार यही पिन माँगा जाएगा':'You will be asked for this PIN every time after')}
+    </div>
+    <input class="input namein" id="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+    ${err? `<div class="retry" style="margin-top:10px">${S.lang==='hi'?'गलत पिन — फिर कोशिश करो':'Wrong PIN — try again'}</div>`:''}
+    <button class="btn" style="margin-top:14px"
+      onclick="${hasPin?'checkParentPin':'setParentPin'}($('pin').value)">
+      ${hasPin? (S.lang==='hi'?'खोलो →':'Unlock →') : (S.lang==='hi'?'सेव करो →':'Save →')}
+    </button>
+  </div>`;
 },
 
 /* ---------- READING ---------- */
@@ -130,7 +174,7 @@ read(){
     : s.split(/\s+/).map(w=>`<span class="w" data-say="${attr(w)}" onclick="sayEl(this)">${w}</span>`).join(' ');
   return `
   <button class="back" onclick="go('home')">← ${t('back')}</button>
-  <div class="muted">${t('level')} ${S.levels.read} · ${t('read')}</div>
+  <div class="muted">${t('level')} ${S.levels.read} · ${t('read')} · ${competencyName('read',S.levels.read)}</div>
   <div class="langpick">
     <button class="${S.lang==='en'?'sel':''}" onclick="setReadLang('en')">English</button>
     <button class="${S.lang==='hi'?'sel':''}" onclick="setReadLang('hi')">हिंदी</button>
@@ -165,6 +209,7 @@ write(){
     <button class="${S.ctx.mode==='trace'?'sel':''}" onclick="setWriteMode('trace')">${S.lang==='hi'?'स्क्रीन पर बनाओ':'Trace on screen'}</button>
     <button class="${S.ctx.mode==='paper'?'sel':''}" onclick="setWriteMode('paper')">${S.lang==='hi'?'कागज़ पर लिखो 📷':'Write on paper 📷'}</button>
   </div>`;
+  const levelLine = `<div class="muted">${t('level')} ${S.levels.write} · ${t('write')} · ${competencyName('write',S.levels.write)}</div>`;
 
   /* ---------- PAPER MODE: copy the sentence, photograph it, type it back ---------- */
   if(S.ctx.mode==='paper'){
@@ -174,6 +219,7 @@ write(){
       return `
       <button class="back" onclick="go('home')">← ${t('back')}</button>
       ${tabs}
+      ${levelLine}
       <div class="permcard" style="margin-top:12px">
         <div class="pi">📷</div>
         <h3>${S.lang==='hi'?'कैमरा चालू करें?':'Turn on the camera?'}</h3>
@@ -189,6 +235,7 @@ write(){
     return `
     <button class="back" onclick="go('home')">← ${t('back')}</button>
     ${tabs}
+    ${levelLine}
     <div class="muted" style="margin-top:8px">${S.lang==='hi'?'इसे अपनी कॉपी में लिखो:':'Copy this into your notebook:'}</div>
     <div class="copyline">${S.ctx.line}</div>
     <button class="btn ghost" style="margin-top:8px" onclick="speak(S.ctx.line)">🔊 ${t('hear')}</button>
@@ -218,6 +265,7 @@ write(){
   return `
   <button class="back" onclick="go('home')">← ${t('back')}</button>
   ${tabs}
+  ${levelLine}
   <div class="display" style="font-size:20px;margin-top:8px">${t('writeSub')}: <span style="color:var(--marigold)">${S.ctx.glyph}</span></div>
   <div class="padwrap">
     <canvas id="guide"></canvas>
@@ -238,7 +286,7 @@ math(){
   const g = gameById(S.game);
   return `
   <button class="back" onclick="go('home')">← ${t('back')}</button>
-  <div class="muted">${t('level')} ${S.levels.math} · ${t('count')}</div>
+  <div class="muted">${t('level')} ${S.levels.math} · ${t('count')} · ${competencyName('math',S.levels.math)}</div>
   <div class="problem">${p.a} ${p.op} ${p.b}</div>
   <div class="mathstage" id="mstage">
     <div class="narr" id="mnarr">${S.lang==='hi'?'"दिखाओ" दबाओ और देखो':'Tap "Show me" to watch it happen'}</div>
@@ -273,7 +321,7 @@ ask(){
         ? `<button class="btn" onclick="S.ctx.panel=${i+1};render();speakPanel(${i+1})">${t('next')} →</button>`
         : `<button class="btn leaf" onclick="go('askquiz')">${t('check')} ✓</button>`}
     </div>
-    <div class="muted" style="margin-top:12px">Saved to this phone. It will play again with no signal.</div>`;
+    <div class="muted" style="margin-top:12px">${S.lang==='hi'?'यह फ़ोन में सुरक्षित है। बिना सिग्नल के भी फिर चलेगा।':'Saved to this phone. It will play again with no signal.'}</div>`;
   }
   return `
   <button class="back" onclick="go('home')">← ${t('back')}</button>
@@ -301,7 +349,7 @@ askquiz(){
 /* ---------- PARENT ---------- */
 parent(){
   const pct = m => S.attempts[m]? Math.round(S.correct[m]/S.attempts[m]*100) : 0;
-  const row = (label,m) => `<div class="metric"><div><b>${label}</b><div style="font-size:12.5px;opacity:.65">${t('level')} ${S.levels[m]} · ${S.attempts[m]} tries</div></div>
+  const row = (label,m) => `<div class="metric"><div><b>${label}</b><div style="font-size:12.5px;opacity:.65">${t('level')} ${S.levels[m]} · ${competencyName(m,S.levels[m])} · ${S.attempts[m]} tries</div></div>
     <div style="text-align:right"><b>${pct(m)}%</b><div class="bar"><i style="width:${pct(m)}%"></i></div></div></div>`;
   const target = (label,k,unit) => `<div class="metric">
       <div><b>${label}</b><div style="font-size:12.5px;opacity:.65">${S.today[k]} of ${S.targets[k]} ${unit} done today</div></div>

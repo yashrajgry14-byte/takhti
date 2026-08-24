@@ -70,6 +70,21 @@ function listen(onResult, onEnd){
   return r;
 }
 
+/* names the real cause instead of a blanket "mic unavailable" — a network
+   drop and a denied permission need different next steps from a child. */
+function micReason(err){
+  if(err==='network' || err==='offline') return S.lang==='hi'
+    ? 'आवाज़ पहचानने के लिए इंटरनेट चाहिए — ब्राउज़र में यही एक चीज़ है जिसे सिग्नल चाहिए, बाकी सब बिना नेट के चलता है।'
+    : 'Speech recognition needs a connection in the browser — everything else works offline.';
+  if(err==='not-allowed' || err==='service-not-allowed') return S.lang==='hi'
+    ? 'माइक की अनुमति नहीं मिली — नीचे लिखकर देखो।'
+    : 'Microphone permission denied — type what you read below.';
+  if(err==='unsupported') return S.lang==='hi'
+    ? 'यह ब्राउज़र सुन नहीं सकता — Chrome में खोलकर देखो।'
+    : "This browser can't listen — try Chrome.";
+  return S.lang==='hi' ? 'माइक नहीं चला — नीचे लिखकर देखो।' : 'Mic unavailable here — type what you read below.';
+}
+
 /* ==================================================================
    READING MATCHER (Tier 0) — deterministic, offline, Devanagari-aware
    Stage 1 capture → 2 normalize → 3 align → 4 grade → 5 gate → 6 score

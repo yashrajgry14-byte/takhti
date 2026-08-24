@@ -114,11 +114,29 @@ function gradeReading(sentence, transcript, lang){
 
 /* --- stage 1 helper: grade every alternative, keep the kindest true reading --- */
 function gradeBest(sentence, alternatives, lang){
-  let best=null;
+  let best=null, topConf=0;
   for(const alt of alternatives){
     const r = gradeReading(sentence, alt.transcript, lang);
     r.confidence = alt.confidence ?? 0;
+    if(r.confidence > topConf) topConf = r.confidence;
     if(!best || r.score > best.score) best = r;
   }
+  // shaky: the guess we credited is a weak, non-preferred one — its own
+  // confidence is below the floor AND the recognizer had something more
+  // confident on offer. A guess that IS the recognizer's top pick, even at
+  // low confidence, is not shaky — nothing better was available.
+  if(best) best.shaky = best.confidence < GRADE.topConf && best.confidence < topConf;
   return best;
+}
+
+/* --- stage 5+6: the single verdict every caller should act on ---
+   Centralizing this closes an asymmetry the matcher used to have: the old
+   gate only protected against a low-confidence pick that ALSO scored low.
+   A low-confidence alternative that happened to text-match well sailed
+   through ungated — "shaky" catches that case too, unless the match is
+   near-perfect (90+), which is trusted even from a shaky pick. */
+const GRADE = { pass:78, gateScore:65, gateConf:0.55, topConf:0.40 };
+function gradeVerdict(r){
+  if((r.confidence < GRADE.gateConf && r.score < GRADE.gateScore) || (r.shaky && r.score < 90)) return 'unsure';
+  return r.score >= GRADE.pass ? 'pass' : 'coach';
 }

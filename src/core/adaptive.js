@@ -12,6 +12,7 @@ function bumpToday(kind){
 
 function record(mod, ok){
   S.attempts[mod]++; if(ok) S.correct[mod]++;
+  saveSoon();
   if(ok) bumpToday(mod);
   const w = S.window[mod]; w.push(ok?1:0); if(w.length>5) w.shift();
   if(ok) S.stars++;

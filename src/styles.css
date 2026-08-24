@@ -85,6 +85,19 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 .card{background:rgba(237,230,210,.05);border:1px solid rgba(237,230,210,.12);border-radius:var(--r);padding:14px}
 .muted{color:var(--chalk-dim);font-size:13.5px;line-height:1.5}
 
+/* ============ PROFILE SWITCHER ============ */
+.profilebar{display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;margin-bottom:2px}
+.profilechip{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px;
+  border:1px solid rgba(237,230,210,.16);background:rgba(237,230,210,.05);border-radius:14px;
+  padding:8px 10px 7px;cursor:pointer;color:var(--chalk-dim);font-family:'Baloo 2';font-size:11px;
+  min-width:56px;transition:transform .13s}
+.profilechip:active{transform:scale(.95)}
+.profilechip .pic{font-size:20px;line-height:1;width:32px;height:32px;border-radius:50%;
+  background:rgba(237,230,210,.08);display:grid;place-items:center}
+.profilechip.sel{background:rgba(240,160,42,.14);border-color:var(--marigold);color:var(--marigold)}
+.profilechip.sel .pic{background:var(--marigold);color:#16302B}
+.profilechip.add .pic{font-size:17px}
+
 /* ---------- home ---------- */
 .hello{font-size:23px;margin:2px 0 2px}
 .ladder{display:flex;align-items:flex-end;gap:5px;height:56px;margin:14px 0 4px}

@@ -10,7 +10,6 @@
    utterance hides which part actually failed.
    ================================================================== */
 
-const RB_PASS = 75;          // chunk is accepted at this score
 const RB_WORD_PASS = 65;     // single-word practice is more forgiving
 const RB_MAX_TRIES = 3;      // after this we switch to echo practice
 
@@ -53,7 +52,7 @@ function rbCurrent(){ return S.rb ? S.rb.chunks[S.rb.idx] : ''; }
 
 /* --- listen --- */
 function rbListen(){
-  if(!S.rb) return;
+  if(!S.rb || S.rb.live) return;
   S.rb.live = true; S.rb.phase = 'listening'; render();
   log(0, `Read-back mic open · chunk ${S.rb.idx+1}/${S.rb.chunks.length}`);
   listen(
@@ -99,12 +98,13 @@ function rbCheck(input){
 
   const target = rbCurrent();
   const r = gradeBest(target, alts, S.lang);
-  log(0, `Read-back graded · ${r.score}% · conf ${(r.confidence||0).toFixed(2)}`);
+  log(0, `Read-back graded · ${r.score}% · conf ${(r.confidence||0).toFixed(2)}${r.shaky?' · shaky pick':''}`);
 
   // never blame the child for the recognizer's doubt
-  if(r.confidence < 0.55 && r.score < 60){
+  const verdict = gradeVerdict(r);
+  if(verdict === 'unsure'){
     S.rb.phase = 'unsure'; S.rb.tokens = null; S.rb.score = null;
-    log(0, 'Low confidence + low match → asking again, no attempt recorded');
+    log(0, 'Low confidence match → asking again, no attempt recorded');
     render();
     return;
   }
@@ -112,7 +112,7 @@ function rbCheck(input){
   S.rb.tokens = r.tokens;
   S.rb.score  = r.score;
 
-  if(r.score >= RB_PASS) rbPass(r);
+  if(verdict === 'pass') rbPass(r);
   else {
     S.rb.tries++;
     S.rb.phase = S.rb.tries >= RB_MAX_TRIES ? 'echo' : 'fix';

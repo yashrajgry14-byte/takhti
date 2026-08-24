@@ -3,15 +3,17 @@ const AFTER = {
   read(){ const m=$('mic'); if(m) m.onclick = startListening; },
   write(){ setupPad(); },
   greet(){ const i=$('nm'); if(i){ i.focus(); i.onkeydown=e=>{ if(e.key==='Enter') saveName(i.value); }; } },
-  open(){ runOpening(); }
+  open(){ runOpening(); },
+  parentlock(){
+    const i=$('pin'); if(!i) return;
+    i.focus();
+    i.onkeydown = e=>{ if(e.key==='Enter') S.parentPin ? checkParentPin(i.value) : setParentPin(i.value); };
+  }
 };
 
 /* ================= OPENING SEQUENCE ================= */
 function saveName(v){
-  const n=(v||'').trim();
-  if(!n) return;
-  S.name = n.charAt(0).toUpperCase()+n.slice(1);
-  log(null, 'Child profile created on device · nothing sent anywhere');
+  if(!createProfile(v)) return;
   go('pick');
 }
 function chooseGame(id){
@@ -54,9 +56,10 @@ function runOpening(){
   }
 }
 function dailyAnswer(i, correct){
+  if(S.ctx.dailyDone) return;
   const fb=$('dfb'); if(!fb) return;
   const ok = i===correct;
   fb.textContent = ok ? (S.lang==='hi'?'बिलकुल सही! ⭐':'Exactly right! ⭐')
                       : (S.lang==='hi'?'फिर से सोचो — कोई बात नहीं':'Have another think — no problem');
-  if(ok){ S.stars++; log(0,'Daily check passed · star added'); speak(S.lang==='hi'?'सही':'Correct'); }
+  if(ok){ S.ctx.dailyDone = true; S.stars++; log(0,'Daily check passed · star added'); speak(S.lang==='hi'?'सही':'Correct'); }
 }
