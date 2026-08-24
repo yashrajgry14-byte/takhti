@@ -1,0 +1,22 @@
+const ANIM = {
+  cricket:{tpl:'measure',n:20,u:{en:'metres',hi:'मीटर'},th:{en:'the pitch',hi:'पिच'},ic:'🏏'},
+  basketball:{tpl:'measure',n:3,u:{en:'metres',hi:'मीटर'},th:{en:'the hoop',hi:'घेरा'},ic:'🏀'},
+  football:{tpl:'shape',ic:'⚽'},
+  khokho:{tpl:'shape',ic:'🤸',pattern:true},
+  badminton:{tpl:'count',n:16,ic:'🪶',th:{en:'feathers',hi:'पंख'}},
+  volleyball:{tpl:'count',n:12,ic:'🧍',th:{en:'players',hi:'खिलाड़ी'}},
+  pithoo:{tpl:'count',n:7,ic:'🪨',th:{en:'stones',hi:'पत्थर'}},
+  chupan:{tpl:'count',n:10,ic:'✋',th:{en:'counts',hi:'गिनतियाँ'}},
+  stapu:{tpl:'count',n:9,ic:'🔲',th:{en:'boxes',hi:'खाने'}},
+  kabaddi:{tpl:'count',n:8,ic:'💨',th:{en:'seconds of breath',hi:'साँस के सेकंड'}},
+  chorsipahi:{tpl:'count',n:4,ic:'📄',th:{en:'chits',hi:'पर्चियाँ'},one:true},
+  tennis:{tpl:'compare',a:'🎾',b:'⚪',v:{en:'The fuzzy one falls slower — the air holds its tiny hairs.',hi:'रोएँदार वाली धीरे गिरती है — हवा उसके रोओं को रोकती है।'}},
+  squash:{tpl:'compare',a:'🔥',b:'🧊',v:{en:'The warm ball bounces higher than the cold one.',hi:'गरम गेंद ठंडी से ज़्यादा उछलती है।'}},
+  kanche:{tpl:'compare',a:'🔵',b:'🟢',v:{en:'One stops, the other shoots off. The push moved across!',hi:'एक रुक गया, दूसरा भाग गया। धक्का पार चला गया!'}},
+  pakdam:{tpl:'compare',a:'🏃',b:'🚶',v:{en:'Same time, more ground covered — that one is faster.',hi:'उतना ही समय, ज़्यादा दूरी — वही तेज़ है।'}},
+  gilli:{tpl:'balance',ic:'🪵',v:{en:'Press one end down and the other end flies up. A lever!',hi:'एक सिरा दबाओ, दूसरा उछलेगा। यही लीवर है!'}},
+  lattu:{tpl:'balance',ic:'🌀',v:{en:'While it spins it stands. When it slows, it tips over.',hi:'घूमते हुए खड़ा रहता है। धीमा होते ही लुढ़क जाता है।'}},
+  langdi:{tpl:'balance',ic:'🦵',v:{en:'Arms out wide, and the wobbling stops.',hi:'हाथ फैलाओ, डगमगाना बंद।'}},
+  baraf:{tpl:'melt',ic:'🧊'},
+  swimming:{tpl:'melt',ic:'🏊',float:true}
+};

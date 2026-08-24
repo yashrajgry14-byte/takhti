@@ -1,0 +1,10 @@
+[build]
+  publish = "."
+
+[functions]
+  directory = "api"
+
+[[redirects]]
+  from = "/api/ask"
+  to = "/.netlify/functions/ask"
+  status = 200

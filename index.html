@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Takhti — the slate that listens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+
+<div class="brandbar">
+  <div class="logomark">त</div>
+  <div>
+    <h1>Takhti</h1>
+    <div class="tag">The slate that listens · तख़्ती</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="netswitch">
+    <b id="netlabel">Network</b>
+    <button class="toggle" id="nettoggle" aria-label="Toggle network"><span></span></button>
+  </div>
+</div>
+
+<div class="stage">
+  <!-- ============ PHONE ============ -->
+  <div class="device">
+    <div class="screen">
+      <div class="statusrow">
+        <span id="langbtn" style="cursor:pointer">EN / हिं</span>
+        <span class="pill off" id="netpill">AIRPLANE MODE</span>
+      </div>
+      <div id="screen"></div>
+    </div>
+  </div>
+
+  <!-- ============ JUDGE PANEL ============ -->
+  <div class="side">
+    <h2 class="sidehead">What's running right now</h2>
+    <p class="sidesub">Takhti is one app with three tiers. The child never sees a tier — they see a lesson that always works and quietly gets richer.</p>
+    <div class="tierlist">
+      <div class="tier" id="tier0">
+        <h4><span class="n">TIER 0</span> Always on-device</h4>
+        <p>Reading diff, stroke scoring, problem generation, adaptive level, progress. Deterministic. Zero network, ever.</p>
+      </div>
+      <div class="tier" id="tier1">
+        <h4><span class="n">TIER 1</span> On-device model</h4>
+        <p>Small language model on the NPU. Fresh practice sentences, kid-language explanations of a mistake. Optional — app is complete without it.</p>
+      </div>
+      <div class="tier" id="tier2">
+        <h4><span class="n">TIER 2</span> Opportunistic cloud</h4>
+        <p>Never serves today's lesson. Answers the question queue and pre-loads tomorrow's content whenever a signal appears.</p>
+      </div>
+    </div>
+    <div class="log" id="log"></div>
+    <p class="notice">Prototype note: in the browser, speech recognition routes through the Web Speech API and needs a connection. On Android this is replaced by an on-device recognizer, which is why the reading loop has a keyboard fallback built in.</p>
+  </div>
+</div>
+
+<!-- Where the Tier 2 (cloud) calls go.
+     '/api/ask' is the serverless proxy in api/ask.js — it keeps the key off the client.
+     If it is unreachable, the app degrades to the on-device pack. Nothing breaks. -->
+<script>window.TAKHTI_API = '/api/ask';</script>
+
+<!-- Plain scripts, not ES modules: the inline onclick handlers in the views
+     need these functions on window. Load order matters — see CLAUDE.md. -->
+<script src="src/config.js"></script>
+<script src="src/state.js"></script>
+<script src="src/content/sentences.js"></script>
+<script src="src/content/games.js"></script>
+<script src="src/content/facts.js"></script>
+<script src="src/content/anim.js"></script>
+<script src="src/content/copy.js"></script>
+<script src="src/core/log.js"></script>
+<script src="src/core/speech.js"></script>
+<script src="src/core/matcher.js"></script>
+<script src="src/core/adaptive.js"></script>
+<script src="src/core/daily-engine.js"></script>
+<script src="src/core/mathgen.js"></script>
+<script src="src/ui/mascot.js"></script>
+<script src="src/ui/readback.js"></script>
+<script src="src/ui/cards.js"></script>
+<script src="src/ui/views.js"></script>
+<script src="src/ui/opening.js"></script>
+<script src="src/ui/handlers.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>
