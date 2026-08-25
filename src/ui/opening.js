@@ -14,8 +14,29 @@ const AFTER = {
 /* ================= OPENING SEQUENCE ================= */
 function saveName(v){
   if(!createProfile(v)) return;
-  go('pick');
+  go('age');
 }
+
+/* --- age: sets the ceiling/floor a fresh profile starts at, and is also
+   how an existing profile (created before this screen existed) gets asked
+   once. `next` is where we continue afterwards — 'pick' for a brand new
+   profile finishing onboarding, 'home' when we caught an existing one
+   without an age set. promptAge() bypasses go() because go() resets S.ctx,
+   which is exactly where we need to remember `next`. */
+function promptAge(next){
+  S.screen = 'age';
+  S.ctx = { ageNext: next };
+  render();
+}
+function setAge(age){
+  S.age = age;
+  const st = band().start;
+  S.levels.read = st.read; S.levels.write = st.write; S.levels.math = st.math;
+  log(0, `Age set to ${age} · band "${band().id}" · starting levels read=${st.read} write=${st.write} math=${st.math}`);
+  saveSoon();
+  go(S.ctx.ageNext || 'pick');
+}
+
 function chooseGame(id){
   S.game = id;
   const g = gameById(id);
@@ -32,12 +53,12 @@ function runOpening(){
     // the greeting is spoken, not just printed — this is the moment the app feels alive
     setTimeout(()=> speak(GREETS[S.lang][(S.visits-1)%GREETS[S.lang].length](S.name)), 260);
     log(0, `Opening · ${g.type} timeline · greeting spoken via on-device TTS`);
-    setTimeout(()=>{                       // 1.5s of motion, then impact
+    setTimeout(()=>{                       // motion, then impact
       if(S.screen!=='open') return;
       S.ctx.phase = 1; render();
       const a = $('arena'); if(a) a.classList.add('shake');
       if(navigator.vibrate) navigator.vibrate([28,40,18]);
-    }, 1450);
+    }, 2300);
   }
   else if(phase === 1){
     setTimeout(()=>{                       // impact settles, today's card is revealed
@@ -45,14 +66,14 @@ function runOpening(){
       const f = todayFormat();
       S.ctx.phase = 2; S.ctx.scene = 0;
       if(!S.seen.includes(f.id)) S.seen.push(f.id);
-      log(0, `Day ${S.day%7+1} format: ${f.id} · adaptive bag draw, one of each per week`);
+      log(0, `Day ${S.day%FORMATS.length+1} format: ${f.id} · adaptive bag draw, one of each per week`);
       bumpToday('facts');
       render();
       if(f.id==='anim' || f.id==='story') setTimeout(playScenes, 420);
       else if(f.id==='fact' || f.id==='world') setTimeout(()=>{
         const p=document.querySelector('.factcard p'); if(p) speak(p.textContent);
       }, 420);
-    }, 760);
+    }, 1000);
   }
 }
 function dailyAnswer(i, correct){

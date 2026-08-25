@@ -13,7 +13,8 @@ const FORMATS = [
   {id:'world',     ic:'🌍', en:'Around the world', hi:'दुनिया भर से'},
   {id:'word',      ic:'🔤', en:'New word',         hi:'नया शब्द'},
   {id:'story',     ic:'📖', en:'Story',            hi:'कहानी'},
-  {id:'challenge', ic:'🎯', en:'Challenge',        hi:'चुनौती'}
+  {id:'challenge', ic:'🎯', en:'Challenge',        hi:'चुनौती'},
+  {id:'lesson',    ic:'🎬', en:'Learn',            hi:'सीखो'}
 ];
 const DAYNAMES = { en:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], hi:['सोम','मंगल','बुध','गुरु','शुक्र','शनि','रवि'] };
 
@@ -28,9 +29,9 @@ function weekKey(){ return new Date().getFullYear()+'-W'+Math.floor((Date.now()/
    but the ones this child needs most land earliest */
 function weekPlan(){
   const acc = m => S.attempts[m] ? S.correct[m]/S.attempts[m] : 0.7;
-  const w = { fact:1.0, quiz:1.0, anim:1.3, world:0.9, word:1.0, story:1.0, challenge:1.1 };
+  const w = { fact:1.0, quiz:1.0, anim:1.3, world:0.9, word:1.0, story:1.0, challenge:1.1, lesson:1.1 };
   if(acc('read') < 0.7){ w.word += 0.9; w.story += 0.7; }
-  if(acc('math') < 0.7){ w.quiz += 0.8; w.challenge += 0.9; }
+  if(acc('math') < 0.7){ w.quiz += 0.8; w.challenge += 0.9; w.lesson += 0.6; }
   if(S.attempts.write < 3) w.anim += 0.4;
   const r = rng(seedOf((S.name||'x') + '|' + weekKey()));
   const pool = FORMATS.map(f=>({...f, w:w[f.id]}));
@@ -43,7 +44,10 @@ function weekPlan(){
   }
   return out;
 }
-function todayFormat(){ return weekPlan()[S.day % 7]; }
+// FORMATS.length, not a hardcoded 7 — weekPlan() always draws every format
+// once, so the cycle length has to track the bag, or the last entries added
+// (like 'lesson') would sit in the plan but never actually be selectable.
+function todayFormat(){ return weekPlan()[S.day % FORMATS.length]; }
 
 /* ---- content pools (ship on-device; Tier 2 refreshes them) ---- */
 const WORLD = [

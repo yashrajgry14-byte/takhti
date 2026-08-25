@@ -9,18 +9,19 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v1';
+const CACHE = 'takhti-v4';
 
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
-  './src/styles.css',
+  './src/styles.css', './src/theme-light.css',
   './src/config.js', './src/state.js',
   './src/content/sentences.js', './src/content/games.js', './src/content/facts.js',
-  './src/content/anim.js', './src/content/copy.js',
+  './src/content/ages.js', './src/content/lessons.js', './src/content/anim.js', './src/content/copy.js',
   './src/core/log.js', './src/core/speech.js', './src/core/matcher.js',
   './src/core/adaptive.js', './src/core/daily-engine.js', './src/core/mathgen.js',
+  './src/core/readability.js',
   './src/content/competencies.js', './src/core/store.js', './src/core/profiles.js',
-  './src/ui/mascot.js', './src/ui/readback.js', './src/ui/cards.js',
+  './src/ui/mascot.js', './src/ui/readback.js', './src/ui/elephant.js', './src/ui/lesson-player.js', './src/ui/cards.js',
   './src/ui/views.js', './src/ui/opening.js', './src/ui/handlers.js',
   './src/app.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png'

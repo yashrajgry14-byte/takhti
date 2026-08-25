@@ -42,5 +42,5 @@ function switchProfile(i){
   S.ctx = {}; S.rb = null;
   log(null, `Switched to ${S.name}'s profile · on-device, instant`);
   save();
-  go('home');
+  if(S.age == null) promptAge('home'); else go('home');
 }

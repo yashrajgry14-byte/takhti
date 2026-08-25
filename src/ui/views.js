@@ -35,6 +35,28 @@ greet(){
   </div>`;
 },
 
+/* ---------- 1b. HOW OLD ---------- */
+age(){
+  const AGE_NOTE = {
+    pre:        {en:'Letters and sounds — no sentences yet.', hi:'अक्षर और आवाज़ें — अभी कोई वाक्य नहीं।'},
+    early:      {en:'Short sentences and easy sums.', hi:'छोटे वाक्य और आसान जोड़-घटाव।'},
+    developing: {en:'Full sentences, two-digit sums, and paper writing.', hi:'पूरे वाक्य, दो अंकों के सवाल, और कागज़ पर लिखना।'},
+    fluent:     {en:'Long sentences, multiplication, everything unlocked.', hi:'लंबे वाक्य, गुणा, सब कुछ खुला हुआ।'}
+  };
+  const groups = Object.values(AGE_BANDS);
+  return `
+  <div style="text-align:center;padding:20px 6px 0">
+    <div class="display" style="font-size:24px">${S.lang==='hi'?'तुम्हारी उम्र क्या है?':'How old are you?'}</div>
+    <div class="muted" style="margin:6px 0 16px">${S.lang==='hi'?'इससे तख़्ती सही स्तर से शुरू करेगी।':'This helps Takhti start at the right level.'}</div>
+    <div class="ages">
+      ${groups.map(b=>`
+        ${b.ages.map(a=>`<button class="agebtn" onclick="setAge(${a})">${a}</button>`).join('')}
+        <div class="bandnote"><b>${S.lang==='hi'?b.hi:b.en}</b> — ${S.lang==='hi'?AGE_NOTE[b.id].hi:AGE_NOTE[b.id].en}</div>
+      `).join('')}
+    </div>
+  </div>`;
+},
+
 /* ---------- 2. PICK YOUR GAME ---------- */
 pick(){
   return `
@@ -92,6 +114,7 @@ open(){
   <div class="greet">${hello}<small>${S.lang==='hi'?g.hi:g.en} ${g.ic} · ${S.lang==='hi'?f.hi:f.en}</small></div>
   ${weekStrip()}
   <div class="reveal" style="margin-top:12px">${CARD[f.id](g)}</div>
+  ${f.id!=='fact'? factStrip(g) : ''}
   ${readBackPanel()}
   <button class="btn" style="margin-top:14px" onclick="go('home')">${S.lang==='hi'?'अब सीखते हैं →':'Now let us learn →'}</button>
   <div class="row" style="margin-top:9px">
@@ -118,10 +141,11 @@ home(){
     ${goalTile('📖','read')}${goalTile('✍️','write')}${goalTile('🔢','math')}${goalTile('💡','facts')}
   </div>
   <div class="tiles">
-    <button class="tile t-read" onclick="go('read')"><span class="ic">📖</span><span>${t('read')}<small>${t('readSub')}</small></span></button>
-    <button class="tile t-write" onclick="go('write')"><span class="ic">✍️</span><span>${t('write')}<small>${t('writeSub')}</small></span></button>
-    <button class="tile t-count" onclick="go('math')"><span class="ic">🔢</span><span>${t('count')}<small>${t('countSub')}</small></span></button>
-    <button class="tile t-ask" onclick="go('ask')"><span class="ic">💬</span><span>${t('ask')}<small>${t('askSub')}</small></span></button>
+    ${moduleAllowed('read')? `<button class="tile t-read" onclick="go('read')"><span class="ic">📖</span><span>${t('read')}<small>${t('readSub')}</small></span></button>`:''}
+    ${moduleAllowed('write')? `<button class="tile t-write" onclick="go('write')"><span class="ic">✍️</span><span>${t('write')}<small>${t('writeSub')}</small></span></button>`:''}
+    ${moduleAllowed('count')? `<button class="tile t-count" onclick="go('math')"><span class="ic">🔢</span><span>${t('count')}<small>${t('countSub')}</small></span></button>`:''}
+    ${moduleAllowed('ask')? `<button class="tile t-ask" onclick="go('ask')"><span class="ic">💬</span><span>${t('ask')}<small>${t('askSub')}</small></span></button>`:''}
+    ${moduleAllowed('count')? `<button class="tile t-learn" onclick="go('lessons')"><span class="ic">🎬</span><span>${S.lang==='hi'?'कहानी से सीखो':'Learn with a story'}</span></button>`:''}
   </div>
   <div class="mascotrow">
     ${mascotSVG()}
@@ -166,7 +190,7 @@ parentlock(){
 
 /* ---------- READING ---------- */
 read(){
-  const pool = SENTENCES[S.lang][S.levels.read];
+  const pool = ageSentences(S.lang, S.levels.read);
   if(!S.ctx.sentence) S.ctx.sentence = pool[Math.floor(Math.random()*pool.length)];
   const s = S.ctx.sentence;
   const shown = S.ctx.tokens
@@ -204,16 +228,17 @@ read(){
 /* ---------- WRITING ---------- */
 write(){
   if(!S.ctx.mode) S.ctx.mode = 'trace';
+  if(S.ctx.mode==='paper' && band().traceOnly) S.ctx.mode = 'trace';   // age moved, tab is gone
   const tabs = `
   <div class="tabs">
     <button class="${S.ctx.mode==='trace'?'sel':''}" onclick="setWriteMode('trace')">${S.lang==='hi'?'स्क्रीन पर बनाओ':'Trace on screen'}</button>
-    <button class="${S.ctx.mode==='paper'?'sel':''}" onclick="setWriteMode('paper')">${S.lang==='hi'?'कागज़ पर लिखो 📷':'Write on paper 📷'}</button>
+    ${band().traceOnly ? '' : `<button class="${S.ctx.mode==='paper'?'sel':''}" onclick="setWriteMode('paper')">${S.lang==='hi'?'कागज़ पर लिखो 📷':'Write on paper 📷'}</button>`}
   </div>`;
   const levelLine = `<div class="muted">${t('level')} ${S.levels.write} · ${t('write')} · ${competencyName('write',S.levels.write)}</div>`;
 
   /* ---------- PAPER MODE: copy the sentence, photograph it, type it back ---------- */
   if(S.ctx.mode==='paper'){
-    const pool = SENTENCES[S.lang][Math.max(1,S.levels.write)];
+    const pool = ageSentences(S.lang, S.levels.write);
     if(!S.ctx.line) S.ctx.line = pool[Math.floor(Math.random()*pool.length)];
     if(!S.camOk){
       return `
@@ -299,6 +324,11 @@ math(){
   ${S.ctx.picked!=null? `<button class="btn" style="margin-top:12px" onclick="nextProblem()">${t('next')} →</button>`:''}`;
 },
 
+/* ---------- LEARN WITH A STORY ---------- */
+lessons(){
+  return S.lesson ? lessonHTML() : lessonListHTML();
+},
+
 /* ---------- ASK (the bridge) ---------- */
 ask(){
   const a = S.ctx.answer;
@@ -327,6 +357,7 @@ ask(){
   <button class="back" onclick="go('home')">← ${t('back')}</button>
   <div class="display" style="font-size:21px;margin:4px 0">${t('ask')}</div>
   <div class="muted">${t('askSub')}</div>
+  ${elephantHTML()}
   <input class="input" id="q" style="margin-top:12px" placeholder="${t('typeQ')}">
   <button class="btn" style="margin-top:10px" onclick="submitQuestion($('q').value)">${t('sendQ')}</button>
   <div style="margin-top:8px" class="row">
@@ -364,6 +395,21 @@ parent(){
     <h3>${S.name}${S.lang==='hi'?' का दिन':"'s day"}</h3>
     <div style="font-size:13px;opacity:.7;margin-bottom:8px">${S.lang==='hi'?'सुनने के लिए दबाएँ':'Tap to hear this read aloud'}</div>
     <button class="btn indigo" style="background:#2A2118;color:#F3EEE0;margin-bottom:10px" onclick="readReport()">🔊 सुनें / Listen</button>
+
+    <div class="kicker2">${S.lang==='hi'?'उम्र':'AGE'}</div>
+    <div class="metric">
+      <div><b>${S.age||6} ${S.lang==='hi'?'साल':'yrs'}</b>
+        <div style="margin-top:3px"><span class="agechip">${S.lang==='hi'?band().hi:band().en}</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <button class="stepbtn" onclick="setParentAge(-1)">−</button>
+        <b style="min-width:20px;text-align:center">${S.age||6}</b>
+        <button class="stepbtn" onclick="setParentAge(1)">+</button>
+      </div>
+    </div>
+    <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin:4px 0 2px">${S.lang==='hi'
+      ? 'उम्र सीमा तय करती है; तख़्ती उसी सीमा के भीतर बच्चे के हिसाब से ढल जाती है।'
+      : 'Age sets the range — Takhti adapts to your child within it.'}</div>
 
     <div class="kicker2">${S.lang==='hi'?'आज का लक्ष्य':"TODAY'S TARGET"}</div>
     ${target(S.lang==='hi'?'बोलकर पढ़ना':'Sentences read aloud','read',S.lang==='hi'?'वाक्य':'sentences')}

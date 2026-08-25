@@ -9,9 +9,10 @@ function setReadText(txt){ S.ctx.readText = txt; return txt; }
 
 function weekStrip(){
   const plan = weekPlan();
+  const today = S.day % plan.length;   // plan.length tracks FORMATS.length, not a fixed 7
   return `<div class="week">${plan.map((f,i)=>`
-    <div class="day ${i===S.day%7?'today':''} ${i<S.day%7?'done':''}">
-      <b>${f.ic}</b>${DAYNAMES[S.lang][i]}
+    <div class="day ${i===today?'today':''} ${i<today?'done':''}">
+      <b>${f.ic}</b>${DAYNAMES[S.lang][i % 7]}
     </div>`).join('')}</div>`;
 }
 function shell(kicker, inner){
@@ -21,7 +22,7 @@ function shell(kicker, inner){
 const CARD = {
 
 fact(g){
-  const list = FACTS[g.id] || [g.fact];
+  const list = ageFacts(g.id);
   if(S.ctx.factIdx == null) S.ctx.factIdx = seedOf((S.name||'x')+'f'+S.day) % list.length;
   const i = S.ctx.factIdx % list.length;
   const f = list[i];
@@ -135,6 +136,22 @@ challenge(g){
     <div class="tapcount">${done
       ? (S.lang==='hi'?`सब ${n} पकड़ लिए! ⭐`:`All ${n} caught! ⭐`)
       : `${S.ctx.tapped} / ${n}`}</div>`);
+},
+
+lesson(g){
+  S.ctx.readText = null;   // interactive, not something to read back
+  const mine = LESSONS.filter(l => l.band === band().id);
+  if(!mine.length) return shell(S.lang==='hi'?'कहानी से सीखो':'LEARN WITH A STORY', `
+    <p>${S.lang==='hi'?'इस उम्र के लिए कहानियाँ जल्द आ रही हैं।':'Stories for this age are coming soon.'}</p>`);
+  const idx = seedOf((S.name||'x')+'lesson'+S.day) % mine.length;
+  const l = mine[idx];
+  return shell(S.lang==='hi'?'आज की कहानी':"TODAY'S STORY", `
+    <div style="text-align:center;padding:6px 0">
+      <div style="font-size:52px" class="grow">${l.ic}</div>
+      <h3 style="margin:8px 0 2px">${L(l.title)}</h3>
+      <div class="muted">${L(l.sub)}</div>
+    </div>
+    <button class="btn leaf" style="margin-top:12px" onclick="go('lessons');startLesson('${l.id}')">▶ ${S.lang==='hi'?'शुरू करो':'Start'}</button>`);
 }
 };
 
@@ -205,6 +222,25 @@ function scenes(g){
   ];
 }
 
+/* a second, smaller fact under whatever today's daily card is — never
+   shown on a 'fact' day, since the card itself already is one */
+function factStrip(g){
+  const list = ageFacts(g.id);
+  if(S.ctx.stripIdx == null) S.ctx.stripIdx = seedOf((S.name||'x')+'strip'+S.day) % list.length;
+  const i = S.ctx.stripIdx % list.length;
+  const txt = L(list[i]);
+  return `<div class="factstrip">
+    <div class="fsline" data-say="${attr(txt)}" onclick="sayEl(this)">
+      <span class="fsic">${g.ic}</span><span class="fstxt">${txt}</span><span class="fsplay">🔊</span>
+    </div>
+    ${list.length>1?`<button class="fsmore" onclick="nextStripFact(${list.length})">✨ ${S.lang==='hi'?'एक और':'One more'}</button>`:''}
+  </div>`;
+}
+function nextStripFact(len){
+  S.ctx.stripIdx = ((S.ctx.stripIdx||0) + 1) % len;
+  render();
+}
+
 function stepScene(){ S.ctx.scene=(S.ctx.scene||0)+1; render(); narrateScene(); }
 function nextFact(len){
   S.ctx.factIdx = ((S.ctx.factIdx||0) + 1) % len;
@@ -213,17 +249,27 @@ function nextFact(len){
   const p = document.querySelector('.factcard p');
   if(p) speak(p.textContent);
 }
-function narrateScene(){ const c=document.querySelector('.caption'); if(c) speak(c.textContent); }
+function narrateScene(onDone){
+  const c=document.querySelector('.caption');
+  if(c) speak(c.textContent, null, onDone);
+  else if(onDone) onDone();
+}
+/* Advances only once the caption has actually finished being read, plus a
+   short beat — a fixed tick used to cut off longer Hindi captions mid-line. */
 function playScenes(){
-  narrateScene();
   clearTimeout(S._sceneTimer);
   const g = gameById(S.game), total = scenes(g).length;
   const tick = () => {
-    if(S.screen!=='open' || (S.ctx.scene||0) >= total-1) return;
-    S.ctx.scene=(S.ctx.scene||0)+1; render(); narrateScene();
-    S._sceneTimer = setTimeout(tick, 3400);
+    if(S.screen!=='open') return;
+    narrateScene(() => {
+      if(S.screen!=='open' || (S.ctx.scene||0) >= total-1) return;   // stop at the last scene
+      S._sceneTimer = setTimeout(() => {
+        S.ctx.scene=(S.ctx.scene||0)+1; render();
+        tick();
+      }, 1100);
+    });
   };
-  S._sceneTimer = setTimeout(tick, 3400);
+  tick();
 }
 function catchIt(id){
   const it = S.ctx.items.find(x=>x.id===id);
@@ -238,7 +284,7 @@ function catchIt(id){
 function nextDay(){
   S.day++;
   const f = todayFormat();
-  log(0, `Day ${S.day%7+1} · scheduler drew "${f.id}" · bag guarantees no repeat this week`);
+  log(0, `Day ${S.day%FORMATS.length+1} · scheduler drew "${f.id}" · bag guarantees no repeat this week`);
   S.ctx = { phase:0 }; render();
 }
 function cheer(){

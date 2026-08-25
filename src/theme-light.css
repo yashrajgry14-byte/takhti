@@ -1,0 +1,143 @@
+/* ==================================================================
+   DAYLIGHT THEME
+   Loaded AFTER styles.css, so it is a pure override layer — nothing in
+   the original file needs editing and nothing here can collide with it.
+   Delete this one <link> and you are back to the slate.
+
+   The slate reads beautifully on a laptop in a dark room. On a cheap
+   phone held outdoors in Punjab sunshine it does not, and that is the
+   actual usage condition. This is paper and sky: high contrast, warm,
+   and legible at low screen brightness.
+   ================================================================== */
+
+:root{
+  --chalk:#2A2118;          /* now the INK colour, not the chalk */
+  --chalk-dim:#6E6355;
+  --slate:#FBF6E9;
+  --slate-2:#FFFDF6;
+  --paper:#16302B;          /* the parent world inverts: dark on light app */
+  --paper-ink:#F3EEE0;
+  --marigold:#E08A00;
+  --leaf:#1E8F55;
+  --indigo:#2F5ECC;
+  --rani:#D02A62;
+  --clay:#B5502F;
+}
+
+/* page and device */
+body{
+  background:
+    radial-gradient(900px 520px at 12% -12%, #CFE6F2 0%, transparent 62%),
+    radial-gradient(760px 520px at 100% 110%, #F6E2C4 0%, transparent 58%),
+    #EFE7D6;
+  color:var(--chalk);
+}
+.brandbar .tag{color:var(--chalk-dim)}
+.brandbar h1{color:#16302B}
+.device{background:#E7DCC4;border-color:rgba(42,33,24,.16);box-shadow:0 22px 54px rgba(60,45,25,.22)}
+.screen{background:linear-gradient(180deg,#DCEEF7 0%,#F7F1E1 58%,#FBF6E9 100%)}
+
+/* chalk-on-slate surfaces become ink-on-paper */
+.card,.factcard,.opt,.gcard,.goal,.day,.tabs button,.langpick button,.btn.ghost,.agebtn{
+  background:rgba(255,255,255,.72);border-color:rgba(42,33,24,.14);color:#2A2118}
+.factcard{background:linear-gradient(160deg,rgba(224,138,0,.13),rgba(255,255,255,.8));
+  border-color:rgba(224,138,0,.4)}
+.btn.ghost{color:#2A2118}
+.input{background:rgba(255,255,255,.85);border-color:rgba(42,33,24,.2);color:#2A2118}
+.input::placeholder{color:#8A7E6D}
+.muted{color:var(--chalk-dim)}
+.netswitch{background:rgba(255,255,255,.6);border-color:rgba(42,33,24,.14)}
+.toggle{background:#C6BCA6}
+.back{color:#6E6355}
+
+/* dark panels inside the app become soft cards */
+.padwrap,.player,.field,.mathstage,.panelstage,.arena{
+  background:rgba(255,255,255,.75);border-color:rgba(42,33,24,.14)}
+.caption{color:#2A2118;background:linear-gradient(transparent,rgba(255,255,255,.92) 45%)}
+#guide{opacity:.16}
+
+/* reading marks: keep the four states obvious on a light ground */
+.w.ok{background:rgba(30,143,85,.22)}
+.w.near{background:rgba(224,138,0,.26)}
+.w.bad{background:rgba(208,42,98,.2)}
+.w.miss{background:rgba(42,33,24,.09);opacity:.5}
+.scorebar{background:rgba(42,33,24,.12)}
+.ring{background:rgba(42,33,24,.12)}
+
+/* tiles keep their colour but need darker text where the fill is pale */
+.t-count,.t-ask{color:#FFF}
+
+/* the parent world inverts — it is the grown-up's screen, not the child's */
+.paper{background:#1B3A34;color:#F3EEE0}
+.paper .metric{border-bottom-color:rgba(243,238,224,.22)}
+.paper .bar{background:rgba(243,238,224,.18)}
+.stepbtn{background:rgba(243,238,224,.12);border-color:rgba(243,238,224,.3);color:#F3EEE0}
+
+/* backdrop: chalk lines become pencil lines on paper */
+.bd{stroke:#3E5A50}
+.bd-cloud{opacity:.16}
+.bd-cloud.c2{opacity:.12}
+.bd-cloud.c3{opacity:.1}
+.bd-kite{opacity:.26}
+.bd-bird{opacity:.24}
+.bd-sun{opacity:.18;stroke:#E08A00}
+.bd-hills{stroke:#3E5A50;opacity:.16}
+.bd-dust{background:#8A7E6D}
+.bd-star{color:#8A7E6D}
+.bd-glow{opacity:.1}
+.bd-token{opacity:.2}
+
+/* trace panel stays dark — it is the judge's window, not the child's */
+.side .tier{background:rgba(255,255,255,.7);border-color:rgba(42,33,24,.14)}
+.side .tier p,.sidesub,.tier .n{color:#6E6355}
+.sidehead,.tier h4{color:#16302B}
+.log{background:#16302B;border-color:rgba(42,33,24,.2)}
+.log .sys{color:#A9B8AF}
+.notice{color:#6E6355}
+
+/* speech bubbles and the mascot need a touch more weight on light ground */
+.bubble{background:#16302B;color:#F3EEE0}
+.mascot .body ellipse,.mascot .body circle{fill:#3E5A50}
+.mascotrow{background:rgba(47,94,204,.1);border-color:rgba(47,94,204,.28)}
+.elephbubble{background:#16302B;color:#F3EEE0}
+.chit{background:rgba(224,138,0,.12);border-color:rgba(224,138,0,.5)}
+.chit.ready{background:rgba(30,143,85,.14);border-color:rgba(30,143,85,.5)}
+.rb{background:rgba(30,143,85,.1);border-color:rgba(30,143,85,.34)}
+.rb.rbdone{background:rgba(30,143,85,.18)}
+.retry{background:rgba(224,138,0,.13);border-color:rgba(224,138,0,.4)}
+.fsline{background:rgba(224,138,0,.11);border-color:rgba(224,138,0,.34);color:#2A2118}
+.flash{background:#FFF}
+/* Append to src/theme-light.css — light-theme overrides for the same components */
+
+/* age picker on paper */
+.agebtn{background:rgba(255,255,255,.72);border-color:rgba(42,33,24,.14);color:#2A2118}
+.agebtn.sel{background:var(--marigold);color:#16302B}
+.bandnote{background:rgba(47,94,204,.1);border-color:rgba(47,94,204,.28);color:#6E6355}
+.bandnote b{color:#16302B}
+.agechip{background:rgba(224,138,0,.16);color:#9A5E00}
+
+/* lesson player on paper */
+.lesstage{background:rgba(255,255,255,.78);border-color:rgba(42,33,24,.14)}
+.lescap{color:#2A2118}
+.bundle{background:rgba(224,138,0,.16)}
+.basket{border-color:rgba(42,33,24,.3)}
+.whole{background:rgba(42,33,24,.12)}
+.part.unknown{background:rgba(224,138,0,.22)}
+.fracpie{background:rgba(42,33,24,.06)}
+.fracpie .slice{background:rgba(224,138,0,.42)}
+.lescard{background:rgba(255,255,255,.72);border-color:rgba(42,33,24,.14);color:#2A2118}
+.lescard small{color:#6E6355}
+
+
+/* lesson player on paper */
+.lesstage{background:rgba(255,255,255,.78);border-color:rgba(42,33,24,.14)}
+.lescap{color:#2A2118}
+.bundle{background:rgba(224,138,0,.16)}
+.basket{border-color:rgba(42,33,24,.3)}
+.whole{background:rgba(42,33,24,.12)}
+.part.unknown{background:rgba(224,138,0,.22)}
+.fracpie{background:rgba(42,33,24,.06)}
+.fracpie .slice{background:rgba(224,138,0,.42)}
+.lescard{background:rgba(255,255,255,.72);border-color:rgba(42,33,24,.14);color:#2A2118}
+.lescard small{color:#6E6355}
+

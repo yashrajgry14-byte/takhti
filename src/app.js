@@ -4,6 +4,10 @@ $('langbtn').onclick = ()=>{ S.lang = S.lang==='en'?'hi':'en'; S.ctx={}; log(nul
 log(null,'Takhti started · no network required');
 log(0,'Content pack loaded from device storage');
 load();
-if(S.profiles.length && S.activeProfile != null) S.screen = 'home';
+if(S.profiles.length && S.activeProfile != null){
+  // an existing profile from before the age screen existed gets asked once
+  S.screen = S.age == null ? 'age' : 'home';
+  if(S.screen === 'age') S.ctx = { ageNext: 'home' };
+}
 setOnline(false);
 render();

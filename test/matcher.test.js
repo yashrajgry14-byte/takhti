@@ -27,6 +27,21 @@ const { gradeReading, gradeBest, gradeVerdict } = sandbox;
 // with one more runInContext call in the same (still-live) lexical scope.
 const GRADE = vm.runInContext('GRADE', sandbox);
 
+/* Load the age-gating stack into the SAME sandbox, in the same dependency
+   order index.html uses, so ageSentences()/clampLevel() are the real
+   functions running against the real shipped content — not a reimplementation. */
+const root = path.join(__dirname, '..', 'src');
+for (const rel of ['state.js', 'content/sentences.js', 'content/facts.js', 'core/readability.js', 'content/ages.js']) {
+  const p = path.join(root, rel);
+  vm.runInContext(fs.readFileSync(p, 'utf8'), sandbox, { filename: p });
+}
+const { readability, band, clampLevel, ageSentences, rdOrder } = sandbox;
+// S is `const`, so — like GRADE — it needs pulling out explicitly. But it's
+// an object: once we hold this same reference, mutating S.age from out here
+// is visible to band()/ageSentences() in there, since they close over the
+// identical object. No need to reach back into the sandbox after this.
+const S = vm.runInContext('S', sandbox);
+
 /* [lang, target, transcript, [minScore, maxScore], note] */
 const TESTS = [
   // ---- CLAUDE.md "must keep passing" table (real recognizer output, 90+) ----
@@ -145,6 +160,55 @@ console.log('-'.repeat(110));
 console.log(`${VERDICT_TESTS.length - vFailures}/${VERDICT_TESTS.length} verdict tests passed`);
 
 failures += vFailures;
-console.log(`\n${TESTS.length + VERDICT_TESTS.length - failures}/${TESTS.length + VERDICT_TESTS.length} total`);
+
+/* ==================================================================
+   AGE GATING — for every age 3..10:
+   1. ageSentences(lang, level) never hands back a line harder than the
+      child's own band, for either language, at any of the six levels.
+   2. clampLevel(mod, raw) never escapes that age's [lo,hi] window, for
+      any module, from any raw level an adaptive nudge could propose.
+   ================================================================== */
+console.log(`\nAGE TESTS (ageSentences band ceiling + clampLevel window, ages 3-10)`);
+let ageFailures = 0, ageTotal = 0;
+const ageIssues = [];
+
+for (let age = 3; age <= 10; age++) {
+  S.age = age;
+  const b = band();
+  const wantOrder = rdOrder(b.read);
+
+  for (const lang of ['en', 'hi']) {
+    for (let level = 1; level <= 6; level++) {
+      const lines = ageSentences(lang, level);
+      for (const line of lines) {
+        ageTotal++;
+        const gotBand = readability(line, lang).band;
+        if (rdOrder(gotBand) > wantOrder) {
+          ageFailures++;
+          ageIssues.push(`  FAIL age=${age} band=${b.id} lang=${lang} level=${level}: "${line}" is band "${gotBand}", harder than "${b.read}"`);
+        }
+      }
+    }
+  }
+
+  for (const mod of ['read', 'write', 'math']) {
+    const [lo, hi] = b.levels[mod];
+    for (let raw = 0; raw <= 8; raw++) {
+      ageTotal++;
+      const clamped = clampLevel(mod, raw);
+      if (clamped < lo || clamped > hi) {
+        ageFailures++;
+        ageIssues.push(`  FAIL age=${age} clampLevel('${mod}', ${raw}) = ${clamped}, outside window [${lo},${hi}]`);
+      }
+    }
+  }
+}
+
+ageIssues.forEach(l => console.log(l));
+console.log(`${ageTotal - ageFailures}/${ageTotal} age-gating checks passed`
+  + ` (per age: ageSentences over 2 langs × 6 levels, every returned line checked; clampLevel over 3 modules × 9 raw levels)`);
+
+failures += ageFailures;
+console.log(`\n${TESTS.length + VERDICT_TESTS.length + ageTotal - failures}/${TESTS.length + VERDICT_TESTS.length + ageTotal} total`);
 
 process.exitCode = failures ? 1 : 0;

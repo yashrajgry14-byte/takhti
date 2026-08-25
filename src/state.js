@@ -7,6 +7,7 @@
 function newProfile(name){
   return {
     name: name || null,
+    age: null,       // set on the age screen; null = not asked yet, see content/ages.js
     game: null,
     visits: 0,
     day: 0,          // index into this week's plan; the demo can step it forward
@@ -33,6 +34,8 @@ const S = {
   activeProfile: null,   // index into profiles
   parentPin: null,       // 4-digit string set by a parent; null = not yet set
   camOk:   false,        // camera permission granted this session (device-wide)
+  eleph:   null,         // Munni's mood on the ask screen, see ui/elephant.js
+  lesson:  null,         // in-progress arithmetic story, see ui/lesson-player.js
   rb: null,             // read-back session, see ui/readback.js
   ctx: {},               // per-screen scratch
   ...newProfile()

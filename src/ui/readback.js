@@ -23,7 +23,8 @@ function rbChunks(text){
   for(const p of parts){
     const w = p.split(' ');
     if(w.length <= 12){ out.push(p); continue; }
-    for(let i=0;i<w.length;i+=8) out.push(w.slice(i,i+8).join(' '));
+    const cw = band().chunkWords;
+    for(let i=0;i<w.length;i+=cw) out.push(w.slice(i,i+cw).join(' '));
   }
   // Nobody should be asked to "read out" a two-word scrap. Fold short
   // fragments into a neighbour, preferring the one that stays under 14.

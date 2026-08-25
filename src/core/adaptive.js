@@ -18,8 +18,22 @@ function record(mod, ok){
   if(ok) S.stars++;
   if(w.length>=4){
     const acc = w.reduce((a,b)=>a+b,0)/w.length;
-    if(acc>=0.85 && S.levels[mod]<6){ S.levels[mod]++; S.window[mod]=[]; log(0,`${mod}: accuracy ${Math.round(acc*100)}% → level up to ${S.levels[mod]}`); return 'up'; }
-    if(acc<=0.4 && S.levels[mod]>1){ S.levels[mod]--; S.window[mod]=[]; log(0,`${mod}: accuracy ${Math.round(acc*100)}% → step down to ${S.levels[mod]}`); return 'down'; }
+    if(acc>=0.85 && S.levels[mod]<6){
+      const next = clampLevel(mod, S.levels[mod]+1);
+      if(next !== S.levels[mod]){
+        S.levels[mod] = next; S.window[mod]=[];
+        log(0,`${mod}: accuracy ${Math.round(acc*100)}% → level up to ${S.levels[mod]}`);
+        return 'up';
+      }
+    }
+    if(acc<=0.4 && S.levels[mod]>1){
+      const next = clampLevel(mod, S.levels[mod]-1);
+      if(next !== S.levels[mod]){
+        S.levels[mod] = next; S.window[mod]=[];
+        log(0,`${mod}: accuracy ${Math.round(acc*100)}% → step down to ${S.levels[mod]}`);
+        return 'down';
+      }
+    }
   }
   log(0,`${mod}: attempt logged (${ok?'correct':'incorrect'}), window ${w.join('')}`);
   return null;

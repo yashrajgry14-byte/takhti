@@ -1,6 +1,6 @@
 /* ================= HANDLERS ================= */
 function nextSentence(){
-  const pool = SENTENCES[S.lang][S.levels.read];
+  const pool = ageSentences(S.lang, S.levels.read);
   S.ctx = { sentence: pool[Math.floor(Math.random()*pool.length)] };
   render();
 }
@@ -129,7 +129,7 @@ function checkInk(){
 /* ================= WRITING: PAPER + CAMERA ================= */
 function setWriteMode(m){ S.ctx = { mode:m }; render(); }
 function nextLine(){
-  const pool = SENTENCES[S.lang][Math.max(1,S.levels.write)];
+  const pool = ageSentences(S.lang, S.levels.write);
   S.ctx = { mode:'paper', line: pool[Math.floor(Math.random()*pool.length)] };
   render();
 }
@@ -347,24 +347,30 @@ function findOffline(q){
   const s=q.toLowerCase();
   return OFFLINE_PACK.find(p=>p.keys.some(k=>s.includes(k)));
 }
+/* Munni is the loading state now: she plays out her praise → search → found
+   sequence while resolve() does the real work in the background, and the
+   screen only actually changes once she settles — see elephant.js. */
 function submitQuestion(q){
   if(!q || !q.trim()) return;
-  const local = findOffline(q);
-  if(local){
-    log(0,'Question matched the on-device pack · no network needed');
-    S.ctx.answer = { ...local, title: S.lang==='hi'? local.hi : local.title };
-    S.ctx.panel = 0; render(); speakPanel(0); return;
-  }
-  if(S.online){ askCloud(q); }
-  else {
-    S.queue.push({ id:'q'+Date.now(), q });
-    log(0,'No signal · question queued to disk, nothing lost');
-    render();
-  }
+  if(S.eleph && S.eleph.mood !== 'idle') return;
+  elephAsk(q, () => new Promise(resolve => {
+    const local = findOffline(q);
+    if(local){
+      log(0,'Question matched the on-device pack · no network needed');
+      S.ctx.answer = { ...local, title: S.lang==='hi'? local.hi : local.title };
+      S.ctx.panel = 0;
+      resolve('answered');
+    } else if(S.online){
+      askCloud(q).then(ok => resolve(ok ? 'answered' : 'queued'));
+    } else {
+      S.queue.push({ id:'q'+Date.now(), q });
+      log(0,'No signal · question queued to disk, nothing lost');
+      resolve('queued');
+    }
+  }), (outcome) => { if(outcome === 'answered' && S.ctx.answer) speakPanel(0); });
 }
 async function askCloud(q){
   log(2,'Signal available · generating answer + storyboard');
-  S.ctx.loading=true; $('screen').innerHTML = `<div style="text-align:center;padding:80px 10px"><div class="panelart">✨</div><div class="display">Making your answer…</div><div class="muted">text · audio · pictures</div></div>`;
   const prompt = `A child aged 6-9 in India asked: "${q}".
 Reply ONLY with JSON, no markdown fences:
 {"title":"the question restated simply","panels":[{"art":"ONE emoji","en":"one short simple sentence","hi":"same sentence in simple Hindi"},{...},{...}],"quiz":{"en":"one simple check question","hi":"same in Hindi","opts":["right","wrong"],"hiOpts":["right in Hindi","wrong in Hindi"],"correct":0}}
@@ -386,7 +392,10 @@ Exactly 3 panels. Each sentence under 18 words, warm, concrete, no jargon. Keep 
     a.id = 'a'+Date.now();
     S.answered.unshift(a);
     log(2,'Answer cached to device · available offline from now on');
-    S.ctx.answer=a; S.ctx.panel=0; render(); speakPanel(0);
+    // state only — no render()/speak() here. The elephant owns the reveal;
+    // rendering now would flip the screen out from under her mid-animation.
+    S.ctx.answer=a; S.ctx.panel=0;
+    return true;
   }catch(e){
     // The cloud is optional, but honesty is not: showing a cached answer to a
     // DIFFERENT question would teach the child that Takhti makes things up.
@@ -404,10 +413,7 @@ Exactly 3 panels. Each sentence under 18 words, warm, concrete, no jargon. Keep 
     }
     S.ctx.answer = null;
     S.ctx.saved = q;
-    render();
-    speak(S.lang==='hi'
-      ? 'अच्छा सवाल! मैंने इसे सँभालकर रख लिया है।'
-      : 'Good question! I have saved it for you.');
+    return false;
   }
 }
 function openAnswer(id){ const a=S.answered.find(x=>x.id===id); if(a){ S.ctx.answer=a; S.ctx.panel=0; render(); speakPanel(0);} }
@@ -440,6 +446,16 @@ function goalTile(icon, k){
 function setTarget(k, d){
   S.targets[k] = Math.max(1, Math.min(20, S.targets[k]+d));
   log(0, `Parent set target · ${k} = ${S.targets[k]} per day`);
+  render();
+}
+function setParentAge(d){
+  S.age = Math.max(3, Math.min(10, (S.age||6) + d));
+  // the band may have narrowed — pull current levels back inside its window
+  S.levels.read  = clampLevel('read',  S.levels.read);
+  S.levels.write = clampLevel('write', S.levels.write);
+  S.levels.math  = clampLevel('math',  S.levels.math);
+  log(0, `Parent set age → ${S.age} · band "${band().id}"`);
+  saveSoon();
   render();
 }
 

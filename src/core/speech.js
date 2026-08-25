@@ -29,10 +29,10 @@ function pickVoice(lang){
       || VOICES.find(v=>low(v).startsWith('en'))
       || VOICES[0] || null;
 }
-function speak(text, lang){
+function speak(text, lang, onDone){
   text = (text==null? '' : String(text)).trim();
-  if(!text) return;
-  if(!('speechSynthesis' in window)){ log(null,'This browser has no speech synthesis'); return; }
+  if(!text){ if(onDone) onDone(); return; }
+  if(!('speechSynthesis' in window)){ log(null,'This browser has no speech synthesis'); if(onDone) onDone(); return; }
   const l = lang || S.lang;
   try{ speechSynthesis.cancel(); }catch(e){}
   // Chrome drops an utterance queued in the same tick as cancel() — give it a beat.
@@ -42,8 +42,30 @@ function speak(text, lang){
     const v = pickVoice(l);
     if(v){ u.voice = v; u.lang = v.lang; }
     else { u.lang = l==='hi' ? 'hi-IN' : 'en-IN'; }
-    u.rate = 0.85; u.pitch = 1.05;
-    u.onerror = e => log(null, 'TTS error: ' + (e.error||'unknown'));
+    u.rate = band().speechRate; u.pitch = 1.05;
+
+    // some Android voices never fire onend, so onDone has a backstop timer;
+    // both paths funnel through finish() so it only ever runs once.
+    let done = false;
+    const finish = () => { if(done) return; done = true; clearTimeout(safety); if(onDone) onDone(); };
+    const words = text.split(/\s+/).length;
+    const safety = setTimeout(finish, 900 + words*420 + 2500);
+
+    u.onend = finish;
+    u.onerror = e => {
+      const err = e.error || 'unknown';
+      // cancel() fires 'interrupted'/'canceled' on the utterance it just
+      // stopped. That is the previous line being replaced, not a failure —
+      // but whatever is waiting on onDone still needs to hear about it.
+      if(err === 'interrupted' || err === 'canceled'){ finish(); return; }
+      if(err === 'not-allowed'){
+        log(null, 'Audio blocked until the child taps something — browser autoplay rule');
+        finish();
+        return;
+      }
+      log(null, 'TTS error: ' + err);
+      finish();
+    };
     speechSynthesis.speak(u);
     if(l==='hi' && v && !v.lang.toLowerCase().startsWith('hi'))
       log(null, 'No Hindi voice on this device — reading with ' + v.lang);
