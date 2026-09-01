@@ -9,19 +9,25 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v4';
+const CACHE = 'takhti-v8';
+// Recorded audio clips are content-hashed (see core/voice.js) — a given
+// filename can never change, so they live in a cache of their own that
+// the version cleanup below never touches. Bumping CACHE on a normal
+// deploy must not re-download tens of MB of narration.
+const AUDIO_CACHE = 'takhti-audio-v1';
 
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './src/styles.css', './src/theme-light.css',
   './src/config.js', './src/state.js',
   './src/content/sentences.js', './src/content/games.js', './src/content/facts.js',
-  './src/content/ages.js', './src/content/lessons.js', './src/content/anim.js', './src/content/copy.js',
-  './src/core/log.js', './src/core/speech.js', './src/core/matcher.js',
+  './src/content/ages.js', './src/content/lessons.js', './src/core/lesson-gen.js',
+  './src/content/anim.js', './src/content/copy.js',
+  './src/core/log.js', './src/core/voice.js', './src/core/speech.js', './src/core/matcher.js',
   './src/core/adaptive.js', './src/core/daily-engine.js', './src/core/mathgen.js',
   './src/core/readability.js',
   './src/content/competencies.js', './src/core/store.js', './src/core/profiles.js',
-  './src/ui/mascot.js', './src/ui/readback.js', './src/ui/elephant.js', './src/ui/lesson-player.js', './src/ui/cards.js',
+  './src/ui/mascot.js', './src/ui/readback.js', './src/ui/elephant.js', './src/ui/home-scene.js', './src/ui/lesson-player.js', './src/ui/cards.js',
   './src/ui/views.js', './src/ui/opening.js', './src/ui/handlers.js',
   './src/app.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png'
@@ -43,7 +49,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+    await Promise.all(keys.filter(k => k !== CACHE && k !== AUDIO_CACHE).map(k => caches.delete(k)));
     self.clients.claim();
   })());
 });
@@ -54,6 +60,22 @@ self.addEventListener('fetch', e => {
 
   // Tier 2 must never be served stale — it is either live or it is queued.
   if (url.pathname.endsWith('/api/ask')) return;
+
+  // Recorded narration clips: cache-first, forever, in their own cache.
+  // The manifest (audio/manifest-{lang}.json) is NOT content-hashed — its
+  // contents grow as more lines get recorded — so it deliberately falls
+  // through to the normal versioned handler below instead.
+  if (url.pathname.includes('/audio/') && !url.pathname.endsWith('.json')) {
+    e.respondWith((async () => {
+      const cache = await caches.open(AUDIO_CACHE);
+      const hit = await cache.match(e.request);
+      if (hit) return hit;
+      const res = await fetch(e.request);
+      if (res.ok) cache.put(e.request, res.clone());
+      return res;
+    })());
+    return;
+  }
 
   e.respondWith((async () => {
     const hit = await caches.match(e.request);

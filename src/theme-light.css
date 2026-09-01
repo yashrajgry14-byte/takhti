@@ -141,3 +141,13 @@ body{
 .lescard{background:rgba(255,255,255,.72);border-color:rgba(42,33,24,.14);color:#2A2118}
 .lescard small{color:#6E6355}
 
+/* Append to src/theme-light.css — home scene light overrides */
+
+/* home scene on paper */
+.hm-bubble{background:#16302B;color:#F3EEE0}
+.hm-munni ellipse,.hm-munni circle,.hm-munni rect{filter:saturate(1.05)}
+.hm-gauri ellipse,.hm-gauri circle{fill:#4A6B60}
+.tile .startpill{background:#16302B;color:var(--marigold)}
+
+/* home scene second pass, on paper */
+.hm-petal{opacity:.42}

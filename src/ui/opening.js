@@ -8,6 +8,11 @@ const AFTER = {
     const i=$('pin'); if(!i) return;
     i.focus();
     i.onkeydown = e=>{ if(e.key==='Enter') S.parentPin ? checkParentPin(i.value) : setParentPin(i.value); };
+  },
+  home(){
+    homeSceneStart();
+    // a goal met while the child was on a different screen celebrates here instead
+    if(S._pendingCelebrate){ S._pendingCelebrate = false; homeCelebrate(); }
   }
 };
 

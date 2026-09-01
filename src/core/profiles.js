@@ -18,7 +18,18 @@ function syncProfileOut(){
 function syncProfileIn(i){
   const p = S.profiles[i];
   if(!p) return;
-  for(const k of PROFILE_FIELDS) S[k] = p[k];
+  // A profile persisted before some field existed (today/targets/doneLessons/
+  // age, and whatever gets added next) is missing that key entirely, not set
+  // to a falsy value — p[k] reads back undefined, not null or 0. Falling back
+  // to newProfile()'s shape there fixes every field this way at once, instead
+  // of each reader guessing its own default.
+  //
+  // newProfile() is called fresh on every sync, not hoisted into a shared
+  // constant: a shared object's nested arrays/objects (levels, today, ...)
+  // would alias across every profile that ever needed a fallback, so one
+  // profile's mutations would leak into another's defaults.
+  const PROFILE_DEFAULTS = newProfile();
+  for(const k of PROFILE_FIELDS) S[k] = p[k] !== undefined ? p[k] : PROFILE_DEFAULTS[k];
 }
 
 function createProfile(name){

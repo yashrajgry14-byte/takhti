@@ -21,7 +21,8 @@ function newProfile(name){
     answered: [],         // resolved answers, cached forever
     targets: { read:5, write:5, math:5, facts:3 },   // set by the parent
     today:   { read:0, write:0, math:0, facts:0 },   // counted on success only
-    photos:  []           // notebook photos, stay on this device
+    photos:  [],           // notebook photos, stay on this device
+    doneLessons: []        // ids already offered, so the picker rotates
   };
 }
 const PROFILE_FIELDS = Object.keys(newProfile());
@@ -36,6 +37,9 @@ const S = {
   camOk:   false,        // camera permission granted this session (device-wide)
   eleph:   null,         // Munni's mood on the ask screen, see ui/elephant.js
   lesson:  null,         // in-progress arithmetic story, see ui/lesson-player.js
+  _bank:   null,         // lessonBank() cache — derived, never persisted, see core/lesson-gen.js
+  _justLevelled: false,      // record() sets this on a level-up; homeLine() reads it once, see ui/home-scene.js
+  _pendingCelebrate: false,  // a goal was met away from home; fires on the next visit, see ui/home-scene.js
   rb: null,             // read-back session, see ui/readback.js
   ctx: {},               // per-screen scratch
   ...newProfile()

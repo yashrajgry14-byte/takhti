@@ -433,7 +433,9 @@ function tier1Explain(words){
 
 /* ---- goals ---- */
 function goalTile(icon, k){
-  const now=S.today[k], max=S.targets[k], done=now>=max;
+  // S.today/S.targets can be missing a key (or be missing entirely) on a
+  // profile persisted before daily goals existed — default rather than throw
+  const now=(S.today&&S.today[k])||0, max=(S.targets&&S.targets[k])||5, done=now>=max;
   const label={read:S.lang==='hi'?'पढ़ो':'read',write:S.lang==='hi'?'लिखो':'write',
                math:S.lang==='hi'?'गिनो':'sums',facts:S.lang==='hi'?'नया':'new'}[k];
   return `<div class="goal ${done?'done':''}">

@@ -168,11 +168,20 @@ function lesArt(b, obj){
   }
 }
 
-/* ================= the session ================= */
-function startLesson(id){
-  const les = LESSONS.find(l => l.id === id);
-  if(!les) return;
-  S.lesson = { id, i:0, right:0, asked:0, picked:null };
+/* ================= the session =================
+   S.lesson.data holds the resolved lesson body (original or, when a signal
+   is available, the Tier 2-rewritten copy) so every other function here
+   reads THAT instead of re-looking the id up — lessonBank() now includes
+   the generated bank, and re-fetching by id would also throw away
+   whatever enrichLesson() came back with. */
+async function startLesson(id){
+  if(S._lessonBusy) return;
+  const found = lessonBank().find(l => l.id === id);
+  if(!found) return;
+  S._lessonBusy = true;
+  const les = S.online ? await enrichLesson(found) : found;   // already falls back to `found` on any failure
+  S._lessonBusy = false;
+  S.lesson = { id, data: les, i:0, right:0, asked:0, picked:null };
   log(0, `Lesson "${id}" · ${les.beats.length} beats · rendered in ${gameById(S.game).en}`);
   render();
   lesNarrate();
@@ -184,7 +193,7 @@ function endLesson(){
   render();
 }
 function lesBeat(){
-  const les = LESSONS.find(l => l.id === S.lesson.id);
+  const les = S.lesson && S.lesson.data;
   return les ? les.beats[S.lesson.i] : null;
 }
 function lesNarrate(){
@@ -199,11 +208,15 @@ function lesNarrate(){
   });
 }
 function lesNext(){
-  const les = LESSONS.find(l => l.id === S.lesson.id);
+  const les = S.lesson && S.lesson.data;
   if(!les) return;
   if(S.lesson.i >= les.beats.length - 1){
     // completing a lesson counts as maths practice, once
-    if(!S.lesson.counted){ S.lesson.counted = true; record('math', S.lesson.asked ? S.lesson.right >= S.lesson.asked/2 : true); }
+    if(!S.lesson.counted){
+      S.lesson.counted = true;
+      record('math', S.lesson.asked ? S.lesson.right >= S.lesson.asked/2 : true);
+      markLessonDone(S.lesson.id);   // so the picker rotates rather than re-offering it
+    }
     return;
   }
   S.lesson.i++; S.lesson.picked = null;
@@ -224,7 +237,7 @@ function lesAnswer(k){
 
 /* ================= render ================= */
 function lessonHTML(){
-  const les = LESSONS.find(l => l.id === S.lesson.id);
+  const les = S.lesson && S.lesson.data;
   if(!les) return '';
   const b = les.beats[S.lesson.i];
   const g = gameById(S.game);
@@ -259,9 +272,11 @@ function lessonHTML(){
   </div>`;
 }
 
-/* the picker: only lessons this child's age should meet */
+/* the picker: an 8-story slice of the child's band — see lessonsForChild()
+   in core/lesson-gen.js for the rotation/variety logic */
 function lessonListHTML(){
-  const mine = LESSONS.filter(l => l.band === band().id);
+  const mine = lessonsForChild(8);
+  const total = lessonBank().filter(l => l.band === band().id).length;
   const g = gameById(S.game);
   return `
   <button class="back" onclick="go('home')">← ${t('back')}</button>
@@ -270,6 +285,9 @@ function lessonListHTML(){
   <div class="muted">${S.lang==='hi'
     ? `हर कहानी तुम्हारे ${g.hi} से बनी है।`
     : `Every story is told with your ${g.en}.`}</div>
+  <div class="muted" style="font-size:12px;margin-top:2px">${S.lang==='hi'
+    ? `तुम्हारी उम्र के लिए ${total} में से ${mine.length} कहानियाँ`
+    : `${mine.length} of ${total} stories for your age`}</div>
   <div class="leslist">
     ${mine.map(l=>`<button class="lescard" onclick="startLesson('${l.id}')">
       <span class="lesic">${l.ic}</span>

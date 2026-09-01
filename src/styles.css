@@ -684,3 +684,108 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 .lesgo{margin-left:auto;color:var(--marigold);font-size:15px}
 .t-learn{background:var(--clay);color:#FFF3EC}
 
+/* Append to src/styles.css — home scene, both passes */
+
+/* ============ HOME SCENE — Munni and Gauri on the main screen ============ */
+.homescene{position:relative;margin:10px -4px 4px;padding:6px 0 0;cursor:pointer;user-select:none}
+.hm-cast{position:relative;height:132px;display:flex;align-items:flex-end;justify-content:center;gap:4px}
+.hm-munni{width:200px;height:auto;flex:0 0 auto}
+.hm-gauri{width:52px;height:auto;flex:0 0 auto;margin-bottom:10px}
+
+.hm-body{animation:hmBreathe 3.8s ease-in-out infinite;transform-origin:150px 210px}
+@keyframes hmBreathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.025) translateY(-3px)}}
+.hm-ear{animation:hmEar 3.2s ease-in-out infinite;transform-origin:248px 112px}
+@keyframes hmEar{0%,72%,100%{transform:rotate(0)}82%{transform:rotate(-14deg)}92%{transform:rotate(5deg)}}
+.hm-trunk{animation:hmTrunk 4.2s ease-in-out infinite;transform-origin:282px 160px}
+@keyframes hmTrunk{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(6deg)}}
+
+.hm-hop{animation:hmHop 3.1s ease-in-out infinite;transform-origin:30px 50px}
+@keyframes hmHop{0%,74%,100%{transform:translateY(0) rotate(0)}82%{transform:translateY(-9px) rotate(-8deg)}90%{transform:translateY(0) rotate(4deg)}}
+.hm-wing{animation:hmFlap 3.1s ease-in-out infinite;transform-origin:26px 36px}
+@keyframes hmFlap{0%,74%,100%{transform:rotate(0)}82%{transform:rotate(-30deg)}90%{transform:rotate(-8deg)}}
+.hm-eye{animation:hmBlink 4.6s infinite}
+@keyframes hmBlink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+
+/* she reacts to a tap: a hop and a trunk salute */
+.hm-tapped .hm-body{animation:hmCheer .8s ease}
+@keyframes hmCheer{0%,100%{transform:translateY(0) rotate(0)}
+  30%{transform:translateY(-14px) rotate(-4deg)}65%{transform:translateY(-4px) rotate(3deg)}}
+.hm-tapped .hm-trunk{animation:none;transform:rotate(-52deg)}
+
+.hm-bubble{position:relative;margin:0 6px 2px;background:var(--chalk);color:#16302B;
+  font-family:'Baloo 2';font-size:16px;line-height:1.35;padding:11px 15px;
+  border-radius:17px 17px 17px 5px;box-shadow:0 5px 16px rgba(0,0,0,.22);
+  animation:hmPop .45s cubic-bezier(.3,1.55,.5,1) both}
+@keyframes hmPop{from{opacity:0;transform:scale(.8) translateY(-8px)}to{opacity:1;transform:none}}
+
+/* the suggested tile gets a gentle pull, not a nag */
+.tile.nudge{position:relative;animation:hmNudge 2.6s ease-in-out infinite}
+@keyframes hmNudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.tile .startpill{position:absolute;top:-9px;right:9px;background:#16302B;color:var(--marigold);
+  font-family:var(--mono);font-size:9px;letter-spacing:.8px;padding:3px 8px;border-radius:99px}
+
+/* ---- home scene, second pass: gestures, flyby, drift, celebration ---- */
+.hm-cast{overflow:visible}
+
+/* --- gestures. Slow idle underneath, quick gesture on top. --- */
+.g-look   .hm-body{animation:hmLook 1.6s cubic-bezier(.4,0,.3,1)}
+@keyframes hmLook{0%,100%{transform:rotate(0)}35%{transform:rotate(-4deg) translateX(-5px)}70%{transform:rotate(3deg) translateX(4px)}}
+.g-sniff  .hm-trunk{animation:hmSniff 1.6s ease-in-out}
+@keyframes hmSniff{0%,100%{transform:rotate(0)}25%{transform:rotate(-30deg)}50%{transform:rotate(-8deg)}75%{transform:rotate(-24deg)}}
+.g-scratch .hm-ear{animation:hmScratch 1.6s ease-in-out}
+@keyframes hmScratch{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-24deg)}40%,80%{transform:rotate(6deg)}}
+.g-swish  .hm-tail{animation:hmSwish 1.6s ease-in-out}
+@keyframes hmSwish{0%,100%{transform:rotate(0)}30%{transform:rotate(24deg)}65%{transform:rotate(-16deg)}}
+.g-perk   .hm-body{animation:hmPerk 1.6s cubic-bezier(.3,1.5,.5,1)}
+@keyframes hmPerk{0%,100%{transform:translateY(0)}30%{transform:translateY(-8px) scale(1.02)}}
+.g-perk   .hm-legs{animation:hmShift 1.6s ease-in-out}
+@keyframes hmShift{0%,100%{transform:translateY(0)}40%{transform:translateY(-3px)}}
+
+/* --- Gauri takes off, loops, and comes back --- */
+.g-fly .hm-gauri{animation:hmFly 3.2s cubic-bezier(.4,0,.5,1)}
+@keyframes hmFly{
+  0%{transform:translate(0,0) rotate(0)}
+  18%{transform:translate(-26px,-54px) rotate(-16deg)}
+  45%{transform:translate(48px,-86px) rotate(10deg)}
+  72%{transform:translate(16px,-40px) rotate(-6deg)}
+  100%{transform:translate(0,0) rotate(0)}}
+.g-fly .hm-wing{animation:hmFlapFast .22s ease-in-out 14}
+@keyframes hmFlapFast{0%,100%{transform:rotate(0)}50%{transform:rotate(-42deg)}}
+
+/* --- leaves and a flower drifting through --- */
+.hm-petal{position:absolute;font-size:15px;opacity:.5;pointer-events:none;
+  animation:hmDrift linear infinite}
+.hm-petal.p1{left:4%;top:12%;animation-duration:17s}
+.hm-petal.p2{left:52%;top:-6%;animation-duration:23s;animation-delay:-8s;font-size:13px;opacity:.42}
+.hm-petal.p3{left:82%;top:6%;animation-duration:20s;animation-delay:-14s;opacity:.36}
+@keyframes hmDrift{
+  0%{transform:translate(0,-14px) rotate(0);opacity:0}
+  12%{opacity:.5}
+  85%{opacity:.34}
+  100%{transform:translate(-38px,150px) rotate(300deg);opacity:0}}
+
+/* --- the celebration burst --- */
+.hm-burst{position:absolute;left:50%;top:46%;width:0;height:0;pointer-events:none;z-index:4}
+.hm-burst i{position:absolute;width:8px;height:8px;border-radius:2px;
+  animation:hmBurst .95s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes hmBurst{
+  0%{transform:rotate(var(--a)) translateX(0) scale(.4);opacity:1}
+  100%{transform:rotate(var(--a)) translateX(var(--d)) scale(1) rotate(280deg);opacity:0}}
+
+/* --- tiles arrive rather than appearing --- */
+.tiles .tile{animation:hmTileIn .45s cubic-bezier(.3,1.4,.5,1) both}
+.tiles .tile:nth-child(1){animation-delay:.04s}
+.tiles .tile:nth-child(2){animation-delay:.10s}
+.tiles .tile:nth-child(3){animation-delay:.16s}
+.tiles .tile:nth-child(4){animation-delay:.22s}
+.tiles .tile:nth-child(5){animation-delay:.28s}
+@keyframes hmTileIn{from{opacity:0;transform:translateY(14px) scale(.94)}to{opacity:1;transform:none}}
+.tile .ic{display:inline-block;animation:hmIcon 4.5s ease-in-out infinite}
+@keyframes hmIcon{0%,100%{transform:rotate(0) scale(1)}45%{transform:rotate(-6deg) scale(1.08)}70%{transform:rotate(4deg) scale(1)}}
+.tile:nth-child(2) .ic{animation-delay:.7s}
+.tile:nth-child(3) .ic{animation-delay:1.4s}
+.tile:nth-child(4) .ic{animation-delay:2.1s}
+
+/* --- the star row pops when it grows --- */
+.stars.grew{animation:hmStar .7s cubic-bezier(.3,1.6,.5,1)}
+@keyframes hmStar{0%,100%{transform:scale(1)}40%{transform:scale(1.22)}}

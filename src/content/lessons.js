@@ -26,7 +26,7 @@ const LESSONS = [
   title:{en:'Count to five', hi:'पाँच तक गिनो'},
   sub:{en:'One at a time', hi:'एक-एक करके'},
   beats:[
-    {t:'intro', say:{en:'The game is starting. Let us count what we have.', hi:'खेल शुरू हो रहा है। आओ गिनें कि हमारे पास क्या है।'}},
+    {t:'intro', say:{en:'The game is starting. Let us count these.', hi:'खेल शुरू! आओ इन्हें गिनें।'}},
     {t:'count', n:3},
     {t:'count', n:5},
     {t:'ask', q:{en:'How many are there now?', hi:'अब कितने हैं?'}, opts:['5','3'], hiOpts:['5','3'], correct:0},
@@ -51,7 +51,7 @@ const LESSONS = [
     {t:'intro', say:{en:'Two teams. One has more than the other — can you see which?', hi:'दो टीमें। एक के पास दूसरे से ज़्यादा है — दिखा?'}},
     {t:'count', n:2},
     {t:'count', n:5},
-    {t:'ask', q:{en:'Which is more, five or two?', hi:'ज़्यादा कौन, पाँच या दो?'}, opts:['5','2'], hiOpts:['5','2'], correct:0},
+    {t:'ask', derived:true, q:{en:'Which is more?', hi:'ज़्यादा कौन?'}, opts:['5','2'], hiOpts:['5','2'], correct:0},
     {t:'win', say:{en:'Five is more than two. Bigger pile, bigger number.', hi:'पाँच दो से ज़्यादा है। बड़ा ढेर, बड़ी संख्या।'}}
   ]},
 
@@ -59,7 +59,7 @@ const LESSONS = [
   title:{en:'Making them equal', hi:'बराबर करना'},
   sub:{en:'Same for everyone', hi:'सबके लिए बराबर'},
   beats:[
-    {t:'intro', say:{en:'Two friends must get the same. Not more, not less — the same.', hi:'दो दोस्तों को बराबर मिलना चाहिए। न ज़्यादा, न कम — बराबर।'}},
+    {t:'intro', say:{en:'Two friends must get the same. Not more, not less.', hi:'दोनों दोस्तों को बराबर मिले। न कम, न ज़्यादा।'}},
     {t:'share', a:4, b:2},
     {t:'ask', q:{en:'How many did each friend get?', hi:'हर दोस्त को कितने मिले?'}, opts:['2','4'], hiOpts:['2','4'], correct:0},
     {t:'win', say:{en:'Two each. That is what fair means.', hi:'हर एक को दो। यही बराबरी है।'}}

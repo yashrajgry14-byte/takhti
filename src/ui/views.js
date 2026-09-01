@@ -1,7 +1,7 @@
 /* ================= SCREENS ================= */
 const $ = id => document.getElementById(id);
 function render(){ $('screen').innerHTML = VIEWS[S.screen](); if(AFTER[S.screen]) AFTER[S.screen](); }
-function go(s){ S.screen=s; S.ctx={}; render(); }
+function go(s){ homeSceneStop(); S.screen=s; S.ctx={}; render(); }   // stop the director before leaving home, so its timers never outlive the screen
 
 /* ---------- profile switcher, lives on the home screen ---------- */
 function profileSwitcher(){
@@ -127,9 +127,12 @@ open(){
 home(){
   const lv = S.levels;
   const rungs = n => [1,2,3,4,5,6].map(i=>`<div class="rung ${i<n?'done':i===n?'now':''}"></div>`).join('');
+  const nudge = homeNudge();
+  const startPill = `<span class="startpill">${S.lang==='hi'?'यहाँ से':'START HERE'}</span>`;
   return `
   ${profileSwitcher()}
   <div class="hello display">${t('hello')}${S.name} 👋</div>
+  ${homeSceneHTML()}
   <div class="muted">${t('level')} ${lv.read} · ${t('read')} · ${competencyName('read',lv.read)}</div>
   <div class="muted">${t('level')} ${lv.math} · ${t('count')} · ${competencyName('math',lv.math)}</div>
   ${S.game? `<button class="btn ghost" style="margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px"
@@ -141,19 +144,14 @@ home(){
     ${goalTile('📖','read')}${goalTile('✍️','write')}${goalTile('🔢','math')}${goalTile('💡','facts')}
   </div>
   <div class="tiles">
-    ${moduleAllowed('read')? `<button class="tile t-read" onclick="go('read')"><span class="ic">📖</span><span>${t('read')}<small>${t('readSub')}</small></span></button>`:''}
-    ${moduleAllowed('write')? `<button class="tile t-write" onclick="go('write')"><span class="ic">✍️</span><span>${t('write')}<small>${t('writeSub')}</small></span></button>`:''}
-    ${moduleAllowed('count')? `<button class="tile t-count" onclick="go('math')"><span class="ic">🔢</span><span>${t('count')}<small>${t('countSub')}</small></span></button>`:''}
+    ${moduleAllowed('read')? `<button class="tile t-read ${nudge==='read'?'nudge':''}" onclick="go('read')">${nudge==='read'?startPill:''}<span class="ic">📖</span><span>${t('read')}<small>${t('readSub')}</small></span></button>`:''}
+    ${moduleAllowed('write')? `<button class="tile t-write ${nudge==='write'?'nudge':''}" onclick="go('write')">${nudge==='write'?startPill:''}<span class="ic">✍️</span><span>${t('write')}<small>${t('writeSub')}</small></span></button>`:''}
+    ${moduleAllowed('count')? `<button class="tile t-count ${nudge==='math'?'nudge':''}" onclick="go('math')">${nudge==='math'?startPill:''}<span class="ic">🔢</span><span>${t('count')}<small>${t('countSub')}</small></span></button>`:''}
     ${moduleAllowed('ask')? `<button class="tile t-ask" onclick="go('ask')"><span class="ic">💬</span><span>${t('ask')}<small>${t('askSub')}</small></span></button>`:''}
     ${moduleAllowed('count')? `<button class="tile t-learn" onclick="go('lessons')"><span class="ic">🎬</span><span>${S.lang==='hi'?'कहानी से सीखो':'Learn with a story'}</span></button>`:''}
   </div>
-  <div class="mascotrow">
-    ${mascotSVG()}
-    <div>
-      <div class="stars">${'★'.repeat(Math.min(S.stars,8))}</div>
-      <div class="muted" style="font-size:12px">${t('skyLine')}</div>
-    </div>
-  </div>
+  <div class="stars" style="text-align:center;margin-top:14px">${'★'.repeat(Math.min(S.stars,8))}</div>
+  <div class="muted" style="font-size:12px;text-align:center">${t('skyLine')}</div>
   <div class="muted" style="font-size:11.5px;margin-top:14px;font-family:var(--mono);letter-spacing:.6px">
     ${S.lang==='hi'?'इस हफ़्ते':'THIS WEEK'}</div>
   ${weekStrip()}
@@ -382,13 +380,18 @@ parent(){
   const pct = m => S.attempts[m]? Math.round(S.correct[m]/S.attempts[m]*100) : 0;
   const row = (label,m) => `<div class="metric"><div><b>${label}</b><div style="font-size:12.5px;opacity:.65">${t('level')} ${S.levels[m]} · ${competencyName(m,S.levels[m])} · ${S.attempts[m]} tries</div></div>
     <div style="text-align:right"><b>${pct(m)}%</b><div class="bar"><i style="width:${pct(m)}%"></i></div></div></div>`;
-  const target = (label,k,unit) => `<div class="metric">
-      <div><b>${label}</b><div style="font-size:12.5px;opacity:.65">${S.today[k]} of ${S.targets[k]} ${unit} done today</div></div>
+  const target = (label,k,unit) => {
+    // same profile-created-before-goals-existed gap as bumpToday() — default rather than throw
+    const now = (S.today && S.today[k]) || 0;
+    const max = (S.targets && S.targets[k]) || 5;
+    return `<div class="metric">
+      <div><b>${label}</b><div style="font-size:12.5px;opacity:.65">${now} of ${max} ${unit} done today</div></div>
       <div style="display:flex;align-items:center;gap:9px">
         <button class="stepbtn" onclick="setTarget('${k}',-1)">−</button>
-        <b style="min-width:20px;text-align:center">${S.targets[k]}</b>
+        <b style="min-width:20px;text-align:center">${max}</b>
         <button class="stepbtn" onclick="setTarget('${k}',1)">+</button>
       </div></div>`;
+  };
   return `
   <button class="back" onclick="go('home')">← ${t('back')}</button>
   <div class="paper">

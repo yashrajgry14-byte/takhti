@@ -29,7 +29,16 @@ function pickVoice(lang){
       || VOICES.find(v=>low(v).startsWith('en'))
       || VOICES[0] || null;
 }
-function speak(text, lang, onDone){
+/* The one entry point everything calls: try the recorded voice first (see
+   core/voice.js), fall back to the device's own synthesis on anything —
+   no manifest entry, autoplay blocked before a tap, a thrown promise. */
+async function speak(text, lang, onDone){
+  const l = lang || S.lang;
+  let played = false;
+  try{ played = await playRecorded(text, l, onDone); }catch(e){ played = false; }
+  if(!played) speakDevice(text, l, onDone);
+}
+function speakDevice(text, lang, onDone){
   text = (text==null? '' : String(text)).trim();
   if(!text){ if(onDone) onDone(); return; }
   if(!('speechSynthesis' in window)){ log(null,'This browser has no speech synthesis'); if(onDone) onDone(); return; }
