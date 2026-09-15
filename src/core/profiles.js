@@ -18,7 +18,16 @@ function syncProfileOut(){
 function syncProfileIn(i){
   const p = S.profiles[i];
   if(!p) return;
-  // A profile persisted before some field existed (today/targets/doneLessons/
+  // id is the one field that CANNOT come from the generic default-merge
+  // below: newProfile() mints a fresh random id on every call, so if a
+  // profile that predates this field just borrowed that default afresh on
+  // every sync, it would get a DIFFERENT id each time until the next save
+  // happened to catch it — not stable at all. Assign it once, directly onto
+  // the stored object, right here, so it is fixed from this sync forward
+  // regardless of save timing.
+  if(p.id === undefined) p.id = genChildId();
+
+  // Every OTHER field persisted before it existed (today/targets/doneLessons/
   // age, and whatever gets added next) is missing that key entirely, not set
   // to a falsy value — p[k] reads back undefined, not null or 0. Falling back
   // to newProfile()'s shape there fixes every field this way at once, instead
@@ -50,8 +59,12 @@ function switchProfile(i){
   syncProfileOut();
   S.activeProfile = i;
   syncProfileIn(i);
+  // revoke any self-listen clip before S.ctx (which holds it) is
+  // replaced — this path doesn't go through go(), which would
+  // otherwise have done it (see ui/self-listen.js's own comment)
+  if(typeof selfListenReset === 'function') selfListenReset();
   S.ctx = {}; S.rb = null;
   log(null, `Switched to ${S.name}'s profile · on-device, instant`);
   save();
-  if(S.age == null) promptAge('home'); else go('home');
+  if(S.age == null) promptAge('map'); else go('map');
 }

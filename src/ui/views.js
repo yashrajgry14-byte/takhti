@@ -1,7 +1,28 @@
 /* ================= SCREENS ================= */
 const $ = id => document.getElementById(id);
 function render(){ $('screen').innerHTML = VIEWS[S.screen](); if(AFTER[S.screen]) AFTER[S.screen](); }
-function go(s){ homeSceneStop(); S.screen=s; S.ctx={}; render(); }   // stop the director before leaving home, so its timers never outlive the screen
+/* Stops the home director and every OTHER game shell's loop before
+   switching screens — never the shell we are simultaneously entering.
+   playGame() calls e.g. popBegin() (which builds fresh module state)
+   BEFORE go('pop'); if go() stopped 'pop' too, it would null that
+   state an instant after creating it, and the AFTER hook that spawns
+   the first gate/bubble/target would silently no-op forever (each
+   shell's own spawn function already guards "if no state, do
+   nothing" — that guard is what was firing). Confirmed by rendering a
+   real round in jsdom: PP/RN/etc. read back NULL immediately after
+   playGame() without this exclusion. */
+function go(s){
+  homeSceneStop();
+  arrivalStop();
+  if(typeof selfListenReset === 'function') selfListenReset();   // stop/discard any in-flight self-listen clip — it must never outlive the reading screen
+  if(s!=='runner') runnerStop();
+  if(s!=='pop')    popStop();
+  if(s!=='tower')  towerStop();
+  if(s!=='match')  matchStop();
+  if(s!=='sort')   sortStop();
+  if(s!=='archer') archerStop();
+  S.screen=s; S.ctx={}; render();
+}
 
 /* ---------- profile switcher, lives on the home screen ---------- */
 function profileSwitcher(){
@@ -21,7 +42,7 @@ const VIEWS = {
 /* ---------- 1. WHO ARE YOU ---------- */
 greet(){
   return `
-  ${S.profiles.length? `<button class="back" onclick="go('home')">← ${t('back')}</button>`:''}
+  ${S.profiles.length? `<button class="back" onclick="go('map')">← ${t('back')}</button>`:''}
   <div style="text-align:center;padding:${S.profiles.length?'12px':'44px'} 6px 0">
     <div style="font-size:64px;animation:peek 1.1s cubic-bezier(.34,1.7,.5,1) both;display:inline-block">👋</div>
     <div class="display" style="font-size:26px;margin-top:14px">${S.lang==='hi'?'नमस्ते! मैं तख़्ती हूँ।':'Hi! I am Takhti.'}</div>
@@ -60,7 +81,7 @@ age(){
 /* ---------- 2. PICK YOUR GAME ---------- */
 pick(){
   return `
-  ${S.game? `<button class="back" onclick="go('home')">← ${t('back')}</button>`:''}
+  ${S.game? `<button class="back" onclick="go('map')">← ${t('back')}</button>`:''}
   <div class="display" style="font-size:23px;margin-top:4px">${S.lang==='hi'?`${S.name}, तुम्हें कौन सा खेल सबसे अच्छा लगता है?`:`${S.name}, which game do you love most?`}</div>
   <div class="muted" style="margin-top:4px">${S.lang==='hi'?'हर दिन इसी से शुरुआत होगी।':'Every day will start with it.'}</div>
   <div class="gamegrid">
@@ -116,7 +137,7 @@ open(){
   <div class="reveal" style="margin-top:12px">${CARD[f.id](g)}</div>
   ${f.id!=='fact'? factStrip(g) : ''}
   ${readBackPanel()}
-  <button class="btn" style="margin-top:14px" onclick="go('home')">${S.lang==='hi'?'अब सीखते हैं →':'Now let us learn →'}</button>
+  <button class="btn" style="margin-top:14px" onclick="go('map')">${S.lang==='hi'?'अब सीखते हैं →':'Now let us learn →'}</button>
   <div class="row" style="margin-top:9px">
     <button class="btn ghost" onclick="nextDay()">${S.lang==='hi'?'कल →':'Tomorrow →'}</button>
     <button class="btn ghost" onclick="go('pick')">${S.lang==='hi'?'खेल बदलो':'Change game'}</button>
@@ -129,10 +150,20 @@ home(){
   const rungs = n => [1,2,3,4,5,6].map(i=>`<div class="rung ${i<n?'done':i===n?'now':''}"></div>`).join('');
   const nudge = homeNudge();
   const startPill = `<span class="startpill">${S.lang==='hi'?'यहाँ से':'START HERE'}</span>`;
+  const hw = (typeof personalizeContentForHomework === 'function') ? personalizeContentForHomework(S) : null;
+  const srsDue = (typeof getDueSrsItems === 'function') ? getDueSrsItems(S) : [];
   return `
   ${profileSwitcher()}
   <div class="hello display">${t('hello')}${S.name} 👋</div>
   ${homeSceneHTML()}
+  ${hw ? `<div class="chit ready" style="background:rgba(240,160,42,.15);border:1.5px solid var(--marigold);margin-top:10px" onclick="go('lessons')">
+      <b>📝 ${S.lang==='hi'?'गृहकार्य':'Teacher Homework'}</b>
+      <div>${hw.note || (S.lang==='hi'?'शिक्षक ने नया अभ्यास दिया है — क्लिक करके सीखो':'Personalized practice assigned by teacher')}</div>
+    </div>` : ''}
+  ${srsDue.length ? `<div class="chit ready" style="background:rgba(63,187,120,.15);border:1.5px solid #3FBB78;margin-top:8px" onclick="go('read')">
+      <b>🔁 ${S.lang==='hi'?'स्मृति अभ्यास':'Memory Review (${srsDue.length})'}</b>
+      <div>${S.lang==='hi'?'पुराने सीखे शब्दों और पाठों का अभ्यास करने का समय है!':'Time to review mastered words & lessons before they fade!'}</div>
+    </div>` : ''}
   <div class="muted">${t('level')} ${lv.read} · ${t('read')} · ${competencyName('read',lv.read)}</div>
   <div class="muted">${t('level')} ${lv.math} · ${t('count')} · ${competencyName('math',lv.math)}</div>
   ${S.game? `<button class="btn ghost" style="margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px"
@@ -144,11 +175,14 @@ home(){
     ${goalTile('📖','read')}${goalTile('✍️','write')}${goalTile('🔢','math')}${goalTile('💡','facts')}
   </div>
   <div class="tiles">
-    ${moduleAllowed('read')? `<button class="tile t-read ${nudge==='read'?'nudge':''}" onclick="go('read')">${nudge==='read'?startPill:''}<span class="ic">📖</span><span>${t('read')}<small>${t('readSub')}</small></span></button>`:''}
-    ${moduleAllowed('write')? `<button class="tile t-write ${nudge==='write'?'nudge':''}" onclick="go('write')">${nudge==='write'?startPill:''}<span class="ic">✍️</span><span>${t('write')}<small>${t('writeSub')}</small></span></button>`:''}
-    ${moduleAllowed('count')? `<button class="tile t-count ${nudge==='math'?'nudge':''}" onclick="go('math')">${nudge==='math'?startPill:''}<span class="ic">🔢</span><span>${t('count')}<small>${t('countSub')}</small></span></button>`:''}
+    ${hw ? `<button class="tile t-learn nudge" style="border:2px solid var(--marigold)" onclick="go('lessons')">${startPill}<span class="ic">📝</span><span>${S.lang==='hi'?'गृहकार्य':'Homework'}<small>${S.lang==='hi'?'शिक्षक का पाठ':'Personalized'}</small></span></button>` : ''}
+    ${srsDue.length && !hw ? `<button class="tile t-read nudge" style="border:2px solid #3FBB78" onclick="go('read')">${startPill}<span class="ic">🔁</span><span>${S.lang==='hi'?'पुनरावृत्ति':'Memory Review'}<small>${srsDue.length} ${S.lang==='hi'?'बाकी':'due'}</small></span></button>` : ''}
+    ${moduleAllowed('read')? `<button class="tile t-read ${!hw&&!srsDue.length&&nudge==='read'?'nudge':''}" onclick="go('read')">${!hw&&!srsDue.length&&nudge==='read'?startPill:''}<span class="ic">📖</span><span>${t('read')}<small>${t('readSub')}</small></span></button>`:''}
+    ${moduleAllowed('write')? `<button class="tile t-write ${!hw&&!srsDue.length&&nudge==='write'?'nudge':''}" onclick="go('write')">${!hw&&!srsDue.length&&nudge==='write'?startPill:''}<span class="ic">✍️</span><span>${t('write')}<small>${t('writeSub')}</small></span></button>`:''}
+    ${moduleAllowed('count')? `<button class="tile t-count ${!hw&&!srsDue.length&&nudge==='math'?'nudge':''}" onclick="go('math')">${!hw&&!srsDue.length&&nudge==='math'?startPill:''}<span class="ic">🔢</span><span>${t('count')}<small>${t('countSub')}</small></span></button>`:''}
     ${moduleAllowed('ask')? `<button class="tile t-ask" onclick="go('ask')"><span class="ic">💬</span><span>${t('ask')}<small>${t('askSub')}</small></span></button>`:''}
     ${moduleAllowed('count')? `<button class="tile t-learn" onclick="go('lessons')"><span class="ic">🎬</span><span>${S.lang==='hi'?'कहानी से सीखो':'Learn with a story'}</span></button>`:''}
+    <button class="tile t-play" onclick="go('games')"><span class="ic">🎮</span><span>${S.lang==='hi'?'खेलो':'Play'}<small>${S.lang==='hi'?'छोटे-छोटे खेल':'Quick arcade rounds'}</small></span></button>
   </div>
   <div class="stars" style="text-align:center;margin-top:14px">${'★'.repeat(Math.min(S.stars,8))}</div>
   <div class="muted" style="font-size:12px;text-align:center">${t('skyLine')}</div>
@@ -164,7 +198,7 @@ parentlock(){
   const hasPin = !!S.parentPin;
   const err = S.ctx.pinErr;
   return `
-  <button class="back" onclick="go('home')">← ${t('back')}</button>
+  <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div style="text-align:center;padding:26px 6px 0">
     <div style="font-size:44px">🔒</div>
     <div class="display" style="font-size:19px;margin-top:10px">
@@ -195,7 +229,7 @@ read(){
     ? S.ctx.tokens.map(tk=>`<span class="w ${tk.state}" title="${tk.heard? 'heard: '+attr(tk.heard) : 'not heard'}" data-say="${attr(tk.text)}" onclick="sayEl(this)">${tk.text}</span>`).join(' ')
     : s.split(/\s+/).map(w=>`<span class="w" data-say="${attr(w)}" onclick="sayEl(this)">${w}</span>`).join(' ');
   return `
-  <button class="back" onclick="go('home')">← ${t('back')}</button>
+  <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="muted">${t('level')} ${S.levels.read} · ${t('read')} · ${competencyName('read',S.levels.read)}</div>
   <div class="langpick">
     <button class="${S.lang==='en'?'sel':''}" onclick="setReadLang('en')">English</button>
@@ -209,7 +243,8 @@ read(){
       <span><i style="background:rgba(237,230,210,.3)"></i>${S.lang==='hi'?'छूटा':'skipped'}</span>
     </div>`:`<div class="muted" style="font-size:12px">${S.lang==='hi'?'किसी शब्द को दबाकर सुनो':'Tap any word to hear it'}</div>`}
   ${S.ctx.score!=null? `<div class="scorebar"><i style="width:${S.ctx.score}%"></i></div>
-     <div class="feedback">${S.ctx.msg}</div>`:''}
+     <div class="feedback">${S.ctx.msg}</div>
+     ${typeof selfListenHTML === 'function' ? selfListenHTML() : ''}`:''}
   ${S.ctx.unsure? `<div class="retry">${S.lang==='hi'?'साफ़ सुनाई नहीं दिया — थोड़ा पास आकर फिर बोलो।':'I could not hear that clearly — come a little closer and try again.'}</div>`:''}
   <button class="mic ${S.ctx.live?'live':''}" id="mic" aria-label="record">${S.ctx.live?'●':'🎙'}</button>
   <div class="muted" style="text-align:center">${S.ctx.live? t('listening') : t('tapMic')}</div>
@@ -240,7 +275,7 @@ write(){
     if(!S.ctx.line) S.ctx.line = pool[Math.floor(Math.random()*pool.length)];
     if(!S.camOk){
       return `
-      <button class="back" onclick="go('home')">← ${t('back')}</button>
+      <button class="back" onclick="go('map')">← ${t('back')}</button>
       ${tabs}
       ${levelLine}
       <div class="permcard" style="margin-top:12px">
@@ -256,7 +291,7 @@ write(){
     }
     const v = S.ctx.verdict;
     return `
-    <button class="back" onclick="go('home')">← ${t('back')}</button>
+    <button class="back" onclick="go('map')">← ${t('back')}</button>
     ${tabs}
     ${levelLine}
     <div class="muted" style="margin-top:8px">${S.lang==='hi'?'इसे अपनी कॉपी में लिखो:':'Copy this into your notebook:'}</div>
@@ -286,7 +321,7 @@ write(){
   const pool = GLYPHS[S.lang][S.levels.write];
   if(!S.ctx.glyph) S.ctx.glyph = pool[Math.floor(Math.random()*pool.length)];
   return `
-  <button class="back" onclick="go('home')">← ${t('back')}</button>
+  <button class="back" onclick="go('map')">← ${t('back')}</button>
   ${tabs}
   ${levelLine}
   <div class="display" style="font-size:20px;margin-top:8px">${t('writeSub')}: <span style="color:var(--marigold)">${S.ctx.glyph}</span></div>
@@ -308,7 +343,7 @@ math(){
   const p = S.ctx.p;
   const g = gameById(S.game);
   return `
-  <button class="back" onclick="go('home')">← ${t('back')}</button>
+  <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="muted">${t('level')} ${S.levels.math} · ${t('count')} · ${competencyName('math',S.levels.math)}</div>
   <div class="problem">${p.a} ${p.op} ${p.b}</div>
   <div class="mathstage" id="mstage">
@@ -325,6 +360,39 @@ math(){
 /* ---------- LEARN WITH A STORY ---------- */
 lessons(){
   return S.lesson ? lessonHTML() : lessonListHTML();
+},
+
+/* ---------- PLAY: the games shelf ----------
+   One entrance on the home screen, not one tile per game. Every entry
+   in gameList() (src/games/game-core.js) gets a card here — icon,
+   bilingual name, bilingual aim, and the child's own best if they have
+   one. All six shells now have a real screen (src/games/*.js). */
+games(){
+  const list = gameList();
+  return `
+  <button class="back" onclick="go('map')">← ${t('back')}</button>
+  <div class="display" style="font-size:22px;margin-top:4px">${S.lang==='hi'?'खेलो':'Play'}</div>
+  <div class="muted" style="margin-top:2px">${S.lang==='hi'
+    ? 'हर खेल एक छोटा दौर है और अपने आप खत्म होता है — जितना खेलना चाहो, उतना ही खेलो, कोई दबाव नहीं।'
+    : 'Each game is one short, bounded round that ends on its own — play one or several, there is no pressure to keep going.'}</div>
+  <div class="gameshelf">
+    ${list.map(g=>{
+      // match's real score is fewest MOVES (lower is better), tracked under
+      // its own key by src/games/match.js — S.gameBest.match itself is
+      // gameEnd()'s own right-count bookkeeping, not a meaningful "best" here.
+      const best = g.kind==='match' ? (S.gameBest||{}).matchMoves : (S.gameBest||{})[g.kind];
+      const bestLabel = g.kind==='match'
+        ? (S.lang==='hi'?'सबसे कम चालें':'Fewest moves')
+        : (S.lang==='hi'?'सबसे अच्छा':'Best');
+      return `<button class="shelfcard" onclick="playGame('${g.kind}')">
+        <span class="sc-ic">${g.ic}</span>
+        <span class="sc-name">${S.lang==='hi'?g.hi:g.en}</span>
+        <span class="sc-aim">${S.lang==='hi'?g.aim.hi:g.aim.en}</span>
+        ${best!=null? `<span class="sc-best">🏆 ${bestLabel}: ${best}</span>`:''}
+        <span class="sc-note">${S.lang==='hi'?'एक दौर · जब चाहो रुको':'One round · stop anytime'}</span>
+      </button>`;
+    }).join('')}
+  </div>`;
 },
 
 /* ---------- ASK (the bridge) ---------- */
@@ -352,7 +420,7 @@ ask(){
     <div class="muted" style="margin-top:12px">${S.lang==='hi'?'यह फ़ोन में सुरक्षित है। बिना सिग्नल के भी फिर चलेगा।':'Saved to this phone. It will play again with no signal.'}</div>`;
   }
   return `
-  <button class="back" onclick="go('home')">← ${t('back')}</button>
+  <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="display" style="font-size:21px;margin:4px 0">${t('ask')}</div>
   <div class="muted">${t('askSub')}</div>
   ${elephantHTML()}
@@ -393,7 +461,7 @@ parent(){
       </div></div>`;
   };
   return `
-  <button class="back" onclick="go('home')">← ${t('back')}</button>
+  <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="paper">
     <h3>${S.name}${S.lang==='hi'?' का दिन':"'s day"}</h3>
     <div style="font-size:13px;opacity:.7;margin-bottom:8px">${S.lang==='hi'?'सुनने के लिए दबाएँ':'Tap to hear this read aloud'}</div>
@@ -414,6 +482,48 @@ parent(){
       ? 'उम्र सीमा तय करती है; तख़्ती उसी सीमा के भीतर बच्चे के हिसाब से ढल जाती है।'
       : 'Age sets the range — Takhti adapts to your child within it.'}</div>
 
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'आवाज़':'SOUND'}</div>
+    <div class="metric">
+      <div><b>${S.lang==='hi'?'आवाज़ और असर':'Sound & narration'}</b>
+        <div style="font-size:12.5px;opacity:.65">${S.lang==='hi'
+          ? 'मुन्नी की आवाज़ें और पढ़कर सुनाना — बंद होने पर भी हर पाठ पहले जैसा चलता है'
+          : "Munni's sounds and read-aloud narration — every lesson still runs the same with this off"}</div>
+      </div>
+      <button class="toggle ${S.muted?'':'on'}" onclick="toggleMuted()" aria-label="${S.muted?'unmute':'mute'}"><span></span></button>
+    </div>
+
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'कक्षा का कोड':'CLASS CODE'}</div>
+    ${S.classCode ? `
+    <div class="metric">
+      <div><b style="font-family:var(--mono);letter-spacing:2px">${S.classCode}</b>
+        <div style="font-size:12.5px;opacity:.65">${S.lang==='hi'?'शिक्षक से जुड़ा हुआ':'Linked to a teacher'}</div>
+      </div>
+      <button class="stepbtn" style="width:auto;padding:0 12px" onclick="unlinkClassCode()">${S.lang==='hi'?'हटाओ':'Unlink'}</button>
+    </div>
+    ${(() => {
+      const hw = (typeof getAssignedHomework === 'function') ? getAssignedHomework(S) : null;
+      if(hw){
+        return `<div class="card" style="margin-top:8px;background:rgba(240,160,42,.1);border:1px solid var(--marigold);padding:10px">
+          <b>📝 ${S.lang==='hi'?'वर्तमान गृहकार्य':'Active Homework'}</b>
+          <div style="font-size:13px;margin-top:4px">${hw.note || (S.lang==='hi'?'शिक्षक द्वारा निर्धारित अभ्यास':'Assigned practice routine')}</div>
+          <div style="font-size:11.5px;opacity:.7;margin-top:4px;font-family:var(--mono)">Skills: ${(hw.skills||[]).join(', ')}</div>
+        </div>`;
+      }
+      return `<div style="margin-top:8px">
+        <button class="btn ghost" style="font-size:13px" onclick="assignSampleHomework()">${S.lang==='hi'?'+ नमूना गृहकार्य दें (गणित/पठन)':' + Assign Sample Homework'}</button>
+      </div>`;
+    })()}
+    <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin:6px 0 2px">${S.lang==='hi'
+      ? 'तुम्हारे बच्चे की प्रगति शिक्षक के साथ इसी फ़ोन से जुड़ती रहेगी और गृहकार्य यहाँ प्राप्त होगा।'
+      : "Only your child's practice record and assigned homework will keep syncing with their teacher from this phone."}</div>` : `
+    <input class="input" id="classcode" maxlength="6" placeholder="${S.lang==='hi'?'6 अक्षर का कोड':'6-character code'}"
+      style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-family:var(--mono)" autocomplete="off">
+    ${S.ctx.classCodeErr? `<div class="retry" style="margin-top:8px">${S.lang==='hi'?'कोड 6 अक्षर का होना चाहिए':'The code must be 6 letters or numbers'}</div>`:''}
+    <button class="btn ghost" style="margin-top:9px" onclick="setClassCode($('classcode').value)">${S.lang==='hi'?'जोड़ो':'Link'}</button>
+    <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin-top:6px">${S.lang==='hi'
+      ? 'अगर शिक्षक ने कोड दिया है, तो यहाँ डालो — बच्चे की प्रगति उनसे जुड़ जाएगी।'
+      : "If your child's teacher gave you a code, enter it here to share their progress."}</div>`}
+
     <div class="kicker2">${S.lang==='hi'?'आज का लक्ष्य':"TODAY'S TARGET"}</div>
     ${target(S.lang==='hi'?'बोलकर पढ़ना':'Sentences read aloud','read',S.lang==='hi'?'वाक्य':'sentences')}
     ${target(S.lang==='hi'?'लिखना':'Sentences written','write',S.lang==='hi'?'वाक्य':'sentences')}
@@ -431,6 +541,9 @@ parent(){
       ? `<div class="gallery">${S.photos.slice(0,9).map(p=>`<img src="${p.img}" title="${p.line} · ${p.score}%">`).join('')}</div>
          <div style="font-size:12px;opacity:.7;margin-top:6px">${S.photos.length} ${S.lang==='hi'?'तस्वीरें इसी फ़ोन में':'photos, stored only on this phone'}</div>`
       : `<div style="font-size:13px;opacity:.7">${S.lang==='hi'?'अभी कोई तस्वीर नहीं। बच्चा कागज़ पर लिखकर तस्वीर लेगा तो यहाँ दिखेगी।':'No photos yet. When your child writes on paper and photographs it, it appears here.'}</div>`}
+    <div style="font-size:12px;opacity:.7;margin-top:6px">${S.lang==='hi'
+      ? 'पढ़ते समय की आवाज़ भी वैसी ही रहती है — सिर्फ़ उसी स्क्रीन पर बजती है, न सेव होती है, न कहीं भेजी जाती है।'
+      : "Same with the reading screen's self-listen clip — it only ever plays back on that screen, never saved, never sent anywhere."}</div>
 
     <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin-top:12px">${S.lang==='hi'
       ? 'कोई स्ट्रीक नहीं, कोई दबाव नहीं। तख़्ती बच्चों को याद दिलाने वाले संदेश नहीं भेजती।'

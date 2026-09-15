@@ -44,6 +44,8 @@ const LES_SAY = {
 };
 
 function lesSay(b){
+  if(typeof litSay === 'function'){ const s = litSay(b); if(s != null) return s; }
+  if(typeof compSay === 'function'){ const s = compSay(b); if(s != null) return s; }
   if(b.say) return L(b.say);
   const tpl = LES_SAY[b.t];
   if(!tpl) return '';
@@ -66,6 +68,9 @@ function lesValues(b){
 
 /* --- the drawing, one function per beat type --- */
 function lesArt(b, obj){
+  if(typeof litArt === 'function'){ const h = litArt(b); if(h) return h; }
+  if(typeof compArt === 'function'){ const h = compArt(b); if(h) return h; }
+
   const dots = (n, cls, delay=0.07, size=24) => [...Array(n)].map((_,i) =>
     `<span class="obj in" style="animation-delay:${(delay*i).toFixed(2)}s;font-size:${size}px">${obj}</span>`).join('');
 
@@ -229,6 +234,12 @@ function lesAnswer(k){
   const ok = k === b.correct;
   if(ok) S.lesson.right++;
   log(0, `Lesson checkpoint · ${ok ? 'correct' : 'incorrect'}`);
+  // feeds the diagnostic's own evidence — hand-written lessons carry no
+  // `.concept` and simply contribute nothing here, see core/diagnose.js
+  if(typeof noteSkillFromConcept === 'function'){
+    const concept = S.lesson.data && S.lesson.data.concept;
+    if(concept) noteSkillFromConcept(concept, ok);
+  }
   render();
   speak(ok ? (S.lang==='hi'?'बिलकुल सही!':'Exactly right!')
            : (S.lang==='hi'?`देखो — जवाब है ${b.opts[b.correct]}`:`Look — the answer is ${b.opts[b.correct]}`),
@@ -279,7 +290,7 @@ function lessonListHTML(){
   const total = lessonBank().filter(l => l.band === band().id).length;
   const g = gameById(S.game);
   return `
-  <button class="back" onclick="go('home')">← ${t('back')}</button>
+  <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="display" style="font-size:21px;margin:4px 0">
     ${S.lang==='hi'?'कहानी से सीखो':'Learn with a story'}</div>
   <div class="muted">${S.lang==='hi'

@@ -37,6 +37,7 @@ const pickLine = (kind) => {
 
 /* --- a trunk toot, synthesised. No audio file, no network. --- */
 function trumpet(times = 1) {
+  if (S.muted) return;
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;

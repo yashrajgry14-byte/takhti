@@ -1,5 +1,6 @@
 /* ================= HANDLERS ================= */
 function nextSentence(){
+  if(typeof selfListenReset === 'function') selfListenReset();   // revoke any clip from the last attempt before it's unreachable
   const pool = ageSentences(S.lang, S.levels.read);
   S.ctx = { sentence: pool[Math.floor(Math.random()*pool.length)] };
   render();
@@ -14,7 +15,16 @@ function startListening(){
   if(S.ctx.live) return;
   S.ctx.live = true; S.ctx.unsure = false; render();
   log(0,`Mic open · recognizer lang ${S.lang==='hi'?'hi-IN':'en-IN'} · 5 alternatives`);
-  listen(alts=>{ checkRead(alts); }, err=>{
+  // A second, independent mic session for self-listen — listen() below
+  // consumes its own stream internally and never exposes it, so this
+  // cannot attach to it; the two start together and stop on the same
+  // two signals (a result, or a recognizer error).
+  if(typeof selfListenStart === 'function') selfListenStart();
+  listen(alts=>{
+    if(typeof selfListenStop === 'function') selfListenStop();
+    checkRead(alts);
+  }, err=>{
+    if(typeof selfListenStop === 'function') selfListenStop();
     S.ctx.live=false;
     if(err && err!=='no-speech'){
       S.ctx.msg = micReason(err);
@@ -461,6 +471,44 @@ function setParentAge(d){
   render();
 }
 
+/* ---- sound, per child — see core/speech.js's speak() and ui/elephant.js's
+   trumpet(), both of which check S.muted directly. Reachable from the
+   parent dashboard, not just the one-time arrival screen, since a parent
+   may want to silence the app in a quiet room long after that first tap. */
+function toggleMuted(){
+  S.muted = !S.muted;
+  log(0, `Sound ${S.muted ? 'muted' : 'unmuted'} for ${S.name || 'this child'}`);
+  saveSoon();
+  render();
+}
+
+/* ---- teacher class code ---- */
+function setClassCode(v){
+  const code = (v||'').trim().toUpperCase();
+  if(!/^[A-Z0-9]{6}$/.test(code)){
+    S.ctx.classCodeErr = true; render(); return;
+  }
+  S.ctx.classCodeErr = false;
+  S.classCode = code;
+  log(0, `Class code linked · ${code} · this child's progress will mirror to their teacher`);
+  saveSoon();
+  mirrorToClassNow(S);   // don't wait for the next checkpoint — link should feel immediate
+  render();
+}
+function unlinkClassCode(){
+  S.classCode = null;
+  log(0, 'Class code unlinked · this child no longer mirrors to a teacher');
+  saveSoon();
+  render();
+}
+function assignSampleHomework(){
+  if(!S.classCode) S.classCode = 'DEMO67';
+  assignHomework(S.classCode, ['bodmas','tables'], S.lang==='hi'?'पहाड़े और BODMAS का अभ्यास':'Order of Operations & Multiplication Tables');
+  log(0, `Sample homework assigned to class ${S.classCode}`);
+  saveSoon();
+  render();
+}
+
 /* ---- parent PIN gate ---- */
 function setParentPin(v){
   const p = (v||'').trim();
@@ -474,6 +522,22 @@ function checkParentPin(v){
   const p = (v||'').trim();
   if(p === S.parentPin) go('parent');
   else { S.ctx.pinErr = true; render(); }
+}
+
+/* ---- games shelf entry point ----
+   The shelf (ui/views.js's games()) calls this for every BUILT shell.
+   Each shell owns its own begin function (e.g. runner.js's runnerBegin())
+   which sets up S.game_/its own state fully BEFORE go() switches the
+   screen — so the very first render already has a real round to show,
+   with no placeholder frame in between. Add one branch per shell as it
+   ships; nothing here is runner-specific beyond the dispatch itself. */
+function playGame(kind){
+  if(kind === 'runner' && typeof runnerBegin === 'function'){ runnerBegin(); go('runner'); }
+  else if(kind === 'pop'    && typeof popBegin    === 'function'){ popBegin();    go('pop'); }
+  else if(kind === 'tower'  && typeof towerBegin  === 'function'){ towerBegin();  go('tower'); }
+  else if(kind === 'match'  && typeof matchBegin  === 'function'){ matchBegin();  go('match'); }
+  else if(kind === 'sort'   && typeof sortBegin   === 'function'){ sortBegin();   go('sort'); }
+  else if(kind === 'archer' && typeof archerBegin === 'function'){ archerBegin(); go('archer'); }
 }
 
 /* ---- parent audio ---- */

@@ -23,6 +23,20 @@ function bumpToday(kind){
 }
 
 function record(mod, ok){
+  // Reading and writing have no separate "lesson" system the way maths
+  // does via lesson-player.js — read()/write() themselves ARE the whole
+  // practice loop, so this is the only place their entry in the skill
+  // graph (read1-6/write1-6, see content/skills.js) can ever get real
+  // evidence. Tag with the level the child was actually AT for this
+  // attempt — captured here, before the level-adjustment logic below can
+  // move S.levels[mod] out from under it.
+  if((mod==='read' || mod==='write') && typeof noteSkillAttempt==='function'){
+    noteSkillAttempt(mod + S.levels[mod], ok);
+  }
+  if(typeof recordSrsItem === 'function'){
+    const itemId = `${mod}_l${S.levels[mod]||1}_${(S.ctx&&S.ctx.sentence)||(S.ctx&&S.ctx.glyph)||(S.ctx&&S.ctx.line)||mod}`;
+    recordSrsItem(itemId, mod, S.ctx?S.ctx.sentence||S.ctx.glyph||'':'', ok, S);
+  }
   S.attempts[mod]++; if(ok) S.correct[mod]++;
   saveSoon();
   if(ok) bumpToday(mod);

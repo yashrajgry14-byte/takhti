@@ -217,7 +217,7 @@ function readBackPanel(){
       <div class="muted">${hi ? 'तुमने पूरी बात खुद पढ़ी।' : 'You read the whole thing yourself.'}</div>
       <div class="row" style="margin-top:11px">
         <button class="btn ghost" onclick="rbCancel()">↻ ${hi?'फिर से':'Again'}</button>
-        <button class="btn" onclick="go('home')">${hi?'आगे चलो →':'Next task →'}</button>
+        <button class="btn" onclick="go('map')">${hi?'आगे चलो →':'Next task →'}</button>
       </div></div>`;
   }
 

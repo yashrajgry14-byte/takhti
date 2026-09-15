@@ -432,9 +432,17 @@ function validateLesson(les){
               errs.push(`beat ${i}: option "${o}" is too long to read at "${les.band}"`);
           }
         }
-        const got = readability(x.q.hi, 'hi').band;
-        if(order.indexOf(got) > order.indexOf(b.read) + 1)
-          errs.push(`beat ${i}: question decodes at "${got}", far above "${b.read}"`);
+        // The decode check only applies from 'early' upward. A three-year-old
+        // reads NOTHING — the app speaks every question to them, and the only
+        // thing they read is the options, which are numerals or single words
+        // and are checked above. Requiring a pre-reader's question to be
+        // decodable by a pre-reader is a test with no meaning, and it was
+        // rejecting forty correct lessons over one conjunct in "शब्द".
+        if(les.band !== 'pre'){
+          const got = readability(x.q.hi, 'hi').band;
+          if(order.indexOf(got) > order.indexOf(b.read) + 1)
+            errs.push(`beat ${i}: question decodes at "${got}", far above "${b.read}"`);
+        }
       }
     }
   });
@@ -451,8 +459,11 @@ function generateLessons(opts){
   const out = [], rejected = [];
   for(const c of CONCEPTS){
     for(const p of c.space()){
+      // A concept may supply its own key. Literacy parameters hold arrays and
+      // emoji, and joining those produced ids nobody could type or match on.
+      const raw = c.key ? c.key(p) : `${c.id}-${Object.values(p).join('-')}`;
       const les = {
-        id: `gen-${c.id}-${Object.values(p).join('-')}`,
+        id: 'gen-' + String(raw).replace(/[^\w\u0900-\u097F-]+/g, '').slice(0, 48),
         band: c.band, ic: c.ic, generated: true, concept: c.id,
         title: c.title(p), sub: c.sub(p), beats: c.beats(p)
       };

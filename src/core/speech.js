@@ -33,6 +33,11 @@ function pickVoice(lang){
    core/voice.js), fall back to the device's own synthesis on anything —
    no manifest entry, autoplay blocked before a tap, a thrown promise. */
 async function speak(text, lang, onDone){
+  // Muted still has to finish the call the way real speech eventually
+  // would — onDone is how every narrated scene advances (lesson beats,
+  // the reading screen, opening sequences...), and none of them expect
+  // to wait forever for a sound that will never come.
+  if(S.muted){ if(onDone) onDone(); return; }
   const l = lang || S.lang;
   let played = false;
   try{ played = await playRecorded(text, l, onDone); }catch(e){ played = false; }
@@ -84,29 +89,48 @@ function speakDevice(text, lang, onDone){
 }
 function listen(onResult, onEnd){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR){ onEnd('unsupported'); return null; }
-  const r = new SR();
-  r.lang = S.lang==='hi' ? 'hi-IN' : 'en-IN';
-  r.interimResults = false;
-  r.maxAlternatives = 5;   // grade against all guesses, not just the top one
-  r.onresult = e => {
-    const res = e.results[0];
-    const alts = [];
-    for(let i=0;i<res.length;i++) alts.push({ transcript:res[i].transcript, confidence:res[i].confidence });
-    onResult(alts);
-  };
-  r.onerror = e => onEnd(e.error);
-  r.onend = () => onEnd(null);
-  r.start();
-  return r;
+
+  // If online and WebSpeech is supported, try WebSpeech API first
+  if(navigator.onLine && SR){
+    try {
+      log(0, `STT · WebSpeech API (${S.lang})`);
+      const r = new SR();
+      r.lang = S.lang==='hi' ? 'hi-IN' : 'en-IN';
+      r.interimResults = false;
+      r.maxAlternatives = 5;
+      r.onresult = e => {
+        const res = e.results[0];
+        const alts = [];
+        for(let i=0;i<res.length;i++) alts.push({ transcript:res[i].transcript, confidence:res[i].confidence });
+        onResult(alts);
+      };
+      r.onerror = e => {
+        if(e.error === 'network' || e.error === 'offline'){
+          log(0, 'WebSpeech offline/network error — switching to WASM STT Engine...');
+          listenVosk(onResult, onEnd);
+        } else {
+          onEnd(e.error);
+        }
+      };
+      r.onend = () => onEnd(null);
+      r.start();
+      return r;
+    } catch(err){
+      log(0, 'WebSpeech failed — trying WASM STT Engine...');
+    }
+  }
+
+  // Fallback to WASM Offline STT Engine
+  log(0, `STT · WASM Offline Engine (${S.lang})`);
+  return listenVosk(onResult, onEnd);
 }
 
 /* names the real cause instead of a blanket "mic unavailable" — a network
    drop and a denied permission need different next steps from a child. */
 function micReason(err){
   if(err==='network' || err==='offline') return S.lang==='hi'
-    ? 'आवाज़ पहचानने के लिए इंटरनेट चाहिए — ब्राउज़र में यही एक चीज़ है जिसे सिग्नल चाहिए, बाकी सब बिना नेट के चलता है।'
-    : 'Speech recognition needs a connection in the browser — everything else works offline.';
+    ? 'ऑफ़लाइन STT इंजन चालू है — बोलकर अभ्यास करते रहें!'
+    : 'Offline STT active — keep speaking to practice!';
   if(err==='not-allowed' || err==='service-not-allowed') return S.lang==='hi'
     ? 'माइक की अनुमति नहीं मिली — नीचे लिखकर देखो।'
     : 'Microphone permission denied — type what you read below.';
