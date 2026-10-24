@@ -492,7 +492,7 @@ function lessonsForChild(n){
   const fresh = mine.filter(l => !done.includes(l.id));
   const pool = fresh.length >= n ? fresh : mine;
 
-  const r = rng(seedOf((S.name || 'x') + '|' + band().id + '|' + (S.day || 0)));
+  const r = rng(seedOf((S.name || 'x') + '|' + band().id + '|' + dayKey()));
   const seen = new Set(), pick = [];
   const shuffled = pool.slice().sort(() => r() - 0.5);
   // one per concept first, so the list looks varied rather than eight
@@ -638,108 +638,57 @@ function genGameSvg(game, beatIndex){
   `;
 }
 
+
 /* ==================================================================
-   HOMEWORK STORY GENERATOR — Interactive Branching Beats & Checkpoints
+   HOMEWORK STORY — a three-beat match in the child's own game, built
+   around ONE real question for the skill being practised.
+
+   The question comes from skillProblem() (core/mathgen.js), so it
+   genuinely exercises that skill at this child's band, with the right
+   answer in a random position and real-mistake distractors. A skill
+   that isn't a single arithmetic question returns null here — the
+   homework banner then points at the diagnosed lessons instead of
+   pretending a sum teaches reading or shapes.
+
+   The card on the last beat is only awarded if the checkpoint was
+   answered correctly (see ui/lesson-player.js's lesNext()); its id is
+   stable per skill+game, so finishing the same homework twice doesn't
+   mint a duplicate card.
    ================================================================== */
 function genHomeworkStory(skillId, gameId, child, options){
   options = options || {};
   const c = child || S;
-  const childName = (c && c.name) || (S && S.name) || 'Kabir';
-  const age = (c && c.age) || (S && S.age) || 6;
-  const bandObj = typeof bandForAge === 'function' ? bandForAge(age) : AGE_BANDS.early;
-  const gamesList = typeof GAMES !== 'undefined' ? GAMES : [{id:'kabaddi', en:'Kabaddi', hi:'कबड्डी', actor:'🤼', proj:'🏃', accent:'#C5603A'}];
-  const g = gamesList.find(x => x.id === (gameId || (c && c.favGame))) || gamesList[0];
-
-  const teacherNote = options.teacherNote || (options.homework && options.homework.note) || '';
+  const p = skillProblem(skillId, seedOf((c.id || c.name || 'x') + '|hw|' + skillId + '|' + dayKey()));
+  if(!p) return null;
+  const g = gameById(gameId || c.game);
+  const skill = skillById(skillId);
+  const teacherNote = options.teacherNote || '';
   const isCoop = !!options.coop;
-  const p1Name = childName;
-  const p2Name = isCoop ? (options.p2Name || 'Ananya') : 'Gauri';
-
-  const skill = typeof SKILLS !== 'undefined' ? SKILLS.find(s=>s.id===skillId) : null;
-  const skillTitleEn = skill ? skill.en : (skillId || 'Math Practice');
-  const skillTitleHi = skill ? skill.hi : (skillId || 'गणित का अभ्यास');
-
-  let numA = 8, numB = 5, ans = 13, op = '+';
-  if(skillId === 'add2' || skillId === 'carry'){
-    numA = 18; numB = 7; ans = 25; op = '+';
-  } else if(skillId === 'barsub' || skillId === 'sub2'){
-    numA = 24; numB = 9; ans = 15; op = '-';
-  } else if(skillId === 'times' || skillId === 'array'){
-    numA = 4; numB = 3; ans = 12; op = '×';
-  } else {
-    numA = 6; numB = 4; ans = 10; op = '+';
-  }
-
-  const storyId = `hw-story-${g.id}-${skillId || 'gen'}-${Date.now()}`;
+  const p1Name = c.name || '';
+  const p2Name = isCoop ? (options.p2Name || (S.lang === 'hi' ? 'दोस्त' : 'Friend')) : 'Gauri';
+  const skillEn = skill ? skill.en : skillId, skillHi = skill ? skill.hi : skillId;
 
   return {
-    id: storyId,
+    id: `hw-story-${g.id}-${skillId}`,
     isHomeworkStory: true,
-    skillId: skillId || 'gen',
-    gameId: g.id,
-    game: g,
-    band: bandObj.id,
-    coop: isCoop,
-    p1Name,
-    p2Name,
-    teacherNote,
-    title: {
-      en: `📝 ${g.en} Homework Story`,
-      hi: `📝 ${g.hi} गृहकार्य कहानी`
-    },
-    sub: {
-      en: `${p1Name}'s ${g.en} Challenge · Skill: ${skillTitleEn}`,
-      hi: `${p1Name} की ${g.hi} चुनौती · कौशल: ${skillTitleHi}`
-    },
+    skillId, gameId: g.id, band: band().id,
+    coop: isCoop, p1Name, p2Name, teacherNote,
+    title: { en: `📝 ${g.en} Homework Story`, hi: `📝 ${g.hi} गृहकार्य कहानी` },
+    sub:   { en: `${p1Name}'s ${g.en} challenge · ${skillEn}`, hi: `${p1Name} की ${g.hi} चुनौती · ${skillHi}` },
     beats: [
-      {
-        t: 'intro',
-        beatIndex: 0,
-        svg: genGameSvg(g, 0),
-        say: {
-          en: `${teacherNote ? `Teacher says: "${teacherNote}". ` : ''}Ready ${p1Name}? The big ${g.en} match is starting!`,
-          hi: `${teacherNote ? `शिक्षक का संदेश: "${teacherNote}"। ` : ''}तैयार हो ${p1Name}? ${g.hi} का बड़ा मैच शुरू हो रहा है!`
-        }
-      },
-      {
-        t: 'ask',
-        beatIndex: 1,
-        svg: genGameSvg(g, 1),
-        say: {
-          en: `Tactile game choice! ${isCoop ? `${p2Name} passes to ${p1Name}. ` : ''}To make a winning move, solve this check:`,
-          hi: `रणनीतिक खेल विकल्प! ${isCoop ? `${p2Name} ने ${p1Name} को पास दिया। ` : ''}जीतने के लिए इस सवाल का हल चुनो:`
-        },
-        q: {
-          en: `${g.en} Checkpoint: ${numA} ${op} ${numB} = ?`,
-          hi: `${g.hi} चेकपॉइंट: ${numA} ${op} ${numB} = ?`
-        },
-        opts: [String(ans), String(ans + 2), String(Math.max(1, ans - 3))],
-        hiOpts: [String(ans), String(ans + 2), String(Math.max(1, ans - 3))],
-        correct: 0
-      },
-      {
-        t: 'win',
-        beatIndex: 2,
-        svg: genGameSvg(g, 2),
-        say: {
-          en: `Brilliant shot! ${p1Name} wins the ${g.en} match and masters ${skillTitleEn}!`,
-          hi: `शानदार खेल! ${p1Name} ने ${g.hi} मैच जीत लिया और ${skillTitleHi} सीख लिया!`
-        },
-        card: {
-          id: `card-${g.id}-${Date.now()}`,
-          gameId: g.id,
-          gameTitle: g.en,
-          hiGameTitle: g.hi,
-          actor: g.actor,
-          proj: g.proj,
-          skillId: skillId || 'gen',
-          skillEn: skillTitleEn,
-          skillHi: skillTitleHi,
-          stamp: '⭐ Teacher Approved',
-          date: new Date().toLocaleDateString()
-        }
-      }
+      { t:'intro', svg: genGameSvg(g, 0),
+        say: { en: `${teacherNote ? `Your teacher says: "${teacherNote}". ` : ''}Ready, ${p1Name}? The big ${g.en} match is starting!`,
+               hi: `${teacherNote ? `शिक्षक का संदेश: "${teacherNote}"। ` : ''}तैयार हो ${p1Name}? ${g.hi} का बड़ा मैच शुरू हो रहा है!` } },
+      { t:'ask', svg: genGameSvg(g, 1),
+        say: { en: `${isCoop ? `${p2Name} passes to ${p1Name}. ` : ''}To make the winning move, solve this:`,
+               hi: `${isCoop ? `${p2Name} ने ${p1Name} को पास दिया। ` : ''}जीतने वाली चाल के लिए यह हल करो:` },
+        q: { en: `${p.text} = ?`, hi: `${p.text} = ?` },
+        opts: p.opts, hiOpts: p.opts, correct: p.correct },
+      { t:'win', svg: genGameSvg(g, 2),
+        say: { en: `What a match! ${p1Name} played ${skillEn} like a champion.`,
+               hi: `क्या मैच था! ${p1Name} ने ${skillHi} चैंपियन की तरह खेला।` },
+        card: { id: `card-hw-${skillId}-${g.id}`, actor: g.actor,
+                titleEn: `${g.en} · ${skillEn}`, titleHi: `${g.hi} · ${skillHi}` } }
     ]
   };
 }
-

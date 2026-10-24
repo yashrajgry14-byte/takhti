@@ -1,188 +1,139 @@
 /* ==================================================================
-   GENERATIVE AI BACKEND BRAIN — Cartoon Video & Animation Synthesizer
+   CARTOON EPISODES — a 4-scene animated episode for one maths skill.
 
-   Evaluates a child's learning profile, age band, skill history,
-   favorite traditional game, and teacher homework assignments to
-   generate structured multi-scene cartoon video blueprints.
+   Deterministic, on-device, no model: "generative" here means the
+   episode is assembled from the child's own data, not authored by hand.
+   What actually varies per child:
+     · the skill (from homework, a diagnosed gap, or the catalog)
+     · both problems — skillProblem() (core/mathgen.js), so they really
+       exercise that skill and stay inside the child's age band
+     · the child's own favourite game (the objects in the animation)
+     · the visual theme (content/themes.js)
 
-   Requires: content/games.js, content/skills.js, content/ages.js
+   The four scenes:
+     1. Hook          — the child, Gauri, and the challenge
+     2. Watch how     — a WORKED EXAMPLE of the same skill (a different
+                        problem, drawn with ui/lesson-player.js's lesArt()
+                        beats where the numbers are small enough to draw)
+     3. Your turn     — the child's own problem; the answer counts as
+                        skill evidence (ui/video-player.js)
+     4. Remember      — the one-line rule for this kind of sum, and a card
+                        if they got scene 3 right
+
+   Returns null for any skill skillProblem() can't turn into a question.
    ================================================================== */
 
-function genCartoonSvgKeyframe(themeOrGameId, sceneIndex, stepIndex){
-  const themeObj = typeof themeById === 'function' ? themeById(themeOrGameId) : null;
-  const gList = typeof GAMES !== 'undefined' ? GAMES : [{id:'kabaddi', accent:'#3FBB78', actor:'🤼', proj:'🏃'}];
-  const g = gList.find(x=>x.id===themeOrGameId);
+const CARTOON_RULE = {
+  '+':   { en:'Adding? Start from the bigger number and count on.',   hi:'जोड़ना है? बड़ी संख्या से शुरू करके आगे गिनो।' },
+  '−':   { en:'Taking away? Start from the total and count back.',     hi:'घटाना है? कुल से शुरू करके पीछे गिनो।' },
+  '×':   { en:'Times means equal groups — count the groups.',          hi:'गुणा मतलब बराबर समूह — समूह गिनो।' },
+  '÷':   { en:'Dividing? Share out equally, one each, round and round.', hi:'भाग देना है? बराबर बाँटो, एक-एक करके।' },
+  'mix': { en:'Multiply first, then add.',                             hi:'पहले गुणा, फिर जोड़।' }
+};
 
-  const accent = (themeObj && themeObj.accent) || (g && g.accent) || '#3FBB78';
-  const actor = (themeObj && themeObj.actor) || (g && g.actor) || '🏃';
-  const proj = (themeObj && themeObj.proj) || (g && g.proj) || '🔴';
-  const themeId = (themeObj && themeObj.id) || (g && g.id) || 'sports';
+/* The drawable beat for a worked example, or null when the numbers are
+   too big to draw object-by-object (then scene 2 shows the steps as text). */
+function cartoonExampleBeat(p){
+  if(p.op === '+') return p.ans <= 20 ? { t:'add', a:p.a, b:p.b } : { t:'line', a:p.a, b:p.b, hops:1 };
+  if(p.op === '−') return p.a <= 20 ? { t:'take', a:p.a, b:p.b } : { t:'bar', a:p.a, b:p.b };
+  if(p.op === '×') return p.ans <= 40 ? { t:'array', a:p.a, b:p.b } : null;
+  if(p.op === '÷') return p.a <= 40 ? { t:'share', a:p.a, b:p.b } : null;
+  return { t:'array', a:p.b, b:p.c };                      // mix: draw the multiplication that happens first
+}
 
-  const offsetX = (stepIndex || 0) * 35;
-  const bounceY = Math.sin((stepIndex || 0) * 1.5) * 8;
-
-  let backdropElements = '';
-  if(themeId === 'anime'){
-    backdropElements = `
-      <circle cx="180" cy="90" r="65" fill="none" stroke="${accent}" stroke-width="3" stroke-dasharray="10,5" opacity="0.7"/>
-      <path d="M 120 40 L 160 90 L 140 140" fill="none" stroke="#FFD700" stroke-width="2.5" opacity="0.8"/>
-      <path d="M 240 40 L 200 90 L 220 140" fill="none" stroke="#FFD700" stroke-width="2.5" opacity="0.8"/>
-    `;
-  } else if(themeId === 'scifi'){
-    backdropElements = `
-      <ellipse cx="180" cy="90" rx="90" ry="30" fill="none" stroke="${accent}" stroke-width="2.5" opacity="0.7"/>
-      <circle cx="90" cy="50" r="12" fill="#4C7BE0" opacity="0.8"/>
-      <circle cx="280" cy="130" r="16" fill="#E8447C" opacity="0.7"/>
-    `;
-  } else if(themeId === 'cinema'){
-    backdropElements = `
-      <polygon points="40,20 180,140 320,20" fill="${accent}" opacity="0.15"/>
-      <rect x="10" y="10" width="340" height="15" fill="none" stroke="${accent}" stroke-width="2" stroke-dasharray="8,8"/>
-    `;
-  } else if(themeId === 'fantasy'){
-    backdropElements = `
-      <path d="M 60 140 L 60 70 L 80 40 L 100 70 L 100 140 Z" fill="${accent}" opacity="0.4"/>
-      <circle cx="180" cy="90" r="45" fill="none" stroke="#9B51E0" stroke-width="3" opacity="0.8"/>
-    `;
-  } else {
-    backdropElements = `
-      <line x1="20" y1="140" x2="340" y2="140" stroke="${accent}" stroke-width="3.5" opacity="0.8"/>
-      <circle cx="180" cy="90" r="55" fill="none" stroke="${accent}" stroke-width="2" stroke-dasharray="6,4" opacity="0.5"/>
-    `;
+/* How the worked example is said, step by step. */
+function cartoonExampleSay(p){
+  if(p.op === 'mix') return {
+    en:`Watch: ${p.text}. Multiply first — ${p.b} × ${p.c} = ${p.b*p.c}. Then add ${p.a}: ${p.ans}.`,
+    hi:`देखो: ${p.text}। पहले गुणा — ${p.b} × ${p.c} = ${p.b*p.c}। फिर ${p.a} जोड़ो: ${p.ans}।` };
+  if(p.op === '×' && p.a >= 10){
+    const t = Math.floor(p.a/10)*10, o = p.a % 10;
+    return {
+      en:`Watch: ${p.text}. Split ${p.a} into ${t} and ${o}: ${t} × ${p.b} = ${t*p.b}, ${o} × ${p.b} = ${o*p.b}. Together: ${p.ans}.`,
+      hi:`देखो: ${p.text}। ${p.a} को ${t} और ${o} में तोड़ो: ${t} × ${p.b} = ${t*p.b}, ${o} × ${p.b} = ${o*p.b}। कुल: ${p.ans}।` };
   }
+  return { en:`Watch: ${p.text} = ${p.ans}.`, hi:`देखो: ${p.text} = ${p.ans}।` };
+}
+
+/* One scene's backdrop: the theme sets the scenery and colour, the
+   child's own game supplies the actor and object, and Gauri (the real
+   chalk-sparrow drawing, ui/mascot.js) watches from the right. */
+function genCartoonSvgKeyframe(theme, game, sceneIndex){
+  const accent = theme.accent;
+  const offsetX = sceneIndex * 35, bounceY = Math.sin(sceneIndex * 1.5) * 8;
+  const backdrop = {
+    anime:   `<circle cx="180" cy="90" r="65" fill="none" stroke="${accent}" stroke-width="3" stroke-dasharray="10,5" opacity="0.7"/>
+              <path d="M 120 40 L 160 90 L 140 140 M 240 40 L 200 90 L 220 140" fill="none" stroke="#FFD700" stroke-width="2.5" opacity="0.8"/>`,
+    scifi:   `<ellipse cx="180" cy="90" rx="90" ry="30" fill="none" stroke="${accent}" stroke-width="2.5" opacity="0.7"/>
+              <circle cx="90" cy="50" r="12" fill="#4C7BE0" opacity="0.8"/><circle cx="280" cy="130" r="16" fill="#E8447C" opacity="0.7"/>`,
+    cinema:  `<polygon points="40,20 180,140 320,20" fill="${accent}" opacity="0.15"/>
+              <rect x="10" y="10" width="340" height="15" fill="none" stroke="${accent}" stroke-width="2" stroke-dasharray="8,8"/>`,
+    fantasy: `<path d="M 60 140 L 60 70 L 80 40 L 100 70 L 100 140 Z" fill="${accent}" opacity="0.4"/>
+              <circle cx="180" cy="90" r="45" fill="none" stroke="#9B51E0" stroke-width="3" opacity="0.8"/>`,
+    folktale:`<rect x="30" y="22" width="300" height="130" rx="18" fill="none" stroke="${accent}" stroke-width="2.5" opacity="0.6"/>
+              <path d="M 40 140 Q 180 100 320 140" fill="none" stroke="#F0A02A" stroke-width="2" opacity="0.6"/>`,
+    sports:  `<line x1="20" y1="140" x2="340" y2="140" stroke="${accent}" stroke-width="3.5" opacity="0.8"/>
+              <circle cx="180" cy="90" r="55" fill="none" stroke="${accent}" stroke-width="2" stroke-dasharray="6,4" opacity="0.5"/>`
+  }[theme.id] || '';
 
   return `
-    <svg class="cartoon-svg-frame" viewBox="0 0 360 180" style="width:100%;height:180px;background:linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.95));border-radius:14px;margin:8px 0;box-shadow:0 6px 20px rgba(0,0,0,0.5);border:2px solid ${accent};">
+    <svg class="cartoon-svg-frame" viewBox="0 0 360 180" role="img" aria-label="${attr(theme.en)}" style="width:100%;height:180px;background:linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.95));border-radius:14px;margin:8px 0;border:2px solid ${accent};">
       <defs>
-        <radialGradient id="glow-${themeId}-${sceneIndex}" cx="50%" cy="50%" r="50%">
+        <radialGradient id="glow-${theme.id}-${sceneIndex}" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stop-color="${accent}" stop-opacity="0.4"/>
           <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
         </radialGradient>
-        <filter id="star-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="2" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
       </defs>
-      
-      <rect width="360" height="180" fill="url(#glow-${themeId}-${sceneIndex})"/>
-      ${backdropElements}
-      
-      <text x="50" y="40" font-size="14" fill="#FFD700" filter="url(#star-glow)">✨</text>
-      <text x="310" y="45" font-size="14" fill="#FFD700" filter="url(#star-glow)">✨</text>
-      <text x="180" y="35" font-size="16" fill="#FFD700" filter="url(#star-glow)">⭐</text>
-
+      <rect width="360" height="180" fill="url(#glow-${theme.id}-${sceneIndex})"/>
+      ${backdrop}
+      <text x="50" y="40" font-size="14">✨</text><text x="310" y="45" font-size="14">✨</text>
       <g transform="translate(${75 + offsetX}, ${95 + bounceY})">
-        <text x="0" y="0" font-size="40" text-anchor="middle" dominant-baseline="middle" filter="url(#star-glow)">${actor}</text>
-        <text x="32" y="-22" font-size="26" text-anchor="middle" dominant-baseline="middle">${proj}</text>
+        <text x="0" y="0" font-size="40" text-anchor="middle" dominant-baseline="middle">${game.actor}</text>
+        <text x="32" y="-22" font-size="26" text-anchor="middle" dominant-baseline="middle">${game.proj}</text>
       </g>
-
-      <g transform="translate(275, 95)">
-        <text x="0" y="0" font-size="36" text-anchor="middle" dominant-baseline="middle">🦜</text>
-        <rect x="-30" y="-38" width="60" height="18" rx="9" fill="${accent}" opacity="0.9"/>
-        <text x="0" y="-26" font-size="10" fill="#FFFFFF" font-weight="bold" text-anchor="middle">GAURI</text>
-      </g>
-    </svg>
-  `;
+      ${gauriSmall('x="245" y="62" width="60" height="60"', 'cartoon-gauri')}
+    </svg>`;
 }
 
-function generateCartoonBlueprint(child, topicOrSkillId, options){
+function generateCartoonBlueprint(child, skillId, options){
   options = options || {};
-  const c = child || (typeof S !== 'undefined' ? S : {});
-  const childName = (c && c.name) || 'Kabir';
-  const age = (c && c.age) || 6;
-  const bandObj = typeof bandForAge === 'function' ? bandForAge(age) : { id:'early', maxNumber:20 };
-  
-  const gamesList = typeof GAMES !== 'undefined' ? GAMES : [{id:'kabaddi', en:'Kabaddi', hi:'कबड्डी', actor:'🤼', proj:'🏃', accent:'#C5603A'}];
-  const gameId = options.gameId || (c && c.favGame) || 'kabaddi';
-  const g = gamesList.find(x => x.id === gameId) || gamesList[0];
-
-  const skillList = typeof SKILLS !== 'undefined' ? SKILLS : [];
-  const skill = skillList.find(s=>s.id===topicOrSkillId) || { id: topicOrSkillId || 'add2', en:'Addition', hi:'जोड़' };
-  
-  const teacherNote = options.teacherNote || '';
-  const seriesTitleEn = options.seriesTitleEn || `${g.en} Math League`;
-  const seriesTitleHi = options.seriesTitleHi || `${g.hi} गणित लीग`;
-
-  let numA = 12, numB = 8, ans = 20, op = '+';
-  if(skill.id === 'barsub' || skill.id === 'sub2'){
-    numA = 18; numB = 7; ans = 11; op = '-';
-  } else if(skill.id === 'times' || skill.id === 'array'){
-    numA = 3; numB = 4; ans = 12; op = '×';
-  } else if(skill.id === 'share'){
-    numA = 12; numB = 3; ans = 4; op = '÷';
-  }
-
-  const videoId = `vid-${g.id}-${skill.id || 'gen'}-${Date.now()}`;
+  const c = child || S;
+  const seed = seedOf((c.id || c.name || 'x') + '|vid|' + skillId + '|' + dayKey());
+  const q = skillProblem(skillId, seed);
+  if(!q) return null;
+  const ex = skillProblem(skillId, seed + 101);           // a different worked example of the same skill
+  const g = gameById(options.gameId || c.game);
+  const theme = themeById(options.themeId);
+  const skill = skillById(skillId);
+  const name = c.name || '';
+  const rule = CARTOON_RULE[q.op];
 
   return {
-    id: videoId,
-    type: 'cartoon_video',
-    seriesTitle: { en: seriesTitleEn, hi: seriesTitleHi },
-    title: {
-      en: `🎬 ${g.en}: Mastering ${skill.en}`,
-      hi: `🎬 ${g.hi}: ${skill.hi} सीखें`
-    },
-    sub: {
-      en: `Episode starring ${childName} & Gauri`,
-      hi: `${childName} और गौरी का एपिसोड`
-    },
-    skillId: skill.id,
-    gameId: g.id,
-    game: g,
-    band: bandObj.id,
-    durationSeconds: 120,
+    id: `vid-${theme.id}-${g.id}-${skillId}`,
+    skillId, gameId: g.id, themeId: theme.id, game: g, theme,
+    title: { en:`${theme.ic} ${skill.en}`, hi:`${theme.ic} ${skill.hi}` },
     scenes: [
-      {
-        sceneIndex: 0,
-        title: { en: 'Scene 1: The Challenge', hi: 'दृश्य 1: चुनौती' },
-        svg: genCartoonSvgKeyframe(g.id, 0, 0),
-        narration: {
-          en: `${teacherNote ? `Teacher Note: "${teacherNote}". ` : ''}Welcome to ${g.en} arena ${childName}! Gauri has a special match challenge for you today.`,
-          hi: `${teacherNote ? `शिक्षक का संदेश: "${teacherNote}"। ` : ''}${g.hi} मैदान में स्वागत है ${childName}! गौरी के पास आज तुम्हारे लिए एक ख़ास चुनौती है।`
-        }
-      },
-      {
-        sceneIndex: 1,
-        title: { en: 'Scene 2: Cartoon Visual Breakdown', hi: 'दृश्य 2: कार्टून दृश्य व्याख्या' },
-        svg: genCartoonSvgKeyframe(g.id, 1, 1),
-        narration: {
-          en: `Watch how we solve this: ${numA} ${op} ${numB}. We bundle them together step-by-step!`,
-          hi: `देखो हम इसे कैसे हल करते हैं: ${numA} ${op} ${numB}। हम इन्हें एक-एक करके मिलाते हैं!`
-        }
-      },
-      {
-        sceneIndex: 2,
-        title: { en: 'Scene 3: Interactive Cartoon Checkpoint', hi: 'दृश्य 3: इंटरैक्टिव चैकपॉइंट' },
-        svg: genCartoonSvgKeyframe(g.id, 2, 2),
+      { title:{ en:'The challenge', hi:'चुनौती' },
+        svg: genCartoonSvgKeyframe(theme, g, 0),
+        narration:{
+          en:`${options.teacherNote ? `Your teacher says: "${options.teacherNote}". ` : ''}Welcome to the ${theme.en} ${g.en} arena, ${name}! Gauri has a ${skill.en.toLowerCase()} challenge for you.`,
+          hi:`${options.teacherNote ? `शिक्षक का संदेश: "${options.teacherNote}"। ` : ''}${theme.hi} ${g.hi} मैदान में स्वागत है, ${name}! गौरी के पास तुम्हारे लिए ${skill.hi} की चुनौती है।` } },
+      { title:{ en:'Watch how', hi:'ऐसे करते हैं' },
+        svg: genCartoonSvgKeyframe(theme, g, 1),
+        beat: cartoonExampleBeat(ex),
+        narration: cartoonExampleSay(ex) },
+      { title:{ en:'Your turn', hi:'अब तुम्हारी बारी' },
+        svg: genCartoonSvgKeyframe(theme, g, 2),
         isCheckpoint: true,
-        question: {
-          en: `${g.en} Checkpoint: What is ${numA} ${op} ${numB}?`,
-          hi: `${g.hi} चेकपॉइंट: ${numA} ${op} ${numB} का उत्तर क्या है?`
-        },
-        opts: [String(ans), String(ans + 2), String(Math.max(1, ans - 3))],
-        hiOpts: [String(ans), String(ans + 2), String(Math.max(1, ans - 3))],
-        correct: 0,
-        narration: {
-          en: `Now it is your turn ${childName}! Tap the correct answer to win the match!`,
-          hi: `अब तुम्हारी बारी है ${childName}! मैच जीतने के लिए सही उत्तर चुनो!`
-        }
-      },
-      {
-        sceneIndex: 3,
-        title: { en: 'Scene 4: Rhyme Memory & Trophy', hi: 'दृश्य 4: याद रखने का नियम और ट्रॉफी' },
-        svg: genCartoonSvgKeyframe(g.id, 3, 3),
-        narration: {
-          en: `Match Won! Remember: ${numA} ${op} ${numB} is always ${ans}! You unlocked the Gold ${g.en} Cartoon Badge!`,
-          hi: `मैच जीत गए! याद रखो: ${numA} ${op} ${numB} हमेशा ${ans} होता है! तुमने गोल्ड ${g.hi} कार्टून बैज जीता!`
-        },
-        badge: {
-          id: `badge-${g.id}-${Date.now()}`,
-          actor: g.actor,
-          titleEn: `${g.en} Master`,
-          titleHi: `${g.hi} मास्टर`,
-          stamp: '⭐ Mastered'
-        }
-      }
+        question:{ en:`${q.text} = ?`, hi:`${q.text} = ?` },
+        opts: q.opts, correct: q.correct,
+        narration:{ en:`Your turn, ${name}! Tap the answer to win the round.`,
+                    hi:`अब तुम्हारी बारी, ${name}! राउंड जीतने के लिए सही उत्तर चुनो।` } },
+      { title:{ en:'Remember', hi:'याद रखो' },
+        svg: genCartoonSvgKeyframe(theme, g, 3),
+        narration:{ en:`${rule.en} ${q.text} = ${q.ans}.`, hi:`${rule.hi} ${q.text} = ${q.ans}।` },
+        badge:{ id:`card-vid-${skillId}`, actor: theme.ic,
+                titleEn:`${theme.en} · ${skill.en}`, titleHi:`${theme.hi} · ${skill.hi}` } }
     ]
   };
 }

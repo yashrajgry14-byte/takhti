@@ -16,10 +16,10 @@ function bumpToday(kind){
     setTimeout(()=>speak(S.lang==='hi'
       ? 'शाबाश! आज का लक्ष्य पूरा हुआ।'
       : "Well done! That goal is complete."), 700);
-    // newly met, right now: celebrate if we're already looking at home,
-    // otherwise queue it for the next visit rather than lose it
-    if(S.screen === 'home') homeCelebrate();
-    else S._pendingCelebrate = true;
+    // goals are met mid-activity (reading, writing, a sum), never on the
+    // map itself — so queue the celebration for the next return to the
+    // map rather than interrupt the screen the child is on
+    S._pendingCelebrate = true;
   }
 }
 
@@ -50,7 +50,7 @@ function record(mod, ok){
       if(next !== S.levels[mod]){
         S.levels[mod] = next; S.window[mod]=[];
         log(0,`${mod}: accuracy ${Math.round(acc*100)}% → level up to ${S.levels[mod]}`);
-        noteLevelUp();
+        S._justLevelled = true;   // Munni mentions it on the next map visit
         return 'up';
       }
     }

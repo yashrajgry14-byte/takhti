@@ -366,6 +366,19 @@ function assignHomework(classCode, skillIds, note = ''){
   }
 }
 
+function clearHomework(classCode){
+  if(!classCode) return false;
+  try {
+    const key = classMirrorKey(classCode);
+    const all = JSON.parse(localStorage.getItem(key) || '{}');
+    delete all._homework;
+    localStorage.setItem(key, JSON.stringify(all));
+    return true;
+  } catch(e){
+    return false;
+  }
+}
+
 function getAssignedHomework(child){
   const c = child || S;
   if(!c || !c.classCode) return null;
@@ -377,32 +390,36 @@ function getAssignedHomework(child){
   }
 }
 
-/* Generates personalized homework remediation plan for active child */
+/* What the child's app does with a teacher's homework: diagnose it
+   against this child's own evidence first. A teacher who assigns BODMAS
+   to a child whose real gap is times tables should get tables practice
+   for that child — the whole point of the skill graph.
+
+   storySkill is the skill the homework story drills: the deepest
+   confirmed gap in the plan that can be taught as a single question
+   (skillHasProblem(), core/mathgen.js), else the first assigned skill
+   that can, else null — then the banner offers the plan's lessons only. */
 function personalizeContentForHomework(child){
   const c = child || S;
   const hw = getAssignedHomework(c);
   if(!hw || !hw.skills || !hw.skills.length) return null;
 
-  // Run Takhti prerequisite diagnosis on assigned homework skills
-  const diagPlan = diagnose(hw.skills, c);
-  const targetLessons = [];
+  const plan = diagnose(hw.skills, c);
+  const lessons = [];
+  for(const item of plan) for(const l of (item.lessons || []))
+    if(!lessons.some(x => x.id === l.id)) lessons.push(l);
 
-  for(const item of diagPlan){
-    if(item.lessons && item.lessons.length){
-      targetLessons.push(...item.lessons);
-    }
-  }
-
-  const story = typeof genHomeworkStory === 'function'
-    ? genHomeworkStory(hw.skills[0], c.favGame || 'kabaddi', c, { teacherNote: hw.note, homework: hw })
-    : null;
+  const gaps = plan.filter(p => p.verdict === 'gap' && skillHasProblem(p.skill.id))
+                   .sort((a,b) => a.depth - b.depth);
+  const storySkill = (gaps[0] && gaps[0].skill.id) || hw.skills.find(skillHasProblem) || null;
 
   return {
     assignedSkills: hw.skills,
+    assignedAt: hw.assignedAt,
     note: hw.note,
-    plan: diagPlan,
-    lessons: targetLessons,
-    story: story
+    plan,
+    lessons,
+    storySkill
   };
 }
 

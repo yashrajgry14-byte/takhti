@@ -74,7 +74,7 @@ const SHELLS = [
 ];
 
 window.addEventListener('load', () => {
-  window.eval(`createProfile('TestChild'); S.age = 8; S.screen = 'home'; render();`);
+  window.eval(`createProfile('TestChild'); S.age = 8; S.screen = 'map'; render();`);
 
   console.log('=== shell integration: real playGame() → go() → render() → AFTER.x() ===');
   for(const shell of SHELLS){

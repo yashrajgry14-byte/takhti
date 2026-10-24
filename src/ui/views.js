@@ -1,20 +1,22 @@
 /* ================= SCREENS ================= */
 const $ = id => document.getElementById(id);
 function render(){ $('screen').innerHTML = VIEWS[S.screen](); if(AFTER[S.screen]) AFTER[S.screen](); }
-/* Stops the home director and every OTHER game shell's loop before
-   switching screens — never the shell we are simultaneously entering.
-   playGame() calls e.g. popBegin() (which builds fresh module state)
-   BEFORE go('pop'); if go() stopped 'pop' too, it would null that
-   state an instant after creating it, and the AFTER hook that spawns
-   the first gate/bubble/target would silently no-op forever (each
-   shell's own spawn function already guards "if no state, do
-   nothing" — that guard is what was firing). Confirmed by rendering a
-   real round in jsdom: PP/RN/etc. read back NULL immediately after
-   playGame() without this exclusion. */
+/* Stops everything that belongs to the screen being left — the arrival
+   scene, a live recognizer, a self-listen clip, a cartoon in progress,
+   the map's ambient sound — and every OTHER game shell's loop, never the
+   shell we are simultaneously entering. playGame() calls e.g. popBegin()
+   (which builds fresh module state) BEFORE go('pop'); if go() stopped
+   'pop' too, it would null that state an instant after creating it, and
+   the AFTER hook that spawns the first gate/bubble/target would silently
+   no-op forever. Confirmed by rendering a real round in jsdom:
+   PP/RN/etc. read back NULL immediately after playGame() without this
+   exclusion — see test/shell-integration.test.js. */
 function go(s){
-  homeSceneStop();
   arrivalStop();
-  if(typeof selfListenReset === 'function') selfListenReset();   // stop/discard any in-flight self-listen clip — it must never outlive the reading screen
+  stopListening();      // a recognizer still listening must not fire against the screen being left
+  selfListenReset();    // stop/discard any in-flight self-listen clip — it must never outlive the reading screen
+  if(s!=='theater') theaterStop();
+  if(s!=='map') sfxAmbientStop();
   if(s!=='runner') runnerStop();
   if(s!=='pop')    popStop();
   if(s!=='tower')  towerStop();
@@ -24,59 +26,22 @@ function go(s){
   S.screen=s; S.ctx={}; render();
 }
 
-/* ---------- profile switcher, lives on the home screen ---------- */
+/* ---------- profile switcher: one phone, up to MAX_PROFILES siblings.
+   Lives on the jungle map (the hub every session returns to), so a
+   sibling can always be switched to or added without a parent PIN. ---------- */
 function profileSwitcher(){
   const chips = S.profiles.map((p,i)=>`
     <button class="profilechip ${i===S.activeProfile?'sel':''}" onclick="switchProfile(${i})">
-      <span class="pic">${p.game? gameById(p.game).ic : '🧒'}</span>${p.name||'?'}
+      <span class="pic">${p.avatar ? avatarById(p.avatar).ic : '🧒'}</span>${p.name||'?'}
     </button>`).join('');
   const add = S.profiles.length < MAX_PROFILES
-    ? `<button class="profilechip add" onclick="go('greet')">
+    ? `<button class="profilechip add" onclick="addChild()">
         <span class="pic">➕</span>${S.lang==='hi'?'नया':'Add'}</button>`
     : '';
   return `<div class="profilebar">${chips}${add}</div>`;
 }
 
 const VIEWS = {
-
-/* ---------- 1. WHO ARE YOU ---------- */
-greet(){
-  return `
-  ${S.profiles.length? `<button class="back" onclick="go('map')">← ${t('back')}</button>`:''}
-  <div style="text-align:center;padding:${S.profiles.length?'12px':'44px'} 6px 0">
-    <div style="font-size:64px;animation:peek 1.1s cubic-bezier(.34,1.7,.5,1) both;display:inline-block">👋</div>
-    <div class="display" style="font-size:26px;margin-top:14px">${S.lang==='hi'?'नमस्ते! मैं तख़्ती हूँ।':'Hi! I am Takhti.'}</div>
-    <div class="muted" style="margin:6px 0 20px">${S.lang==='hi'?'मैं तुम्हें क्या बुलाऊँ?':'What should I call you?'}</div>
-    <input class="input namein" id="nm" placeholder="${S.lang==='hi'?'अपना नाम लिखो':'Type your name'}" autocomplete="off">
-    <button class="btn" style="margin-top:12px" onclick="saveName($('nm').value)">${S.lang==='hi'?'चलो शुरू करें →':'Start →'}</button>
-    <div class="langpick" style="margin-top:22px">
-      <button class="${S.lang==='en'?'sel':''}" onclick="S.lang='en';render()">English</button>
-      <button class="${S.lang==='hi'?'sel':''}" onclick="S.lang='hi';render()">हिंदी</button>
-    </div>
-  </div>`;
-},
-
-/* ---------- 1b. HOW OLD ---------- */
-age(){
-  const AGE_NOTE = {
-    pre:        {en:'Letters and sounds — no sentences yet.', hi:'अक्षर और आवाज़ें — अभी कोई वाक्य नहीं।'},
-    early:      {en:'Short sentences and easy sums.', hi:'छोटे वाक्य और आसान जोड़-घटाव।'},
-    developing: {en:'Full sentences, two-digit sums, and paper writing.', hi:'पूरे वाक्य, दो अंकों के सवाल, और कागज़ पर लिखना।'},
-    fluent:     {en:'Long sentences, multiplication, everything unlocked.', hi:'लंबे वाक्य, गुणा, सब कुछ खुला हुआ।'}
-  };
-  const groups = Object.values(AGE_BANDS);
-  return `
-  <div style="text-align:center;padding:20px 6px 0">
-    <div class="display" style="font-size:24px">${S.lang==='hi'?'तुम्हारी उम्र क्या है?':'How old are you?'}</div>
-    <div class="muted" style="margin:6px 0 16px">${S.lang==='hi'?'इससे तख़्ती सही स्तर से शुरू करेगी।':'This helps Takhti start at the right level.'}</div>
-    <div class="ages">
-      ${groups.map(b=>`
-        ${b.ages.map(a=>`<button class="agebtn" onclick="setAge(${a})">${a}</button>`).join('')}
-        <div class="bandnote"><b>${S.lang==='hi'?b.hi:b.en}</b> — ${S.lang==='hi'?AGE_NOTE[b.id].hi:AGE_NOTE[b.id].en}</div>
-      `).join('')}
-    </div>
-  </div>`;
-},
 
 /* ---------- 2. PICK YOUR GAME ---------- */
 pick(){
@@ -144,56 +109,6 @@ open(){
   </div>`;
 },
 
-/* ---------- HOME ---------- */
-home(){
-  const lv = S.levels;
-  const rungs = n => [1,2,3,4,5,6].map(i=>`<div class="rung ${i<n?'done':i===n?'now':''}"></div>`).join('');
-  const nudge = homeNudge();
-  const startPill = `<span class="startpill">${S.lang==='hi'?'यहाँ से':'START HERE'}</span>`;
-  const hw = (typeof personalizeContentForHomework === 'function') ? personalizeContentForHomework(S) : null;
-  const srsDue = (typeof getDueSrsItems === 'function') ? getDueSrsItems(S) : [];
-  return `
-  ${topGamifyBar()}
-  ${profileSwitcher()}
-  <div class="hello display">${t('hello')}${S.name} 👋</div>
-  ${homeSceneHTML()}
-  ${hw ? `<div class="chit ready" style="background:rgba(240,160,42,.15);border:1.5px solid var(--marigold);margin-top:10px" onclick="go('lessons')">
-      <b>📝 ${S.lang==='hi'?'गृहकार्य':'Teacher Homework'}</b>
-      <div>${hw.note || (S.lang==='hi'?'शिक्षक ने नया अभ्यास दिया है — क्लिक करके सीखो':'Personalized practice assigned by teacher')}</div>
-    </div>` : ''}
-  ${srsDue.length ? `<div class="chit ready" style="background:rgba(63,187,120,.15);border:1.5px solid #3FBB78;margin-top:8px" onclick="go('read')">
-      <b>🔁 ${S.lang==='hi'?'स्मृति अभ्यास':'Memory Review (${srsDue.length})'}</b>
-      <div>${S.lang==='hi'?'पुराने सीखे शब्दों और पाठों का अभ्यास करने का समय है!':'Time to review mastered words & lessons before they fade!'}</div>
-    </div>` : ''}
-  <div class="muted">${t('level')} ${lv.read} · ${t('read')} · ${competencyName('read',lv.read)}</div>
-  <div class="muted">${t('level')} ${lv.math} · ${t('count')} · ${competencyName('math',lv.math)}</div>
-  ${S.game? `<button class="btn ghost" style="margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px"
-      onclick="go('open')"><span style="font-size:20px">${gameById(S.game).ic}</span>
-      ${S.lang==='hi'?'आज का '+gameById(S.game).hi+' पल फिर देखो':'Replay today\u2019s '+gameById(S.game).en+' moment'}</button>`:''}
-  <div class="ladder">${rungs(lv.read)}</div>
-  <div class="ladderlabel"><span>LEVEL 1</span><span>LEVEL 6</span></div>
-  <div class="goals">
-    ${goalTile('📖','read')}${goalTile('✍️','write')}${goalTile('🔢','math')}${goalTile('💡','facts')}
-  </div>
-  <div class="tiles">
-    ${hw ? `<button class="tile t-learn nudge" style="border:2px solid var(--marigold)" onclick="go('lessons')">${startPill}<span class="ic">📝</span><span>${S.lang==='hi'?'गृहकार्य':'Homework'}<small>${S.lang==='hi'?'शिक्षक का पाठ':'Personalized'}</small></span></button>` : ''}
-    ${srsDue.length && !hw ? `<button class="tile t-read nudge" style="border:2px solid #3FBB78" onclick="go('read')">${startPill}<span class="ic">🔁</span><span>${S.lang==='hi'?'पुनरावृत्ति':'Memory Review'}<small>${srsDue.length} ${S.lang==='hi'?'बाकी':'due'}</small></span></button>` : ''}
-    ${moduleAllowed('read')? `<button class="tile t-read ${!hw&&!srsDue.length&&nudge==='read'?'nudge':''}" onclick="go('read')">${!hw&&!srsDue.length&&nudge==='read'?startPill:''}<span class="ic">📖</span><span>${t('read')}<small>${t('readSub')}</small></span></button>`:''}
-    ${moduleAllowed('write')? `<button class="tile t-write ${!hw&&!srsDue.length&&nudge==='write'?'nudge':''}" onclick="go('write')">${!hw&&!srsDue.length&&nudge==='write'?startPill:''}<span class="ic">✍️</span><span>${t('write')}<small>${t('writeSub')}</small></span></button>`:''}
-    ${moduleAllowed('count')? `<button class="tile t-count ${!hw&&!srsDue.length&&nudge==='math'?'nudge':''}" onclick="go('math')">${!hw&&!srsDue.length&&nudge==='math'?startPill:''}<span class="ic">🔢</span><span>${t('count')}<small>${t('countSub')}</small></span></button>`:''}
-    ${moduleAllowed('ask')? `<button class="tile t-ask" onclick="go('ask')"><span class="ic">💬</span><span>${t('ask')}<small>${t('askSub')}</small></span></button>`:''}
-    ${moduleAllowed('count')? `<button class="tile t-learn" onclick="go('lessons')"><span class="ic">🎬</span><span>${S.lang==='hi'?'कहानी से सीखो':'Learn with a story'}</span></button>`:''}
-    <button class="tile t-play" onclick="go('games')"><span class="ic">🎮</span><span>${S.lang==='hi'?'खेलो':'Play'}<small>${S.lang==='hi'?'छोटे-छोटे खेल':'Quick arcade rounds'}</small></span></button>
-  </div>
-  <div class="stars" style="text-align:center;margin-top:14px">${'★'.repeat(Math.min(S.stars,8))}</div>
-  <div class="muted" style="font-size:12px;text-align:center">${t('skyLine')}</div>
-  <div class="muted" style="font-size:11.5px;margin-top:14px;font-family:var(--mono);letter-spacing:.6px">
-    ${S.lang==='hi'?'इस हफ़्ते':'THIS WEEK'}</div>
-  ${weekStrip()}
-  ${S.queue.length? `<div class="chit"><b>${S.queue.length} question${S.queue.length>1?'s':''} waiting</b>Will be answered when signal arrives.</div>`:''}
-  <button class="btn ghost" style="margin-top:14px" onclick="go('parentlock')">${t('parent')} →</button>`;
-},
-
 /* ---------- PARENT PIN GATE ---------- */
 parentlock(){
   const hasPin = !!S.parentPin;
@@ -224,10 +139,17 @@ parentlock(){
 /* ---------- READING ---------- */
 read(){
   if(!S.ctx.sentence){
-    const due = (typeof getDueSrsItems === 'function') ? getDueSrsItems(S, 'read') : [];
-    if(due.length && due[0].content){
-      S.ctx.sentence = due[0].content;
-      S.ctx._srsQueue = due.slice(1).map(it => it.content);
+    // Spaced repetition, invisibly: due reading items (core/srs.js) are the
+    // session's first sentences, most-overdue first, before any fresh random
+    // pick — jungle-map.js's mapSuggestion() routed the child here for exactly
+    // this. S.ctx._srsQueue carries the rest across nextSentence(). Items with
+    // no stored sentence are skipped rather than shown as a blank line.
+    const due = getDueSrsItems(S, 'read')
+      .sort((a,b) => a.nextReview - b.nextReview)
+      .map(it => it.content).filter(Boolean);
+    if(due.length){
+      S.ctx.sentence = due[0];
+      if(due.length > 1) S.ctx._srsQueue = due.slice(1);
     } else {
       const pool = ageSentences(S.lang, S.levels.read);
       S.ctx.sentence = pool[Math.floor(Math.random()*pool.length)];
@@ -518,9 +440,9 @@ parent(){
           <div style="font-size:11.5px;opacity:.7;margin-top:4px;font-family:var(--mono)">Skills: ${(hw.skills||[]).join(', ')}</div>
         </div>`;
       }
-      return `<div style="margin-top:8px">
-        <button class="btn ghost" style="font-size:13px" onclick="assignSampleHomework()">${S.lang==='hi'?'+ नमूना गृहकार्य दें (गणित/पठन)':' + Assign Sample Homework'}</button>
-      </div>`;
+      return `<div style="font-size:12.5px;opacity:.7;margin-top:8px">${S.lang==='hi'
+        ? 'अभी कोई गृहकार्य नहीं। शिक्षक नीचे "शिक्षकों के लिए" से गृहकार्य दे सकते हैं।'
+        : 'No homework right now. A teacher can assign some from "For teachers" below.'}</div>`;
     })()}
     <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin:6px 0 2px">${S.lang==='hi'
       ? 'तुम्हारे बच्चे की प्रगति शिक्षक के साथ इसी फ़ोन से जुड़ती रहेगी और गृहकार्य यहाँ प्राप्त होगा।'
@@ -545,17 +467,35 @@ parent(){
     ${row(t('count'),'math')}
     <div class="metric"><div><b>${S.lang==='hi'?'पूछे गए सवाल':'Questions asked'}</b><div style="font-size:12.5px;opacity:.65">${S.answered.length} answered · ${S.queue.length} waiting for signal</div></div></div>
 
-    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'याद रहा (स्मृति)':'REMEMBERED (MEMORY)'}</div>
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'याद रहा':'REMEMBERED'}</div>
     ${(() => {
-      const stats = (typeof srsStats === 'function') ? srsStats(S) : { total:0, mastered:0, due:0 };
-      const pctMastered = stats.total ? Math.round(stats.mastered / stats.total * 100) : 0;
+      // Plain language on purpose: what the child has held onto — never
+      // "due", "review", a step number or an interval (core/srs.js's
+      // internals stay internal; the child never sees them either).
+      const srs = srsStats(S);
+      if(!srs.total) return `<div style="font-size:13px;opacity:.7">${S.lang==='hi'
+        ? 'अभी दिखाने को कुछ नहीं — बच्चा जैसे-जैसे अभ्यास करेगा, यह यहाँ दिखने लगेगा।'
+        : 'Nothing to show yet — this fills in as your child practises things more than once.'}</div>`;
+      const pct = Math.round(srs.mastered / srs.total * 100);
       return `<div class="metric">
-        <div><b>${S.lang==='hi'?'दीर्घकालिक याददास्त':'Long-term Retention'}</b>
-          <div style="font-size:12.5px;opacity:.65">${stats.mastered} of ${stats.total} ${S.lang==='hi'?'पाठ पक्के याद हैं':'mastered items'} · ${stats.due} ${S.lang==='hi'?'पुनरावृत्ति के लिए बाकी':'due for review'}</div>
+        <div><b>${S.lang==='hi'?'हमेशा के लिए याद':'Stuck for good'}</b>
+          <div style="font-size:12.5px;opacity:.65">${S.lang==='hi'
+            ? `${srs.total} में से ${srs.mastered} चीज़ें`
+            : `${srs.mastered} of ${srs.total} things practised`}</div>
         </div>
-        <div style="text-align:right"><b>${pctMastered}%</b><div class="bar"><i style="width:${pctMastered}%"></i></div></div>
-      </div>`;
+        <div style="text-align:right"><b>${pct}%</b><div class="bar"><i style="width:${pct}%"></i></div></div>
+      </div>
+      <div style="font-size:12px;opacity:.7;margin-top:6px">${S.lang==='hi'
+        ? 'बाकी अपने आप, समय-समय पर लौटकर आती हैं — बच्चे को इसका पता भी नहीं चलता।'
+        : 'The rest come back around on their own, further apart each time — your child never sees a review screen.'}</div>`;
     })()}
+
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'जीते हुए कार्ड':'CARDS EARNED'}</div>
+    ${S.cards.length
+      ? `<div class="cardshelf">${S.cards.map(c=>`<span class="earned-card" title="${attr(S.lang==='hi'?c.titleHi:c.titleEn)}">${c.actor||'⭐'}<small>${S.lang==='hi'?c.titleHi:c.titleEn}</small></span>`).join('')}</div>`
+      : `<div style="font-size:13px;opacity:.7">${S.lang==='hi'
+          ? 'अभी कोई कार्ड नहीं। कहानी या कार्टून में सही जवाब देकर बच्चा कार्ड जीतता है।'
+          : 'None yet. Your child earns a card by getting a story or cartoon checkpoint right.'}</div>`}
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'कॉपी की तस्वीरें':'NOTEBOOK SHELF'}</div>
     ${S.photos.length
@@ -569,34 +509,36 @@ parent(){
     <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin-top:12px">${S.lang==='hi'
       ? 'कोई स्ट्रीक नहीं, कोई दबाव नहीं। तख़्ती बच्चों को याद दिलाने वाले संदेश नहीं भेजती।'
       : 'No streaks, no daily pressure. Takhti does not send reminders to children.'}</div>
-  </div>`;
+  </div>
+  <button class="btn ghost" style="margin-top:12px" onclick="go('teacher')">🧑‍🏫 ${S.lang==='hi'?'शिक्षकों के लिए →':'For teachers →'}</button>`;
 }
 };
 
+/* The strip across the top of the map: who is playing, and their stars.
+   Stars only ever grow — they are never spent, never reset, and never
+   compared with anyone else — which is the one kind of habit mechanic
+   this app allows (see CLAUDE.md's product constraints). There is
+   deliberately NO day-streak counter here: a streak is a number that can
+   be lost, and that loss is exactly the guilt mechanic the DPDP Act s.9
+   bars for children. Tapping your own name is just for fun. */
 function topGamifyBar(){
-  if(typeof S === 'undefined' || !S.name) return '';
-  const streak = S.day ? (S.day + 1) : 1;
-  const stars = S.stars || 12;
-  const mascotEmoji = S.avatar || '🐘';
+  if(!S.name) return '';
+  const av = S.avatar ? avatarById(S.avatar).ic : '🧒';
   return `
   <div class="top-gamify-bar">
-    <div class="streak-badge" title="Daily Streak">
-      <span class="streak-flame">🔥</span>
-      <span>${streak} ${S.lang==='hi'?'दिन':'Day'}</span>
-    </div>
-    <div class="mascot-avatar-btn" onclick="cheerMascotAvatar()" title="Cheer Munni!">
-      <span style="font-size:18px">${mascotEmoji}</span>
+    <button class="mascot-avatar-btn" onclick="cheerMascotAvatar(this)">
+      <span style="font-size:18px">${av}</span>
       <span>${S.name}</span>
-    </div>
-    <div class="star-badge" title="Total Stars Earned">
+    </button>
+    <div class="star-badge" title="${S.lang==='hi'?'अब तक के सितारे':'Stars so far'}">
       <span class="star-sparkle">⭐</span>
-      <span>${stars}</span>
+      <span>${S.stars}</span>
     </div>
   </div>`;
 }
 
-function cheerMascotAvatar(){
-  if(typeof sfxChime === 'function') sfxChime();
-  if(typeof triggerStarBurst === 'function') triggerStarBurst(15);
+function cheerMascotAvatar(el){
+  sfxChime();
+  triggerStarBurst(15, el);
 }
 

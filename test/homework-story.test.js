@@ -1,71 +1,83 @@
+/* ==================================================================
+   HOMEWORK STORY — genHomeworkStory() (core/lesson-gen.js), built on
+   skillProblem() (core/mathgen.js).
+
+   Proves the things that were wrong before: the right answer is not
+   always the first option; the question really exercises the named
+   skill (carrying carries, BODMAS needs the order of operations and
+   offers the add-first mistake); the story uses the child's own game,
+   not a hardcoded one; a skill that isn't one arithmetic question gets
+   no fake story; the card id is stable so it can't be minted twice.
+   ================================================================== */
 const fs = require('fs'), vm = require('vm');
+const { verifyLoadListHasAllContent } = require('./_helpers/load-order.js');
 
-function makeLocalStorage(){
-  const data = {};
-  return {
-    getItem: k => (k in data ? data[k] : null),
-    setItem: (k,v) => { data[k] = String(v); },
-    removeItem: k => { delete data[k]; },
-  };
-}
-
-const ctx = {
-  console, Intl, setTimeout, clearTimeout,
-  localStorage: makeLocalStorage(),
-  S: { lang: 'en', age: 6, name: 'Kabir', favGame: 'kabaddi' }
-};
+const ctx = { console, Intl, S: { lang:'en', age:8, name:'Kabir', id:'c-kabir', game:'cricket', day:0 } };
 vm.createContext(ctx);
-
-for(const f of [
+const LOAD_LIST = [
   'src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
-  'src/content/games.js','src/content/facts.js','src/content/ages.js',
+  'src/content/games.js','src/content/themes.js','src/content/facts.js','src/content/ages.js',
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
   'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-  'src/core/diagnose.js'
-]){
-  vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
-}
-
-vm.runInContext(`globalThis.__hwStory = {
-  genHomeworkStory, genGameSvg, personalizeContentForHomework, assignHomework, S, GAMES
-};`, ctx);
-const HW = ctx.__hwStory;
+  'src/content/comprehension.js','src/core/diagnose.js','src/core/mathgen.js'
+];
+for(const f of LOAD_LIST) vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
+vm.runInContext(`globalThis.__ = { genHomeworkStory, genGameSvg, gameById, S };`, ctx);
+const X = ctx.__;
 
 let failures = 0;
-function check(name, pass, detail){
-  console.log(`  ${pass ? 'PASS' : 'FAIL'}  ${name}${pass ? '' : ' → ' + detail}`);
-  if(!pass) failures++;
+const checks = [];
+function check(name, pass, detail){ checks.push({name, pass, detail}); if(!pass) failures++; }
+
+const lc = verifyLoadListHasAllContent(LOAD_LIST, 'src/core/diagnose.js');
+check("this file's own LOAD_LIST includes every content/*.js file index.html loads before core/diagnose.js", lc.pass, JSON.stringify(lc.missing));
+
+const evalQ = q => Function(`return (${q.en.replace(' = ?','').replace(/×/g,'*').replace(/−/g,'-').replace(/÷/g,'/')})`)();
+const ask = st => st.beats.find(b => b.t === 'ask');
+
+const carry = X.genHomeworkStory('carry', null, X.S, { teacherNote: 'Practise carrying' });
+console.log('carry story:', ask(carry).q.en, ask(carry).opts, 'correct', ask(carry).correct);
+check('a homework story has three beats: intro, the question, the win', carry && carry.beats.map(b=>b.t).join() === 'intro,ask,win', JSON.stringify(carry && carry.beats.map(b=>b.t)));
+check("with no game given, it uses the child's own game (cricket), not a hardcoded one", carry.gameId === 'cricket', carry.gameId);
+check("the teacher's note is woven into the opening line", carry.beats[0].say.en.includes('Practise carrying'), carry.beats[0].say.en);
+check('the option marked correct really is the answer to the question asked', Number(ask(carry).opts[ask(carry).correct]) === evalQ(ask(carry).q), JSON.stringify(ask(carry)));
+{
+  const [a, b] = ask(carry).q.en.replace(' = ?','').split(' + ').map(Number);
+  check('a "carrying" question genuinely carries (ones digits add to 10 or more)', (a % 10) + (b % 10) >= 10, ask(carry).q.en);
 }
 
-console.log('=== HOMEWORK STORY GENERATOR TESTS ===');
+// the right answer must not sit in the same position every time
+const positions = new Set();
+for(let i = 0; i < 40; i++){
+  const st = X.genHomeworkStory('add2', null, { ...X.S, id: 'child' + i }, {});
+  positions.add(ask(st).correct);
+}
+check('across 40 children, the correct answer lands in more than one position (it used to be index 0 every time)', positions.size >= 2, JSON.stringify([...positions]));
 
-// Test 1: Story generation across games (Cricket, Kabaddi, Pithoo, Stapu)
-const storyKabaddi = HW.genHomeworkStory('carry', 'kabaddi', HW.S, { teacherNote: 'Practice 2-digit carrying' });
-check('Homework story generated for Kabaddi', storyKabaddi && storyKabaddi.isHomeworkStory, 'failed to generate story');
-check('Story carries 3 interactive beats', storyKabaddi && storyKabaddi.beats.length === 3, `got ${storyKabaddi && storyKabaddi.beats.length}`);
-check('Beat 0 contains teacher note', storyKabaddi && storyKabaddi.beats[0].say.en.includes('Practice 2-digit carrying'), 'note not woven in');
+const bod = X.genHomeworkStory('bodmas', null, X.S, {});
+const bq = ask(bod).q.en.replace(' = ?','');
+const [ba, rest] = bq.split(' + '); const [bb, bc] = rest.split(' × ').map(Number);
+check('a BODMAS question really needs the order of operations (a + b × c)', /\d+ \+ \d+ × \d+/.test(bq), bq);
+check('…and offers the classic mistake (adding first) as one of the wrong options', ask(bod).opts.map(Number).includes((Number(ba) + bb) * bc), JSON.stringify(ask(bod).opts));
 
-// Test 2: Procedural SVG court rendering
-const svgCricket = HW.genGameSvg('cricket', 0);
-check('Procedural SVG generated for Cricket pitch', typeof svgCricket === 'string' && svgCricket.includes('game-svg-panel') && svgCricket.includes('rect'), 'invalid SVG');
+check('a skill that is not one arithmetic question (shapes) gets no story at all, not a fake sum', X.genHomeworkStory('shapes2d', null, X.S, {}) === null, 'expected null');
+check('…same for a reading skill', X.genHomeworkStory('read3', null, X.S, {}) === null, 'expected null');
 
-const svgStapu = HW.genGameSvg('stapu', 1);
-check('Procedural SVG generated for Stapu grid', typeof svgStapu === 'string' && svgStapu.includes('7'), 'invalid Stapu SVG');
+const coop = X.genHomeworkStory('carry', 'kabaddi', X.S, { coop:true, p2Name:'Ananya' });
+check('co-op mode: coop flag set and the friend named', coop.coop === true && coop.p2Name === 'Ananya', JSON.stringify({coop:coop.coop, p2:coop.p2Name}));
+check('an explicit game overrides the child default', coop.gameId === 'kabaddi', coop.gameId);
 
-// Test 3: Co-Op Buddy Mode turn assignments
-const storyCoop = HW.genHomeworkStory('carry', 'cricket', HW.S, { coop: true, p2Name: 'Ananya' });
-check('Co-Op Buddy Mode set to true', storyCoop && storyCoop.coop === true, `coop is ${storyCoop && storyCoop.coop}`);
-check('Co-Op sets p2Name to Ananya', storyCoop && storyCoop.p2Name === 'Ananya', `got ${storyCoop && storyCoop.p2Name}`);
+const again = X.genHomeworkStory('carry', null, X.S, {});
+const card = carry.beats[2].card;
+check('the win beat carries a card with a stable id, so finishing twice cannot mint a duplicate', card && card.id === again.beats[2].card.id && !/\d{10,}/.test(card.id), card && card.id);
 
-// Test 4: Checkpoint math options & collectible card reward
-const winBeat = storyKabaddi.beats[2];
-check('Win beat contains collectible card reward', winBeat && winBeat.card && winBeat.card.stamp === '⭐ Teacher Approved', 'card reward missing');
+const svgCricket = X.genGameSvg(X.gameById('cricket'), 1);
+check('procedural game SVG renders for cricket', svgCricket.includes('game-svg-panel') && svgCricket.includes('rect'), 'invalid SVG');
+const svgStapu = X.genGameSvg(X.gameById('stapu'), 1);
+check('procedural game SVG renders for stapu', svgStapu.includes('game-svg-panel'), 'invalid SVG');
 
-// Test 5: Teacher homework assignment bridge integration
-HW.S.classCode = 'CLASS101';
-HW.assignHomework('CLASS101', ['carry', 'barsub'], 'Submitting math practice');
-const hwPlan = HW.personalizeContentForHomework(HW.S);
-check('personalizeContentForHomework returns story bundle', hwPlan && hwPlan.story && hwPlan.story.isHomeworkStory, 'story not returned in hw bundle');
-
-console.log(`\nResults: ${failures === 0 ? 'ALL TESTS PASSED' : failures + ' TEST(S) FAILED'}`);
+console.log('\n' + '-'.repeat(70));
+checks.forEach(c => console.log(`  ${c.pass?'PASS':'FAIL'}  ${c.name}${c.pass?'':'  → '+c.detail}`));
+console.log('-'.repeat(70));
+console.log(`${checks.length-failures}/${checks.length} checks passed`);
 process.exitCode = failures ? 1 : 0;

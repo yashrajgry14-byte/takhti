@@ -68,5 +68,8 @@ function switchProfile(i){
   S.ctx = {}; S.rb = null;
   log(null, `Switched to ${S.name}'s profile · on-device, instant`);
   save();
-  if(S.age == null) promptAge('map'); else go('map');
+  // a profile that predates avatars or never got an age finishes the same
+  // tap-an-animal / count-the-candles onboarding a new child gets
+  if(!S.avatar || S.age == null){ S.ob = null; go('onboard'); }
+  else goHub();
 }

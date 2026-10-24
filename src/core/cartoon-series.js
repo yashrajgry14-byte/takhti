@@ -1,74 +1,29 @@
 /* ==================================================================
-   TOPIC CARTOON SERIES ENGINE — Multi-Episode Animated Arcs
+   CARTOON SERIES — a few episodes that build one idea, in order.
 
-   Generates multi-episode cartoon series following recurring Indian
-   game champions & mascots across continuous curriculum topics.
-
-   Requires: core/generative-brain.js, content/games.js
+   Each series is a short ladder of real skills from the skill graph,
+   easiest first, told in one game and one theme so the episodes feel
+   like a story rather than a playlist. cartoonSeriesFor() keeps only the
+   episodes this child's age band reaches (cartoonSkills(), see
+   core/video-library-catalog.js) and drops a series with none left, so a
+   five-year-old never sees a times-tables episode.
    ================================================================== */
 
-function generateCartoonSeries(seriesId, child){
-  const c = child || (typeof S !== 'undefined' ? S : {});
-  const favGame = (c && c.favGame) || 'kabaddi';
+const CARTOON_SERIES = [
+  { id:'kabaddi_league', gameId:'kabaddi', themeId:'sports', icon:'🤼',
+    title:{ en:'The Kabaddi Counting League', hi:'कबड्डी गिनती लीग' },
+    episodes:['count20', 'add10', 'add2', 'carry'] },
+  { id:'jungle_feast', gameId:'chupan', themeId:'folktale', icon:'🐘',
+    title:{ en:"Munni's Jungle Feast", hi:'मुन्नी की जंगल दावत' },
+    episodes:['sub10', 'sub2', 'borrow', 'divshare'] },
+  { id:'cricket_cup', gameId:'cricket', themeId:'anime', icon:'🏏',
+    title:{ en:'The Cricket Power-Up Cup', hi:'क्रिकेट पॉवर-अप कप' },
+    episodes:['skip', 'tables', 'mult2x1', 'bodmas'] }
+];
 
-  const SERIES_TEMPLATES = {
-    kabaddi_league: {
-      id: 'kabaddi_league',
-      title: { en: "Kabir's Kabaddi Math League", hi: "कबीर की कबड्डी गणित लीग" },
-      gameId: 'kabaddi',
-      icon: '🤼',
-      episodes: [
-        { epNum: 1, title: { en: 'Ep 1: The First Raid (Counting)', hi: 'एपिसोड 1: पहली रेड (गिनती)' }, skillId: 'count' },
-        { epNum: 2, title: { en: 'Ep 2: Defending the Line (Addition)', hi: 'एपिसोड 2: लाइन की रक्षा (जोड़)' }, skillId: 'add2' },
-        { epNum: 3, title: { en: 'Ep 3: The Championship Trophy (Carrying)', hi: 'एपिसोड 3: चैम्पियनशिप ट्रॉफी (हासिल)' }, skillId: 'carry' }
-      ]
-    },
-    jungle_fractions: {
-      id: 'jungle_fractions',
-      title: { en: "Munni's Jungle Fraction Adventure", hi: "मुन्नी की जंगल भिन्न यात्रा" },
-      gameId: 'chupan',
-      icon: '🐘',
-      episodes: [
-        { epNum: 1, title: { en: 'Ep 1: Sharing the Mangoes (Equal Shares)', hi: 'एपिसोड 1: आम बाँटना (बराबर हिस्से)' }, skillId: 'share' },
-        { epNum: 2, title: { en: 'Ep 2: Cutting the Cake (Halves & Quarters)', hi: 'एपिसोड 2: केक काटना (आधा और चौथाई)' }, skillId: 'frac' },
-        { epNum: 3, title: { en: 'Ep 3: The Grand Jungle Feast (Fractions)', hi: 'एपिसोड 3: बड़ा जंगल दावत (भिन्न)' }, skillId: 'frac' }
-      ]
-    },
-    cricket_champions: {
-      id: 'cricket_champions',
-      title: { en: "Ananya's Cricket Multiplication Cup", hi: "अनन्या का क्रिकेट गुणा कप" },
-      gameId: 'cricket',
-      icon: '🏏',
-      episodes: [
-        { epNum: 1, title: { en: 'Ep 1: Boundary Runs (Skip Counting)', hi: 'एपिसोड 1: बाउंड्री रन (छलाँग गिनती)' }, skillId: 'skip' },
-        { epNum: 2, title: { en: 'Ep 2: Array Grid Bowling (Multiplication)', hi: 'एपिसोड 2: एरे ग्रिड बॉलिंग (गुणा)' }, skillId: 'array' },
-        { epNum: 3, title: { en: 'Ep 3: World Cup Final (Times Tables)', hi: 'एपिसोड 3: वर्ल्ड कप फाइनल (पहाड़ा)' }, skillId: 'times' }
-      ]
-    }
-  };
-
-  const template = SERIES_TEMPLATES[seriesId] || SERIES_TEMPLATES.kabaddi_league;
-
-  // Generate video blueprints for each episode
-  const episodeVideos = template.episodes.map(ep => {
-    if(typeof generateCartoonBlueprint === 'function'){
-      const vid = generateCartoonBlueprint(c, ep.skillId, {
-        gameId: template.gameId,
-        seriesTitleEn: template.title.en,
-        seriesTitleHi: template.title.hi
-      });
-      vid.episodeNum = ep.epNum;
-      vid.title = ep.title;
-      return vid;
-    }
-    return null;
-  }).filter(Boolean);
-
-  return {
-    id: template.id,
-    title: template.title,
-    icon: template.icon,
-    gameId: template.gameId,
-    episodes: episodeVideos
-  };
+function cartoonSeriesFor(){
+  const reach = new Set(cartoonSkills().map(s => s.id));
+  return CARTOON_SERIES
+    .map(sr => ({ ...sr, episodes: sr.episodes.filter(id => reach.has(id)) }))
+    .filter(sr => sr.episodes.length);
 }

@@ -150,7 +150,6 @@ const SKILLS = [
 ];
 
 const skillById = id => SKILLS.find(s => s.id === id);
-const skillsForGrade = g => SKILLS.filter(s => s.g === g);
 
 /* Everything a skill stands on, all the way down, deepest first.
    Cycle-safe: a malformed graph must not hang a teacher's dashboard. */

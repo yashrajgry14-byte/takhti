@@ -44,10 +44,22 @@ function weekPlan(){
   }
   return out;
 }
-// FORMATS.length, not a hardcoded 7 — weekPlan() always draws every format
-// once, so the cycle length has to track the bag, or the last entries added
-// (like 'lesson') would sit in the plan but never actually be selectable.
-function todayFormat(){ return weekPlan()[S.day % FORMATS.length]; }
+/* Which day of the plan is today: the REAL weekday (Mon = 0), shifted by
+   S.day — a demo offset only nextDay() ("Tomorrow →") advances, so a
+   judge can walk the week without waiting for it. This used to be
+   S.day alone, which nothing but that demo button ever moved: a real
+   child opening the app every morning got the same card format forever.
+
+   weekPlan() orders all FORMATS by need; a 7-day week shows the first
+   seven. Which format sits eighth changes week to week with the child's
+   own weighting and the week's seed, so none is permanently excluded —
+   it is just the one this child needs least that week. */
+function dayIndex(){ return ((new Date().getDay() + 6) % 7 + (S.day || 0)) % 7; }
+/* A number that changes once per calendar day (plus the demo offset) —
+   the seed for everything that should be "today's": the fact, the word,
+   the story, the lessons offered. */
+function dayKey(){ return Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5) + (S.day || 0); }
+function todayFormat(){ return weekPlan()[dayIndex()]; }
 
 /* ---- content pools (ship on-device; Tier 2 refreshes them) ---- */
 const WORLD = [

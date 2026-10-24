@@ -229,7 +229,7 @@ function arrFinish(){
   S.arr = null;
   if(!S.avatar || S.age == null){ go('onboard'); return; }
   if(!S.game){ go('pick'); return; }
-  go('map');
+  goHub();   // today's opening the first time today, else the map
 }
 function arrSkip(){
   clearTimeout(S._arrTimer);   // otherwise the 8.2s herd-walk timer still fires later and resets the chat to turn 0

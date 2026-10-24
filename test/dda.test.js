@@ -1,34 +1,21 @@
+/* ==================================================================
+   AGE-BAND PASS THRESHOLDS (DDA) — getGradeThresholds()/gradeVerdict()
+   in core/matcher.js, reading AGE_BANDS' passScore/gateScore from
+   content/ages.js.
+
+   Deliberately loads ONLY those two files: nothing here touches the
+   skill/content graph, so there is no content load list to drift (see
+   test/_helpers/load-order.js for the suites where there is). The real
+   call sites — the reading screen's checkRead() and the read-back card —
+   are exercised end to end by test/self-listen.test.js.
+   ================================================================== */
 const fs = require('fs'), vm = require('vm');
 
-function makeLocalStorage(){
-  const data = {};
-  return {
-    getItem: k => (k in data ? data[k] : null),
-    setItem: (k,v) => { data[k] = String(v); },
-    removeItem: k => { delete data[k]; },
-  };
-}
-
-const ctx = {
-  console, Intl, setTimeout, clearTimeout,
-  localStorage: makeLocalStorage(),
-  S: { lang: 'en', age: 5, name: 'Rohan' }
-};
+const ctx = { console, Intl, S: { lang: 'en', age: 5, name: 'Rohan' } };
 vm.createContext(ctx);
-
-for(const f of [
-  'src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
-  'src/content/games.js','src/content/facts.js','src/content/ages.js',
-  'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
-  'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-  'src/core/diagnose.js'
-]){
+for(const f of ['src/content/ages.js', 'src/core/matcher.js'])
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
-}
-
-vm.runInContext(`globalThis.__dda = {
-  gradeVerdict, getGradeThresholds, bandForAge, S
-};`, ctx);
+vm.runInContext(`globalThis.__dda = { gradeVerdict, getGradeThresholds, AGE_BANDS, GRADE, S };`, ctx);
 const DDA = ctx.__dda;
 
 let failures = 0;
@@ -37,29 +24,30 @@ function check(name, pass, detail){
   if(!pass) failures++;
 }
 
-console.log('=== DYNAMIC DIFFICULTY ADJUSTMENT (DDA) TESTS ===');
+console.log('=== AGE-BAND PASS THRESHOLDS (DDA) ===');
 
-// Test 1: 5-year-old (early band) thresholds
 DDA.S.age = 5;
-let thresh = DDA.getGradeThresholds(DDA.S);
-check('Early band (age 5) pass threshold is 68%', thresh.pass === 68, `got ${thresh.pass}`);
+check('Early band (age 5) pass threshold is 68%', DDA.getGradeThresholds(DDA.S).pass === 68, `got ${DDA.getGradeThresholds(DDA.S).pass}`);
+check('68% passes for a 5-year-old', DDA.gradeVerdict({ score: 68, confidence: 0.9, shaky: false }, DDA.S) === 'pass', 'not pass');
 
-// Test 2: 68% score passes for a 5-year-old
-let verdict68_early = DDA.gradeVerdict({ score: 68, confidence: 0.9, shaky: false }, DDA.S);
-check('68% score passes for a 5-year-old in early band', verdict68_early === 'pass', `got ${verdict68_early}`);
-
-// Test 3: 9-year-old (fluent band) thresholds
 DDA.S.age = 9;
-thresh = DDA.getGradeThresholds(DDA.S);
-check('Fluent band (age 9) pass threshold is 82%', thresh.pass === 82, `got ${thresh.pass}`);
+check('Fluent band (age 9) pass threshold is 82%', DDA.getGradeThresholds(DDA.S).pass === 82, `got ${DDA.getGradeThresholds(DDA.S).pass}`);
+check('68% does NOT pass for a 9-year-old (coach)', DDA.gradeVerdict({ score: 68, confidence: 0.9, shaky: false }, DDA.S) === 'coach', 'not coach');
+check('82% passes for a 9-year-old', DDA.gradeVerdict({ score: 82, confidence: 0.9, shaky: false }, DDA.S) === 'pass', 'not pass');
 
-// Test 4: 68% score fails/coaches for a 9-year-old
-let verdict68_fluent = DDA.gradeVerdict({ score: 68, confidence: 0.9, shaky: false }, DDA.S);
-check('68% score does NOT pass for a 9-year-old in fluent band (verdict: coach)', verdict68_fluent === 'coach', `got ${verdict68_fluent}`);
+check('every age band declares its own pass and gate score, so no band silently falls back to the flat default',
+  Object.values(DDA.AGE_BANDS).every(b => typeof b.passScore === 'number' && typeof b.gateScore === 'number'),
+  JSON.stringify(Object.values(DDA.AGE_BANDS).map(b => [b.id, b.passScore, b.gateScore])));
+check('pass thresholds rise with age — older children are held to a higher bar',
+  Object.values(DDA.AGE_BANDS).map(b => b.passScore).every((p, i, a) => i === 0 || p >= a[i-1]),
+  JSON.stringify(Object.values(DDA.AGE_BANDS).map(b => b.passScore)));
 
-// Test 5: 82% score passes for a 9-year-old
-let verdict82_fluent = DDA.gradeVerdict({ score: 82, confidence: 0.9, shaky: false }, DDA.S);
-check('82% score passes for a 9-year-old in fluent band', verdict82_fluent === 'pass', `got ${verdict82_fluent}`);
+// "Never mark a child wrong for the recognizer's doubt": low confidence
+// plus a low score is 'unsure' (ask again, record nothing), not 'coach'.
+check("low recognizer confidence with a low score is 'unsure', never a wrong answer",
+  DDA.gradeVerdict({ score: 40, confidence: 0.2, shaky: false }, DDA.S) === 'unsure', 'not unsure');
+check("a shaky match below 90 is 'unsure' too",
+  DDA.gradeVerdict({ score: 85, confidence: 0.9, shaky: true }, DDA.S) === 'unsure', 'not unsure');
 
 console.log(`\nResults: ${failures === 0 ? 'ALL TESTS PASSED' : failures + ' TEST(S) FAILED'}`);
 process.exitCode = failures ? 1 : 0;

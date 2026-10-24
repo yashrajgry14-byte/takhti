@@ -80,16 +80,3 @@ function rdBand(score, lang){
   return 'fluent';
 }
 
-/* Filter any pool down to what this child should actually be seeing.
-   Falls back one band at a time rather than returning nothing — an
-   empty screen is worse than a slightly easy sentence. */
-function rdFilter(pool, lang, band){
-  const order = ['pre','early','developing','fluent'];
-  const cap = order.indexOf(band);
-  for(let c = cap; c >= 0; c--){
-    const allowed = order.slice(0, c+1);
-    const hit = pool.filter(t => allowed.includes(readability(t, lang).band));
-    if(hit.length) return hit;
-  }
-  return pool;
-}

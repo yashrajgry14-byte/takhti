@@ -211,28 +211,41 @@ function lesNarrate(){
     setTimeout(() => { if(S.lesson && lesBeat() === b) lesNext(); }, 900);
   });
 }
+/* A collectible card, kept in the child's own profile (S.cards — persisted,
+   shown on the parent dashboard). Stable ids, so earning the same card
+   twice doesn't duplicate it. Returns whether it was new. Shared with the
+   cartoon player (ui/video-player.js). */
+function awardCard(card){
+  if(!card || S.cards.some(c => c.id === card.id)) return false;
+  S.cards.push({ id: card.id, actor: card.actor, titleEn: card.titleEn, titleHi: card.titleHi });
+  log(0, `Card earned · ${card.titleEn}`);
+  saveSoon();
+  return true;
+}
+
 function lesNext(){
   const les = S.lesson && S.lesson.data;
   if(!les) return;
   if(S.lesson.i >= les.beats.length - 1){
     if(!S.lesson.counted){
       S.lesson.counted = true;
-      record('math', S.lesson.asked ? S.lesson.right >= S.lesson.asked/2 : true);
+      const passed = S.lesson.asked ? S.lesson.right >= S.lesson.asked/2 : true;
+      record('math', passed);
       markLessonDone(S.lesson.id);
+      if(les.isHomeworkStory && S.lesson.hwAt){ S.hwDone = S.lesson.hwAt; saveSoon(); }
+      if(passed && S.lesson.asked){
+        if(typeof sfxChime === 'function') sfxChime();
+        if(typeof triggerConfetti === 'function') triggerConfetti(1800);
+      }
     }
     return;
   }
   S.lesson.i++; S.lesson.picked = null;
   if(typeof sfxCard === 'function') sfxCard();
 
+  // the card is earned by getting the checkpoint right, not by reaching the end
   const newBeat = les.beats[S.lesson.i];
-  if(newBeat && newBeat.card){
-    S.unlockedCards = S.unlockedCards || [];
-    if(!S.unlockedCards.some(c=>c.id===newBeat.card.id)){
-      S.unlockedCards.push(newBeat.card);
-      if(typeof sfxChime === 'function') sfxChime();
-    }
-  }
+  if(newBeat && newBeat.card && S.lesson.right > 0 && awardCard(newBeat.card) && typeof sfxChime === 'function') sfxChime();
 
   render(); lesNarrate();
 }
@@ -248,34 +261,28 @@ function lesAnswer(k){
     if(typeof sfxThud === 'function') sfxThud();
   }
   log(0, `Lesson checkpoint · ${ok ? 'correct' : 'incorrect'}`);
-  if(typeof noteSkillFromConcept === 'function'){
-    const concept = S.lesson.data && S.lesson.data.concept;
-    if(concept) noteSkillFromConcept(concept, ok);
-  }
+  // a homework story names its skill directly; a bank lesson names a concept
+  const les = S.lesson.data;
+  if(les.skillId) noteSkillAttempt(les.skillId, ok);
+  else if(les.concept) noteSkillFromConcept(les.concept, ok);
   render();
   speak(ok ? (S.lang==='hi'?'बिलकुल सही!':'Exactly right!')
            : (S.lang==='hi'?`देखो — जवाब है ${b.opts[b.correct]}`:`Look — the answer is ${b.opts[b.correct]}`),
         null, () => setTimeout(() => { if(S.lesson) lesNext(); }, 700));
 }
 
-function triggerStorySelfListen(){
-  const b = lesBeat();
-  if(!b) return;
-  const line = b.t === 'ask' ? L(b.q) : lesSay(b);
-  if(typeof sfxChalk === 'function') sfxChalk();
-  if(typeof speakWithSelfListen === 'function'){
-    speakWithSelfListen(line);
-  } else if(typeof speak === 'function'){
-    speak(line);
-  }
-}
-
-function startHomeworkStory(skillId, gameId, coop){
-  if(typeof genHomeworkStory !== 'function') return;
-  const les = genHomeworkStory(skillId, gameId, S, { coop: !!coop });
-  S.lesson = { id: les.id, data: les, i: 0, right: 0, asked: 0, picked: null };
+/* The homework story drills personalizeContentForHomework()'s storySkill —
+   the deepest diagnosed gap it can teach, not necessarily the skill the
+   teacher typed — in the child's own game. hwAt remembers which
+   assignment this was, so finishing it lets Munni stop pointing at it. */
+function startHomeworkStory(coop){
+  const hw = personalizeContentForHomework(S);
+  if(!hw || !hw.storySkill) return;
+  const les = genHomeworkStory(hw.storySkill, S.game, S, { coop: !!coop, teacherNote: hw.note });
+  if(!les) return;
+  S.lesson = { id: les.id, data: les, i: 0, right: 0, asked: 0, picked: null, hwAt: hw.assignedAt };
   if(typeof sfxCard === 'function') sfxCard();
-  log(0, `Homework Story "${les.id}" started in ${gameById(gameId || S.game).en}`);
+  log(0, `Homework story · ${hw.storySkill}${hw.assignedSkills.includes(hw.storySkill) ? '' : ` (diagnosed under ${hw.assignedSkills.join(', ')})`} · in ${gameById(S.game).en}`);
   render();
   lesNarrate();
 }
@@ -292,19 +299,25 @@ function lessonHTML(){
   const asking = b.t === 'ask';
   const opts = asking ? (S.lang==='hi' ? (b.hiOpts || b.opts) : b.opts) : [];
 
+  // one shared match: the friend sets it up, the child answers, both win
   const coopBanner = les.coop ? `
     <div style="background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:20px;font-size:12px;margin-bottom:8px;text-align:center;">
-      👥 ${S.lesson.i % 2 === 0 ? (les.p1Name || 'Player 1') + "'s Turn" : (les.p2Name || 'Player 2') + "'s Turn"}
+      👥 ${b.t === 'ask'
+        ? (S.lang==='hi' ? `${les.p1Name} की बारी — ${les.p2Name} मदद कर सकता है` : `${les.p1Name}'s turn — ${les.p2Name} can help`)
+        : `${les.p1Name} + ${les.p2Name}`}
     </div>
   ` : '';
 
-  const cardRewardHtml = b.card ? `
+  const earned = b.card && S.cards.some(c => c.id === b.card.id);
+  const cardRewardHtml = !b.card ? '' : earned ? `
     <div class="card-reward-box" style="background:linear-gradient(135deg, ${g.accent || '#3FBB78'}33, rgba(0,0,0,0.4));border:2px solid ${g.accent || '#3FBB78'};border-radius:14px;padding:12px;margin:10px 0;text-align:center;">
       <div style="font-size:32px">${b.card.actor}</div>
-      <div style="font-weight:bold;font-size:16px;color:#FFD700">${S.lang==='hi'?b.card.hiGameTitle:b.card.gameTitle} ${b.card.stamp}</div>
-      <div style="font-size:12px;opacity:0.8">${S.lang==='hi'?'कौशल: ' + b.card.skillHi : 'Skill Mastered: ' + b.card.skillEn}</div>
-    </div>
-  ` : '';
+      <div style="font-weight:bold;font-size:16px;color:#FFD700">${S.lang==='hi'?b.card.titleHi:b.card.titleEn}</div>
+      <div style="font-size:12px;opacity:0.8">${S.lang==='hi'?'नया कार्ड!':'New card for your collection!'}</div>
+    </div>` : `
+    <div class="muted" style="text-align:center;margin:10px 0">${S.lang==='hi'
+      ? 'अगली बार सवाल सही करो और यह कार्ड तुम्हारा!'
+      : 'Get the question right next time and this card is yours!'}</div>`;
 
   return `
   <button class="back" onclick="endLesson()">← ${t('back')}</button>
@@ -328,7 +341,6 @@ function lessonHTML(){
 
   <div class="row" style="margin-top:12px;gap:6px;">
     <button class="btn ghost" onclick="lesNarrate()">🔊 ${t('hear')}</button>
-    <button class="btn ghost" onclick="triggerStorySelfListen()">🎙️ ${S.lang==='hi'?'स्वयं बोलें':'Self-Listen'}</button>
     ${last
       ? `<button class="btn leaf" onclick="endLesson()">${S.lang==='hi'?'हो गया ⭐':'Done ⭐'}</button>`
       : `<button class="btn" onclick="lesNext()">${t('next')} →</button>`}
@@ -339,25 +351,38 @@ function lessonListHTML(){
   const mine = lessonsForChild(8);
   const total = lessonBank().filter(l => l.band === band().id).length;
   const g = gameById(S.game);
-  const hwData = typeof personalizeContentForHomework === 'function' ? personalizeContentForHomework() : null;
+  const hwData = personalizeContentForHomework(S);
+  // the diagnosed plan's own lessons: bank lessons open here, practice loops
+  // (read/write) open their live screen — see core/diagnose.js's lessonsForSkill()
+  const hwLessons = hwData ? hwData.lessons.slice(0, 3) : [];
+  const hwStart = hwData && hwData.plan.find(p => p.verdict === 'gap' || p.verdict === 'wobbly');
 
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="display" style="font-size:21px;margin:4px 0">
     ${S.lang==='hi'?'कहानी से सीखो':'Learn with a story'}</div>
-  
+
   ${hwData ? `
     <div class="hw-banner-card" style="background:linear-gradient(135deg, var(--marigold), #C5603A);border-radius:14px;padding:14px;margin:10px 0;color:#fff;">
-      <div style="font-weight:bold;font-size:16px;">📝 ${S.lang==='hi'?'गृहकार्य कहानी':'Teacher Homework Story'}</div>
-      <div style="font-size:13px;margin:4px 0;opacity:0.9;">${hwData.note ? `"${hwData.note}"` : (S.lang==='hi'?'शिक्षक द्वारा निर्धारित कार्य':'Assigned by teacher')}</div>
+      <div style="font-weight:bold;font-size:16px;">📝 ${S.lang==='hi'?'गृहकार्य':'Homework from your teacher'}</div>
+      <div style="font-size:13px;margin:4px 0;opacity:0.9;">${hwData.note ? `"${attr(hwData.note)}"` : (S.lang==='hi'?'शिक्षक द्वारा दिया गया':'Assigned by your teacher')}</div>
+      ${hwStart ? `<div style="font-size:12.5px;opacity:.9;margin-top:2px">${S.lang==='hi'
+        ? `पहले: ${hwStart.skill.hi}`
+        : `Start with: ${hwStart.skill.en}`}</div>` : ''}
+      ${hwData.storySkill ? `
       <div class="row" style="gap:8px;margin-top:8px;">
-        <button class="btn" style="background:#fff;color:#000;font-weight:bold;" onclick="startHomeworkStory('${hwData.assignedSkills[0]}', '${S.game}', false)">
-          ▶ ${S.lang==='hi'?'सोलो खेलें':'Play Solo'}
+        <button class="btn" style="background:#fff;color:#000;font-weight:bold;" onclick="startHomeworkStory(false)">
+          ▶ ${S.lang==='hi'?'अकेले खेलो':'Play solo'}
         </button>
-        <button class="btn ghost" style="color:#fff;border-color:#fff;" onclick="startHomeworkStory('${hwData.assignedSkills[0]}', '${S.game}', true)">
-          👥 ${S.lang==='hi'?'2-खिलाड़ी मोड':'2-Player Co-Op'}
+        <button class="btn ghost" style="color:#fff;border-color:#fff;" onclick="startHomeworkStory(true)">
+          👥 ${S.lang==='hi'?'दोस्त के साथ':'With a friend'}
         </button>
-      </div>
+      </div>` : ''}
+      ${hwLessons.map(l => `<button class="lescard" style="margin-top:8px" onclick="${l.screen ? `go('${l.screen}')` : `startLesson('${l.id}')`}">
+        <span class="lesic">${l.ic || '📘'}</span>
+        <span><b>${L(l.title)}</b><small>${L(l.sub)}</small></span>
+        <span class="lesgo">▶</span>
+      </button>`).join('')}
     </div>
   ` : ''}
 

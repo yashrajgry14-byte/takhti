@@ -468,26 +468,18 @@ function answerQuiz(i,correct){
   if(ok){ S.ctx.quizDone = true; S.stars++; log(0,'Comprehension checkpoint passed'); }
 }
 
-/* ---- Tier 1: on-device small model (simulated hook) ---- */
+/* ---- Tier 1: on-device small model — the hook, not the model ----
+   No small language model ships in this build. This is the one place a
+   Tier 1 model would take the words a child just struggled with and write
+   a fresh practice line; until then it only records, honestly, that the
+   hook fired and with what — the judge trace must never claim a model is
+   generating something it isn't. */
 function tier1Explain(words){
   if(!words.length) return;
-  log(1,`SLM · generating a practice line using: ${words.join(', ')}`);
+  log(1,`Tier 1 hook · no on-device model in this build · would practise: ${words.join(', ')}`);
 }
 
-/* ---- goals ---- */
-function goalTile(icon, k){
-  // S.today/S.targets can be missing a key (or be missing entirely) on a
-  // profile persisted before daily goals existed — default rather than throw
-  const now=(S.today&&S.today[k])||0, max=(S.targets&&S.targets[k])||5, done=now>=max;
-  const label={read:S.lang==='hi'?'पढ़ो':'read',write:S.lang==='hi'?'लिखो':'write',
-               math:S.lang==='hi'?'गिनो':'sums',facts:S.lang==='hi'?'नया':'new'}[k];
-  return `<div class="goal ${done?'done':''}">
-    <div class="gi">${done?'✅':icon}</div>
-    <div class="gv">${now}/${max}</div>
-    <div class="gl">${label}</div>
-    <div class="ring"><i style="width:${Math.min(100,now/max*100)}%"></i></div>
-  </div>`;
-}
+/* ---- parent controls ---- */
 function setTarget(k, d){
   S.targets[k] = Math.max(1, Math.min(20, S.targets[k]+d));
   log(0, `Parent set target · ${k} = ${S.targets[k]} per day`);
@@ -510,6 +502,7 @@ function setParentAge(d){
    may want to silence the app in a quiet room long after that first tap. */
 function toggleMuted(){
   S.muted = !S.muted;
+  if(S.muted) sfxAmbientStop();   // a looping sound must stop now, not at the next screen change
   log(0, `Sound ${S.muted ? 'muted' : 'unmuted'} for ${S.name || 'this child'}`);
   saveSoon();
   render();
@@ -531,13 +524,6 @@ function setClassCode(v){
 function unlinkClassCode(){
   S.classCode = null;
   log(0, 'Class code unlinked · this child no longer mirrors to a teacher');
-  saveSoon();
-  render();
-}
-function assignSampleHomework(){
-  if(!S.classCode) S.classCode = 'DEMO67';
-  assignHomework(S.classCode, ['bodmas','tables'], S.lang==='hi'?'पहाड़े और BODMAS का अभ्यास':'Order of Operations & Multiplication Tables');
-  log(0, `Sample homework assigned to class ${S.classCode}`);
   saveSoon();
   render();
 }

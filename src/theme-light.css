@@ -38,7 +38,7 @@ body{
 .screen{background:linear-gradient(180deg,#DCEEF7 0%,#F7F1E1 58%,#FBF6E9 100%)}
 
 /* chalk-on-slate surfaces become ink-on-paper */
-.card,.factcard,.opt,.gcard,.goal,.day,.tabs button,.langpick button,.btn.ghost,.agebtn{
+.card,.factcard,.opt,.gcard,.day,.tabs button,.langpick button,.btn.ghost{
   background:rgba(255,255,255,.72);border-color:rgba(42,33,24,.14);color:#2A2118}
 .factcard{background:linear-gradient(160deg,rgba(224,138,0,.13),rgba(255,255,255,.8));
   border-color:rgba(224,138,0,.4)}
@@ -62,10 +62,10 @@ body{
 .w.bad{background:rgba(208,42,98,.2)}
 .w.miss{background:rgba(42,33,24,.09);opacity:.5}
 .scorebar{background:rgba(42,33,24,.12)}
-.ring{background:rgba(42,33,24,.12)}
+
 
 /* tiles keep their colour but need darker text where the fill is pale */
-.t-count,.t-ask{color:#FFF}
+
 
 /* the parent world inverts — it is the grown-up's screen, not the child's */
 .paper{background:#1B3A34;color:#F3EEE0}
@@ -74,18 +74,18 @@ body{
 .stepbtn{background:rgba(243,238,224,.12);border-color:rgba(243,238,224,.3);color:#F3EEE0}
 
 /* backdrop: chalk lines become pencil lines on paper */
-.bd{stroke:#3E5A50}
-.bd-cloud{opacity:.16}
-.bd-cloud.c2{opacity:.12}
-.bd-cloud.c3{opacity:.1}
-.bd-kite{opacity:.26}
-.bd-bird{opacity:.24}
-.bd-sun{opacity:.18;stroke:#E08A00}
-.bd-hills{stroke:#3E5A50;opacity:.16}
-.bd-dust{background:#8A7E6D}
-.bd-star{color:#8A7E6D}
-.bd-glow{opacity:.1}
-.bd-token{opacity:.2}
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* trace panel stays dark — it is the judge's window, not the child's */
 .side .tier{background:rgba(255,255,255,.7);border-color:rgba(42,33,24,.14)}
@@ -97,8 +97,8 @@ body{
 
 /* speech bubbles and the mascot need a touch more weight on light ground */
 .bubble{background:#16302B;color:#F3EEE0}
-.mascot .body ellipse,.mascot .body circle{fill:#3E5A50}
-.mascotrow{background:rgba(47,94,204,.1);border-color:rgba(47,94,204,.28)}
+
+
 .elephbubble{background:#16302B;color:#F3EEE0}
 .chit{background:rgba(224,138,0,.12);border-color:rgba(224,138,0,.5)}
 .chit.ready{background:rgba(30,143,85,.14);border-color:rgba(30,143,85,.5)}
@@ -110,10 +110,10 @@ body{
 /* Append to src/theme-light.css — light-theme overrides for the same components */
 
 /* age picker on paper */
-.agebtn{background:rgba(255,255,255,.72);border-color:rgba(42,33,24,.14);color:#2A2118}
-.agebtn.sel{background:var(--marigold);color:#16302B}
-.bandnote{background:rgba(47,94,204,.1);border-color:rgba(47,94,204,.28);color:#6E6355}
-.bandnote b{color:#16302B}
+
+
+
+
 .agechip{background:rgba(224,138,0,.16);color:#9A5E00}
 
 /* lesson player on paper */
@@ -144,13 +144,13 @@ body{
 /* Append to src/theme-light.css — home scene light overrides */
 
 /* home scene on paper */
-.hm-bubble{background:#16302B;color:#F3EEE0}
+
 .hm-munni ellipse,.hm-munni circle,.hm-munni rect{filter:saturate(1.05)}
 .hm-gauri ellipse,.hm-gauri circle{fill:#4A6B60}
-.tile .startpill{background:#16302B;color:var(--marigold)}
+
 
 /* home scene second pass, on paper */
-.hm-petal{opacity:.42}
+
 /* Append to src/theme-light.css */
 
 /* literacy beats on paper */
@@ -196,14 +196,11 @@ body{
 
 /* speech bubbles already invert for contrast on light ground (see the
    existing .bubble/.hm-bubble rule above) — arrival's matches it exactly */
-.arr-bubble{background:#16302B;color:#F3EEE0}
 
 /* dark-glass chips read poorly against a warm gradient once the rest of
    the app has gone light — flip to a light-glass chip instead, still
    opaque enough to stay legible against ANY part of the sky gradient */
-.arr-opt{background:rgba(255,255,255,.78);border-color:rgba(42,33,24,.22);color:#2A2118}
-.arr-opt.sel{background:var(--marigold);color:#16302B}
-.arr-mute{background:rgba(255,255,255,.7)}
+
 /* Append to theme-light.css */
 
 /* onboarding + map on paper */
@@ -218,7 +215,7 @@ body{
   border-color: rgba(42, 33, 24, 0.14);
   box-shadow: 0 4px 14px rgba(60, 45, 25, 0.1);
 }
-.streak-badge, .star-badge {
+ .star-badge {
   background: rgba(255, 255, 255, 0.8);
   border-color: rgba(42, 33, 24, 0.14);
   color: #2A2118;

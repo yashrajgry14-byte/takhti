@@ -157,7 +157,7 @@ function runPass2(){
     const trumpetResult = window.eval(`
       (function(){
         createProfile('Riya');
-        S.age = 8; S.screen = 'home'; render();
+        S.age = 8; S.screen = 'map'; render();
         S.muted = true;
         S._ac = undefined;
         trumpet(1);

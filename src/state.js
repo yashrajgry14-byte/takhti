@@ -21,9 +21,10 @@ function newProfile(name){
     age: null,       // set on the age screen; null = not asked yet, see content/ages.js
     game: null,
     visits: 0,
-    day: 0,          // index into this week's plan; the demo can step it forward
-    seen: [],        // formats already opened this week
-    stars: 3,
+    day: 0,          // demo offset on top of the real weekday — only nextDay() ("Tomorrow →") moves it, see core/daily-engine.js's dayIndex()
+    lastOpen: null,  // dayKey() of the last daily opening, so it plays once a day — see ui/opening.js's goHub()
+    stars: 3,        // only ever grows: never spent, reset, or compared — see ui/views.js's topGamifyBar()
+    cards: [],       // collectible cards earned by getting a story/cartoon checkpoint right; shown on the parent dashboard
     levels: { read: 2, write: 1, math: 2 },
     window: { read: [], write: [], math: [] },   // rolling accuracy window
     attempts: { read: 0, write: 0, math: 0 },
@@ -36,6 +37,7 @@ function newProfile(name){
     doneLessons: [],       // ids already offered, so the picker rotates
     skillHistory: {},      // skillId -> {n, right}, built from lesson checkpoints; see core/diagnose.js
     classCode: null,       // a teacher's 6-char code, entered once on the parent dashboard; see core/diagnose.js
+    hwDone: null,          // assignedAt of the last homework this child finished, so Munni stops pointing at it — see ui/jungle-map.js
     gameBest: {},          // shellKind -> this child's own best score, see src/games/game-core.js's gameEnd()
     muted: false,          // per child, not per device — see core/speech.js's speak()/ui/elephant.js's trumpet()
     avatar: null,          // the animal a child taps to say who they are, see ui/onboarding.js
@@ -59,8 +61,9 @@ const S = {
   _gamePool: null,       // gameBuildPool() cache — derived, never persisted, see src/games/game-core.js
   game_:   null,         // in-progress arcade round — device-level scratch, never persisted, see src/games/game-core.js
   arr:     null,         // in-progress arrival conversation ({step,turn,reply}) — device-level scratch, never persisted, see ui/arrival.js
-  _justLevelled: false,      // record() sets this on a level-up; homeLine() reads it once, see ui/home-scene.js
-  _pendingCelebrate: false,  // a goal was met away from home; fires on the next visit, see ui/home-scene.js
+  _justLevelled: false,      // record() sets this on a level-up; Munni mentions it once on the map, see ui/jungle-map.js's mapLine()
+  _pendingCelebrate: false,  // a daily goal was met mid-activity; the map celebrates it on the next visit, see ui/jungle-map.js
+  _addingChild: false,       // onboarding is creating a sibling's new profile, see ui/onboarding.js's addChild()
   rb: null,             // read-back session, see ui/readback.js
   ctx: {},               // per-screen scratch
   ...newProfile()

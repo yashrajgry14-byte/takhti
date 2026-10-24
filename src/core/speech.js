@@ -87,18 +87,19 @@ function speakDevice(text, lang, onDone){
       log(0, `TTS · ${v? v.name : (l==='hi'?'hi-IN':'en-IN')}`);
   }, 70);
 }
-/* WebSpeech is cloud STT on every browser that ships it — there is no
-   on-device fallback yet (see core/vosk-stt.js for why, and what
-   isVoskReady() is for once one exists). So "browser lacks the API",
-   "no connection", and "the recognizer just failed to start" all mean
-   the same thing to a child: no microphone grading is available right
-   now, type it instead. Calling onEnd() immediately and synchronously
-   in those cases — rather than opening a microphone that can never
-   produce a result — is what keeps the reading screen from ever
-   hanging with no way out; see startListening()/stopListening() in
-   ui/handlers.js for the other half of that guarantee (the ONLINE
-   WebSpeech recognizer this function returns is a real, long-lived
-   object that must be stoppable too, not just this synchronous path). */
+/* WebSpeech is cloud STT on every browser that ships it, and no on-device
+   recognizer is bundled in this build — so "browser lacks the API", "no
+   connection", and "the recognizer failed to start" all mean the same
+   thing to a child: no microphone grading right now, type it instead.
+   onEnd() is called synchronously in those cases rather than opening a
+   microphone that could never produce a result, which is what keeps the
+   reading screen from hanging with no way out. The online recognizer
+   this returns is a real, long-lived object — ui/handlers.js keeps it
+   (ACTIVE_LISTEN) so stopListening() can end a turn nobody is waiting on.
+
+   When an offline engine ships (Vosk, vosk-model-small-hi-0.22), the
+   !navigator.onLine branch is the one place it plugs in; it must call
+   onResult() with the same [{transcript, confidence}] alternatives shape. */
 function listen(onResult, onEnd){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -108,11 +109,6 @@ function listen(onResult, onEnd){
     return null;
   }
   if(!navigator.onLine){
-    // The one place a real on-device recognizer will plug in later — see
-    // core/vosk-stt.js. isVoskReady() is false today, so this always falls
-    // through to the honest "no recognizer, type it" message below.
-    if(typeof isVoskReady === 'function' && isVoskReady() && typeof listenVosk === 'function')
-      return listenVosk(onResult, onEnd);
     log(0, 'STT unavailable offline — no on-device recognizer bundled, typed fallback');
     onEnd('network');
     return null;
@@ -154,50 +150,3 @@ function micReason(err){
     : "This browser can't listen — try Chrome.";
   return S.lang==='hi' ? 'माइक नहीं चला — नीचे लिखकर देखो।' : 'Mic unavailable here — type what you read below.';
 }
-
-/* ==================================================================
-   AUDIO SELF-LISTEN FEEDBACK LOOP
-   Captures transient audio stream during reading for self-comparison.
-   ================================================================== */
-let ACTIVE_RECORDER = null;
-let RECORDED_CHUNKS = [];
-
-function startVoiceRecorder(){
-  RECORDED_CHUNKS = [];
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    if(typeof MediaRecorder === 'undefined') return;
-    try {
-      ACTIVE_RECORDER = new MediaRecorder(stream);
-      ACTIVE_RECORDER.ondataavailable = e => { if(e.data && e.data.size > 0) RECORDED_CHUNKS.push(e.data); };
-      ACTIVE_RECORDER.onstop = () => {
-        if(RECORDED_CHUNKS.length > 0){
-          const blob = new Blob(RECORDED_CHUNKS, { type: 'audio/webm' });
-          if(S.ctx) S.ctx.recordedVoice = URL.createObjectURL(blob);
-          if(typeof render === 'function') render();
-        }
-        stream.getTracks().forEach(t => t.stop());
-      };
-      ACTIVE_RECORDER.start();
-    } catch(e){}
-  }).catch(e => {});
-}
-
-function stopVoiceRecorder(){
-  if(ACTIVE_RECORDER && ACTIVE_RECORDER.state !== 'inactive'){
-    try { ACTIVE_RECORDER.stop(); } catch(e){}
-  }
-}
-
-function playSelfVoice(){
-  if(S.ctx && S.ctx.recordedVoice){
-    const audio = new Audio(S.ctx.recordedVoice);
-    audio.play().catch(e => log(null, 'Audio playback blocked: ' + e.message));
-  }
-}
-
-
-/* ==================================================================
-   READING MATCHER (Tier 0) — deterministic, offline, Devanagari-aware
-   Stage 1 capture → 2 normalize → 3 align → 4 grade → 5 gate → 6 score
-   ================================================================== */

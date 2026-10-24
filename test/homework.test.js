@@ -31,14 +31,14 @@ const LOAD_LIST = [
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
   'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
   'src/content/comprehension.js',
-  'src/core/diagnose.js'
+  'src/core/diagnose.js', 'src/core/mathgen.js'
 ];
 for(const f of LOAD_LIST){
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
 }
 
 vm.runInContext(`globalThis.__h = {
-  assignHomework, getAssignedHomework, personalizeContentForHomework, diagnose, S
+  assignHomework, getAssignedHomework, clearHomework, personalizeContentForHomework, diagnose, noteSkillAttempt, S
 };`, ctx);
 const H = ctx.__h;
 
@@ -70,6 +70,27 @@ check('Assigned homework retrieved for child linked to CLASS6', fetched && fetch
 // Test 3: Personalize Content for Homework
 const personalized = H.personalizeContentForHomework(H.S);
 check('Personalized remediation plan generated', personalized && personalized.lessons && personalized.lessons.length > 0, JSON.stringify(personalized));
+check('the plan carries the assignment timestamp, so a finished homework can be told apart from a new one',
+  personalized && personalized.assignedAt === fetched.assignedAt, JSON.stringify({ at: personalized && personalized.assignedAt }));
+
+// Test 4: the story drills the child's REAL gap, not just what was typed.
+// This child is weak on times tables (5/12) — the skill under BODMAS — so
+// the homework story must drill tables, the deepest teachable gap.
+for(const ok of [1,0,0,1,0,1,0,0,1,0,0,1]) H.noteSkillAttempt('tables', !!ok, H.S);
+const weak = H.personalizeContentForHomework(H.S);
+check("a child weak on tables, assigned BODMAS + tables, gets a story that drills tables (the diagnosed gap), not BODMAS",
+  weak && weak.storySkill === 'tables', JSON.stringify(weak && { storySkill: weak.storySkill, plan: weak.plan.map(p => p.skill.id + ':' + p.verdict) }));
+
+// Test 5: a skill that isn't one arithmetic question gets no fake maths story
+H.assignHomework('CLASS6', ['read3'], 'Read aloud');
+const reading = H.personalizeContentForHomework(H.S);
+check('reading homework gets the diagnosed practice lessons but no maths story (storySkill null)',
+  reading && reading.storySkill === null && reading.lessons.length > 0, JSON.stringify(reading && { storySkill: reading.storySkill, lessons: reading.lessons.length }));
+
+// Test 6: a teacher can withdraw homework
+H.clearHomework('CLASS6');
+check('clearHomework() removes the assignment — the child app sees no homework afterwards',
+  H.getAssignedHomework(H.S) === null && H.personalizeContentForHomework(H.S) === null, JSON.stringify(H.getAssignedHomework(H.S)));
 
 console.log(`\nResults: ${failures === 0 ? 'ALL TESTS PASSED' : failures + ' TEST(S) FAILED'}`);
 process.exitCode = failures ? 1 : 0;

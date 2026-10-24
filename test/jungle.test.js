@@ -175,8 +175,8 @@ server.listen(0, '127.0.0.1', () => {
     `);
     console.log(JSON.stringify(mapDeveloping, null, 2));
     check("choosing a game routes onward to 'map'", mapDeveloping.screen === 'map', `screen=${mapDeveloping.screen}`);
-    check("age 7 (developing band, modules includes 'ask') shows all six places, including Munni's Pond",
-      mapDeveloping.visibleIds.length === 6 && mapDeveloping.visibleIds.includes('ask'),
+    check("age 7 (developing band, modules includes 'ask') shows all seven places, including Munni's Pond and the Picture Hut",
+      mapDeveloping.visibleIds.length === 7 && mapDeveloping.visibleIds.includes('ask') && mapDeveloping.visibleIds.includes('theater'),
       JSON.stringify(mapDeveloping.visibleIds));
     check('the rendered DOM has exactly as many .jm-place buttons as mapVisible() returned',
       mapDeveloping.renderedCount === mapDeveloping.visibleIds.length, JSON.stringify(mapDeveloping));
@@ -199,8 +199,8 @@ server.listen(0, '127.0.0.1', () => {
     check("the 'pre' band's own modules list genuinely excludes 'ask'", !mapPre.bandModules.includes('ask'), JSON.stringify(mapPre.bandModules));
     check("a 4-year-old's map has no Munni's Pond place at all (not shown disabled — genuinely absent)",
       !mapPre.visibleIds.includes('ask') && !mapPre.askButtonExists, JSON.stringify(mapPre));
-    check("the 'pre' band still shows the other five places (read/write/math/story/play all stay allowed)",
-      mapPre.visibleIds.length === 5, JSON.stringify(mapPre.visibleIds));
+    check("the 'pre' band still shows the other six places (read/write/math/story/play/theater all stay allowed)",
+      mapPre.visibleIds.length === 6, JSON.stringify(mapPre.visibleIds));
 
     console.log("\n=== Munni stands at mapSuggestion() ===");
     const suggestion = window.eval(`
@@ -213,8 +213,8 @@ server.listen(0, '127.0.0.1', () => {
         const sug = mapSuggestion();
         const munniEl = document.querySelector('.jm-munni');
         return {
-          suggestedId: sug && sug.id,
-          suggestedXY: sug && { x:sug.x, y:sug.y },
+          suggestedId: sug && sug.place.id, why: sug && sug.why,
+          suggestedXY: sug && { x:sug.place.x, y:sug.place.y },
           munniExists: !!munniEl,
           munniLeft: munniEl && munniEl.style.left,
           munniTop: munniEl && munniEl.style.top
@@ -244,7 +244,7 @@ server.listen(0, '127.0.0.1', () => {
         }};
         render();
         const sug = mapSuggestion();
-        return { suggestedId: sug && sug.id, dueCount: getDueSrsItems(S).length };
+        return { suggestedId: sug && sug.place.id, why: sug && sug.why, dueCount: getDueSrsItems(S).length };
       })()
     `);
     console.log(JSON.stringify(srsOverride));
@@ -287,12 +287,12 @@ server.listen(0, '127.0.0.1', () => {
       })()
     `);
     console.log(JSON.stringify(srsStates, null, 2));
-    check('map renders (all 6 places, no throw) with a due SRS item present',
-      srsStates.withDue.threw === null && srsStates.withDue.placeCount === 6, JSON.stringify(srsStates.withDue));
-    check('map renders (all 6 places, no throw) with S.srs present but empty (nothing due)',
-      srsStates.noDue.threw === null && srsStates.noDue.placeCount === 6, JSON.stringify(srsStates.noDue));
-    check('map renders (all 6 places, no throw) for a child with no S.srs field at all — zero SRS history is not a broken state',
-      srsStates.noHistory.threw === null && srsStates.noHistory.placeCount === 6, JSON.stringify(srsStates.noHistory));
+    check('map renders (all 7 places, no throw) with a due SRS item present',
+      srsStates.withDue.threw === null && srsStates.withDue.placeCount === 7, JSON.stringify(srsStates.withDue));
+    check('map renders (all 7 places, no throw) with S.srs present but empty (nothing due)',
+      srsStates.noDue.threw === null && srsStates.noDue.placeCount === 7, JSON.stringify(srsStates.noDue));
+    check('map renders (all 7 places, no throw) for a child with no S.srs field at all — zero SRS history is not a broken state',
+      srsStates.noHistory.threw === null && srsStates.noHistory.placeCount === 7, JSON.stringify(srsStates.noHistory));
 
     console.log('\n=== the parent dashboard REMEMBERED section: empty state and a real one, neither throws ===');
     const parentSrs = window.eval(`

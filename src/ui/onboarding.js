@@ -61,7 +61,11 @@ function obPickAvatar(id){
   // bootstrap S with no S.profiles entry behind them, and vanish on the
   // next load(). An EXISTING profile re-picking (e.g. one that predates
   // avatars) just updates in place instead of creating a duplicate.
-  if(S.activeProfile == null || !S.profiles[S.activeProfile]){
+  // Adding a sibling (addChild()) always creates a new profile too, rather
+  // than renaming whoever was active.
+  if(S._addingChild || S.activeProfile == null || !S.profiles[S.activeProfile]){
+    S.ob = null;              // don't leave the outgoing sibling's own profile marked mid-onboarding
+    S._addingChild = false;
     createProfile(name);
   }else{
     S.name = name;
@@ -125,13 +129,23 @@ function obFinishAge(){
   S.ob = null;
   log(0, `Age ${S.age} · levels seeded from the ${band ? band().id : 'default'} band`);
   if(typeof saveSoon === 'function') saveSoon();
-  go(S.game ? 'map' : 'pick');
+  if(S.game) goHub(); else go('pick');
 }
 
 /* ---------------- the router ---------------- */
 function onboardHTML(){
-  const st = S.ob || (S.ob = { step: S.avatar ? 'age' : 'who' });
+  const st = S.ob || (S.ob = { step: S.avatar && !S._addingChild ? 'age' : 'who' });
   return st.step === 'age' ? obAgeHTML() : obWhoHTML();
+}
+
+/* A sibling joins the same way the first child did — tap an animal, count
+   the candles — starting a fresh profile. Reached from the profile
+   switcher on the jungle map. */
+function addChild(){
+  if(S.profiles.length >= MAX_PROFILES) return;
+  S._addingChild = true;
+  S.ob = null;
+  go('onboard');
 }
 
 if(typeof VIEWS !== 'undefined') VIEWS.onboard = onboardHTML;
