@@ -59,7 +59,8 @@ server.listen(0, '127.0.0.1', () => {
   const tap = el => { if(!el) throw new Error('nothing to tap'); el.click(); };
   const byText = (sel, txt) => $$(sel).find(el => el.textContent.toLowerCase().includes(txt.toLowerCase()));
 
-  w.addEventListener('load', () => {
+  w.addEventListener('load', async () => {
+    const tick = () => new Promise(r => setTimeout(r, 60));
     try{
       /* ---- first run ---- */
       E(`arrSkip(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance();`);
@@ -139,6 +140,27 @@ server.listen(0, '127.0.0.1', () => {
       check('the new child picks their own game next', E('S.screen') === 'pick', E('S.screen'));
       E(`switchProfile(0)`);
       check('switching back to the first child (already opened today) lands on the map, not the opening', E('S.screen') === 'map' && E('S.name') === 'Tiger', `${E('S.screen')} ${E('S.name')}`);
+
+      /* ---- Tier 1: a practice line after a missed reading ---- */
+      E(`go('read'); S.ctx.sentence = 'The dog can run.'; render();`);   // a known line whose words recur in the bank
+      $('#typed').value = 'zzz qqq'; tap(byText('.btn', 'Check'));
+      await tick();
+      check('a missed reading offers one more line with the missed words', !!$('.practise'), $('#screen').textContent.slice(0, 300));
+      const offered = E('S.ctx.practice && S.ctx.practice.line');
+      tap($('.practise'));
+      check('tapping it makes that line the one to read', E('S.ctx.sentence') === offered && !!offered, `${offered}`);
+
+      /* ---- the dashboard's on-device status, and sharing with a teacher on another phone ---- */
+      E(`go('parent')`); await tick();
+      check('the parent dashboard shows what works without internet on this phone', $('#screen').textContent.includes('Reading aloud') && $('#screen').textContent.includes('Fresh practice lines'), 'missing');
+      tap(byText('.btn', 'Make a progress code'));
+      const pcode = $('.sharecode') && $('.sharecode').value;
+      check('"Make a progress code" shows a code to send', /^TKR1./.test(pcode || ''), pcode);
+      $('#hwcode').value = 'not a code'; tap(byText('.btn', 'Add homework'));
+      check('a bad homework code is refused with a clear message', /whole homework code/.test($('#screen').textContent), 'no message');
+      E(`go('teacher')`);
+      $('#rcode').value = pcode; tap(byText('.btn', 'Add to class'));
+      check('the teacher view accepts a progress code', /added to class ABC123/.test($('#screen').textContent), $('#screen').textContent.slice(0, 300));
 
       /* ---- once a day ---- */
       E(`S.lastOpen = dayKey() - 1; goHub();`);

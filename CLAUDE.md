@@ -22,18 +22,19 @@ breaks the entire premise and the demo.
 | Tier | What it does | Where |
 |------|--------------|-------|
 | 0 | Reading matcher + age-band pass thresholds, stroke scoring, skill-shaped problem generation, adaptive level, daily scheduler, skill graph + diagnostic, spaced repetition, cartoon episodes, procedural sound | `src/core/`, `src/content/`, `src/games/` — always on, no network, no model |
-| 1 | Small language model for fresh practice lines | `tier1Explain()` in `handlers.js` — **a hook only, no model ships**; its trace line says so |
+| 1 | A fresh practice line for missed words | `core/tier1.js` — the curated bank everywhere; the phone's own on-device model (Chrome's Prompt API) where it already has one, strictly validated |
 | 2 | Cloud answers + storyboards for the question queue | `askCloud()` / `flushQueue()` via `api/ask.js` |
 
-Nothing here is an AI model. "Generative" in `core/generative-brain.js` means
-an episode assembled from the child's own data (skill, level, game) by
-deterministic code — see **The Picture Hut**.
+The app ships no model of its own. Tier 1 uses the phone's built-in on-device
+model when the browser provides one (see **Tier 1**). "Generative" in
+`core/generative-brain.js` means an episode assembled from the child's own
+data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ## Running it
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 21 test suites (see Testing)
+npm test           # all 24 test suites (see Testing)
 ```
 
 No build step, no bundler, no framework. Open `index.html` through the dev
@@ -56,12 +57,12 @@ config.js, state.js
 content/sentences.js, content/games.js, content/themes.js, content/facts.js, content/ages.js
 content/skills.js, content/curriculum-early.js, content/lessons.js, core/lesson-gen.js
 content/literacy.js, content/comprehension.js
-core/diagnose.js, core/generative-brain.js, core/video-library-catalog.js, core/cartoon-series.js
+core/diagnose.js, core/class-share.js, core/generative-brain.js, core/video-library-catalog.js, core/cartoon-series.js
 core/srs.js, core/sfx.js, games/game-core.js
 content/anim.js, content/copy.js, content/competencies.js
 core/log.js, core/store.js, core/profiles.js
 core/voice.js, core/speech.js, core/matcher.js
-core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js
+core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js, core/tier1.js
 ui/mascot.js, ui/readback.js, ui/elephant.js, ui/lesson-player.js, ui/anim-celebrate.js, ui/cards.js
 ui/views.js, ui/opening.js
 ui/arrival.js, ui/onboarding.js, ui/jungle-map.js, ui/video-player.js, ui/teacher.js
@@ -70,7 +71,7 @@ ui/self-listen.js, ui/handlers.js
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v27` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v28` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -96,6 +97,7 @@ src/
     anim.js, copy.js, competencies.js   animation templates, UI strings, NIPUN/NCERT level names
   core/
     diagnose.js             the teacher diagnostic, class-code mirror, homework bridge
+    class-share.js          progress/homework codes that carry the class between phones
     generative-brain.js     builds one 4-scene cartoon episode for a maths skill
     video-library-catalog.js  which episodes a child is offered, and which first
     cartoon-series.js       short multi-episode ladders, filtered to the child's band
@@ -105,13 +107,14 @@ src/
     store.js                localStorage wrapper — load()/save()/saveSoon()
     profiles.js             up to 4 children on one phone
     voice.js                recorded narration where it exists, else device TTS
-    speech.js               speak(), listen() (WebSpeech; honest typed fallback offline)
+    speech.js               speak(), listen() — on-device recognition where the phone has it
     matcher.js              the reading matcher + getGradeThresholds()/gradeVerdict()
     adaptive.js             rolling-window levelling, daily goals; record() feeds SRS
     daily-engine.js         the week plan; dayIndex()/dayKey() (calendar-driven)
     mathgen.js              genProblem(level) for free practice; skillProblem(skill) for one named skill
     lesson-gen.js           generates the lesson bank; genHomeworkStory(), genGameSvg()
     readability.js          a measurable difficulty score for a line
+    tier1.js                practice lines for missed words (bank + on-device model)
   games/
     game-core.js            shared round lifecycle + GAME_SHELLS registry
     runner, pop, tower, match, sort, archer   the six game shells
@@ -214,13 +217,35 @@ on. `clearHomework()` withdraws it.
 
 ## The teacher view
 
-`ui/teacher.js`, behind the parent PIN. Reads the class-code mirror for a code,
-lists linked children, and lets a teacher pick the skill the class got wrong:
+`ui/teacher.js`, behind the parent PIN. Reads the class-code mirror for a code
+— children on this phone, plus children on other phones whose parent sent a
+progress code (see **Between phones**) — lists them, and lets a teacher pick the skill the class got wrong:
 `tDiagnose()` per child (with `planSummary()`, slips and guesswork flagged),
 `classPattern()` for the shared gap, then assign that skill or the shared gap
-as homework. It also shows what Takhti covers — `skillCoverage()`,
-`coverageMatrix(3)`, `ladderCoverage()` — and what it can't teach yet
-(`contentQueue()`). See Known limitations for the mirror's reach.
+as homework (and send it on as a homework code). It also shows what Takhti
+covers — `skillCoverage()`, `coverageMatrix(3)`, `ladderCoverage()` — and
+what it can't teach yet (`contentQueue()`).
+
+## Between phones — no server
+
+`core/class-share.js`. The class mirror is each phone's own storage, so the
+class travels between phones as short text codes, the way schools already
+pass things around (WhatsApp, SMS):
+
+- **Progress code** (`classReportCode()`, parent dashboard → *Send to the
+  teacher*): class code, child id, name, practice counts per skill. The
+  teacher pastes it into the teacher view (`importClassReport()`); the child
+  joins the class diagnosis with their real evidence. An older code never
+  overwrites a newer one.
+- **Homework code** (`homeworkCode()`, teacher view): skills, note, and the
+  original `assignedAt` (so "finished" means the same assignment on every
+  phone). The parent pastes it on the dashboard (`importHomework()`); it
+  links an unlinked child, and refuses another class's homework.
+
+Format `TKR1|TKH1.base64url(json).checksum` — a code cut short or edited is
+rejected before it can touch a record. Nothing is uploaded; a code moves only
+when a person sends it. `navigator.share` opens the phone's share sheet where
+there is one, else the code is copied.
 
 ## The reading matcher — read this before changing it
 
@@ -277,16 +302,34 @@ sound), honours `prefers-reduced-motion`. Used deliberately rarely: a goal
 met, a lesson passed, a correct cartoon checkpoint, a clean read-back
 (`cheer()`), tapping your own name.
 
-## Offline speech recognition
+## Offline reading — on-device speech recognition
 
-Not built. `listen()` (`speech.js`) uses WebSpeech when online; offline or
-unsupported, it ends the turn **synchronously** with an honest message
-(*"Speech recognition needs a connection — type it below, everything else
-works offline"*) — the typed fallback is always on the reading screen. The
-live recognizer is kept in `ACTIVE_LISTEN` so `stopListening()` (called by
+`listen()` (`speech.js`) uses the browser's **on-device** recognizer whenever
+the phone has the language pack (newer Chrome: `SpeechRecognition.available()`
+/ `install()` / `processLocally`) — offline *and* online, because then the
+child's voice never leaves the phone. `prepareOfflineSpeech()` downloads the
+English and Hindi packs while there is a connection (at boot, on the first
+mic tap, or the parent dashboard's *Download offline reading* button); its
+results are in `STT_LOCAL`. Without a pack: online uses the browser's normal
+recognizer; offline ends the turn **synchronously** with an honest message
+(including "connect once to download offline reading" when a pack can be
+fetched) — the typed fallback is always on the reading screen. The live
+recognizer is kept in `ACTIVE_LISTEN` so `stopListening()` (called by
 `go()`, `nextSentence()`, `switchProfile()`) can end an abandoned turn. The
-`!navigator.onLine` branch of `listen()` is where an on-device engine (e.g.
-Vosk, `vosk-model-small-hi-0.22`) would plug in.
+parent dashboard's *Without internet* section shows what this phone has.
+
+## Tier 1 — practice lines
+
+After a reading that isn't a pass, `tier1Offer()` (`handlers.js`) offers
+*"One more with these words: …"* from `tier1PracticeLine()` (`core/tier1.js`):
+a bank line containing every missed word wins outright; otherwise the phone's
+own on-device model (Prompt API `LanguageModel`) may write one — **only if it
+is already on the phone** (never downloaded mid-lesson) and only if
+`t1Valid()` accepts it: every target word, the band's length, plain letters
+and punctuation only (no markup, digits or web addresses), readability at or
+below the child's band. Failing that, the nearest bank line. Tapping it makes
+that line the one to read (`practiseLine()`). One bounded sentence, never a
+conversation.
 
 ## Self-listen
 
@@ -332,9 +375,12 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `srs` | vm | interval maths |
 | `dda` | vm | age-band thresholds, and "unsure" for recognizer doubt |
 | `sfx` | vm | muted = silent, shared buffer, chalk throttle, ambient start/stop, fail-safe on partial Web Audio |
+| `class-share` | vm | two separate "phones": progress code → teacher's diagnosis → homework code back; damaged, edited, wrong-kind and older codes rejected |
+| `tier1` | vm | bank lines for missed words (EN/HI); the validator; a stub on-device model: good line used, bad reply thrown away, never downloaded mid-lesson, bank first |
+| `offline-stt` | vm | packs downloaded while online; offline recognition on the device (EN/HI); on-device even online; no pack → immediate honest end; browsers without the API unchanged |
 | `homework-story` | vm | real skill-shaped questions, shuffled answers, the child's own game, stable card ids |
 | `video-generator` | vm | episodes, catalog band limits and theme filter, series, recommendation, evidence + card only for a right answer |
-| `app-flows` | jsdom | **every newly wired feature through real taps**: onboarding, map, Picture Hut, PIN gate, teacher view, homework end to end, adding a sibling, once-a-day opening, goal celebration |
+| `app-flows` | jsdom | **every wired feature through real taps**: onboarding, map, Picture Hut, PIN gate, teacher view, homework end to end, the practice-line button, the on-device status, progress and homework codes, adding a sibling, once-a-day opening, goal celebration |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -349,19 +395,26 @@ wire it in or delete it.**
 
 ## Known limitations
 
-Honest gaps, not bugs:
+Honest edges of what's built:
 
-1. **The class-code mirror is this device's own `localStorage`.** The teacher
-   view only sees children on the same phone; a separate teacher device needs
-   a Tier 2 sync that doesn't exist yet. The screen says so.
-2. **No offline speech recognition** — see above. Reading offline is typed.
-3. **Tier 1 is a hook, not a model.** `tier1Explain()` only logs.
+1. **Offline reading depends on the browser.** It works where the browser
+   offers on-device recognition and the pack has downloaded (recent Chrome);
+   elsewhere offline reading is typed. Whether a Hindi pack exists is the
+   browser's call. (The Android build uses `EXTRA_PREFER_OFFLINE`.)
+2. **The on-device model depends on the browser too.** Without one, practice
+   lines come from the curated bank only — which covers most missed words.
+3. **Between phones is by code, not live sync.** A parent or teacher sends a
+   code when they choose; nothing syncs in the background (by design —
+   nothing is uploaded). A Tier 2 sync could automate it later.
 4. **`planSummary()` is English-only**, so the teacher view's per-child line
    is English even in Hindi mode.
 5. **SRS replays content only for reading**; write/math review is routing only.
 6. **Cartoons and homework stories cover arithmetic skills only**
    (`SKILL_OPS` in `mathgen.js`). Other homework still gets its diagnosed
    lessons, just no story.
+7. **Browser APIs are stubbed in the tests** (speech, the on-device model,
+   audio). Check on a real handset before a demo — especially the microphone
+   and offline reading.
 
 ## Style
 

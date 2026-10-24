@@ -3,10 +3,9 @@
 
    Reached from the bottom of the parent dashboard, so it sits behind the
    same PIN. It reads the class-code mirror (core/diagnose.js): every
-   child on THIS phone linked to a code has their skill evidence there.
-   (The mirror is this device's own storage — a teacher's separate app
-   would need the Tier 2 sync to see other phones; that is said plainly
-   on screen rather than implied.)
+   child on this phone linked to a code, plus every child on ANOTHER
+   phone whose parent sent a progress code that was pasted in here
+   (core/class-share.js). Homework goes back the same way, as a code.
 
    What a teacher can do here:
      1. Say which skill the class got wrong in a test. tDiagnose() runs
@@ -55,8 +54,8 @@ function teacherHTML(){
   <button class="back" onclick="go('parent')">← ${t('back')}</button>
   <div class="display" style="font-size:22px;margin:4px 0">🧑‍🏫 ${hi?'शिक्षकों के लिए':'For teachers'}</div>
   <div class="muted" style="font-size:12.5px">${hi
-    ? 'यह इस फ़ोन पर कक्षा कोड से जुड़े बच्चों का रिकॉर्ड पढ़ता है। दूसरे फ़ोनों के बच्चे इंटरनेट सिंक के बाद ही दिखेंगे।'
-    : 'This reads the records of children on this phone linked to the class code. Children on other phones appear only once internet sync is set up.'}</div>
+    ? 'इस फ़ोन पर कक्षा कोड से जुड़े बच्चे, और दूसरे फ़ोनों के वे बच्चे जिनके माता-पिता ने प्रगति कोड भेजा। कुछ भी अपलोड नहीं होता।'
+    : "Children on this phone linked to the class code, plus children on other phones whose parent sent a progress code. Nothing is uploaded."}</div>
 
   <div class="paper" style="margin-top:10px">
     <div class="kicker2">${hi?'कक्षा का कोड':'CLASS CODE'}</div>
@@ -66,6 +65,14 @@ function teacherHTML(){
     ${code ? `<div style="font-size:12.5px;opacity:.75;margin-top:6px">${roster.length
       ? (hi ? `${roster.length} बच्चे जुड़े: ${roster.map(r=>attr(r.name)).join(', ')}` : `${roster.length} linked: ${roster.map(r=>attr(r.name)).join(', ')}`)
       : (hi ? 'इस कोड से अभी कोई बच्चा नहीं जुड़ा।' : 'No children linked to this code yet.')}</div>` : ''}
+
+    <div class="kicker2" style="margin-top:12px">${hi?'दूसरे फ़ोन से प्रगति कोड':"A CHILD'S PROGRESS CODE"}</div>
+    <textarea class="input sharecode" id="rcode" placeholder="TKR1…"></textarea>
+    ${S.ctx.rMsg ? `<div class="${S.ctx.rOk?'muted':'retry'}" style="font-size:12.5px;margin-top:6px">${S.ctx.rMsg}</div>` : ''}
+    <button class="btn ghost" style="margin-top:8px" onclick="teacherImport($('rcode').value)">${hi?'बच्चा जोड़ो':'Add to class'}</button>
+    <div style="font-size:12px;opacity:.7;margin-top:4px">${hi
+      ? 'माता-पिता अपने डैशबोर्ड से यह कोड WhatsApp/SMS पर भेजते हैं।'
+      : 'Parents send this from their dashboard, over WhatsApp or SMS.'}</div>
 
     ${roster.length ? `
     <div class="kicker2" style="margin-top:14px">${hi?'कक्षा ने क्या गलत किया?':'WHAT DID THE CLASS GET WRONG?'}</div>
@@ -94,7 +101,15 @@ function teacherHTML(){
     ${hw ? `<div class="card" style="margin-top:12px;padding:10px;border:1px solid var(--marigold)">
       <b>📝 ${hi?'अभी का गृहकार्य':'Current homework'}</b>
       <div style="font-size:13px">${hw.skills.map(id => { const s = skillById(id); return s ? (hi?s.hi:s.en) : id; }).join(', ')}${hw.note ? ` — "${attr(hw.note)}"` : ''}</div>
-      <button class="btn ghost" style="margin-top:8px;font-size:13px" onclick="teacherClearHomework()">${hi?'हटाओ':'Remove'}</button>
+      <div style="font-size:12px;opacity:.75;margin-top:8px">${hi
+        ? 'दूसरे फ़ोनों पर बच्चों के लिए यह कोड भेजें — माता-पिता डैशबोर्ड पर डालते हैं:'
+        : 'For children on other phones, send this code — parents paste it on their dashboard:'}</div>
+      <textarea class="input sharecode" readonly onclick="this.select()">${homeworkCode(code)}</textarea>
+      <div class="row" style="gap:8px;margin-top:8px">
+        <button class="btn" onclick="shareText(homeworkCode('${code}'))">📤 ${hi?'भेजो':'Send'}</button>
+        <button class="btn ghost" onclick="teacherClearHomework()">${hi?'हटाओ':'Remove'}</button>
+      </div>
+      ${S.ctx.shared ? `<div class="muted" style="font-size:12px;margin-top:4px">${S.ctx.shared}</div>` : ''}
     </div>` : ''}
   </div>
 
@@ -120,6 +135,21 @@ function teacherSetCode(v){
   const code = (v || '').trim().toUpperCase();
   if(!/^[A-Z0-9]{6}$/.test(code)) return;
   S.ctx.tcode = code; S.ctx.tskill = '';
+  render();
+}
+function teacherImport(text){
+  const hi = S.lang === 'hi';
+  const r = importClassReport(text);
+  S.ctx.rOk = r.ok;
+  if(r.ok){
+    S.ctx.tcode = r.code;
+    S.ctx.rMsg = hi ? `${r.name} कक्षा ${r.code} में जुड़ गया।` : `${r.name} added to class ${r.code}.`;
+    log(0, `Progress code imported · ${r.name} · class ${r.code}`);
+  } else {
+    S.ctx.rMsg = r.why === 'older'
+      ? (hi ? 'इस बच्चे का नया कोड पहले से है।' : 'A newer code for this child is already here.')
+      : (hi ? 'यह पूरा प्रगति कोड नहीं लगता — फिर से कॉपी करके देखो।' : "That doesn't look like a whole progress code — try copying it again.");
+  }
   render();
 }
 function teacherAssign(skillId, note){

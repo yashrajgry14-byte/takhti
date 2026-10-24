@@ -87,38 +87,78 @@ function speakDevice(text, lang, onDone){
       log(0, `TTS · ${v? v.name : (l==='hi'?'hi-IN':'en-IN')}`);
   }, 70);
 }
-/* WebSpeech is cloud STT on every browser that ships it, and no on-device
-   recognizer is bundled in this build — so "browser lacks the API", "no
-   connection", and "the recognizer failed to start" all mean the same
-   thing to a child: no microphone grading right now, type it instead.
-   onEnd() is called synchronously in those cases rather than opening a
-   microphone that could never produce a result, which is what keeps the
-   reading screen from hanging with no way out. The online recognizer
-   this returns is a real, long-lived object — ui/handlers.js keeps it
-   (ACTIVE_LISTEN) so stopListening() can end a turn nobody is waiting on.
+/* ==================================================================
+   LISTENING — WebSpeech, on-device whenever the phone can.
 
-   When an offline engine ships (Vosk, vosk-model-small-hi-0.22), the
-   !navigator.onLine branch is the one place it plugs in; it must call
-   onResult() with the same [{transcript, confidence}] alternatives shape. */
+   Newer Chrome can recognise speech ON THE DEVICE: it downloads a
+   language pack once, then listens with no connection at all — and the
+   child's voice never leaves the phone, which is the better default for
+   children regardless of signal. The network loads tomorrow:
+   prepareOfflineSpeech() fetches the packs while there is a connection
+   (on the first mic tap, or the parent dashboard's button), so the next
+   offline session can still be graded.
+
+   STT_LOCAL[lang] holds the browser's own answer: 'available',
+   'downloadable', 'downloading' or 'unavailable'. Recognition runs
+   on-device whenever it says 'available', online or not. Otherwise:
+   online → the browser's normal recognizer; offline → onEnd('network')
+   synchronously, with an honest message and the typed fallback that is
+   always on the reading screen. Never a microphone that can't answer.
+
+   The recognizer this returns is a real, long-lived object —
+   ui/handlers.js keeps it (ACTIVE_LISTEN) so stopListening() can end a
+   turn nobody is waiting on.
+   ================================================================== */
+const STT_LANG = { en:'en-IN', hi:'hi-IN' };
+const STT_LOCAL = { en:'unavailable', hi:'unavailable' };
+
+function sttRecognizer(){
+  return (typeof window !== 'undefined') && (window.SpeechRecognition || window.webkitSpeechRecognition) || null;
+}
+
+async function sttLocalStatus(lang){
+  const SR = sttRecognizer();
+  if(!SR || typeof SR.available !== 'function') return 'unavailable';
+  try{ return await SR.available({ langs:[STT_LANG[lang]], processLocally:true }); }
+  catch(e){ return 'unavailable'; }
+}
+
+/* Check both languages and, while online, download any pack the browser
+   offers. Safe to call repeatedly; resolves to STT_LOCAL. */
+async function prepareOfflineSpeech(){
+  const SR = sttRecognizer();
+  for(const lang of ['en', 'hi']){
+    let st = await sttLocalStatus(lang);
+    if(st === 'downloadable' && navigator.onLine && typeof SR.install === 'function'){
+      try{ if(await SR.install({ langs:[STT_LANG[lang]], processLocally:true })) st = 'available'; }
+      catch(e){ /* stays downloadable — the next try, or the parent's button, will retry */ }
+    }
+    STT_LOCAL[lang] = st;
+  }
+  log(0, `On-device speech · English ${STT_LOCAL.en} · Hindi ${STT_LOCAL.hi}`);
+  return STT_LOCAL;
+}
+
 function listen(onResult, onEnd){
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
+  const SR = sttRecognizer();
   if(!SR){
     log(0, 'STT unavailable — this browser has no SpeechRecognition, typed fallback');
     onEnd('unsupported');
     return null;
   }
-  if(!navigator.onLine){
-    log(0, 'STT unavailable offline — no on-device recognizer bundled, typed fallback');
+  const local = STT_LOCAL[S.lang] === 'available';
+  if(!navigator.onLine && !local){
+    log(0, `STT unavailable offline — no on-device pack for ${STT_LANG[S.lang]} (${STT_LOCAL[S.lang]}), typed fallback`);
     onEnd('network');
     return null;
   }
   try {
-    log(0, `STT · WebSpeech API (${S.lang})`);
     const r = new SR();
-    r.lang = S.lang==='hi' ? 'hi-IN' : 'en-IN';
+    r.lang = STT_LANG[S.lang];
     r.interimResults = false;
     r.maxAlternatives = 5;
+    if(local) r.processLocally = true;
+    log(0, `STT · ${local ? 'on-device (no audio leaves the phone)' : 'browser recognizer'} · ${r.lang}`);
     r.onresult = e => {
       const res = e.results[0];
       const alts = [];
@@ -130,7 +170,7 @@ function listen(onResult, onEnd){
     r.start();
     return r;
   } catch(err){
-    log(0, 'WebSpeech failed to start — typed fallback');
+    log(0, 'Speech recognizer failed to start — typed fallback');
     onEnd('network');
     return null;
   }
@@ -139,14 +179,20 @@ function listen(onResult, onEnd){
 /* names the real cause instead of a blanket "mic unavailable" — a network
    drop and a denied permission need different next steps from a child. */
 function micReason(err){
-  if(err==='network' || err==='offline') return S.lang==='hi'
-    ? 'बोलकर पहचान के लिए इंटरनेट चाहिए — नीचे लिखकर देखो, बाकी सब कुछ ऑफ़लाइन काम करता है।'
-    : 'Speech recognition needs a connection — type it below, everything else works offline.';
-  if(err==='not-allowed' || err==='service-not-allowed') return S.lang==='hi'
+  const hi = S.lang === 'hi';
+  if(err==='network' || err==='offline'){
+    if(STT_LOCAL[S.lang] === 'downloadable' || STT_LOCAL[S.lang] === 'downloading') return hi
+      ? 'एक बार इंटरनेट से जुड़ो — तख़्ती ऑफ़लाइन पढ़ना डाउनलोड कर लेगी। अभी नीचे लिखकर देखो।'
+      : 'Connect to the internet once and Takhti will download offline reading. For now, type it below.';
+    return hi
+      ? 'इस फ़ोन पर बोलकर पहचान के लिए इंटरनेट चाहिए — नीचे लिखकर देखो, बाकी सब कुछ ऑफ़लाइन काम करता है।'
+      : 'Speech recognition needs a connection on this phone — type it below, everything else works offline.';
+  }
+  if(err==='not-allowed' || err==='service-not-allowed') return hi
     ? 'माइक की अनुमति नहीं मिली — नीचे लिखकर देखो।'
     : 'Microphone permission denied — type what you read below.';
-  if(err==='unsupported') return S.lang==='hi'
+  if(err==='unsupported') return hi
     ? 'यह ब्राउज़र सुन नहीं सकता — Chrome में खोलकर देखो।'
     : "This browser can't listen — try Chrome.";
-  return S.lang==='hi' ? 'माइक नहीं चला — नीचे लिखकर देखो।' : 'Mic unavailable here — type what you read below.';
+  return hi ? 'माइक नहीं चला — नीचे लिखकर देखो।' : 'Mic unavailable here — type what you read below.';
 }

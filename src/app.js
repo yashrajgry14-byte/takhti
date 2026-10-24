@@ -5,11 +5,12 @@ log(null,'Takhti started · no network required');
 log(0,'Content pack loaded from device storage');
 load();
 // Arrival (ui/arrival.js) is the first thing every session sees, new
-// device or returning one — it is also where the browser gets its
-// first real user gesture, which the rest of the app's audio depends
-// on. arrFinish() routes onward exactly where this block used to send
-// an existing profile directly: age() if never asked, home() if it
-// was, or greet() for a brand-new device.
+// device or returning one — it is also where the browser gets its first
+// real user gesture, which the rest of the app's audio depends on.
+// arrFinish() routes onward: onboarding, the game picker, or goHub().
 S.screen = 'arrival';
 setOnline(false);
 render();
+// Find out (and, while online, fetch) what on-device speech this phone
+// has, so a reading attempt later today can be graded with no signal.
+prepareOfflineSpeech();

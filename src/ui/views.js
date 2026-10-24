@@ -175,6 +175,7 @@ read(){
     </div>`:`<div class="muted" style="font-size:12px">${S.lang==='hi'?'किसी शब्द को दबाकर सुनो':'Tap any word to hear it'}</div>`}
   ${S.ctx.score!=null? `<div class="scorebar"><i style="width:${S.ctx.score}%"></i></div>
      <div class="feedback">${S.ctx.msg}</div>
+     ${S.ctx.practice ? `<button class="btn ghost practise" onclick="practiseLine()">🔁 ${S.lang==='hi'?'इन शब्दों के साथ एक और':'One more with these words'}: <b>${S.ctx.practice.line}</b></button>` : ''}
      ${typeof selfListenHTML === 'function' ? selfListenHTML() : ''}`:''}
   ${S.ctx.unsure? `<div class="retry">${S.lang==='hi'?'साफ़ सुनाई नहीं दिया — थोड़ा पास आकर फिर बोलो।':'I could not hear that clearly — come a little closer and try again.'}</div>`:''}
   <button class="mic ${S.ctx.live?'live':''}" id="mic" aria-label="record">${S.ctx.live?'●':'🎙'}</button>
@@ -423,6 +424,29 @@ parent(){
       <button class="toggle ${S.muted?'':'on'}" onclick="toggleMuted()" aria-label="${S.muted?'unmute':'mute'}"><span></span></button>
     </div>
 
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'बिना इंटरनेट':'WITHOUT INTERNET'}</div>
+    ${(() => {
+      const d = S.ctx.dev;
+      if(!d) return `<div class="muted" style="font-size:12.5px">${S.lang==='hi'?'जाँच रहे हैं…':'Checking this phone…'}</div>`;
+      const word = st => ({
+        available:   S.lang==='hi' ? 'तैयार ✓' : 'ready ✓',
+        downloadable:S.lang==='hi' ? 'डाउनलोड हो सकता है' : 'can be downloaded',
+        downloading: S.lang==='hi' ? 'डाउनलोड हो रहा है…' : 'downloading…',
+        unavailable: S.lang==='hi' ? 'इस ब्राउज़र में नहीं' : 'not on this browser'
+      })[st] || st;
+      const canGet = d.en === 'downloadable' || d.hi === 'downloadable';
+      return `<div class="metric"><div><b>${S.lang==='hi'?'बोलकर पढ़ना':'Reading aloud'}</b>
+          <div style="font-size:12.5px;opacity:.7">English: ${word(d.en)} · हिंदी: ${word(d.hi)}</div></div></div>
+        ${canGet ? `<button class="btn ghost" onclick="getOfflineReading()">⬇️ ${S.lang==='hi'?'ऑफ़लाइन पढ़ना डाउनलोड करो':'Download offline reading'}</button>` : ''}
+        <div class="metric"><div><b>${S.lang==='hi'?'नए अभ्यास वाक्य':'Fresh practice lines'}</b>
+          <div style="font-size:12.5px;opacity:.7">${d.model === 'available'
+            ? (S.lang==='hi'?'फ़ोन का अपना AI मॉडल + वाक्य-भंडार':"this phone's own AI model + the sentence bank")
+            : (S.lang==='hi'?'वाक्य-भंडार (इस ब्राउज़र में फ़ोन का AI मॉडल नहीं)':'the sentence bank (no on-device AI model in this browser)')}</div></div></div>
+        <div style="font-size:12px;opacity:.7">${S.lang==='hi'
+          ? 'फ़ोन पर ही पहचान हो तो बच्चे की आवाज़ फ़ोन से बाहर नहीं जाती।'
+          : "When recognition runs on the phone, your child's voice never leaves it."}</div>`;
+    })()}
+
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'कक्षा का कोड':'CLASS CODE'}</div>
     ${S.classCode ? `
     <div class="metric">
@@ -435,18 +459,24 @@ parent(){
       const hw = (typeof getAssignedHomework === 'function') ? getAssignedHomework(S) : null;
       if(hw){
         return `<div class="card" style="margin-top:8px;background:rgba(240,160,42,.1);border:1px solid var(--marigold);padding:10px">
-          <b>📝 ${S.lang==='hi'?'वर्तमान गृहकार्य':'Active Homework'}</b>
-          <div style="font-size:13px;margin-top:4px">${hw.note || (S.lang==='hi'?'शिक्षक द्वारा निर्धारित अभ्यास':'Assigned practice routine')}</div>
-          <div style="font-size:11.5px;opacity:.7;margin-top:4px;font-family:var(--mono)">Skills: ${(hw.skills||[]).join(', ')}</div>
+          <b>📝 ${S.lang==='hi'?'अभी का गृहकार्य':'Current homework'}</b>
+          <div style="font-size:13px;margin-top:4px">${(hw.skills||[]).map(id => { const s = skillById(id); return s ? (S.lang==='hi'?s.hi:s.en) : id; }).join(', ')}${hw.note ? ` — "${attr(hw.note)}"` : ''}</div>
         </div>`;
       }
       return `<div style="font-size:12.5px;opacity:.7;margin-top:8px">${S.lang==='hi'
-        ? 'अभी कोई गृहकार्य नहीं। शिक्षक नीचे "शिक्षकों के लिए" से गृहकार्य दे सकते हैं।'
-        : 'No homework right now. A teacher can assign some from "For teachers" below.'}</div>`;
+        ? 'अभी कोई गृहकार्य नहीं।'
+        : 'No homework right now.'}</div>`;
     })()}
-    <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin:6px 0 2px">${S.lang==='hi'
-      ? 'तुम्हारे बच्चे की प्रगति शिक्षक के साथ इसी फ़ोन से जुड़ती रहेगी और गृहकार्य यहाँ प्राप्त होगा।'
-      : "Only your child's practice record and assigned homework will keep syncing with their teacher from this phone."}</div>` : `
+
+    <div class="kicker2" style="margin-top:12px">${S.lang==='hi'?'शिक्षक को भेजो':'SEND TO THE TEACHER'}</div>
+    ${S.ctx.reportCode ? `
+      <textarea class="input sharecode" readonly onclick="this.select()">${S.ctx.reportCode}</textarea>
+      <button class="btn" style="margin-top:8px" onclick="shareText(S.ctx.reportCode)">📤 ${S.lang==='hi'?'भेजो (WhatsApp/SMS)':'Send (WhatsApp/SMS)'}</button>
+      ${S.ctx.shared ? `<div class="muted" style="font-size:12px;margin-top:4px">${S.ctx.shared}</div>` : ''}`
+    : `<button class="btn ghost" onclick="makeReportCode()">${S.lang==='hi'?'प्रगति कोड बनाओ':'Make a progress code'}</button>`}
+    <div style="font-size:12px;opacity:.7;line-height:1.5;margin-top:6px">${S.lang==='hi'
+      ? 'कोड में सिर्फ़ नाम और अभ्यास की गिनती होती है — कुछ भी अपलोड नहीं होता, आप ख़ुद चुनते हैं कि किसे भेजना है। शिक्षक इसे "शिक्षकों के लिए" में डालते हैं।'
+      : "The code holds only the name and practice counts — nothing is uploaded; you choose who to send it to. The teacher pastes it into \"For teachers\"."}</div>` : `
     <input class="input" id="classcode" maxlength="6" placeholder="${S.lang==='hi'?'6 अक्षर का कोड':'6-character code'}"
       style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-family:var(--mono)" autocomplete="off">
     ${S.ctx.classCodeErr? `<div class="retry" style="margin-top:8px">${S.lang==='hi'?'कोड 6 अक्षर का होना चाहिए':'The code must be 6 letters or numbers'}</div>`:''}
@@ -454,6 +484,11 @@ parent(){
     <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin-top:6px">${S.lang==='hi'
       ? 'अगर शिक्षक ने कोड दिया है, तो यहाँ डालो — बच्चे की प्रगति उनसे जुड़ जाएगी।'
       : "If your child's teacher gave you a code, enter it here to share their progress."}</div>`}
+
+    <div class="kicker2" style="margin-top:12px">${S.lang==='hi'?'शिक्षक से गृहकार्य कोड मिला?':'GOT A HOMEWORK CODE FROM THE TEACHER?'}</div>
+    <textarea class="input sharecode" id="hwcode" placeholder="TKH1…"></textarea>
+    ${S.ctx.hwMsg ? `<div class="${S.ctx.hwOk?'muted':'retry'}" style="font-size:12.5px;margin-top:6px">${S.ctx.hwMsg}</div>` : ''}
+    <button class="btn ghost" style="margin-top:8px" onclick="receiveHomework($('hwcode').value)">${S.lang==='hi'?'गृहकार्य जोड़ो':'Add homework'}</button>
 
     <div class="kicker2">${S.lang==='hi'?'आज का लक्ष्य':"TODAY'S TARGET"}</div>
     ${target(S.lang==='hi'?'बोलकर पढ़ना':'Sentences read aloud','read',S.lang==='hi'?'वाक्य':'sentences')}

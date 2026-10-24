@@ -29,8 +29,10 @@ function setReadLang(l){
   log(null, 'Reading language → ' + (l==='hi'?'Hindi (hi-IN)':'English (en-IN)'));
   nextSentence();
 }
+let STT_PREPARED = false;   // the first mic tap of a session also fetches offline language packs, while online
 function startListening(){
   if(S.ctx.live) return;
+  if(!STT_PREPARED && navigator.onLine){ STT_PREPARED = true; prepareOfflineSpeech(); }
   S.ctx.live = true; S.ctx.unsure = false; render();
   log(0,`Mic open · recognizer lang ${S.lang==='hi'?'hi-IN':'en-IN'} · 5 alternatives`);
   // A second, independent mic session for self-listen — listen() below
@@ -109,7 +111,26 @@ function checkRead(input){
   render();
 
   if(!ok && r.misread.length) setTimeout(()=>speak(r.misread.slice(0,3).join(', ')), 420);
-  if(S.online && !ok) tier1Explain(r.misread.slice(0,2));
+  if(!ok && r.misread.length) tier1Offer(r.misread.slice(0,2));
+}
+
+/* Tier 1: one more line using the words just missed (core/tier1.js).
+   Offered, never forced — it appears under the feedback as a button. */
+async function tier1Offer(words){
+  const sentence = S.ctx.sentence;
+  const p = await tier1PracticeLine(words, S.lang, S.levels.read, sentence);
+  if(!p || S.screen !== 'read' || S.ctx.sentence !== sentence) return;   // the child moved on meanwhile
+  S.ctx.practice = p;
+  log(1, `Tier 1 · practice line for "${words.join(', ')}" from ${p.source === 'model' ? 'the on-device model' : 'the sentence bank'}`);
+  render();
+}
+function practiseLine(){
+  const line = S.ctx.practice && S.ctx.practice.line;
+  if(!line) return;
+  stopListening();
+  selfListenReset();
+  S.ctx = { sentence: line };
+  render();
 }
 
 /* tap any word to hear it on its own — via data-say, so quotes and
@@ -468,16 +489,6 @@ function answerQuiz(i,correct){
   if(ok){ S.ctx.quizDone = true; S.stars++; log(0,'Comprehension checkpoint passed'); }
 }
 
-/* ---- Tier 1: on-device small model — the hook, not the model ----
-   No small language model ships in this build. This is the one place a
-   Tier 1 model would take the words a child just struggled with and write
-   a fresh practice line; until then it only records, honestly, that the
-   hook fired and with what — the judge trace must never claim a model is
-   generating something it isn't. */
-function tier1Explain(words){
-  if(!words.length) return;
-  log(1,`Tier 1 hook · no on-device model in this build · would practise: ${words.join(', ')}`);
-}
 
 /* ---- parent controls ---- */
 function setTarget(k, d){
@@ -527,6 +538,49 @@ function unlinkClassCode(){
   saveSoon();
   render();
 }
+
+/* ---- sharing with a teacher on another phone (core/class-share.js) ---- */
+function makeReportCode(){
+  S.ctx.reportCode = classReportCode(S);
+  S.ctx.shared = '';
+  render();
+}
+/* The phone's own share sheet (WhatsApp, SMS…) where there is one, else
+   the clipboard; the code is also shown, selectable, on screen. */
+async function shareText(text){
+  const hi = S.lang === 'hi';
+  try{
+    if(navigator.share){ await navigator.share({ text }); S.ctx.shared = hi ? 'भेज दिया।' : 'Sent.'; }
+    else { await navigator.clipboard.writeText(text); S.ctx.shared = hi ? 'कॉपी हो गया — अब WhatsApp/SMS में चिपकाओ।' : 'Copied — paste it into WhatsApp or SMS.'; }
+  }catch(e){
+    S.ctx.shared = hi ? 'ऊपर का कोड दबाकर कॉपी करो।' : 'Tap the code above to select and copy it.';
+  }
+  render();
+}
+function receiveHomework(text){
+  const hi = S.lang === 'hi';
+  const r = importHomework(text, S);
+  S.ctx.hwOk = r.ok;
+  S.ctx.hwMsg = r.ok
+    ? (hi ? 'गृहकार्य जुड़ गया — मुन्नी कहानी की आग के पास इंतज़ार करेगी।' : 'Homework added — Munni will wait at the Story Fire.')
+    : r.why === 'otherclass'
+      ? (hi ? 'यह कोड दूसरी कक्षा का है।' : 'This code is for a different class.')
+      : (hi ? 'यह पूरा गृहकार्य कोड नहीं लगता — फिर से कॉपी करके देखो।' : "That doesn't look like a whole homework code — try copying it again.");
+  if(r.ok){ log(0, `Homework received by code · class ${r.code} · ${r.skills.join(', ')}`); saveSoon(); }
+  render();
+}
+
+/* ---- on-device capabilities, shown on the parent dashboard ---- */
+async function refreshDeviceStatus(){
+  S.ctx.dev = { en: STT_LOCAL.en, hi: STT_LOCAL.hi, model: await tier1ModelStatus(S.lang) };
+  if(S.screen === 'parent') render();
+}
+async function getOfflineReading(){
+  await prepareOfflineSpeech();
+  S.ctx.dev = null;
+  refreshDeviceStatus();
+}
+AFTER.parent = () => { if(!S.ctx.dev) refreshDeviceStatus(); };
 
 /* ---- parent PIN gate ---- */
 function setParentPin(v){
