@@ -1,0 +1,252 @@
+/* ==================================================================
+   AFTER THE CALL — what actually happened, and what the parent hears
+
+   During the call the voice model relays the child's words to us. A
+   language model can "helpfully" tidy a child's misreading into the
+   correct sentence, or turn a wrong 8 into the right 9. So nothing the
+   relay said becomes a permanent record of reading. When the call ends,
+   Bolna sends its own transcript; we line each of Munni's prompts up
+   against it, take the child's reply straight from the recognizer, and
+   grade THAT with the app's matcher and the app's verdict — confidence
+   gate included. That is the evidence of record.
+
+   Where the relayed words and the transcript disagree we count it.
+   That number is how we know whether the live loop can be trusted, and
+   it goes on the team dashboard, not to parents.
+
+   The parent report leads with what went well, names at most three
+   words to practise, and suggests one thing to do at home. No scores
+   out of ten, no "missed", nothing a child could overhear as failure.
+   ================================================================== */
+'use strict';
+const { parseNumber, parseYesNo, foldDev, intentOf } = require('./understand');
+const { gradeLine, recordOutcome } = require('./session');
+
+const TERMINAL = new Set(['completed', 'no-answer', 'busy', 'failed', 'canceled', 'stopped', 'error', 'balance-low', 'call-disconnected']);
+
+function parseTranscript(text) {
+  const turns = [];
+  for (const raw of String(text || '').split(/\r?\n/)) {
+    const m = raw.match(/^\s*(assistant|user|agent|bot|human|caller)\s*:\s*(.*)$/i);
+    if (m) {
+      const role = /assistant|agent|bot/i.test(m[1]) ? 'assistant' : 'user';
+      const last = turns[turns.length - 1];
+      if (last && last.role === role) last.text += ' ' + m[2];   // a turn split across lines
+      else turns.push({ role, text: m[2] });
+    } else if (raw.trim() && turns.length) {
+      turns[turns.length - 1].text += ' ' + raw.trim();
+    }
+  }
+  return turns;
+}
+
+function toks(s, lang) {
+  return String(s || '').normalize('NFC').replace(/[.,!?;:"'“”‘’()\[\]।॥…]/g, ' ')
+    .split(/\s+/).filter(Boolean).map(t => (lang === 'hi' ? foldDev(t) : t.toLowerCase()));
+}
+function overlap(prompt, line, lang) {
+  const p = toks(prompt, lang), l = new Set(toks(line, lang));
+  if (!p.length) return 0;
+  return p.filter(t => l.has(t)).length / p.length;
+}
+
+/* For every prompt Munni gave (first ask, clue, coaching), find it in the
+   transcript and take the user turns that follow it, up to her next line. */
+function alignToTranscript(session, turns) {
+  let pos = 0;
+  for (const it of session.items) {
+    it.heard_tx = [];
+    for (const prompt of it.prompts) {
+      let hit = -1, best = 0;
+      for (let i = pos; i < turns.length; i++) {
+        if (turns[i].role !== 'assistant') continue;
+        const o = overlap(prompt, turns[i].text, session.lang);
+        if (o > best) { best = o; hit = i; }
+        if (o >= 0.9) break;
+      }
+      if (hit < 0 || best < 0.6) { it.heard_tx.push(null); continue; }
+      // the reply after this prompt; if the child asked to hear it again,
+      // Munni repeated the same words — the answer follows the repeat
+      let reply = null;
+      for (let h = hit; h >= 0 && h < turns.length;) {
+        const said = [];
+        let j = h + 1;
+        while (j < turns.length && turns[j].role === 'user') said.push(turns[j++].text);
+        reply = said.join(' ').trim() || null;
+        pos = h + 1;
+        if (!reply || intentOf(reply) !== 'repeat') break;
+        h = j < turns.length && overlap(prompt, turns[j].text, session.lang) >= 0.6 ? j : -1;
+      }
+      it.heard_tx.push(reply);
+    }
+  }
+}
+
+/* The call is over: settle the record. Idempotent per execution id. */
+function processCallEnd(core, child, session, payload) {
+  const status = String(payload.status || '').toLowerCase();
+  if (!TERMINAL.has(status)) return { changed: false, reason: 'not terminal: ' + status };
+  if (session.processed && session.call && session.call.execution_id === payload.id) return { changed: false, reason: 'already processed' };
+
+  const tel = payload.telephony_data || {};
+  session.call = Object.assign(session.call || {}, {
+    execution_id: payload.id, status, smart_status: payload.smart_status || null,
+    duration_s: Number(payload.conversation_duration || tel.duration || 0),
+    recording_url: tel.recording_url || null, hangup_by: tel.hangup_by || null,
+    hangup_reason: tel.hangup_reason || null, answered_by_voice_mail: !!payload.answered_by_voice_mail,
+    cost_cents: payload.total_cost != null ? payload.total_cost : null
+  });
+  session.transcript = String(payload.transcript || '');
+  session.processed = true;
+  session.processed_at = new Date().toISOString();
+
+  // safeguarding is a human's job, never automated messaging — flag only
+  session.flags = session.flags || {};
+  if (findTrue(payload.extracted_data, /safeguard|safety|concern/i)) session.flags.safeguarding = true;
+
+  if (!session.items.length) {
+    // the phone was answered but no lesson started (child not there,
+    // voicemail), or it was never answered. Nothing is recorded either way.
+    session.status = session.call.duration_s > 0 && !session.call.answered_by_voice_mail ? 'no_lesson' : 'missed';
+    session.report = missedReport(child, session);
+    return { changed: true, status: session.status };
+  }
+  session.status = 'done';
+
+  const turns = parseTranscript(session.transcript);
+  alignToTranscript(session, turns);
+
+  // relay check: did the words the model passed us match the recognizer?
+  let checked = 0, mismatched = 0;
+  for (const it of session.items) {
+    it.said.forEach((relayed, k) => {
+      const tx = it.heard_tx && it.heard_tx[k];
+      if (tx == null) return;
+      checked++;
+      if (it.expect === 'number' && parseNumber(relayed, session.lang) !== parseNumber(tx, session.lang)) mismatched++;
+      else if (it.expect === 'yesno' && parseYesNo(relayed) !== parseYesNo(tx)) mismatched++;
+      else if (it.expect === 'reading' && Math.abs(gradeLine(core, child, session, it.target, [relayed]).score -
+                                                   gradeLine(core, child, session, it.target, [tx]).score) >= 15) mismatched++;
+    });
+  }
+  session.relay = { checked, mismatched };
+
+  // reading evidence of record: the transcript, graded by the app's matcher
+  for (const it of session.items) {
+    if (it.expect !== 'reading') continue;
+    const txs = (it.heard_tx || []).filter(Boolean);
+    const source = txs.length ? 'transcript' : 'relay';
+    const alts = txs.length ? txs : it.said.filter(Boolean);
+    if (!alts.length) { it.evidence = { source, verdict: 'unsure', score: 0 }; continue; }
+    const first = gradeLine(core, child, session, it.target, [alts[0]]);
+    const best = gradeLine(core, child, session, it.target, alts);
+    // words to practise: what tripped them up the FIRST time, even if a
+    // second reading after Munni's coaching came out clean
+    const misread = [...new Set([...practiceWords(first.tokens), ...practiceWords(best.tokens)])];
+    it.evidence = { source, first_verdict: first.verdict, verdict: best.verdict, score: best.score,
+                    misread, slips: best.slips };
+    // only a first reading of a card line counts toward the reading level;
+    // a line said after Munni is speaking practice, not reading
+    if (it.kind === 'read' && !session.recorded_read && first.verdict !== 'unsure') {
+      const mv = recordOutcome(core, child, session, 'read', first.verdict === 'pass');
+      it.evidence.level_move = mv || null;
+    }
+  }
+  session.recorded_read = true;
+  session.levels_after = { ...child.profile.levels };
+  session.report = buildReport(core, child, session);
+  return { changed: true, status: session.status };
+}
+
+/* A word is worth practising if the child misread it, slipped on it, or
+   skipped it in the MIDDLE of a line. Words after the point where they
+   simply stopped reading were never attempted — "है" is not a word to
+   drill just because the child stopped two words in. */
+function practiceWords(tokens) {
+  const out = [];
+  (tokens || []).forEach((t, i) => {
+    const laterRead = tokens.slice(i + 1).some(x => x.state !== 'miss');
+    if (t.state === 'bad' || t.state === 'near' || (t.state === 'miss' && laterRead)) out.push(t.text);
+  });
+  return out;
+}
+
+function findTrue(obj, keyRe, depth = 0) {
+  if (!obj || typeof obj !== 'object' || depth > 5) return false;
+  for (const [k, v] of Object.entries(obj)) {
+    if (keyRe.test(k)) {
+      const val = v && typeof v === 'object' ? (v.objective ?? v.subjective ?? v.value) : v;
+      if (val === true || /^(true|yes|haan|हाँ|1)$/i.test(String(val).trim())) return true;
+    }
+    if (v && typeof v === 'object' && findTrue(v, keyRe, depth + 1)) return true;
+  }
+  return false;
+}
+
+/* ---------------- the parent report ---------------- */
+const R = {
+  title:    { en: '{name} practised with Munni today', hi: '{name} ने आज मुन्नी के साथ अभ्यास किया' },
+  minutes:  { en: 'About {m} minutes on the call.', hi: 'लगभग {m} मिनट बात हुई।' },
+  minute:   { en: 'About a minute on the call.', hi: 'लगभग एक मिनट बात हुई।' },
+  maths:    { en: 'Maths: worked on {n} sums, {c} right on the first try.', hi: 'गणित: {n} सवाल किए, {c} पहली बार में सही।' },
+  level:    { en: 'Now practising: {comp}.', hi: 'अभी अभ्यास: {comp}।' },
+  reading:  { en: 'Reading: read {g} of {n} lines well.', hi: 'पढ़ना: {n} में से {g} लाइनें अच्छे से पढ़ीं।' },
+  oral:     { en: 'Speaking: said {g} of {n} lines after Munni.', hi: 'बोलना: मुन्नी के बाद {n} में से {g} लाइनें बोलीं।' },
+  words:    { en: 'Worth practising together: {w}.', hi: 'साथ में अभ्यास करें: {w}।' },
+  tipMath:  { en: 'Tip for today: count something together at dinner, like rotis or spoons.', hi: 'आज की सलाह: खाने के समय साथ में कुछ गिनें, जैसे रोटियाँ या चम्मच।' },
+  tipRead:  { en: 'Tip for today: find the word "{w}" together on a sign, a box or a newspaper.', hi: 'आज की सलाह: "{w}" शब्द किसी बोर्ड, डिब्बे या अख़बार पर साथ में ढूँढें।' },
+  tipGood:  { en: 'Tip for today: ask {name} to teach you one sum from the call.', hi: 'आज की सलाह: {name} से कहें कि कॉल का एक सवाल आपको सिखाए।' },
+  stopped:  { en: '{name} chose to stop early today, which is completely fine.', hi: '{name} ने आज जल्दी रुकना चुना, यह बिल्कुल ठीक है।' },
+  missed:   { en: 'Munni could not reach {name} today. The next call will be at the usual time.', hi: 'मुन्नी आज {name} से बात नहीं कर पाई। अगली कॉल हमेशा के समय पर होगी।' },
+  footer:   { en: '— Takhti', hi: '— तख़्ती' }
+};
+const t = (k, lang, v) => { let s = R[k][lang] || R[k].en; for (const x in (v || {})) s = s.split('{' + x + '}').join(v[x]); return s; };
+
+function buildReport(core, child, session) {
+  const lang = session.lang, name = child.name;
+  const lines = [t('title', lang, { name })];
+  const mins = Math.max(1, Math.round((session.call && session.call.duration_s || 0) / 60));
+  if (session.call && session.call.duration_s) lines.push(mins === 1 ? t('minute', lang, {}) : t('minutes', lang, { m: mins }));
+
+  const sums = session.items.filter(x => (x.kind === 'math' || x.kind === 'story') && x.outcome && x.outcome !== 'unsure');
+  const firstTry = sums.filter(x => x.outcome === 'correct').length;
+  if (sums.length) {
+    lines.push(t('maths', lang, { n: sums.length, c: firstTry }));
+    const { out: comp } = core.withChild(child.profile, { lang }, T => {
+      const c = T.COMPETENCY.math[T.S.levels.math]; return c ? c[lang] : '';
+    });
+    if (comp) lines.push(t('level', lang, { comp }));
+  }
+
+  const reads = session.items.filter(x => x.kind === 'read' && x.evidence && x.evidence.verdict !== 'unsure');
+  const oral = session.items.filter(x => x.kind === 'repeat' && x.evidence && x.evidence.verdict !== 'unsure');
+  if (reads.length) lines.push(t('reading', lang, { g: reads.filter(x => x.evidence.verdict === 'pass').length, n: reads.length }));
+  if (oral.length) lines.push(t('oral', lang, { g: oral.filter(x => x.evidence.verdict === 'pass').length, n: oral.length }));
+
+  const words = [];
+  for (const x of reads) for (const w of (x.evidence.misread || []).concat(x.evidence.slips || [])) {
+    const clean = w.replace(/[.,!?।]/g, '');
+    if (clean && !words.includes(clean)) words.push(clean);
+  }
+  if (words.length) lines.push(t('words', lang, { w: words.slice(0, 3).join(', ') }));
+  if (session.ended_by === 'stop') lines.push(t('stopped', lang, { name }));
+
+  if (words.length) lines.push(t('tipRead', lang, { w: words[0] }));
+  else if (sums.length && firstTry < sums.length / 2) lines.push(t('tipMath', lang, {}));
+  else lines.push(t('tipGood', lang, { name }));
+  lines.push(t('footer', lang, {}));
+
+  const text = lines.join('\n');
+  const phone = String(child.parent_phone || '').replace(/[^\d]/g, '');
+  return { lang, text, lines,
+           // for the team: open a WhatsApp chat with this parent, report typed in
+           whatsapp: phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : null,
+           // for the parent: forward it to the other parent or the teacher
+           share: `https://wa.me/?text=${encodeURIComponent(text)}` };
+}
+
+function missedReport(child, session) {
+  return { lang: session.lang, text: t('missed', session.lang, { name: child.name }) };
+}
+
+module.exports = { processCallEnd, parseTranscript, alignToTranscript, buildReport, missedReport, TERMINAL };

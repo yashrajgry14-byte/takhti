@@ -104,6 +104,9 @@ function genProblem(lvl){
 
   ans = op==='+'? a+b : op==='−'? a-b : a*b;
   const set = new Set([ans]);
-  while(set.size<4){ const d=ans + (Math.random()<.5?-1:1)*r(1,Math.max(2,Math.round(ans*.3))); if(d>=0) set.add(d); }
+  // span must leave 3 distinct non-negative distractors: at ans 0 a span
+  // of 2 only reaches {1,2}, and this loop never ended (level 3, 4 − 4)
+  const span = Math.max(ans < 2 ? 3 : 2, Math.round(ans*.3));
+  while(set.size<4){ const d=ans + (Math.random()<.5?-1:1)*r(1,span); if(d>=0) set.add(d); }
   return { a,b,op,ans, opts:[...set].sort(()=>Math.random()-.5) };
 }

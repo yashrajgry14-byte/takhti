@@ -87,8 +87,12 @@ function gradeReading(sentence, transcript, lang){
   for(let i=1;i<=m;i++) for(let j=1;j<=n;j++){
     const g=gradeWord(disp[i-1], said[j-1], lang);
     gr[i][j]=g;
-    dp[i][j] = g ? dp[i-1][j-1] + (g==='ok'?1.0:g==='near'?0.9:0.5)
-                 : Math.max(dp[i-1][j], dp[i][j-1]);
+    // An alignable pair is an option, not an obligation: skipping can
+    // score higher. Without the max, a child who read "नदी में" and
+    // stopped had में pulled onto the last word, है (a 'bad' look-alike),
+    // instead of onto में — scoring 27 for a correct two-word start.
+    dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1],
+                        g ? dp[i-1][j-1] + (g==='ok'?1.0:g==='near'?0.9:0.5) : -Infinity);
   }
   const states=new Array(m).fill('miss');
   const heard=new Array(m).fill(null);
