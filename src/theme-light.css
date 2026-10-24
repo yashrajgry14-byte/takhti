@@ -211,3 +211,25 @@ body{
 .ob-bubble{background:#16302B;color:#F3EEE0}
 .cake .candles i{background:#6E6355}
 .jm-label small{color:rgba(237,230,210,.8)}
+
+/* Playground UI light-theme overrides */
+.top-gamify-bar {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(42, 33, 24, 0.14);
+  box-shadow: 0 4px 14px rgba(60, 45, 25, 0.1);
+}
+.streak-badge, .star-badge {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(42, 33, 24, 0.14);
+  color: #2A2118;
+}
+.glass-card {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(42, 33, 24, 0.14);
+  box-shadow: 0 10px 24px rgba(60, 45, 25, 0.12);
+}
+.theme-pill {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(42, 33, 24, 0.16);
+  color: #2A2118;
+}

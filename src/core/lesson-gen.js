@@ -554,3 +554,192 @@ ${JSON.stringify(lines)}`;
     return les;
   }
 }
+
+/* ==================================================================
+   PROCEDURAL SVG SCENE GENERATOR — Traditional Indian Games
+   ================================================================== */
+function genGameSvg(game, beatIndex){
+  const g = typeof game === 'string' ? (typeof GAMES !== 'undefined' ? GAMES.find(x=>x.id===game) : null) : game;
+  const id = g ? g.id : 'kabaddi';
+  const accent = (g && g.accent) || '#3FBB78';
+  const actor = (g && g.actor) || '🏃';
+  const proj = (g && g.proj) || '🔴';
+
+  let innerSvg = '';
+  if(id === 'cricket'){
+    innerSvg = `
+      <rect x="90" y="45" width="180" height="70" rx="6" fill="${accent}" opacity="0.2" stroke="${accent}" stroke-width="2"/>
+      <line x1="105" y1="45" x2="105" y2="115" stroke="${accent}" stroke-width="2"/>
+      <line x1="255" y1="45" x2="255" y2="115" stroke="${accent}" stroke-width="2"/>
+      <line x1="98" y1="65" x2="98" y2="95" stroke="#FFD700" stroke-width="3"/>
+      <line x1="102" y1="65" x2="102" y2="95" stroke="#FFD700" stroke-width="3"/>
+      <line x1="258" y1="65" x2="258" y2="95" stroke="#FFD700" stroke-width="3"/>
+    `;
+  } else if(id === 'kabaddi'){
+    innerSvg = `
+      <rect x="40" y="30" width="280" height="100" rx="8" fill="none" stroke="${accent}" stroke-width="2.5"/>
+      <line x1="180" y1="30" x2="180" y2="130" stroke="${accent}" stroke-width="3" stroke-dasharray="6,4"/>
+      <line x1="110" y1="30" x2="110" y2="130" stroke="${accent}" stroke-width="1.5" opacity="0.6"/>
+      <line x1="250" y1="30" x2="250" y2="130" stroke="${accent}" stroke-width="1.5" opacity="0.6"/>
+    `;
+  } else if(id === 'stapu'){
+    innerSvg = `
+      <g fill="none" stroke="${accent}" stroke-width="2">
+        <rect x="150" y="20" width="60" height="30" rx="3"/>
+        <rect x="120" y="50" width="60" height="30" rx="3"/>
+        <rect x="180" y="50" width="60" height="30" rx="3"/>
+        <rect x="150" y="80" width="60" height="30" rx="3"/>
+        <text x="180" y="40" text-anchor="middle" fill="${accent}" font-size="14" font-weight="bold">7</text>
+        <text x="150" y="70" text-anchor="middle" fill="${accent}" font-size="14" font-weight="bold">5</text>
+        <text x="210" y="70" text-anchor="middle" fill="${accent}" font-size="14" font-weight="bold">6</text>
+        <text x="180" y="100" text-anchor="middle" fill="${accent}" font-size="14" font-weight="bold">3</text>
+      </g>
+    `;
+  } else if(id === 'pithoo'){
+    innerSvg = `
+      <line x1="50" y1="120" x2="310" y2="120" stroke="${accent}" stroke-width="3"/>
+      <rect x="150" y="110" width="60" height="10" rx="2" fill="${accent}"/>
+      <rect x="153" y="100" width="54" height="10" rx="2" fill="${accent}" opacity="0.9"/>
+      <rect x="156" y="90" width="48" height="10" rx="2" fill="${accent}" opacity="0.8"/>
+      <rect x="159" y="80" width="42" height="10" rx="2" fill="${accent}" opacity="0.7"/>
+      <rect x="162" y="70" width="36" height="10" rx="2" fill="${accent}" opacity="0.6"/>
+      <rect x="165" y="60" width="30" height="10" rx="2" fill="${accent}" opacity="0.5"/>
+      <rect x="168" y="50" width="24" height="10" rx="2" fill="${accent}" opacity="0.4"/>
+    `;
+  } else if(id === 'gilli'){
+    innerSvg = `
+      <line x1="40" y1="110" x2="320" y2="110" stroke="${accent}" stroke-width="2"/>
+      <path d="M 80 100 Q 180 20 280 100" fill="none" stroke="${accent}" stroke-width="2.5" stroke-dasharray="5,5"/>
+    `;
+  } else {
+    innerSvg = `
+      <rect x="50" y="30" width="260" height="100" rx="10" fill="${accent}" opacity="0.12" stroke="${accent}" stroke-width="2"/>
+      <circle cx="180" cy="80" r="30" fill="none" stroke="${accent}" stroke-width="2" opacity="0.5"/>
+    `;
+  }
+
+  const posX = beatIndex === 0 ? 80 : (beatIndex === 1 ? 180 : 270);
+  const posY = 80;
+
+  return `
+    <svg class="game-svg-panel" viewBox="0 0 360 150" style="width:100%;max-height:160px;background:rgba(0,0,0,0.15);border-radius:12px;margin:8px 0;">
+      <defs>
+        <filter id="glow-${id}" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+      </defs>
+      ${innerSvg}
+      <g transform="translate(${posX}, ${posY})">
+        <text x="0" y="0" font-size="28" text-anchor="middle" dominant-baseline="middle" filter="url(#glow-${id})">${actor}</text>
+        ${proj ? `<text x="25" y="-15" font-size="20" text-anchor="middle" dominant-baseline="middle">${proj}</text>` : ''}
+      </g>
+    </svg>
+  `;
+}
+
+/* ==================================================================
+   HOMEWORK STORY GENERATOR — Interactive Branching Beats & Checkpoints
+   ================================================================== */
+function genHomeworkStory(skillId, gameId, child, options){
+  options = options || {};
+  const c = child || S;
+  const childName = (c && c.name) || (S && S.name) || 'Kabir';
+  const age = (c && c.age) || (S && S.age) || 6;
+  const bandObj = typeof bandForAge === 'function' ? bandForAge(age) : AGE_BANDS.early;
+  const gamesList = typeof GAMES !== 'undefined' ? GAMES : [{id:'kabaddi', en:'Kabaddi', hi:'कबड्डी', actor:'🤼', proj:'🏃', accent:'#C5603A'}];
+  const g = gamesList.find(x => x.id === (gameId || (c && c.favGame))) || gamesList[0];
+
+  const teacherNote = options.teacherNote || (options.homework && options.homework.note) || '';
+  const isCoop = !!options.coop;
+  const p1Name = childName;
+  const p2Name = isCoop ? (options.p2Name || 'Ananya') : 'Gauri';
+
+  const skill = typeof SKILLS !== 'undefined' ? SKILLS.find(s=>s.id===skillId) : null;
+  const skillTitleEn = skill ? skill.en : (skillId || 'Math Practice');
+  const skillTitleHi = skill ? skill.hi : (skillId || 'गणित का अभ्यास');
+
+  let numA = 8, numB = 5, ans = 13, op = '+';
+  if(skillId === 'add2' || skillId === 'carry'){
+    numA = 18; numB = 7; ans = 25; op = '+';
+  } else if(skillId === 'barsub' || skillId === 'sub2'){
+    numA = 24; numB = 9; ans = 15; op = '-';
+  } else if(skillId === 'times' || skillId === 'array'){
+    numA = 4; numB = 3; ans = 12; op = '×';
+  } else {
+    numA = 6; numB = 4; ans = 10; op = '+';
+  }
+
+  const storyId = `hw-story-${g.id}-${skillId || 'gen'}-${Date.now()}`;
+
+  return {
+    id: storyId,
+    isHomeworkStory: true,
+    skillId: skillId || 'gen',
+    gameId: g.id,
+    game: g,
+    band: bandObj.id,
+    coop: isCoop,
+    p1Name,
+    p2Name,
+    teacherNote,
+    title: {
+      en: `📝 ${g.en} Homework Story`,
+      hi: `📝 ${g.hi} गृहकार्य कहानी`
+    },
+    sub: {
+      en: `${p1Name}'s ${g.en} Challenge · Skill: ${skillTitleEn}`,
+      hi: `${p1Name} की ${g.hi} चुनौती · कौशल: ${skillTitleHi}`
+    },
+    beats: [
+      {
+        t: 'intro',
+        beatIndex: 0,
+        svg: genGameSvg(g, 0),
+        say: {
+          en: `${teacherNote ? `Teacher says: "${teacherNote}". ` : ''}Ready ${p1Name}? The big ${g.en} match is starting!`,
+          hi: `${teacherNote ? `शिक्षक का संदेश: "${teacherNote}"। ` : ''}तैयार हो ${p1Name}? ${g.hi} का बड़ा मैच शुरू हो रहा है!`
+        }
+      },
+      {
+        t: 'ask',
+        beatIndex: 1,
+        svg: genGameSvg(g, 1),
+        say: {
+          en: `Tactile game choice! ${isCoop ? `${p2Name} passes to ${p1Name}. ` : ''}To make a winning move, solve this check:`,
+          hi: `रणनीतिक खेल विकल्प! ${isCoop ? `${p2Name} ने ${p1Name} को पास दिया। ` : ''}जीतने के लिए इस सवाल का हल चुनो:`
+        },
+        q: {
+          en: `${g.en} Checkpoint: ${numA} ${op} ${numB} = ?`,
+          hi: `${g.hi} चेकपॉइंट: ${numA} ${op} ${numB} = ?`
+        },
+        opts: [String(ans), String(ans + 2), String(Math.max(1, ans - 3))],
+        hiOpts: [String(ans), String(ans + 2), String(Math.max(1, ans - 3))],
+        correct: 0
+      },
+      {
+        t: 'win',
+        beatIndex: 2,
+        svg: genGameSvg(g, 2),
+        say: {
+          en: `Brilliant shot! ${p1Name} wins the ${g.en} match and masters ${skillTitleEn}!`,
+          hi: `शानदार खेल! ${p1Name} ने ${g.hi} मैच जीत लिया और ${skillTitleHi} सीख लिया!`
+        },
+        card: {
+          id: `card-${g.id}-${Date.now()}`,
+          gameId: g.id,
+          gameTitle: g.en,
+          hiGameTitle: g.hi,
+          actor: g.actor,
+          proj: g.proj,
+          skillId: skillId || 'gen',
+          skillEn: skillTitleEn,
+          skillHi: skillTitleHi,
+          stamp: '⭐ Teacher Approved',
+          date: new Date().toLocaleDateString()
+        }
+      }
+    ]
+  };
+}
+

@@ -59,9 +59,11 @@ function switchProfile(i){
   syncProfileOut();
   S.activeProfile = i;
   syncProfileIn(i);
-  // revoke any self-listen clip before S.ctx (which holds it) is
-  // replaced — this path doesn't go through go(), which would
-  // otherwise have done it (see ui/self-listen.js's own comment)
+  // stop any live recognizer and revoke any self-listen clip before
+  // S.ctx (which holds the clip) is replaced — this path doesn't go
+  // through go(), which would otherwise have done both (see
+  // ui/handlers.js's stopListening() and ui/self-listen.js's own comment)
+  if(typeof stopListening === 'function') stopListening();
   if(typeof selfListenReset === 'function') selfListenReset();
   S.ctx = {}; S.rb = null;
   log(null, `Switched to ${S.name}'s profile · on-device, instant`);

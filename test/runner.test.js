@@ -24,6 +24,7 @@
    lookup in runner.js is already null-guarded for exactly this).
    ================================================================== */
 const fs=require('fs'), vm=require('vm');
+const { verifyLoadListHasAllContent } = require('./_helpers/load-order.js');
 
 let failures=0;
 const checks=[];
@@ -31,6 +32,21 @@ function check(name, pass, detail){
   checks.push({name, pass, detail});
   if(!pass) failures++;
 }
+
+// Shared by both passes below (ctx1 and ctx2 each get their own fresh vm
+// context, but load the identical real order) — named once so the
+// load-order self-check has one list to verify, not two copies to keep
+// in sync by hand.
+const LOAD_LIST = ['src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
+                'src/content/games.js','src/content/facts.js','src/content/ages.js',
+                'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
+                'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
+                'src/content/comprehension.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js',
+                'src/games/runner.js'];
+const loadCheck = verifyLoadListHasAllContent(LOAD_LIST, 'src/core/diagnose.js');
+check("this file's own LOAD_LIST includes every content/*.js file index.html actually loads before core/diagnose.js",
+  loadCheck.pass,
+  `index.html loads ${JSON.stringify(loadCheck.realContentBefore)} before diagnose.js; LOAD_LIST is missing ${JSON.stringify(loadCheck.missing)}`);
 
 /* ==================================================================
    PASS 1 — round logic, no DOM at all
@@ -40,12 +56,7 @@ const ctx1={console, Intl,
      skillHistory:{}, gameBest:{}, doneLessons:[]}};
 vm.createContext(ctx1);
 ctx1.log = () => {};   // core/log.js needs document; game-core.js logs at round start/end
-for(const f of ['src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
-                'src/content/games.js','src/content/facts.js','src/content/ages.js',
-                'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
-                'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-                'src/content/comprehension.js','src/core/diagnose.js','src/games/game-core.js',
-                'src/games/runner.js'])
+for(const f of LOAD_LIST)
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx1, {filename:f});
 vm.runInContext(`globalThis.__={runnerBegin,runnerRecordAnswer,gameCurrent,S};`, ctx1);
 const X = ctx1.__;
@@ -123,12 +134,7 @@ ctx2.document = {
 };
 ctx2.$ = id => ctx2.document.getElementById(id);
 ctx2.navigator = { vibrate: () => {} };
-for(const f of ['src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
-                'src/content/games.js','src/content/facts.js','src/content/ages.js',
-                'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
-                'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-                'src/content/comprehension.js','src/core/diagnose.js','src/games/game-core.js',
-                'src/games/runner.js'])
+for(const f of LOAD_LIST)
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx2, {filename:f});
 vm.runInContext(`globalThis.__2={runnerBegin,runnerAttachLive,runnerStop,runnerSteer};`, ctx2);
 const Y = ctx2.__2;

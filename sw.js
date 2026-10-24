@@ -9,7 +9,7 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v22';
+const CACHE = 'takhti-v26';
 // Recorded audio clips are content-hashed (see core/voice.js) — a given
 // filename can never change, so they live in a cache of their own that
 // the version cleanup below never touches. Bumping CACHE on a normal
@@ -20,11 +20,11 @@ const SHELL = [
   './', './index.html', './manifest.webmanifest',
   './src/styles.css', './src/theme-light.css',
   './src/config.js', './src/state.js',
-  './src/content/sentences.js', './src/content/games.js', './src/content/facts.js',
+  './src/content/sentences.js', './src/content/games.js', './src/content/themes.js', './src/content/facts.js',
   './src/content/ages.js', './src/content/skills.js', './src/content/curriculum-early.js',
   './src/content/lessons.js', './src/core/lesson-gen.js', './src/content/literacy.js',
   './src/content/comprehension.js',
-  './src/core/diagnose.js', './src/core/srs.js',
+  './src/core/diagnose.js', './src/core/generative-brain.js', './src/core/video-library-catalog.js', './src/core/cartoon-series.js', './src/core/srs.js', './src/core/sfx.js',
   './src/games/game-core.js',
   './src/content/anim.js', './src/content/copy.js',
   './src/core/log.js', './src/core/vosk-stt.js', './src/core/voice.js', './src/core/speech.js', './src/core/matcher.js',
@@ -32,7 +32,7 @@ const SHELL = [
   './src/core/readability.js',
   './src/content/competencies.js', './src/core/store.js', './src/core/profiles.js',
   './src/ui/mascot.js', './src/ui/readback.js', './src/ui/elephant.js', './src/ui/home-scene.js',
-  './src/ui/lesson-player.js', './src/ui/cards.js',
+  './src/ui/lesson-player.js', './src/ui/anim-celebrate.js', './src/ui/video-player.js', './src/ui/cards.js',
   './src/ui/views.js', './src/ui/opening.js',
   './src/ui/arrival.js', './src/ui/onboarding.js', './src/ui/jungle-map.js',
   './src/games/runner.js', './src/games/pop.js', './src/games/tower.js',

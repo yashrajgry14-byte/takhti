@@ -136,7 +136,23 @@ function gradeBest(sentence, alternatives, lang){
    through ungated — "shaky" catches that case too, unless the match is
    near-perfect (90+), which is trusted even from a shaky pick. */
 const GRADE = { pass:78, gateScore:65, gateConf:0.55, topConf:0.40 };
-function gradeVerdict(r){
-  if((r.confidence < GRADE.gateConf && r.score < GRADE.gateScore) || (r.shaky && r.score < 90)) return 'unsure';
-  return r.score >= GRADE.pass ? 'pass' : 'coach';
+
+function getGradeThresholds(child){
+  let b = null;
+  if(typeof band === 'function') b = band();
+  else if(typeof bandForAge === 'function') b = bandForAge((child && child.age) || 6);
+
+  if(!b) return GRADE;
+  return {
+    pass: b.passScore || GRADE.pass,
+    gateScore: b.gateScore || GRADE.gateScore,
+    gateConf: GRADE.gateConf,
+    topConf: GRADE.topConf
+  };
+}
+
+function gradeVerdict(r, child){
+  const thresh = getGradeThresholds(child);
+  if((r.confidence < thresh.gateConf && r.score < thresh.gateScore) || (r.shaky && r.score < 90)) return 'unsure';
+  return r.score >= thresh.pass ? 'pass' : 'coach';
 }

@@ -207,7 +207,6 @@ function lesNarrate(){
   const line = b.t === 'ask' ? L(b.q) : lesSay(b);
   if(!line) return;
   speak(line, null, () => {
-    // interactive beats wait for the child; the rest flow on
     if(!S.lesson || b.t === 'ask') return;
     setTimeout(() => { if(S.lesson && lesBeat() === b) lesNext(); }, 900);
   });
@@ -216,15 +215,25 @@ function lesNext(){
   const les = S.lesson && S.lesson.data;
   if(!les) return;
   if(S.lesson.i >= les.beats.length - 1){
-    // completing a lesson counts as maths practice, once
     if(!S.lesson.counted){
       S.lesson.counted = true;
       record('math', S.lesson.asked ? S.lesson.right >= S.lesson.asked/2 : true);
-      markLessonDone(S.lesson.id);   // so the picker rotates rather than re-offering it
+      markLessonDone(S.lesson.id);
     }
     return;
   }
   S.lesson.i++; S.lesson.picked = null;
+  if(typeof sfxCard === 'function') sfxCard();
+
+  const newBeat = les.beats[S.lesson.i];
+  if(newBeat && newBeat.card){
+    S.unlockedCards = S.unlockedCards || [];
+    if(!S.unlockedCards.some(c=>c.id===newBeat.card.id)){
+      S.unlockedCards.push(newBeat.card);
+      if(typeof sfxChime === 'function') sfxChime();
+    }
+  }
+
   render(); lesNarrate();
 }
 function lesAnswer(k){
@@ -232,10 +241,13 @@ function lesAnswer(k){
   S.lesson.picked = k;
   S.lesson.asked++;
   const ok = k === b.correct;
-  if(ok) S.lesson.right++;
+  if(ok){
+    S.lesson.right++;
+    if(typeof sfxChime === 'function') sfxChime();
+  } else {
+    if(typeof sfxThud === 'function') sfxThud();
+  }
   log(0, `Lesson checkpoint · ${ok ? 'correct' : 'incorrect'}`);
-  // feeds the diagnostic's own evidence — hand-written lessons carry no
-  // `.concept` and simply contribute nothing here, see core/diagnose.js
   if(typeof noteSkillFromConcept === 'function'){
     const concept = S.lesson.data && S.lesson.data.concept;
     if(concept) noteSkillFromConcept(concept, ok);
@@ -246,25 +258,64 @@ function lesAnswer(k){
         null, () => setTimeout(() => { if(S.lesson) lesNext(); }, 700));
 }
 
+function triggerStorySelfListen(){
+  const b = lesBeat();
+  if(!b) return;
+  const line = b.t === 'ask' ? L(b.q) : lesSay(b);
+  if(typeof sfxChalk === 'function') sfxChalk();
+  if(typeof speakWithSelfListen === 'function'){
+    speakWithSelfListen(line);
+  } else if(typeof speak === 'function'){
+    speak(line);
+  }
+}
+
+function startHomeworkStory(skillId, gameId, coop){
+  if(typeof genHomeworkStory !== 'function') return;
+  const les = genHomeworkStory(skillId, gameId, S, { coop: !!coop });
+  S.lesson = { id: les.id, data: les, i: 0, right: 0, asked: 0, picked: null };
+  if(typeof sfxCard === 'function') sfxCard();
+  log(0, `Homework Story "${les.id}" started in ${gameById(gameId || S.game).en}`);
+  render();
+  lesNarrate();
+}
+
 /* ================= render ================= */
 function lessonHTML(){
   const les = S.lesson && S.lesson.data;
   if(!les) return '';
   const b = les.beats[S.lesson.i];
-  const g = gameById(S.game);
+  const g = gameById(les.gameId || S.game);
   const obj = g.proj || g.ic;
   const last = S.lesson.i >= les.beats.length - 1;
 
   const asking = b.t === 'ask';
   const opts = asking ? (S.lang==='hi' ? (b.hiOpts || b.opts) : b.opts) : [];
 
+  const coopBanner = les.coop ? `
+    <div style="background:rgba(255,255,255,0.08);padding:6px 12px;border-radius:20px;font-size:12px;margin-bottom:8px;text-align:center;">
+      👥 ${S.lesson.i % 2 === 0 ? (les.p1Name || 'Player 1') + "'s Turn" : (les.p2Name || 'Player 2') + "'s Turn"}
+    </div>
+  ` : '';
+
+  const cardRewardHtml = b.card ? `
+    <div class="card-reward-box" style="background:linear-gradient(135deg, ${g.accent || '#3FBB78'}33, rgba(0,0,0,0.4));border:2px solid ${g.accent || '#3FBB78'};border-radius:14px;padding:12px;margin:10px 0;text-align:center;">
+      <div style="font-size:32px">${b.card.actor}</div>
+      <div style="font-weight:bold;font-size:16px;color:#FFD700">${S.lang==='hi'?b.card.hiGameTitle:b.card.gameTitle} ${b.card.stamp}</div>
+      <div style="font-size:12px;opacity:0.8">${S.lang==='hi'?'कौशल: ' + b.card.skillHi : 'Skill Mastered: ' + b.card.skillEn}</div>
+    </div>
+  ` : '';
+
   return `
   <button class="back" onclick="endLesson()">← ${t('back')}</button>
   <div class="muted">${L(les.title)} <span class="agechip">${band()[S.lang] || band().en}</span></div>
+  ${coopBanner}
 
   <div class="lesstage">
+    ${b.svg ? b.svg : ''}
     <div class="lesart">${asking ? `<div class="lesq">${L(b.q)}</div>` : lesArt(b, obj)}</div>
     ${!asking ? `<div class="lescap">${lesSay(b)}</div>` : ''}
+    ${cardRewardHtml}
   </div>
 
   <div class="pbar">${les.beats.map((_,k)=>`<i class="${k<=S.lesson.i?'on':''}"></i>`).join('')}</div>
@@ -275,24 +326,41 @@ function lessonHTML(){
         S.lesson.picked===k ? 'wrong' : ''}" onclick="lesAnswer(${k})">${o}</button>`).join('')}
     </div>` : ''}
 
-  <div class="row" style="margin-top:12px">
+  <div class="row" style="margin-top:12px;gap:6px;">
     <button class="btn ghost" onclick="lesNarrate()">🔊 ${t('hear')}</button>
+    <button class="btn ghost" onclick="triggerStorySelfListen()">🎙️ ${S.lang==='hi'?'स्वयं बोलें':'Self-Listen'}</button>
     ${last
       ? `<button class="btn leaf" onclick="endLesson()">${S.lang==='hi'?'हो गया ⭐':'Done ⭐'}</button>`
       : `<button class="btn" onclick="lesNext()">${t('next')} →</button>`}
   </div>`;
 }
 
-/* the picker: an 8-story slice of the child's band — see lessonsForChild()
-   in core/lesson-gen.js for the rotation/variety logic */
 function lessonListHTML(){
   const mine = lessonsForChild(8);
   const total = lessonBank().filter(l => l.band === band().id).length;
   const g = gameById(S.game);
+  const hwData = typeof personalizeContentForHomework === 'function' ? personalizeContentForHomework() : null;
+
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="display" style="font-size:21px;margin:4px 0">
     ${S.lang==='hi'?'कहानी से सीखो':'Learn with a story'}</div>
+  
+  ${hwData ? `
+    <div class="hw-banner-card" style="background:linear-gradient(135deg, var(--marigold), #C5603A);border-radius:14px;padding:14px;margin:10px 0;color:#fff;">
+      <div style="font-weight:bold;font-size:16px;">📝 ${S.lang==='hi'?'गृहकार्य कहानी':'Teacher Homework Story'}</div>
+      <div style="font-size:13px;margin:4px 0;opacity:0.9;">${hwData.note ? `"${hwData.note}"` : (S.lang==='hi'?'शिक्षक द्वारा निर्धारित कार्य':'Assigned by teacher')}</div>
+      <div class="row" style="gap:8px;margin-top:8px;">
+        <button class="btn" style="background:#fff;color:#000;font-weight:bold;" onclick="startHomeworkStory('${hwData.assignedSkills[0]}', '${S.game}', false)">
+          ▶ ${S.lang==='hi'?'सोलो खेलें':'Play Solo'}
+        </button>
+        <button class="btn ghost" style="color:#fff;border-color:#fff;" onclick="startHomeworkStory('${hwData.assignedSkills[0]}', '${S.game}', true)">
+          👥 ${S.lang==='hi'?'2-खिलाड़ी मोड':'2-Player Co-Op'}
+        </button>
+      </div>
+    </div>
+  ` : ''}
+
   <div class="muted">${S.lang==='hi'
     ? `हर कहानी तुम्हारे ${g.hi} से बनी है।`
     : `Every story is told with your ${g.en}.`}</div>

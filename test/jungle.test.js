@@ -228,6 +228,97 @@ server.listen(0, '127.0.0.1', () => {
       suggestion.munniLeft === `${suggestion.suggestedXY.x}%` && suggestion.munniTop === `${suggestion.suggestedXY.y}%`,
       JSON.stringify(suggestion));
 
+    console.log('\n=== spaced repetition: a due item overrides the daily-target suggestion, invisibly ===');
+    const srsOverride = window.eval(`
+      (function(){
+        S.age = 7; go('map');
+        // 'write' would normally win (furthest behind daily target), but a
+        // genuinely due 'read' item must win instead — see jungle-map.js's
+        // mapSuggestion(), option (b): no new map place, spaced repetition
+        // just wins the existing routing.
+        S.targets = { read:5, write:5, math:5, facts:3 };
+        S.today   = { read:5, write:0, math:5, facts:3 };
+        S.srs = { 'read_l3_the cat sat': {
+          id:'read_l3_the cat sat', mod:'read', content:'The cat sat.',
+          step:2, attempts:2, correct:2, lastReview:Date.now()-1000, nextReview:Date.now()-1000
+        }};
+        render();
+        const sug = mapSuggestion();
+        return { suggestedId: sug && sug.id, dueCount: getDueSrsItems(S).length };
+      })()
+    `);
+    console.log(JSON.stringify(srsOverride));
+    check("a due read item overrides the daily-target suggestion — mapSuggestion() picks 'read', not 'write'",
+      srsOverride.suggestedId === 'read' && srsOverride.dueCount === 1, JSON.stringify(srsOverride));
+
+    console.log('\n=== the due item is genuinely the first sentence on the reading screen, not a fresh random pick ===');
+    const srsFirstSentence = window.eval(`
+      (function(){
+        go('read');   // go() resets S.ctx — this is a fresh session, same as tapping the map place would give
+        return { sentence: S.ctx.sentence, queueLeft: (S.ctx._srsQueue||[]).length };
+      })()
+    `);
+    console.log(JSON.stringify(srsFirstSentence));
+    check("the reading screen opens on the due item's own content, not a random sentence",
+      srsFirstSentence.sentence === 'The cat sat.', JSON.stringify(srsFirstSentence));
+
+    console.log('\n=== the map renders correctly with due items, with none, and with zero SRS history at all ===');
+    const srsStates = window.eval(`
+      (function(){
+        function snapshot(){
+          go('map');
+          let threw = null;
+          try { mapSuggestion(); } catch(e){ threw = e.message; }
+          return {
+            threw,
+            placeCount: document.querySelectorAll('.jm-place').length,
+            munniExists: !!document.querySelector('.jm-munni')
+          };
+        }
+        const withDue = snapshot();   // S.srs still holds the due item from above
+
+        S.srs = {};   // real SRS history, nothing currently due (all mastered / not yet time)
+        const noDue = snapshot();
+
+        delete S.srs;   // a child who has never triggered recordSrsItem() at all — the true zero-history case
+        const noHistory = snapshot();
+
+        return { withDue, noDue, noHistory };
+      })()
+    `);
+    console.log(JSON.stringify(srsStates, null, 2));
+    check('map renders (all 6 places, no throw) with a due SRS item present',
+      srsStates.withDue.threw === null && srsStates.withDue.placeCount === 6, JSON.stringify(srsStates.withDue));
+    check('map renders (all 6 places, no throw) with S.srs present but empty (nothing due)',
+      srsStates.noDue.threw === null && srsStates.noDue.placeCount === 6, JSON.stringify(srsStates.noDue));
+    check('map renders (all 6 places, no throw) for a child with no S.srs field at all — zero SRS history is not a broken state',
+      srsStates.noHistory.threw === null && srsStates.noHistory.placeCount === 6, JSON.stringify(srsStates.noHistory));
+
+    console.log('\n=== the parent dashboard REMEMBERED section: empty state and a real one, neither throws ===');
+    const parentSrs = window.eval(`
+      (function(){
+        delete S.srs;
+        go('parent');
+        const emptyHtml = document.getElementById('screen').innerHTML;
+        S.srs = {
+          a: { id:'a', mod:'read', step:4, attempts:5, correct:5, lastReview:Date.now(), nextReview:Date.now()+9e8 },
+          b: { id:'b', mod:'write', step:1, attempts:2, correct:1, lastReview:Date.now(), nextReview:Date.now()-1000 }
+        };
+        go('parent');
+        const filledHtml = document.getElementById('screen').innerHTML;
+        return {
+          emptyLen: emptyHtml.length,
+          emptyMentionsRemembered: emptyHtml.includes('REMEMBERED') || emptyHtml.includes('याद रहा'),
+          filledLen: filledHtml.length,
+          filledMentionsPct: filledHtml.includes('50%')
+        };
+      })()
+    `);
+    console.log(JSON.stringify(parentSrs));
+    check('parent dashboard renders (non-trivial length) with zero SRS history', parentSrs.emptyLen > 500, JSON.stringify(parentSrs));
+    check("parent dashboard's REMEMBERED section renders even with zero history (empty state, not missing)", parentSrs.emptyMentionsRemembered, JSON.stringify(parentSrs));
+    check('parent dashboard renders correctly with real SRS stats — 1 of 2 mastered shows as 50%', parentSrs.filledMentionsPct, JSON.stringify(parentSrs));
+
     check('no uncaught script errors anywhere in this run', jsErrors.length === 0, jsErrors.join(' | '));
 
     console.log('\n' + '-'.repeat(70));

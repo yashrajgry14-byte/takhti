@@ -153,6 +153,7 @@ home(){
   const hw = (typeof personalizeContentForHomework === 'function') ? personalizeContentForHomework(S) : null;
   const srsDue = (typeof getDueSrsItems === 'function') ? getDueSrsItems(S) : [];
   return `
+  ${topGamifyBar()}
   ${profileSwitcher()}
   <div class="hello display">${t('hello')}${S.name} 👋</div>
   ${homeSceneHTML()}
@@ -222,8 +223,16 @@ parentlock(){
 
 /* ---------- READING ---------- */
 read(){
-  const pool = ageSentences(S.lang, S.levels.read);
-  if(!S.ctx.sentence) S.ctx.sentence = pool[Math.floor(Math.random()*pool.length)];
+  if(!S.ctx.sentence){
+    const due = (typeof getDueSrsItems === 'function') ? getDueSrsItems(S, 'read') : [];
+    if(due.length && due[0].content){
+      S.ctx.sentence = due[0].content;
+      S.ctx._srsQueue = due.slice(1).map(it => it.content);
+    } else {
+      const pool = ageSentences(S.lang, S.levels.read);
+      S.ctx.sentence = pool[Math.floor(Math.random()*pool.length)];
+    }
+  }
   const s = S.ctx.sentence;
   const shown = S.ctx.tokens
     ? S.ctx.tokens.map(tk=>`<span class="w ${tk.state}" title="${tk.heard? 'heard: '+attr(tk.heard) : 'not heard'}" data-say="${attr(tk.text)}" onclick="sayEl(this)">${tk.text}</span>`).join(' ')
@@ -536,6 +545,18 @@ parent(){
     ${row(t('count'),'math')}
     <div class="metric"><div><b>${S.lang==='hi'?'पूछे गए सवाल':'Questions asked'}</b><div style="font-size:12.5px;opacity:.65">${S.answered.length} answered · ${S.queue.length} waiting for signal</div></div></div>
 
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'याद रहा (स्मृति)':'REMEMBERED (MEMORY)'}</div>
+    ${(() => {
+      const stats = (typeof srsStats === 'function') ? srsStats(S) : { total:0, mastered:0, due:0 };
+      const pctMastered = stats.total ? Math.round(stats.mastered / stats.total * 100) : 0;
+      return `<div class="metric">
+        <div><b>${S.lang==='hi'?'दीर्घकालिक याददास्त':'Long-term Retention'}</b>
+          <div style="font-size:12.5px;opacity:.65">${stats.mastered} of ${stats.total} ${S.lang==='hi'?'पाठ पक्के याद हैं':'mastered items'} · ${stats.due} ${S.lang==='hi'?'पुनरावृत्ति के लिए बाकी':'due for review'}</div>
+        </div>
+        <div style="text-align:right"><b>${pctMastered}%</b><div class="bar"><i style="width:${pctMastered}%"></i></div></div>
+      </div>`;
+    })()}
+
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'कॉपी की तस्वीरें':'NOTEBOOK SHELF'}</div>
     ${S.photos.length
       ? `<div class="gallery">${S.photos.slice(0,9).map(p=>`<img src="${p.img}" title="${p.line} · ${p.score}%">`).join('')}</div>
@@ -551,3 +572,31 @@ parent(){
   </div>`;
 }
 };
+
+function topGamifyBar(){
+  if(typeof S === 'undefined' || !S.name) return '';
+  const streak = S.day ? (S.day + 1) : 1;
+  const stars = S.stars || 12;
+  const mascotEmoji = S.avatar || '🐘';
+  return `
+  <div class="top-gamify-bar">
+    <div class="streak-badge" title="Daily Streak">
+      <span class="streak-flame">🔥</span>
+      <span>${streak} ${S.lang==='hi'?'दिन':'Day'}</span>
+    </div>
+    <div class="mascot-avatar-btn" onclick="cheerMascotAvatar()" title="Cheer Munni!">
+      <span style="font-size:18px">${mascotEmoji}</span>
+      <span>${S.name}</span>
+    </div>
+    <div class="star-badge" title="Total Stars Earned">
+      <span class="star-sparkle">⭐</span>
+      <span>${stars}</span>
+    </div>
+  </div>`;
+}
+
+function cheerMascotAvatar(){
+  if(typeof sfxChime === 'function') sfxChime();
+  if(typeof triggerStarBurst === 'function') triggerStarBurst(15);
+}
+

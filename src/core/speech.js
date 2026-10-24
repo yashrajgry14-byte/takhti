@@ -87,50 +87,65 @@ function speakDevice(text, lang, onDone){
       log(0, `TTS · ${v? v.name : (l==='hi'?'hi-IN':'en-IN')}`);
   }, 70);
 }
+/* WebSpeech is cloud STT on every browser that ships it — there is no
+   on-device fallback yet (see core/vosk-stt.js for why, and what
+   isVoskReady() is for once one exists). So "browser lacks the API",
+   "no connection", and "the recognizer just failed to start" all mean
+   the same thing to a child: no microphone grading is available right
+   now, type it instead. Calling onEnd() immediately and synchronously
+   in those cases — rather than opening a microphone that can never
+   produce a result — is what keeps the reading screen from ever
+   hanging with no way out; see startListening()/stopListening() in
+   ui/handlers.js for the other half of that guarantee (the ONLINE
+   WebSpeech recognizer this function returns is a real, long-lived
+   object that must be stoppable too, not just this synchronous path). */
 function listen(onResult, onEnd){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  // If online and WebSpeech is supported, try WebSpeech API first
-  if(navigator.onLine && SR){
-    try {
-      log(0, `STT · WebSpeech API (${S.lang})`);
-      const r = new SR();
-      r.lang = S.lang==='hi' ? 'hi-IN' : 'en-IN';
-      r.interimResults = false;
-      r.maxAlternatives = 5;
-      r.onresult = e => {
-        const res = e.results[0];
-        const alts = [];
-        for(let i=0;i<res.length;i++) alts.push({ transcript:res[i].transcript, confidence:res[i].confidence });
-        onResult(alts);
-      };
-      r.onerror = e => {
-        if(e.error === 'network' || e.error === 'offline'){
-          log(0, 'WebSpeech offline/network error — switching to WASM STT Engine...');
-          listenVosk(onResult, onEnd);
-        } else {
-          onEnd(e.error);
-        }
-      };
-      r.onend = () => onEnd(null);
-      r.start();
-      return r;
-    } catch(err){
-      log(0, 'WebSpeech failed — trying WASM STT Engine...');
-    }
+  if(!SR){
+    log(0, 'STT unavailable — this browser has no SpeechRecognition, typed fallback');
+    onEnd('unsupported');
+    return null;
   }
-
-  // Fallback to WASM Offline STT Engine
-  log(0, `STT · WASM Offline Engine (${S.lang})`);
-  return listenVosk(onResult, onEnd);
+  if(!navigator.onLine){
+    // The one place a real on-device recognizer will plug in later — see
+    // core/vosk-stt.js. isVoskReady() is false today, so this always falls
+    // through to the honest "no recognizer, type it" message below.
+    if(typeof isVoskReady === 'function' && isVoskReady() && typeof listenVosk === 'function')
+      return listenVosk(onResult, onEnd);
+    log(0, 'STT unavailable offline — no on-device recognizer bundled, typed fallback');
+    onEnd('network');
+    return null;
+  }
+  try {
+    log(0, `STT · WebSpeech API (${S.lang})`);
+    const r = new SR();
+    r.lang = S.lang==='hi' ? 'hi-IN' : 'en-IN';
+    r.interimResults = false;
+    r.maxAlternatives = 5;
+    r.onresult = e => {
+      const res = e.results[0];
+      const alts = [];
+      for(let i=0;i<res.length;i++) alts.push({ transcript:res[i].transcript, confidence:res[i].confidence });
+      onResult(alts);
+    };
+    r.onerror = e => onEnd(e.error);
+    r.onend = () => onEnd(null);
+    r.start();
+    return r;
+  } catch(err){
+    log(0, 'WebSpeech failed to start — typed fallback');
+    onEnd('network');
+    return null;
+  }
 }
 
 /* names the real cause instead of a blanket "mic unavailable" — a network
    drop and a denied permission need different next steps from a child. */
 function micReason(err){
   if(err==='network' || err==='offline') return S.lang==='hi'
-    ? 'ऑफ़लाइन STT इंजन चालू है — बोलकर अभ्यास करते रहें!'
-    : 'Offline STT active — keep speaking to practice!';
+    ? 'बोलकर पहचान के लिए इंटरनेट चाहिए — नीचे लिखकर देखो, बाकी सब कुछ ऑफ़लाइन काम करता है।'
+    : 'Speech recognition needs a connection — type it below, everything else works offline.';
   if(err==='not-allowed' || err==='service-not-allowed') return S.lang==='hi'
     ? 'माइक की अनुमति नहीं मिली — नीचे लिखकर देखो।'
     : 'Microphone permission denied — type what you read below.';
@@ -139,6 +154,48 @@ function micReason(err){
     : "This browser can't listen — try Chrome.";
   return S.lang==='hi' ? 'माइक नहीं चला — नीचे लिखकर देखो।' : 'Mic unavailable here — type what you read below.';
 }
+
+/* ==================================================================
+   AUDIO SELF-LISTEN FEEDBACK LOOP
+   Captures transient audio stream during reading for self-comparison.
+   ================================================================== */
+let ACTIVE_RECORDER = null;
+let RECORDED_CHUNKS = [];
+
+function startVoiceRecorder(){
+  RECORDED_CHUNKS = [];
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    if(typeof MediaRecorder === 'undefined') return;
+    try {
+      ACTIVE_RECORDER = new MediaRecorder(stream);
+      ACTIVE_RECORDER.ondataavailable = e => { if(e.data && e.data.size > 0) RECORDED_CHUNKS.push(e.data); };
+      ACTIVE_RECORDER.onstop = () => {
+        if(RECORDED_CHUNKS.length > 0){
+          const blob = new Blob(RECORDED_CHUNKS, { type: 'audio/webm' });
+          if(S.ctx) S.ctx.recordedVoice = URL.createObjectURL(blob);
+          if(typeof render === 'function') render();
+        }
+        stream.getTracks().forEach(t => t.stop());
+      };
+      ACTIVE_RECORDER.start();
+    } catch(e){}
+  }).catch(e => {});
+}
+
+function stopVoiceRecorder(){
+  if(ACTIVE_RECORDER && ACTIVE_RECORDER.state !== 'inactive'){
+    try { ACTIVE_RECORDER.stop(); } catch(e){}
+  }
+}
+
+function playSelfVoice(){
+  if(S.ctx && S.ctx.recordedVoice){
+    const audio = new Audio(S.ctx.recordedVoice);
+    audio.play().catch(e => log(null, 'Audio playback blocked: ' + e.message));
+  }
+}
+
 
 /* ==================================================================
    READING MATCHER (Tier 0) — deterministic, offline, Devanagari-aware

@@ -1,4 +1,5 @@
 const fs=require('fs'), vm=require('vm');
+const { verifyLoadListHasAllContent } = require('./_helpers/load-order.js');
 
 /* Node has no `localStorage` — this is the same tiny in-memory stand-in the
    real browser one behaves as for our purposes (string keys, JSON blobs),
@@ -22,15 +23,21 @@ vm.createContext(ctx);
 // Same order index.html actually loads them in: skills.js, then
 // curriculum-early.js (pushes Nursery-Class 5 skills into SKILLS), then
 // lesson-gen.js, then literacy.js (pushes concepts into CONCEPTS/GEN_BEATS
-// and teaches skills by populating their .concepts). Loading anything less
+// and teaches skills by populating their .concepts), then comprehension.js
+// (the last 7 gaps below Class 4 — same mechanism). Loading anything less
 // than the real graph here would mean this file quietly stops testing what
 // the app actually ships the moment new content merges in — which is
-// exactly what happened before this list included the last two files.
-for(const f of ['src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
-                'src/content/games.js','src/content/facts.js','src/content/ages.js',
+// exactly what happened before: this list omitted comprehension.js for a
+// while, and every number below was computed against a graph the app no
+// longer shipped, with 0 test failures the entire time. See the self-check
+// right below, added specifically so that can't happen silently again.
+const LOAD_LIST = ['src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
+                'src/content/games.js','src/content/themes.js','src/content/facts.js','src/content/ages.js',
                 'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
                 'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-                'src/core/diagnose.js'])
+                'src/content/comprehension.js',
+                'src/core/diagnose.js'];
+for(const f of LOAD_LIST)
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
 vm.runInContext(`globalThis.__d={SKILLS,skillCoverage,prereqChain,diagnose,planSummary,classPattern,skillById,
   noteSkillAttempt,tDiagnose,flushClassMirror,readClassShared,classMirrorKey,lessonsForSkill};`,ctx);
@@ -43,12 +50,22 @@ function check(name, pass, detail){
   if(!pass) failures++;
 }
 
+// SELF-CHECK, run before anything else counts on LOAD_LIST being complete —
+// see test/_helpers/load-order.js. A content file that ships in the real
+// app but is missing here is exactly the failure mode this suite lived
+// with unnoticed — every number this file asserts is only as real as this
+// list, so the list itself is now under test, not just trusted.
+const loadCheck = verifyLoadListHasAllContent(LOAD_LIST, 'src/core/diagnose.js');
+check("this file's own LOAD_LIST includes every content/*.js file index.html actually loads before core/diagnose.js",
+  loadCheck.pass,
+  `index.html loads ${JSON.stringify(loadCheck.realContentBefore)} before diagnose.js; LOAD_LIST is missing ${JSON.stringify(loadCheck.missing)}`);
+
 console.log('=== graph ===');
 const cov=D.skillCoverage();
 console.log(`skills: ${cov.total} · teachable today: ${cov.taught} (${cov.pct}%)`);
 console.log(`content gaps: ${cov.gaps.length} — ${cov.gaps.slice(0,8).join(', ')}...`);
 console.log(`absorbed (read*/write* duplicates removed from the count): ${cov.absorbed.length} — ${cov.absorbed.join(', ')}`);
-// The graph has grown twice since the 48-skill maths-only original:
+// The graph has grown three times since the 48-skill maths-only original:
 //   +12  read1-6/write1-6 (an earlier session's generic bilingual ladder)
 //   +66  curriculum-early.js's Nursery-Class 5 skills (num/eng/hin/evs)
 // = 126 raw nodes. content/literacy.js's own 15 concepts then populate SOME
@@ -65,17 +82,27 @@ console.log(`absorbed (read*/write* duplicates removed from the count): ${cov.ab
 // e.g. e1-decode/u-blend, both via 'blending'). skillCoverage() dedupes
 // those — any non-read/write skill sharing a concept with a read*/write*
 // skill is "absorbed": dropped from both total and taught, never counted
-// twice. 126 raw − 23 absorbed = 103. All re-verified against the real
-// merged graph (this file loads curriculum-early.js and literacy.js, same
-// order as index.html).
+// twice. 126 raw − 23 absorbed = 103.
+//
+// content/comprehension.js then closes 7 MORE of the still-open gaps —
+// e2-compre, e2-noun, e3-compre, e3-verb, e3-para, h3-compre, h3-vyakaran —
+// by populating their .concepts the same way literacy.js does (no new
+// skill nodes, no change to the 103/126/23 totals above, just fewer of
+// the 103 left un-taught): taught moves 48→55, so pct moves 47%→53% and
+// gaps moves 55→48. All re-verified against the real merged graph (this
+// file loads curriculum-early.js, literacy.js AND comprehension.js, same
+// order as index.html — see the self-check above).
 check('103 skills counted after dedup (126 raw − 23 read/write-absorbed duplicates)', cov.total===103, `got ${cov.total}`);
-check('47% teachable today (48/103) — the dedup lowers the raw 56% because 23 of those "taught" nodes were the same competency counted twice',
-  cov.pct===47, `got ${cov.pct}%`);
+check('53% teachable today (55/103) — comprehension.js closes 7 more gaps on top of the 47% (48/103) before it existed',
+  cov.pct===53, `got ${cov.pct}%`);
 check("literacy.js's own concepts closed two PRE-EXISTING maths gaps (shapes2d, time2)",
   !cov.gaps.includes('1·shapes2d') && !cov.gaps.includes('2·time2'),
   JSON.stringify(cov.gaps.filter(g=>/shapes2d|time2/.test(g))));
-check('55 content gaps remain — dedup never changes gaps, since an absorbed skill is by definition already taught',
-  cov.gaps.length===55, `got ${cov.gaps.length}: ${JSON.stringify(cov.gaps)}`);
+check("comprehension.js's own 7 concepts closed their matching gaps (e2-compre, e2-noun, e3-compre, e3-verb, e3-para, h3-compre, h3-vyakaran) — this is the exact drift the stale version of this file missed",
+  ['2·e2-compre','2·e2-noun','3·e3-compre','3·e3-verb','3·e3-para','3·h3-compre','3·h3-vyakaran'].every(g => !cov.gaps.includes(g)),
+  JSON.stringify(cov.gaps.filter(g=>/compre|e2-noun|e3-verb|e3-para|vyakaran/.test(g))));
+check('48 content gaps remain — dedup never changes gaps, since an absorbed skill is by definition already taught',
+  cov.gaps.length===48, `got ${cov.gaps.length}: ${JSON.stringify(cov.gaps)}`);
 check('e1-decode and u-blend (curriculum-early.js\'s own decoding/blending skills) are absorbed into read2, not double-counted',
   cov.absorbed.includes('e1-decode') && cov.absorbed.includes('u-blend'),
   JSON.stringify(cov.absorbed));

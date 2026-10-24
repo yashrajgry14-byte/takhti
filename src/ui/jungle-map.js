@@ -56,9 +56,38 @@ function mapVisible(){
   });
 }
 
-/* Where Munni is standing: the module furthest from its own daily target,
-   so she waits at the thing worth doing rather than a fixed favourite. */
+/* Where Munni is standing: due spaced-repetition items win first (see
+   core/srs.js), then whichever module is furthest from its own daily
+   target, so she waits at the thing worth doing rather than a fixed
+   favourite.
+
+   Chose option (b) over adding a seventh "review" place: a badge that
+   appears and disappears is a notification wearing a jungle costume, and
+   this app already has a hard rule against habit mechanics aimed at
+   children (see CLAUDE.md's product constraints). Spaced repetition
+   works precisely because the learner doesn't experience it as a
+   separate event — Munni just happens to be standing at reading today,
+   and the first sentence the child gets (see VIEWS.read in views.js)
+   happens to be the one due for review. No new UI, no "3 things to
+   remember" counter, nothing for the child to notice at all. A parent
+   still gets the real signal — see parent()'s REMEMBERED section. */
 function mapSuggestion(){
+  if(typeof getDueSrsItems === 'function'){
+    const visibleMods = new Set(mapVisible().map(p => p.mod).filter(Boolean));
+    const due = getDueSrsItems(S).filter(it => visibleMods.has(it.mod));
+    if(due.length){
+      const counts = {};
+      for(const it of due) counts[it.mod] = (counts[it.mod] || 0) + 1;
+      const topMod = Object.keys(counts).sort((a,b) => counts[b] - counts[a])[0];
+      // math SRS items carry no specific problem to replay (genProblem()
+      // generates fresh each time — see views.js's math()), so for math
+      // "review" just means Munni sends the child back to practice at
+      // their current level again; for read, the due item's own sentence
+      // becomes the session's first one, see VIEWS.read.
+      const place = mapVisible().find(p => p.mod === topMod);
+      if(place) return place;
+    }
+  }
   const t = S.today || {}, g = S.targets || {};
   const cand = mapVisible()
     .filter(p => p.mod && g[p.mod])
@@ -81,8 +110,11 @@ function jungleMapHTML(){
   const here = mapSuggestion();
   const pct = mapProgress();
 
+  const topBar = typeof topGamifyBar === 'function' ? topGamifyBar() : '';
+
   return `
-  <div class="jmap" id="jmap">
+  ${topBar}
+  <div class="jmap glass-card" id="jmap" style="border-radius:24px;border:2px solid rgba(255,255,255,0.18);box-shadow:0 14px 36px rgba(0,0,0,0.35);">
     <svg class="jm-canvas" viewBox="0 0 100 100" preserveAspectRatio="none">
       <!-- the path, drawn through the places in order -->
       <path class="jm-path" d="M22 26 C 44 18, 56 14, 68 20 S 84 36, 78 48
@@ -124,13 +156,15 @@ function jungleMapHTML(){
   </div>
 
   <div class="jm-foot">
-    <button class="btn ghost" onclick="go('parent')">${t('parent')} →</button>
+    <button class="btn-3d ghost" style="width:100%" onclick="go('parent')">${t('parent')} →</button>
   </div>`;
 }
 
 function mapGo(screen){
   if(typeof trumpet === 'function') trumpet(1);
+  if(typeof sfxChime === 'function') sfxChime();
   go(screen);
 }
 
 if(typeof VIEWS !== 'undefined') VIEWS.map = jungleMapHTML;
+

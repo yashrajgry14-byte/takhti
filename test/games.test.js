@@ -1,4 +1,5 @@
 const fs=require('fs'), vm=require('vm');
+const { verifyLoadListHasAllContent } = require('./_helpers/load-order.js');
 
 /* Same real load order index.html and sw.js's SHELL now ship: the full
    content graph, then core/diagnose.js, then src/games/game-core.js —
@@ -11,11 +12,12 @@ const ctx={console, Intl,
   S:{lang:'en', age:8, name:'TestChild', day:0, game:'cricket',
      skillHistory:{}, gameBest:{}, doneLessons:[]}};
 vm.createContext(ctx);
-for(const f of ['src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
+const LOAD_LIST = ['src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
                 'src/content/games.js','src/content/facts.js','src/content/ages.js',
                 'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
                 'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-                'src/content/comprehension.js','src/core/diagnose.js','src/games/game-core.js'])
+                'src/content/comprehension.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'];
+for(const f of LOAD_LIST)
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
 // game-core.js calls log(0, ...) inside gameStart()/gameEnd() — a no-op
 // stand-in, same reasoning as every other test file's stubs: nothing here
@@ -32,6 +34,11 @@ function check(name, pass, detail){
   checks.push({name, pass, detail});
   if(!pass) failures++;
 }
+
+const loadCheck = verifyLoadListHasAllContent(LOAD_LIST, 'src/core/diagnose.js');
+check("this file's own LOAD_LIST includes every content/*.js file index.html actually loads before core/diagnose.js",
+  loadCheck.pass,
+  `index.html loads ${JSON.stringify(loadCheck.realContentBefore)} before diagnose.js; LOAD_LIST is missing ${JSON.stringify(loadCheck.missing)}`);
 
 /* ==================================================================
    1. THE POOL — built once from the real, validated lesson bank

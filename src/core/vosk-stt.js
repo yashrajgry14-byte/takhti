@@ -1,103 +1,30 @@
 /* ==================================================================
-   VOSK WASM STT ENGINE (Tier 0 / On-Device Speech Recognition)
+   OFFLINE STT — honest status: NOT built yet.
 
-   Enables 100% offline speech recognition in the browser using WebAssembly.
-   Provides fallback when WebSpeech API is offline or unsupported.
+   The real destination is a bundled WASM recognizer (Vosk,
+   vosk-model-small-hi-0.22, ~42MB) that takes over when WebSpeech has
+   no connection to talk to — WebSpeech is cloud STT on every browser
+   that ships it, so "offline" and "no recognizer" are the same
+   situation today. That is a real model-loading, real-audio-pipeline
+   build, not something to fake here.
+
+   An earlier version of this file pretended otherwise: it opened the
+   microphone, buffered real PCM audio into an array, and never fed
+   that buffer to anything — onResult() was never called. A child
+   reading offline would tap the mic and simply never be graded, with
+   no error, no message, and (see core/speech.js's old fallback logic)
+   no way to stop the stuck turn either. A working "type it instead"
+   beats a silently hanging microphone, so core/speech.js's listen()
+   now detects "no recognizer available" itself and says so plainly
+   via micReason() — see there. This file no longer pretends to
+   listen; isVoskReady() stays false until a real engine is wired in.
+
+   When that build happens, wire the real ready-check in behind
+   isVoskReady() and add a real listenVosk(onResult, onEnd) that
+   actually calls onResult() with a transcript — core/speech.js's
+   listen() already asks "is an offline recognizer available?" before
+   trying to use one, so nothing else needs to change to plug it in.
    ================================================================== */
-
-let VOSK_STATE = {
-  ready: false,
-  loading: false,
-  recognizer: null,
-  audioCtx: null,
-  mediaStream: null,
-  processor: null,
-  lang: 'hi'
-};
-
-/* Checks if WASM STT engine is loaded and ready */
 function isVoskReady(){
-  return VOSK_STATE.ready;
-}
-
-/* Initialize Vosk WASM Engine lazily or on-demand */
-async function initVoskSTT(lang = 'hi'){
-  if(VOSK_STATE.ready || VOSK_STATE.loading) return VOSK_STATE.ready;
-  VOSK_STATE.loading = true;
-  VOSK_STATE.lang = lang;
-
-  try {
-    log(0, `Initializing WASM Offline STT engine (${lang})...`);
-    // Simulated WASM model loader for browser environment
-    // In production PWA, fetches vosk.wasm and vosk-model-small-hi-0.22 from CacheStorage
-    VOSK_STATE.ready = true;
-    VOSK_STATE.loading = false;
-    log(0, `WASM Offline STT Ready (${lang})`);
-    return true;
-  } catch(e) {
-    VOSK_STATE.loading = false;
-    VOSK_STATE.ready = false;
-    log(null, 'WASM STT initialization failed: ' + e.message);
-    return false;
-  }
-}
-
-/* Listen using WebAudio + WASM Offline STT */
-function listenVosk(onResult, onEnd){
-  if(typeof window === 'undefined' || !navigator.mediaDevices){
-    onEnd('unsupported');
-    return null;
-  }
-
-  log(0, 'Starting WASM Offline Speech Recognizer...');
-
-  let isListening = true;
-  let audioCtx = null;
-  let stream = null;
-  let processor = null;
-
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
-    if(!isListening){
-      s.getTracks().forEach(t => t.stop());
-      return;
-    }
-
-    stream = s;
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContextClass();
-    const source = audioCtx.createMediaStreamSource(stream);
-    
-    // ScriptProcessor fallback for broad browser support without external worklet build step
-    processor = audioCtx.createScriptProcessor(4096, 1, 1);
-    
-    // Buffer spoken audio PCM data
-    let pcmBuffers = [];
-    processor.onaudioprocess = (e) => {
-      if(!isListening) return;
-      const input = e.inputBuffer.getChannelData(0);
-      pcmBuffers.push(new Float32Array(input));
-    };
-
-    source.connect(processor);
-    processor.connect(audioCtx.destination);
-
-    VOSK_STATE.audioCtx = audioCtx;
-    VOSK_STATE.mediaStream = stream;
-    VOSK_STATE.processor = processor;
-
-  }).catch(err => {
-    log(null, 'WASM Mic Error: ' + err.name);
-    onEnd('not-allowed');
-  });
-
-  return {
-    stop: () => {
-      isListening = false;
-      if(processor) try{ processor.disconnect(); }catch(e){}
-      if(audioCtx) try{ audioCtx.close(); }catch(e){}
-      if(stream) try{ stream.getTracks().forEach(t => t.stop()); }catch(e){}
-      log(0, 'WASM Offline STT stopped.');
-      onEnd(null);
-    }
-  };
+  return false;
 }

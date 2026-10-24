@@ -1224,3 +1224,195 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
   .ar-el{animation-duration:0s;animation-delay:0s}
   .ar-cloud,.ar-birds,.ar-star,.ar-trees i{animation:none}
 }
+
+/* ==================================================================
+   CHILD-CENTRIC PLAYGROUND UI (3D TACTILE + GLASSMORPHISM + STREAKS)
+   ================================================================== */
+
+/* 3D Tactile Buttons */
+.btn-3d {
+  position: relative;
+  font-family: 'Baloo 2', cursive, sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  border: none;
+  border-radius: 16px;
+  padding: 13px 20px;
+  cursor: pointer;
+  background: var(--marigold);
+  color: #16302B;
+  box-shadow: 0 5px 0 #C47B10, 0 10px 20px rgba(0,0,0,0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s ease;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-3d:active {
+  transform: translateY(4px) scale(0.97);
+  box-shadow: 0 1px 0 #C47B10, 0 4px 10px rgba(0,0,0,0.2);
+}
+.btn-3d.leaf {
+  background: var(--leaf);
+  color: #0E2A1E;
+  box-shadow: 0 5px 0 #2B8954, 0 10px 20px rgba(0,0,0,0.25);
+}
+.btn-3d.leaf:active {
+  box-shadow: 0 1px 0 #2B8954, 0 4px 10px rgba(0,0,0,0.2);
+}
+.btn-3d.indigo {
+  background: var(--indigo);
+  color: #FFFFFF;
+  box-shadow: 0 5px 0 #2854B7, 0 10px 20px rgba(0,0,0,0.25);
+}
+.btn-3d.indigo:active {
+  box-shadow: 0 1px 0 #2854B7, 0 4px 10px rgba(0,0,0,0.2);
+}
+.btn-3d.rani {
+  background: var(--rani);
+  color: #FFFFFF;
+  box-shadow: 0 5px 0 #B02353, 0 10px 20px rgba(0,0,0,0.25);
+}
+.btn-3d.rani:active {
+  box-shadow: 0 1px 0 #B02353, 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* Header Top Gamification Bar (Streaks & Stars) */
+.top-gamify-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(237, 230, 210, 0.16);
+  border-radius: 18px;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+.streak-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #FF9F43;
+  background: rgba(255, 159, 67, 0.14);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 159, 67, 0.35);
+}
+.streak-flame {
+  display: inline-block;
+  font-size: 18px;
+  animation: flameBounce 1.5s ease-in-out infinite;
+}
+@keyframes flameBounce {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.2) translateY(-2px); }
+}
+.star-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #FECA57;
+  background: rgba(254, 202, 87, 0.14);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(254, 202, 87, 0.35);
+}
+.star-sparkle {
+  display: inline-block;
+  font-size: 18px;
+  animation: starPulse 2s infinite alternate;
+}
+@keyframes starPulse {
+  0% { transform: rotate(0deg) scale(1); }
+  100% { transform: rotate(20deg) scale(1.18); }
+}
+.mascot-avatar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: rgba(63, 187, 120, 0.15);
+  border: 1px solid rgba(63, 187, 120, 0.4);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: 'Baloo 2', cursive;
+  font-size: 13.5px;
+  color: var(--leaf);
+  transition: transform 0.12s;
+}
+.mascot-avatar-btn:active {
+  transform: scale(0.92);
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+  background: rgba(237, 230, 210, 0.07);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(237, 230, 210, 0.16);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+}
+
+/* Theme Pills Deck in Cartoon Theater */
+.theme-deck {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  margin-bottom: 12px;
+  scrollbar-width: none;
+}
+.theme-deck::-webkit-scrollbar { display: none; }
+.theme-pill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(237, 230, 210, 0.08);
+  border: 1.5px solid rgba(237, 230, 210, 0.18);
+  color: var(--chalk);
+  font-family: 'Baloo 2', cursive;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+.theme-pill:hover {
+  background: rgba(240, 160, 42, 0.16);
+  border-color: var(--marigold);
+  transform: translateY(-2px);
+}
+.theme-pill:active {
+  transform: scale(0.95);
+}
+.theme-pill.active {
+  background: linear-gradient(135deg, var(--marigold), #FF9F43);
+  color: #16302B;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(240, 160, 42, 0.4);
+  font-weight: 800;
+}
+
+/* Confetti Burst Overlay */
+#confetti-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+

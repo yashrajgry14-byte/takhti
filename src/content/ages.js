@@ -28,7 +28,9 @@ const AGE_BANDS = {
     sessionCards: 1,
     traceOnly: true,                            // never asks them to copy a sentence
     chunkWords: 3,
-    speechRate: 0.72
+    speechRate: 0.72,
+    passScore: 65,
+    gateScore: 55
   },
 
   /* 5–6 · early reader. Short sentences, single-digit sums. */
@@ -43,7 +45,9 @@ const AGE_BANDS = {
     sessionCards: 1,
     traceOnly: true,
     chunkWords: 5,
-    speechRate: 0.78
+    speechRate: 0.78,
+    passScore: 68,
+    gateScore: 58
   },
 
   /* 7–8 · developing. Full sentences, two-digit work, paper writing. */
@@ -58,7 +62,9 @@ const AGE_BANDS = {
     sessionCards: 2,
     traceOnly: false,
     chunkWords: 8,
-    speechRate: 0.85
+    speechRate: 0.85,
+    passScore: 78,
+    gateScore: 65
   },
 
   /* 9–10 · fluent. Long sentences, multiplication, everything on. */
@@ -73,7 +79,9 @@ const AGE_BANDS = {
     sessionCards: 2,
     traceOnly: false,
     chunkWords: 10,
-    speechRate: 0.9
+    speechRate: 0.9,
+    passScore: 82,
+    gateScore: 70
   }
 };
 

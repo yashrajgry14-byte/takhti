@@ -1,4 +1,5 @@
 const fs = require('fs'), vm = require('vm');
+const { verifyLoadListHasAllContent } = require('./_helpers/load-order.js');
 
 function makeLocalStorage(){
   const data = {};
@@ -16,13 +17,23 @@ const ctx = {
 };
 vm.createContext(ctx);
 
-for(const f of [
+// srs.js itself touches only child.srs/Date.now()/log() — none of this
+// content graph — but this list follows the same "load the real app's
+// order up to the file under test" pattern the other diagnose.js-adjacent
+// suites use, so it gets the same load-list self-check for consistency
+// (see test/_helpers/load-order.js): content/comprehension.js was missing
+// here too until this pass, harmlessly (srs.test.js's own assertions never
+// touch SKILLS/CONCEPTS), but a load list that silently drifts from the
+// real app is the failure mode being closed off project-wide.
+const LOAD_LIST = [
   'src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
   'src/content/games.js','src/content/facts.js','src/content/ages.js',
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
   'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
+  'src/content/comprehension.js','src/content/themes.js',
   'src/core/diagnose.js','src/core/srs.js'
-]){
+];
+for(const f of LOAD_LIST){
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
 }
 
@@ -38,6 +49,11 @@ function check(name, pass, detail){
 }
 
 console.log('=== SPACED REPETITION ENGINE (EBBINGHAUS) TESTS ===');
+
+const loadCheck = verifyLoadListHasAllContent(LOAD_LIST, 'src/core/diagnose.js');
+check("this file's own LOAD_LIST includes every content/*.js file index.html actually loads before core/diagnose.js",
+  loadCheck.pass,
+  `index.html loads ${JSON.stringify(loadCheck.realContentBefore)} before diagnose.js; LOAD_LIST is missing ${JSON.stringify(loadCheck.missing)}`);
 
 // Test 1: Record successful review -> advances step to 1 (1 day review)
 SRS.recordSrsItem('read_l1_namaste', 'read', 'Namaste', true, SRS.S);

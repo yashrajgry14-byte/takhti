@@ -61,6 +61,7 @@ function runOpening(){
     setTimeout(()=>{                       // motion, then impact
       if(S.screen!=='open') return;
       S.ctx.phase = 1; render();
+      if(typeof sfxThud === 'function') sfxThud();
       const a = $('arena'); if(a) a.classList.add('shake');
       if(navigator.vibrate) navigator.vibrate([28,40,18]);
     }, 2300);

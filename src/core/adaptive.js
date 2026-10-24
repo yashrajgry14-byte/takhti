@@ -12,6 +12,7 @@ function bumpToday(kind){
   const done = S.today[kind] >= max;
   log(0, `Goal · ${kind} ${S.today[kind]}/${max}${done?' · TARGET MET':''}`);
   if(done){
+    if(typeof sfxChime === 'function') sfxChime();
     setTimeout(()=>speak(S.lang==='hi'
       ? 'शाबाश! आज का लक्ष्य पूरा हुआ।'
       : "Well done! That goal is complete."), 700);

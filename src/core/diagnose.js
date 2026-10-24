@@ -393,11 +393,17 @@ function personalizeContentForHomework(child){
     }
   }
 
+  const story = typeof genHomeworkStory === 'function'
+    ? genHomeworkStory(hw.skills[0], c.favGame || 'kabaddi', c, { teacherNote: hw.note, homework: hw })
+    : null;
+
   return {
     assignedSkills: hw.skills,
     note: hw.note,
     plan: diagPlan,
-    lessons: targetLessons
+    lessons: targetLessons,
+    story: story
   };
 }
+
 

@@ -1,4 +1,5 @@
 const fs = require('fs'), vm = require('vm');
+const { verifyLoadListHasAllContent } = require('./_helpers/load-order.js');
 
 function makeLocalStorage(){
   const data = {};
@@ -16,13 +17,23 @@ const ctx = {
 };
 vm.createContext(ctx);
 
-for(const f of [
+// Same load-list fix as test/diagnose.test.js: content/comprehension.js
+// ships in the real index.html between literacy.js and diagnose.js, so it
+// belongs here too. This file's own assertions happen not to touch any of
+// the 7 skills comprehension.js teaches (bodmas/tables are pure maths), so
+// its omission was never actually wrong here — but a load list that
+// silently drifts from the real app is the exact failure mode being fixed
+// project-wide, not something worth re-introducing by leaving this one file
+// on the old, shorter list. See the self-check below.
+const LOAD_LIST = [
   'src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
-  'src/content/games.js','src/content/facts.js','src/content/ages.js',
+  'src/content/games.js','src/content/themes.js','src/content/facts.js','src/content/ages.js',
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
   'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
+  'src/content/comprehension.js',
   'src/core/diagnose.js'
-]){
+];
+for(const f of LOAD_LIST){
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
 }
 
@@ -38,6 +49,15 @@ function check(name, pass, detail){
 }
 
 console.log('=== TEACHER HOMEWORK PERSONALIZATION TESTS ===');
+
+// SELF-CHECK — see test/_helpers/load-order.js and test/diagnose.test.js
+// for the full story: a content file that ships in the real app but is
+// missing from this list is exactly the drift that let a whole suite pass
+// while quietly testing a graph the app no longer ships.
+const loadCheck = verifyLoadListHasAllContent(LOAD_LIST, 'src/core/diagnose.js');
+check("this file's own LOAD_LIST includes every content/*.js file index.html actually loads before core/diagnose.js",
+  loadCheck.pass,
+  `index.html loads ${JSON.stringify(loadCheck.realContentBefore)} before diagnose.js; LOAD_LIST is missing ${JSON.stringify(loadCheck.missing)}`);
 
 // Test 1: Assign Homework
 const assigned = H.assignHomework('CLASS6', ['bodmas', 'tables'], 'Practice BODMAS and tables');

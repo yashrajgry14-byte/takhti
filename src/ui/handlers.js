@@ -1,8 +1,26 @@
 /* ================= HANDLERS ================= */
+// The handle listen() returns (a live SpeechRecognition object, when
+// WebSpeech is actually running) — kept here, not on S, because it is a
+// live browser object, not app state. Retained specifically so a turn
+// nobody is waiting on any more (the child moved to the next sentence, a
+// different screen, or a different profile) can be told to stop instead
+// of going on to fire onresult/onerror against state that has moved on.
+let ACTIVE_LISTEN = null;
+
 function nextSentence(){
+  if(typeof stopListening === 'function') stopListening();        // abandon any recognizer still listening for the sentence we're leaving
   if(typeof selfListenReset === 'function') selfListenReset();   // revoke any clip from the last attempt before it's unreachable
-  const pool = ageSentences(S.lang, S.levels.read);
-  S.ctx = { sentence: pool[Math.floor(Math.random()*pool.length)] };
+  // Drain any remaining due-for-review sentences (see VIEWS.read) before
+  // going back to the normal random pool — same invisible spaced
+  // repetition, carried across "Next" the way it carries across the
+  // session's first sentence.
+  const queue = S.ctx._srsQueue || [];
+  if(queue.length){
+    S.ctx = { sentence: queue[0], _srsQueue: queue.slice(1) };
+  } else {
+    const pool = ageSentences(S.lang, S.levels.read);
+    S.ctx = { sentence: pool[Math.floor(Math.random()*pool.length)] };
+  }
   render();
 }
 function setReadLang(l){
@@ -20,10 +38,12 @@ function startListening(){
   // cannot attach to it; the two start together and stop on the same
   // two signals (a result, or a recognizer error).
   if(typeof selfListenStart === 'function') selfListenStart();
-  listen(alts=>{
+  ACTIVE_LISTEN = listen(alts=>{
+    ACTIVE_LISTEN = null;
     if(typeof selfListenStop === 'function') selfListenStop();
     checkRead(alts);
   }, err=>{
+    ACTIVE_LISTEN = null;
     if(typeof selfListenStop === 'function') selfListenStop();
     S.ctx.live=false;
     if(err && err!=='no-speech'){
@@ -32,6 +52,17 @@ function startListening(){
     }
     render();
   });
+}
+/* The other half of the "never hangs with no way out" guarantee — see
+   core/speech.js's listen(). Called wherever a live turn's screen/sentence/
+   profile is about to change from under it (nextSentence(), go(), and
+   switchProfile(), the same three reset points self-listen already uses).
+   Guarded for a recognizer that never started, or already finished. */
+function stopListening(){
+  if(ACTIVE_LISTEN && typeof ACTIVE_LISTEN.stop === 'function'){
+    try{ ACTIVE_LISTEN.stop(); }catch(e){}
+  }
+  ACTIVE_LISTEN = null;
 }
 
 /* accepts either an alternatives array (from the mic) or a plain string (typed) */
@@ -43,10 +74,11 @@ function checkRead(input){
   S.ctx.live = false;
 
   const r = gradeBest(S.ctx.sentence, alts, S.lang);
-  log(0,`Graded ${alts.length} alternative(s) · best ${r.score}% · conf ${(r.confidence||0).toFixed(2)}${r.shaky?' · shaky pick':''}`);
+  const thresh = typeof getGradeThresholds === 'function' ? getGradeThresholds(S) : { pass: 78 };
+  log(0,`Graded ${alts.length} alt(s) · best ${r.score}% · DDA pass threshold ${thresh.pass}% (${band().id}) · conf ${(r.confidence||0).toFixed(2)}${r.shaky?' · shaky pick':''}`);
 
   // Stage 5 — confidence gate. Never mark a child wrong for the recognizer's doubt.
-  const verdict = gradeVerdict(r);
+  const verdict = gradeVerdict(r, S);
   if(verdict === 'unsure'){
     S.ctx.unsure = true; S.ctx.tokens = null; S.ctx.score = null;
     log(0,'Low confidence match → asking again, no attempt recorded');
@@ -101,7 +133,7 @@ function setupPad(){
   hasInk=false;
   const pos=e=>{ const r=c.getBoundingClientRect(); const p=e.touches?e.touches[0]:e; return [p.clientX-r.left, p.clientY-r.top]; };
   const start=e=>{ e.preventDefault(); drawing=true; hasInk=true; const [x,y]=pos(e); cx.beginPath(); cx.moveTo(x,y); };
-  const move=e=>{ if(!drawing) return; e.preventDefault(); const [x,y]=pos(e); cx.lineTo(x,y); cx.stroke(); };
+  const move=e=>{ if(!drawing) return; e.preventDefault(); const [x,y]=pos(e); cx.lineTo(x,y); cx.stroke(); if(typeof sfxChalk === 'function') sfxChalk(); };
   const end=()=>{ drawing=false; };
   c.onmousedown=start; c.onmousemove=move; window.onmouseup=end;
   c.ontouchstart=start; c.ontouchmove=move; c.ontouchend=end;
@@ -341,6 +373,7 @@ function countUp(n, narr){
 }
 function answerMath(o){
   if(S.ctx.picked!=null) return;
+  if(typeof sfxPop === 'function') sfxPop();
   S.ctx.picked=o;
   const ok = o===S.ctx.p.ans;
   S.ctx.msg = ok ? (S.lang==='hi'?'सही! ⭐':'Correct! ⭐')

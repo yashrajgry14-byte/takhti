@@ -1,4 +1,5 @@
 const fs=require('fs'), vm=require('vm');
+const { verifyLoadListHasAllContent } = require('./_helpers/load-order.js');
 
 const ctx={console, Intl, setTimeout, clearTimeout,
   S:{lang:'en', age:8, name:'x', day:0, game:'cricket', online:false, doneLessons:[], levels:{}, skillHistory:{}}};
@@ -8,12 +9,18 @@ vm.createContext(ctx);
    graph, then comprehension.js (which needs CONCEPTS/GEN_BEATS/SKILLS from
    lesson-gen.js, literacy.js and skills.js, per the brief), then the UI's
    lesson-player.js itself — so the compArt/compSay delegation chain added
-   to lesArt/lesSay is the REAL chain, not a reimplementation of it. */
-for(const f of ['src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
-                'src/content/games.js','src/content/facts.js','src/content/ages.js',
+   to lesArt/lesSay is the REAL chain, not a reimplementation of it. This
+   file is the one this whole repo's numbers get quoted from (CLAUDE.md
+   included) precisely because it is the only suite that loads the complete
+   graph — see the self-check right below, which exists so a FUTURE content
+   file can't quietly fall off this list the way comprehension.js once fell
+   off test/diagnose.test.js's. */
+const LOAD_LIST = ['src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
+                'src/content/games.js','src/content/themes.js','src/content/facts.js','src/content/ages.js',
                 'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
                 'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-                'src/content/comprehension.js','src/core/diagnose.js','src/content/copy.js'])
+                'src/content/comprehension.js','src/core/diagnose.js','src/content/copy.js'];
+for(const f of LOAD_LIST)
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
 
 /* lesson-player.js is a UI file — it expects a handful of things that, in
@@ -49,6 +56,11 @@ function check(name, pass, detail){
   checks.push({name, pass, detail});
   if(!pass) failures++;
 }
+
+const loadCheck = verifyLoadListHasAllContent(LOAD_LIST, 'src/core/diagnose.js');
+check("this file's own LOAD_LIST includes every content/*.js file index.html actually loads before core/diagnose.js",
+  loadCheck.pass,
+  `index.html loads ${JSON.stringify(loadCheck.realContentBefore)} before diagnose.js; LOAD_LIST is missing ${JSON.stringify(loadCheck.missing)}`);
 
 console.log('=== generation ===');
 const {lessons, rejected} = X.generateLessons({report:true});
