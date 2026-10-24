@@ -468,7 +468,21 @@ parent(){
         : 'No homework right now.'}</div>`;
     })()}
 
-    <div class="kicker2" style="margin-top:12px">${S.lang==='hi'?'शिक्षक को भेजो':'SEND TO THE TEACHER'}</div>
+    <div class="kicker2" style="margin-top:12px">${S.lang==='hi'?'शिक्षक के साथ सिंक':'SYNC WITH THE TEACHER'}</div>
+    <div class="metric">
+      <div><b>${S.lang==='hi'?'अपने आप सिंक करो (हर घंटे)':'Sync automatically (every hour)'}</b>
+        <div style="font-size:12.5px;opacity:.7">${S.lang==='hi'
+          ? `सिर्फ़ ${attr(S.name)} का नाम और अभ्यास की गिनती शिक्षक की कक्षा में भेजी जाती है — तस्वीरें, आवाज़ या पढ़ा हुआ पाठ कभी नहीं। कभी भी बंद कर सकते हैं।`
+          : `Only ${attr(S.name)}'s name and practice counts go to the teacher's class — never photos, voice or what was read. You can switch it off any time.`}</div>
+      </div>
+      <button class="toggle ${S.syncOn?'on':''}" onclick="toggleSyncConsent()" aria-label="${S.syncOn?'sync on':'sync off'}"><span></span></button>
+    </div>
+    ${S.syncOn ? `<div class="row" style="gap:8px;align-items:center;margin-top:6px">
+      <div class="muted" style="font-size:12.5px;flex:1">${syncStatusLine(S.classCode)}</div>
+      <button class="btn ghost" style="width:auto;padding:8px 14px" onclick="syncNow(S.classCode)">🔄 ${S.lang==='hi'?'अभी सिंक करो':'Sync now'}</button>
+    </div>` : ''}
+
+    <div class="kicker2" style="margin-top:12px">${S.lang==='hi'?'या कोड से भेजो':'OR SEND BY CODE'}</div>
     ${S.ctx.reportCode ? `
       <textarea class="input sharecode" readonly onclick="this.select()">${S.ctx.reportCode}</textarea>
       <button class="btn" style="margin-top:8px" onclick="shareText(S.ctx.reportCode)">📤 ${S.lang==='hi'?'भेजो (WhatsApp/SMS)':'Send (WhatsApp/SMS)'}</button>

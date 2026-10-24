@@ -8,3 +8,8 @@
   from = "/api/ask"
   to = "/.netlify/functions/ask"
   status = 200
+
+[[redirects]]
+  from = "/api/class-sync"
+  to = "/.netlify/functions/class-sync"
+  status = 200

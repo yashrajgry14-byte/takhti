@@ -37,6 +37,7 @@ function newProfile(name){
     doneLessons: [],       // ids already offered, so the picker rotates
     skillHistory: {},      // skillId -> {n, right}, built from lesson checkpoints; see core/diagnose.js
     classCode: null,       // a teacher's 6-char code, entered once on the parent dashboard; see core/diagnose.js
+    syncOn: false,         // a parent's consent to sync this child's name + practice counts with the class (core/class-sync.js); off until switched on
     hwDone: null,          // assignedAt of the last homework this child finished, so Munni stops pointing at it — see ui/jungle-map.js
     gameBest: {},          // shellKind -> this child's own best score, see src/games/game-core.js's gameEnd()
     muted: false,          // per child, not per device — see core/speech.js's speak()/ui/elephant.js's trumpet()
@@ -54,6 +55,9 @@ const S = {
   profiles: [],          // up to 4 children, see core/profiles.js
   activeProfile: null,   // index into profiles
   parentPin: null,       // 4-digit string set by a parent; null = not yet set
+  syncClasses: [],       // class codes this phone's teacher view keeps synced, see core/class-sync.js
+  syncAt: {},            // class code -> time of its last successful sync
+  syncKeys: {},          // class code -> this phone's teacher key, see core/class-sync.js (never shown, never shared)
   camOk:   false,        // camera permission granted this session (device-wide)
   eleph:   null,         // Munni's mood on the ask screen, see ui/elephant.js
   lesson:  null,         // in-progress arithmetic story, see ui/lesson-player.js

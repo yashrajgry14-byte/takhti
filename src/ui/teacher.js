@@ -4,8 +4,9 @@
    Reached from the bottom of the parent dashboard, so it sits behind the
    same PIN. It reads the class-code mirror (core/diagnose.js): every
    child on this phone linked to a code, plus every child on ANOTHER
-   phone whose parent sent a progress code that was pasted in here
-   (core/class-share.js). Homework goes back the same way, as a code.
+   phone whose parent switched class sync on (core/class-sync.js — hourly,
+   or "Sync now") or sent a progress code that was pasted in here
+   (core/class-share.js). Homework reaches them the same two ways.
 
    What a teacher can do here:
      1. Say which skill the class got wrong in a test. tDiagnose() runs
@@ -44,6 +45,7 @@ function teacherHTML(){
   const results = skillId && roster.length ? tDiagnose([skillId], roster, code) : [];
   const shared = classPattern(results.map(r => ({ name: r.student.name, plan: r.plan })));
   const hw = code ? (readClassShared(code)._homework || null) : null;
+  const hwLive = hw && !hw.cleared ? hw : null;
   const cov = skillCoverage();
   const matrix = coverageMatrix(3);
   const ladders = ladderCoverage();
@@ -54,8 +56,8 @@ function teacherHTML(){
   <button class="back" onclick="go('parent')">← ${t('back')}</button>
   <div class="display" style="font-size:22px;margin:4px 0">🧑‍🏫 ${hi?'शिक्षकों के लिए':'For teachers'}</div>
   <div class="muted" style="font-size:12.5px">${hi
-    ? 'इस फ़ोन पर कक्षा कोड से जुड़े बच्चे, और दूसरे फ़ोनों के वे बच्चे जिनके माता-पिता ने प्रगति कोड भेजा। कुछ भी अपलोड नहीं होता।'
-    : "Children on this phone linked to the class code, plus children on other phones whose parent sent a progress code. Nothing is uploaded."}</div>
+    ? 'इस फ़ोन पर कक्षा कोड से जुड़े बच्चे, और दूसरे फ़ोनों के वे बच्चे जिनके माता-पिता ने सिंक चालू किया या प्रगति कोड भेजा।'
+    : 'Children on this phone linked to the class code, plus children on other phones whose parent switched sync on or sent a progress code.'}</div>
 
   <div class="paper" style="margin-top:10px">
     <div class="kicker2">${hi?'कक्षा का कोड':'CLASS CODE'}</div>
@@ -66,7 +68,20 @@ function teacherHTML(){
       ? (hi ? `${roster.length} बच्चे जुड़े: ${roster.map(r=>attr(r.name)).join(', ')}` : `${roster.length} linked: ${roster.map(r=>attr(r.name)).join(', ')}`)
       : (hi ? 'इस कोड से अभी कोई बच्चा नहीं जुड़ा।' : 'No children linked to this code yet.')}</div>` : ''}
 
-    <div class="kicker2" style="margin-top:12px">${hi?'दूसरे फ़ोन से प्रगति कोड':"A CHILD'S PROGRESS CODE"}</div>
+    ${code ? `
+    <div class="metric" style="margin-top:10px">
+      <div><b>${hi?'इस कक्षा को सिंक रखो (हर घंटे)':'Keep this class synced (every hour)'}</b>
+        <div style="font-size:12.5px;opacity:.7">${hi
+          ? 'जिन बच्चों के माता-पिता ने सिंक चालू किया है, वे हर फ़ोन से यहाँ आते हैं, और गृहकार्य उन तक जाता है।'
+          : 'Children whose parents switched sync on arrive here from every phone, and homework reaches them.'}</div></div>
+      <button class="toggle ${S.syncClasses.includes(code)?'on':''}" onclick="toggleClassSync('${code}')" aria-label="sync"><span></span></button>
+    </div>
+    ${S.syncClasses.includes(code) ? `<div class="row" style="gap:8px;align-items:center;margin-top:6px">
+      <div class="muted" style="font-size:12.5px;flex:1">${syncStatusLine(code)}</div>
+      <button class="btn ghost" style="width:auto;padding:8px 14px" onclick="syncNow('${code}')">🔄 ${hi?'अभी सिंक करो':'Sync now'}</button>
+    </div>` : ''}` : ''}
+
+    <div class="kicker2" style="margin-top:12px">${hi?'या कोड से: दूसरे फ़ोन का प्रगति कोड':"OR BY CODE: A CHILD'S PROGRESS CODE"}</div>
     <textarea class="input sharecode" id="rcode" placeholder="TKR1…"></textarea>
     ${S.ctx.rMsg ? `<div class="${S.ctx.rOk?'muted':'retry'}" style="font-size:12.5px;margin-top:6px">${S.ctx.rMsg}</div>` : ''}
     <button class="btn ghost" style="margin-top:8px" onclick="teacherImport($('rcode').value)">${hi?'बच्चा जोड़ो':'Add to class'}</button>
@@ -98,9 +113,9 @@ function teacherHTML(){
         : "Each child's app re-checks this against that child's own practice and starts at their real gap."}</div>` : ''}
     ` : ''}
 
-    ${hw ? `<div class="card" style="margin-top:12px;padding:10px;border:1px solid var(--marigold)">
+    ${hwLive ? `<div class="card" style="margin-top:12px;padding:10px;border:1px solid var(--marigold)">
       <b>📝 ${hi?'अभी का गृहकार्य':'Current homework'}</b>
-      <div style="font-size:13px">${hw.skills.map(id => { const s = skillById(id); return s ? (hi?s.hi:s.en) : id; }).join(', ')}${hw.note ? ` — "${attr(hw.note)}"` : ''}</div>
+      <div style="font-size:13px">${hwLive.skills.map(id => { const s = skillById(id); return s ? (hi?s.hi:s.en) : id; }).join(', ')}${hwLive.note ? ` — "${attr(hwLive.note)}"` : ''}</div>
       <div style="font-size:12px;opacity:.75;margin-top:8px">${hi
         ? 'दूसरे फ़ोनों पर बच्चों के लिए यह कोड भेजें — माता-पिता डैशबोर्ड पर डालते हैं:'
         : 'For children on other phones, send this code — parents paste it on their dashboard:'}</div>
@@ -157,14 +172,25 @@ function teacherAssign(skillId, note){
   if(!code || !skillId) return;
   assignHomework(code, [skillId], (note || '').trim());
   log(0, `Teacher assigned homework · ${skillId} · class ${code}`);
-  render();
+  teacherSyncIfOn(code);
 }
 function teacherClearHomework(){
   const code = teacherCode();
   if(!code) return;
   clearHomework(code);
   log(0, `Teacher removed homework · class ${code}`);
-  render();
+  teacherSyncIfOn(code);
+}
+/* Homework shouldn't wait for the hourly sync to reach the children. */
+function teacherSyncIfOn(code){
+  if(S.syncClasses.includes(code)) syncNow(code); else render();
+}
+function toggleClassSync(code){
+  S.syncClasses = S.syncClasses.includes(code) ? S.syncClasses.filter(c => c !== code) : [...S.syncClasses, code];
+  if(S.syncClasses.includes(code) && !S.syncKeys[code]) S.syncKeys = { ...S.syncKeys, [code]: newTeacherKey() };
+  log(0, `Teacher view · class ${code} sync ${S.syncClasses.includes(code) ? 'on' : 'off'}`);
+  save();
+  if(S.syncClasses.includes(code)) syncNow(code); else render();
 }
 
 if(typeof VIEWS !== 'undefined') VIEWS.teacher = teacherHTML;

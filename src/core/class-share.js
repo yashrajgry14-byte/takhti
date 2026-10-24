@@ -3,8 +3,9 @@
 
    The class-code mirror (core/diagnose.js) lives in one phone's own
    storage, so on its own a teacher only sees children on the same phone.
-   This closes the loop between phones the way Indian schools already
-   pass things around — a message on WhatsApp or SMS:
+   core/class-sync.js keeps classes in sync automatically when there is a
+   connection; this is the path that needs no internet and no server, the
+   way Indian schools already pass things around — WhatsApp or SMS:
 
      child's phone → teacher:  a PROGRESS CODE (classReportCode): the
                                child's class code, id, name and practice
@@ -16,7 +17,7 @@
                                dashboard (importHomework) and that child's
                                app diagnoses it like any other homework.
 
-   Nothing is uploaded anywhere. A code only travels when a parent or
+   A code goes nowhere by itself — it only travels when a parent or
    teacher sends it themselves, and it holds no more than the teacher's
    own diagnostic needs — no photos, no voice, no reading text.
 
@@ -86,6 +87,7 @@ function importClassReport(text){
 
 function homeworkCode(classCode){
   const hw = readClassShared(classCode)._homework;
+  if(hw && hw.cleared) return null;
   return hw ? shareEncode('homework', { c: classCode, s: hw.skills, n: hw.note || '', a: hw.assignedAt }) : null;
 }
 

@@ -144,4 +144,5 @@ window.addEventListener('load', () => {
   console.log(`${checks.length-failures}/${checks.length} checks passed`);
 
   process.exitCode = failures ? 1 : 0;
+  dom.window.close();   // stops the app's own timers (e.g. the hourly class-sync check) so the process can exit
 });

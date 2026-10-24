@@ -23,7 +23,7 @@ breaks the entire premise and the demo.
 |------|--------------|-------|
 | 0 | Reading matcher + age-band pass thresholds, stroke scoring, skill-shaped problem generation, adaptive level, daily scheduler, skill graph + diagnostic, spaced repetition, cartoon episodes, procedural sound | `src/core/`, `src/content/`, `src/games/` — always on, no network, no model |
 | 1 | A fresh practice line for missed words | `core/tier1.js` — the curated bank everywhere; the phone's own on-device model (Chrome's Prompt API) where it already has one, strictly validated |
-| 2 | Cloud answers + storyboards for the question queue | `askCloud()` / `flushQueue()` via `api/ask.js` |
+| 2 | Cloud answers for the question queue; class sync between phones | `askCloud()` / `flushQueue()` via `api/ask.js`; `core/class-sync.js` via `api/class-sync.mjs` |
 
 The app ships no model of its own. Tier 1 uses the phone's built-in on-device
 model when the browser provides one (see **Tier 1**). "Generative" in
@@ -34,7 +34,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 24 test suites (see Testing)
+npm test           # all 25 test suites (see Testing)
 ```
 
 No build step, no bundler, no framework. Open `index.html` through the dev
@@ -57,7 +57,7 @@ config.js, state.js
 content/sentences.js, content/games.js, content/themes.js, content/facts.js, content/ages.js
 content/skills.js, content/curriculum-early.js, content/lessons.js, core/lesson-gen.js
 content/literacy.js, content/comprehension.js
-core/diagnose.js, core/class-share.js, core/generative-brain.js, core/video-library-catalog.js, core/cartoon-series.js
+core/diagnose.js, core/class-share.js, core/class-sync.js, core/generative-brain.js, core/video-library-catalog.js, core/cartoon-series.js
 core/srs.js, core/sfx.js, games/game-core.js
 content/anim.js, content/copy.js, content/competencies.js
 core/log.js, core/store.js, core/profiles.js
@@ -71,7 +71,7 @@ ui/self-listen.js, ui/handlers.js
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v28` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v29` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -98,6 +98,7 @@ src/
   core/
     diagnose.js             the teacher diagnostic, class-code mirror, homework bridge
     class-share.js          progress/homework codes that carry the class between phones
+    class-sync.js           automatic class sync — hourly, on reconnect, and "Sync now"
     generative-brain.js     builds one 4-scene cartoon episode for a maths skill
     video-library-catalog.js  which episodes a child is offered, and which first
     cartoon-series.js       short multi-episode ladders, filtered to the child's band
@@ -133,6 +134,7 @@ src/
     handlers.js             event handlers
   app.js                    boot: load(), S.screen='arrival', render()
 api/ask.js                  serverless proxy; keeps the API key off the client
+api/class-sync.mjs          Tier 2 class sync (Netlify Blobs); syncCore() is the merge
 sw.js                       service worker — offline cache
 ```
 
@@ -226,26 +228,46 @@ as homework (and send it on as a homework code). It also shows what Takhti
 covers — `skillCoverage()`, `coverageMatrix(3)`, `ladderCoverage()` — and
 what it can't teach yet (`contentQueue()`).
 
-## Between phones — no server
+## Between phones — automatic sync, or by code
 
-`core/class-share.js`. The class mirror is each phone's own storage, so the
-class travels between phones as short text codes, the way schools already
-pass things around (WhatsApp, SMS):
+The class mirror is each phone's own storage. Two ways it travels:
 
-- **Progress code** (`classReportCode()`, parent dashboard → *Send to the
-  teacher*): class code, child id, name, practice counts per skill. The
-  teacher pastes it into the teacher view (`importClassReport()`); the child
-  joins the class diagnosis with their real evidence. An older code never
-  overwrites a newer one.
-- **Homework code** (`homeworkCode()`, teacher view): skills, note, and the
-  original `assignedAt` (so "finished" means the same assignment on every
-  phone). The parent pastes it on the dashboard (`importHomework()`); it
-  links an unlinked child, and refuses another class's homework.
+**Automatic sync** (`core/class-sync.js` ↔ `api/class-sync.mjs`). Every class
+this phone takes part in syncs **once an hour** (checked every 5 minutes),
+**the moment a connection returns**, and on **Sync now** (parent dashboard and
+teacher view). Runs whenever the phone really has a connection
+(`navigator.onLine`), regardless of the demo signal toggle.
+- **Consent first.** A child's data is only sent if a parent switched *Sync
+  automatically* on for that child (`S.syncOn`, off by default, behind the
+  PIN; the dashboard says exactly what is sent). Only the name and practice
+  counts per skill — never photos, voice, levels or what was read.
+- **Who sees what.** The teacher's phone holds a random per-class key
+  (`S.syncKeys`, made when the teacher switches *Keep this class synced* on,
+  never shown or shared; the server stores only its SHA-256). The first
+  teacher phone claims the class; only that key gets the whole class back or
+  can set/withdraw homework, and a different key is refused (403). A child's
+  phone gets back only the homework and its own record — never classmates'.
+- **Merging** is newest-wins: per child by `at` (local mirror writes are
+  timestamped), homework by `assignedAt`. Withdrawing homework writes a dated
+  `cleared` marker (`clearHomework()`) so the withdrawal travels too.
+  Assigning or withdrawing homework syncs straight away.
+- **The server** (`api/class-sync.mjs`, Netlify function, also runs under the
+  Vercel-style signature) stores one record per class in Netlify Blobs
+  (`takhti-classes`), type-checks and caps everything (name 40 chars, ≤200
+  skills, ≤60 children, right ≤ tries, no reserved ids, 64 KB body). With no
+  blob store (another host, local dev) it answers 503 and the app says
+  "Sync isn't set up on this server yet" and carries on.
 
-Format `TKR1|TKH1.base64url(json).checksum` — a code cut short or edited is
-rejected before it can touch a record. Nothing is uploaded; a code moves only
-when a person sends it. `navigator.share` opens the phone's share sheet where
-there is one, else the code is copied.
+**By code, no internet** (`core/class-share.js`) — for phones that rarely see
+a connection, the way schools already pass things around (WhatsApp, SMS):
+- **Progress code** (`classReportCode()`, parent dashboard → *Or send by
+  code*), pasted into the teacher view (`importClassReport()`).
+- **Homework code** (`homeworkCode()`, teacher view), pasted on the parent
+  dashboard (`importHomework()`); it links an unlinked child and refuses
+  another class's homework.
+
+Format `TKR1|TKH1.base64url(json).checksum`; a code cut short or edited is
+rejected before it touches a record; an older code never overwrites newer data.
 
 ## The reading matcher — read this before changing it
 
@@ -375,6 +397,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `srs` | vm | interval maths |
 | `dda` | vm | age-band thresholds, and "unsure" for recognizer doubt |
 | `sfx` | vm | muted = silent, shared buffer, chalk throttle, ambient start/stop, fail-safe on partial Web Audio |
+| `class-sync` | vm | the real server merge + two simulated phones: nothing sent without consent; child → teacher, homework and its withdrawal → child; hourly schedule; offline and no-server handled; children never see classmates; parents can't set homework; a second teacher phone can't take over; only the key's hash stored; input sanitised |
 | `class-share` | vm | two separate "phones": progress code → teacher's diagnosis → homework code back; damaged, edited, wrong-kind and older codes rejected |
 | `tier1` | vm | bank lines for missed words (EN/HI); the validator; a stub on-device model: good line used, bad reply thrown away, never downloaded mid-lesson, bank first |
 | `offline-stt` | vm | packs downloaded while online; offline recognition on the device (EN/HI); on-device even online; no pack → immediate honest end; browsers without the API unchanged |
@@ -403,9 +426,10 @@ Honest edges of what's built:
    browser's call. (The Android build uses `EXTRA_PREFER_OFFLINE`.)
 2. **The on-device model depends on the browser too.** Without one, practice
    lines come from the curated bank only — which covers most missed words.
-3. **Between phones is by code, not live sync.** A parent or teacher sends a
-   code when they choose; nothing syncs in the background (by design —
-   nothing is uploaded). A Tier 2 sync could automate it later.
+3. **Sync needs the server deployed on Netlify** (Netlify Blobs). Elsewhere
+   it reports "not set up" and the codes still work. The teacher key lives on
+   one phone: a teacher who changes phones needs a new class code (no
+   key-transfer flow yet).
 4. **`planSummary()` is English-only**, so the teacher view's per-child line
    is English even in Hindi mode.
 5. **SRS replays content only for reading**; write/math review is routing only.
@@ -419,7 +443,8 @@ Honest edges of what's built:
 ## Style
 
 Plain, dependency-free JavaScript in the app (`jsdom`, `acorn`, `acorn-walk`
-are test-only dev dependencies). Comments explain *why*, not *what*.
+are test-only dev dependencies; `@netlify/blobs` is used only by the server
+function). Comments explain *why*, not *what*.
 Child-facing copy is warm and short; never scold, never say "wrong" when
 "almost" is true. Sound and celebration calls are guarded — a bonus, never a
 dependency. Keep the judge trace (`log()`) honest: it must never claim

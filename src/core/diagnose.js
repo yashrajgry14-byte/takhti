@@ -97,7 +97,7 @@ function mirrorToClassNow(child){
     const key = classMirrorKey(c.classCode);
     const raw = localStorage.getItem(key);
     const all = raw ? JSON.parse(raw) : {};
-    all[c.id] = { childName: c.name, skillHistory: c.skillHistory || {} };
+    all[c.id] = { childName: c.name, skillHistory: c.skillHistory || {}, at: Date.now() };   // at: newest-wins merging, see core/class-sync.js
     localStorage.setItem(key, JSON.stringify(all));
   }catch(e){ /* mirroring is a bonus, never a dependency */ }
 }
@@ -366,12 +366,15 @@ function assignHomework(classCode, skillIds, note = ''){
   }
 }
 
+/* Withdrawing homework leaves a dated "cleared" marker rather than
+   deleting it, so class sync (core/class-sync.js) carries the withdrawal
+   to other phones instead of an older copy bringing it back. */
 function clearHomework(classCode){
   if(!classCode) return false;
   try {
     const key = classMirrorKey(classCode);
     const all = JSON.parse(localStorage.getItem(key) || '{}');
-    delete all._homework;
+    all._homework = { skills:[], note:'', assignedAt: Date.now(), cleared:true };
     localStorage.setItem(key, JSON.stringify(all));
     return true;
   } catch(e){
@@ -383,8 +386,8 @@ function getAssignedHomework(child){
   const c = child || S;
   if(!c || !c.classCode) return null;
   try {
-    const shared = readClassShared(c.classCode);
-    return shared._homework || null;
+    const hw = readClassShared(c.classCode)._homework;
+    return hw && !hw.cleared ? hw : null;
   } catch(e){
     return null;
   }

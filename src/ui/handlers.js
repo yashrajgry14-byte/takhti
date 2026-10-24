@@ -539,6 +539,21 @@ function unlinkClassCode(){
   render();
 }
 
+/* ---- class sync (core/class-sync.js) ---- */
+function toggleSyncConsent(){
+  S.syncOn = !S.syncOn;
+  log(0, `Parent ${S.syncOn ? 'switched ON' : 'switched off'} class sync for ${S.name}`);
+  save();
+  render();
+  if(S.syncOn) syncNow(S.classCode);
+}
+async function syncNow(code){
+  const p = syncClass(code);
+  render();                 // show "Syncing…" straight away
+  await p;
+  render();
+}
+
 /* ---- sharing with a teacher on another phone (core/class-share.js) ---- */
 function makeReportCode(){
   S.ctx.reportCode = classReportCode(S);

@@ -107,11 +107,18 @@ server.listen(0, '127.0.0.1', () => {
       check('setting a PIN opens the parent dashboard', E('S.screen') === 'parent', E('S.screen'));
       check('the dashboard shows the card the child just earned', !!$('.earned-card'), 'no earned card');
       $('#classcode').value = 'ABC123'; tap(byText('.btn', 'Link'));
+      check('class sync is OFF until a parent switches it on', E('S.syncOn') === false && /Sync automatically/.test($('#screen').textContent), 'not off');
+      tap($$('.toggle').find(t => /sync/.test(t.getAttribute('aria-label'))));
+      await tick();
+      check("switching it on shows 'Sync now' and an honest status (no sync server in this test)", E('S.syncOn') === true && !!byText('.btn', 'Sync now') && /sync/i.test($('#screen').textContent), $('#screen').textContent.slice(0, 200));
       tap(byText('.btn', 'For teachers'));
       check('"For teachers" opens the teacher view', E('S.screen') === 'teacher', E('S.screen'));
       check('the teacher view shows what Takhti covers, from the live skill graph', !!$('.covtable') && $('#screen').textContent.includes('can be taught today'), 'no coverage');
       $('#tcode').value = 'ABC123'; tap(byText('.btn', 'Open class'));
       check('opening the class lists the linked child', $('#screen').textContent.includes('1 linked: Tiger'), $('#screen').textContent.slice(0, 400));
+      tap($$('.toggle').find(t => t.getAttribute('aria-label') === 'sync'));
+      await tick();
+      check("'Keep this class synced' makes this phone the class's teacher (a private key, never shown)", E("S.syncClasses.includes('ABC123') && S.syncKeys.ABC123.length === 48") && !$('#screen').textContent.includes(E('S.syncKeys.ABC123')), 'no key');
       const sel = $('#screen select'); sel.value = 'tables'; sel.dispatchEvent(new w.Event('change'));
       check('picking the skill the class got wrong runs the real diagnosis per child', $$('#screen .metric').some(m => m.textContent.includes('Tiger')), 'no per-child result');
       $('#tnote').value = 'Practise your tables'; tap(byText('.btn', 'This skill'));
@@ -160,7 +167,7 @@ server.listen(0, '127.0.0.1', () => {
       check('a bad homework code is refused with a clear message', /whole homework code/.test($('#screen').textContent), 'no message');
       E(`go('teacher')`);
       $('#rcode').value = pcode; tap(byText('.btn', 'Add to class'));
-      check('the teacher view accepts a progress code', /added to class ABC123/.test($('#screen').textContent), $('#screen').textContent.slice(0, 300));
+      check('the teacher view takes a progress code (here, on the same phone, it rightly reports the live record is newer)', /added to class ABC123|newer code for this child is already here/.test($('#screen').textContent), $('#screen').textContent.slice(0, 300));
 
       /* ---- once a day ---- */
       E(`S.lastOpen = dayKey() - 1; goHub();`);

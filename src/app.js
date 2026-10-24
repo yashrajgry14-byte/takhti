@@ -14,3 +14,6 @@ render();
 // Find out (and, while online, fetch) what on-device speech this phone
 // has, so a reading attempt later today can be graded with no signal.
 prepareOfflineSpeech();
+// Keep each class this phone takes part in in sync — hourly, on reconnect,
+// and on "Sync now" (core/class-sync.js). Only children a parent opted in.
+startClassSync();
