@@ -28,13 +28,33 @@ const SRC = path.join(__dirname, '..', 'src');
    have done (celebrations, the trace panel) is stubbed below. */
 const FILES = [
   'state.js',
-  'content/sentences.js', 'content/games.js', 'content/facts.js', 'content/ages.js',
-  'content/lessons.js', 'core/lesson-gen.js', 'content/competencies.js',
+  'content/sentences.js', 'content/games.js', 'content/themes.js', 'content/facts.js', 'content/ages.js',
+  'content/skills.js', 'content/curriculum-early.js', 'content/lessons.js', 'core/lesson-gen.js',
+  'content/literacy.js', 'content/comprehension.js',
+  'core/diagnose.js', 'core/class-share.js', 'core/srs.js',
+  'content/competencies.js',
   'core/profiles.js', 'core/matcher.js', 'core/adaptive.js',
   'core/daily-engine.js', 'core/mathgen.js', 'core/readability.js'
 ];
 
-function createCore() {
+/* The class mirror (core/diagnose.js) and homework (class-share.js) live
+   in a phone's localStorage. The server is one more "phone", so it gets a
+   localStorage of its own, kept in the voice store — homework codes pasted
+   on the dashboard land exactly where the app's own code expects them. */
+function storageShim(persist) {
+  const mem = new Map(Object.entries((persist && persist.load()) || {}));
+  const flush = () => persist && persist.save(Object.fromEntries(mem));
+  return {
+    getItem: k => (mem.has(String(k)) ? mem.get(String(k)) : null),
+    setItem: (k, v) => { mem.set(String(k), String(v)); flush(); },
+    removeItem: k => { mem.delete(String(k)); flush(); },
+    key: i => [...mem.keys()][i] ?? null,
+    get length() { return mem.size; }
+  };
+}
+
+function createCore(opts) {
+  opts = opts || {};
   const trace = [];
   let random = Math.random;
 
@@ -42,12 +62,13 @@ function createCore() {
      its meaning — the judge-facing trace — it just collects instead of
      painting a panel. */
   const sandbox = {
-    console, Intl,
+    console, Intl, TextEncoder, TextDecoder, btoa, atob,
+    localStorage: storageShim(opts.persist),
     log: (tier, msg) => trace.push({ tier, msg, at: Date.now() }),
     speak: () => {},                 // Munni speaks through Bolna, not the browser
     save: () => {}, saveSoon: () => {},
-    homeCelebrate: () => {},
-    noteLevelUp: () => { sandbox.__T.S._justLevelled = true; },
+    // the app debounces the class mirror with a timer; on the server every
+    // write is the last one for a while, so callers use mirrorToClassNow()
     setTimeout: () => 0, clearTimeout: () => {}
   };
   // A Math whose random() we can seed per session, so a call can be
@@ -64,7 +85,10 @@ function createCore() {
   // `const` declarations do not attach to the sandbox; lift what we need.
   vm.runInContext(`globalThis.__T = {
     S, AGE_BANDS, bandForAge, band, clampLevel, ageSentences, readability, rdBand,
-    gradeReading, gradeBest, gradeVerdict, GRADE, genProblem, record,
+    gradeReading, gradeBest, gradeVerdict, getGradeThresholds, GRADE, genProblem, record,
+    skillProblem, skillHasProblem, skillById, noteSkillAttempt, noteSkillFromConcept,
+    personalizeContentForHomework, getAssignedHomework, importHomework, classReportCode,
+    mirrorToClassNow, getDueSrsItems,
     CONCEPTS, validateLesson, newProfile, PROFILE_FIELDS,
     syncProfileIn, syncProfileOut, COMPETENCY, seedOf, rng, SENTENCES
   };`, sandbox);
@@ -79,8 +103,9 @@ function createCore() {
     S.activeProfile = 0;
     T.syncProfileIn(0);
     S.lang = opts.lang || 'hi';
-    S.screen = 'phone';              // never 'home': no in-app celebration
+    S.screen = 'phone';              // no app screen is showing
     S.online = false;                // the server never calls Tier 2 from inside a lesson
+    S.ctx = opts.ctx || {};          // record() keys SRS items on S.ctx.sentence
     S._bank = null;
     S._justLevelled = false;
     if (opts.seed != null) random = T.rng(T.seedOf(String(opts.seed)));

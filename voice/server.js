@@ -140,6 +140,17 @@ function createServer(opts) {
           if (r.error) return send(res, 400, wantsHtml ? `<!doctype html><p>${P.esc(r.error.join('; '))}</p><p><a href="/voice/admin?${q}">back</a></p>` : { error: r.error });
           return wantsHtml ? redirect(res, `/voice/admin?${q}`) : send(res, 201, { child: publicChild(r.child) });
         }
+        if (req.method === 'POST' && (mm = m(/^\/voice\/admin\/children\/([A-Za-z0-9_-]+)\/homework$/))) {
+          const b = await readBody(req, 64 * 1024);
+          const r = brain.importHomeworkCode(mm[1], b.code);
+          if (wantsHtml) return r.ok ? redirect(res, `/voice/admin?${q}`)
+            : send(res, 400, `<!doctype html><p>That homework code was not accepted (${P.esc(r.why)}).</p><p><a href="/voice/admin?${q}">back</a></p>`);
+          return send(res, r.ok ? 200 : 400, r);
+        }
+        if (req.method === 'GET' && (mm = m(/^\/voice\/admin\/children\/([A-Za-z0-9_-]+)\/progress-code$/))) {
+          const code = brain.progressCode(mm[1]);
+          return send(res, code ? 200 : 404, code ? { code } : { error: 'child not linked to a class yet — import a homework code first' });
+        }
         if (req.method === 'DELETE' && (mm = m(/^\/voice\/admin\/children\/([A-Za-z0-9_-]+)$/))) {
           return send(res, brain.deleteChild(mm[1]) ? 200 : 404, { deleted: mm[1] });
         }

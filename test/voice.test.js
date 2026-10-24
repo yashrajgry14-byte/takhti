@@ -306,6 +306,94 @@ await test('consent is required, and erasure removes the child and every session
   assert.strictEqual(brain.getSession(session.id), null);
 });
 
+/* ---------------- the skill graph, homework, SRS, the teacher ---------------- */
+/* A teacher's phone: the real app code in its own vm with its own storage,
+   the same way test/class-share.test.js stands up two phones. */
+function teacherPhone() {
+  const data = {};
+  const ctx = { console, Intl, setTimeout, clearTimeout, TextEncoder, TextDecoder, btoa, atob, Uint8Array,
+    localStorage: { getItem: k => (k in data ? data[k] : null), setItem: (k, v) => { data[k] = String(v); } },
+    S: { lang: 'en', age: 8, day: 0, skillHistory: {}, classCode: null, game: 'cricket' } };
+  vm.createContext(ctx);
+  for (const f of ['src/core/matcher.js', 'src/core/readability.js', 'src/content/sentences.js', 'src/content/games.js',
+    'src/content/themes.js', 'src/content/facts.js', 'src/content/ages.js', 'src/core/daily-engine.js', 'src/content/skills.js',
+    'src/content/curriculum-early.js', 'src/content/lessons.js', 'src/core/lesson-gen.js', 'src/content/literacy.js',
+    'src/content/comprehension.js', 'src/core/diagnose.js', 'src/core/class-share.js', 'src/core/mathgen.js'])
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', f), 'utf8'), ctx, { filename: f });
+  vm.runInContext('globalThis.__ = { assignHomework, homeworkCode, importClassReport, readClassShared, tDiagnose };', ctx);
+  return ctx.__;
+}
+
+await test('phone maths is tagged with the skill it really exercised (the diagnostic sees it)', () => {
+  const r = run(kid(7, 'en'), perfect, 'skills');
+  const h = r.child.profile.skillHistory;
+  const mathSkills = Object.keys(h).filter(k => !/^read|^write/.test(k));
+  assert.ok(mathSkills.length >= 1, 'no maths skill evidence: ' + JSON.stringify(h));
+  const sums = r.s.items.filter(i => ['math', 'story'].includes(i.kind));
+  const noted = mathSkills.reduce((a, k) => a + h[k].n, 0);
+  assert.ok(noted >= sums.length, `${noted} skill notes for ${sums.length} sums`);
+});
+await test('teacher homework code → the next call asks it → the progress code reaches the teacher view', () => {
+  const t = teacherPhone();
+  t.assignHomework('ABC123', ['tables'], 'Tables this week');
+  const hwCode = t.homeworkCode('ABC123');
+  const c = kid(9, 'en', 'Meera');
+  const imp = brain.importHomeworkCode(c.id, hwCode);
+  assert.ok(imp.ok, JSON.stringify(imp));
+  assert.strictEqual(brain.getChild(c.id).profile.classCode, 'ABC123');
+
+  const r = run(c, perfect, 'hw');
+  const hw = r.s.items.find(i => i.kind === 'homework');
+  assert.ok(hw, 'no homework item; slots ' + r.s.slots.join(','));
+  assert.ok(r.says.some(x => x.includes("teacher's homework")), 'Munni did not say it was homework');
+  assert.strictEqual(hw.outcome, 'correct');
+  assert.ok(r.child.profile.hwDone, 'homework not marked done');
+
+  webhook(r.id, brain.getSession(r.id).live_turns.map(x => `${x.role}: ${x.text}`).join('\n'));
+  const rep = brain.getSession(r.id).report;
+  const code = rep.lines.find(l => /^TKR1\./.test(l));
+  assert.ok(code, 'no progress code in the report');
+  const back = t.importClassReport(code);
+  assert.ok(back.ok && /\(phone\)$/.test(back.name), JSON.stringify(back));
+  const seen = t.readClassShared('ABC123')[r.child.profile.id];
+  assert.ok(seen && seen.skillHistory[hw.skill] && seen.skillHistory[hw.skill].n >= 1, 'teacher cannot see the homework skill');
+
+  const next = brain.createSession(c.id, { seed: 'hw2' }).session;
+  assert.ok(!next.slots.includes('homework'), 'finished homework was asked again');
+});
+await test('homework that cannot be asked out loud (BODMAS) is left for the app, not mangled', () => {
+  const t = teacherPhone();
+  t.assignHomework('XYZ789', ['bodmas'], '');
+  const c = kid(10, 'en', 'Ishaan');
+  assert.ok(brain.importHomeworkCode(c.id, t.homeworkCode('XYZ789')).ok);
+  const s = brain.createSession(c.id, { seed: 'bodmas' }).session;
+  // with no evidence, the plan's storySkill is bodmas itself: a + b × c
+  assert.ok(!s.slots.includes('homework'), 'asked an unbracketed a + b × c out loud');
+});
+await test('a wrong or damaged homework code is refused before it touches the child', () => {
+  const c = kid(8, 'hi', 'Tara');
+  assert.strictEqual(brain.importHomeworkCode(c.id, 'TKH1.abc.000').ok, false);
+  assert.strictEqual(brain.getChild(c.id).profile.classCode, null);
+});
+await test('reading lines that spaced repetition says are due come back on the next card first', () => {
+  const c = kid(7, 'hi', 'Srs');
+  const r = run(c, perfect, 'srs1');
+  webhook(r.id, brain.getSession(r.id).live_turns.map(x => `${x.role}: ${x.text}`).join('\n'));
+  const child = brain.getChild(c.id);
+  const items = Object.values(child.profile.srs || {}).filter(x => x.mod === 'read');
+  assert.ok(items.length >= 1, 'reading on the phone fed no SRS items');
+  const line = items[0].content;
+  assert.ok(r.s.lines.includes(line), 'SRS item is not keyed on the card sentence: ' + line);
+  for (const x of items) x.nextReview = Date.now() - 1000;      // a day has passed
+  brain.store.put('children', child.id, child);
+  const next = brain.createSession(c.id, { seed: 'srs2' }).session;
+  assert.ok(next.lines.includes(line), 'due line not served: ' + JSON.stringify(next.lines));
+});
+await test('reading thresholds come from the age band, not the voice layer', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'voice', 'session.js'), 'utf8');
+  assert.ok(!/g\.score\s*[<>]=?\s*\d/.test(src), 'a hardcoded reading threshold crept into session.js');
+});
+
 /* ---------------- HTTP ---------------- */
 await test('HTTP: tools need the token, webhook needs the key, family links work, unknown sessions end gracefully', async () => {
   const { server } = createServer({ brain, toolToken: 'tt', webhookKey: 'hk', adminKey: 'ak', env: {} });
@@ -358,6 +446,7 @@ await test('regression: genProblem(3) no longer hangs on 4 − 4 = 0', () => {
   for (const f of ['state.js', 'content/ages.js', 'core/mathgen.js'])
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8'), box);
   vm.runInContext('S.age = 7;', box);
+  k = 0; calls = 0;                        // loading may itself draw randoms; start the sequence here
   const g = vm.runInContext('genProblem(3)', box);
   assert.strictEqual(g.ans, 0);
   assert.strictEqual(new Set(g.opts).size, 4);

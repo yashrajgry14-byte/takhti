@@ -11,8 +11,9 @@ It works on any phone, with no app and no data.
    │                                      │
    │        takhti_next / takhti_answer   │  (the only two tools, lesson node only)
    ▼                                      ▼
- voice/server.js ── voice/brain.js ── voice/session.js ── src/core/*.js (unchanged)
-   │                                      matcher · genProblem · record() · age bands
+ voice/server.js ── voice/brain.js ── voice/session.js ── src/ (unchanged, loaded in a vm)
+   │                                      matcher + band thresholds · genProblem · skillProblem
+   │                                      record() → SRS · skill graph · diagnose · class codes
    │                                      lesson generator + validator
    └─ after the call: Bolna webhook → voice/report.js
         re-grades reading from Bolna's own transcript → parent report + WhatsApp link
@@ -37,6 +38,27 @@ notebook. When Munni calls, the child reads what they wrote. That makes writing
 part of the lesson: first copy it, then read it back. If there's no card, Munni
 turns the line into "say it after me". Children aged 3–4 always get
 say-after-me and are never asked to read.
+
+## It feeds the same record the app keeps
+
+- **Skill graph.** Every sum is tagged with the skill it really exercised.
+  For example, a two-digit sum whose ones overflow counts as `carry`, and a
+  story problem counts towards its concept's skills. This goes through the
+  app's own `noteSkillAttempt()` / `noteSkillFromConcept()`, so the teacher's
+  diagnosis counts phone practice as evidence.
+- **Spaced repetition.** Reading on the call goes through `record()`, which
+  keys each SRS item on the actual sentence. The next card puts the lines
+  that are due first, most overdue first, the same review the Reading Tree
+  runs.
+- **Teacher homework.** Paste a homework code from the app's teacher view
+  next to the child on the dashboard. That links the child to the class.
+  The next call replaces the story problem with the homework, personalised by
+  the app's `personalizeContentForHomework()`: a child weak on tables who was
+  given BODMAS hears a tables question. BODMAS itself is never asked on a
+  call, because "two plus three times four" has no brackets when spoken.
+- **Back to the teacher.** For a linked child, the parent report ends with
+  the app's own progress code (name labelled "(phone)"). The parent forwards
+  it, and the teacher pastes it into the teacher view as usual.
 
 ## Try it in 30 seconds (no Bolna, no phone)
 
@@ -131,7 +153,7 @@ no age, no surname, and the phone number only as the number to dial.
 | | `POST /voice/tools/answer` `{session_id, child_said}` | same |
 | Bolna, after a call | `POST /voice/webhook?key=…` (execution payload) | `TAKHTI_WEBHOOK_KEY` |
 | Families | `GET /voice/card/:session`, `GET /voice/report/:session` | the unguessable link |
-| Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` |
+| Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `POST /voice/admin/children/:id/homework` `{code}`, `GET /voice/admin/children/:id/progress-code`, `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` |
 
 The tools always return `200` with `{say, expect, done, item}`. An unknown
 session gets a polite bilingual goodbye with `done: true`, so a broken link

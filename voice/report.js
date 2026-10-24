@@ -148,7 +148,7 @@ function processCallEnd(core, child, session, payload) {
     // only a first reading of a card line counts toward the reading level;
     // a line said after Munni is speaking practice, not reading
     if (it.kind === 'read' && !session.recorded_read && first.verdict !== 'unsure') {
-      const mv = recordOutcome(core, child, session, 'read', first.verdict === 'pass');
+      const mv = recordOutcome(core, child, session, 'read', first.verdict === 'pass', it);
       it.evidence.level_move = mv || null;
     }
   }
@@ -198,8 +198,20 @@ const R = {
   tipGood:  { en: 'Tip for today: ask {name} to teach you one sum from the call.', hi: 'आज की सलाह: {name} से कहें कि कॉल का एक सवाल आपको सिखाए।' },
   stopped:  { en: '{name} chose to stop early today, which is completely fine.', hi: '{name} ने आज जल्दी रुकना चुना, यह बिल्कुल ठीक है।' },
   missed:   { en: 'Munni could not reach {name} today. The next call will be at the usual time.', hi: 'मुन्नी आज {name} से बात नहीं कर पाई। अगली कॉल हमेशा के समय पर होगी।' },
+  homework: { en: "{name} also did a question from the teacher's homework.", hi: '{name} ने टीचर के होमवर्क का एक सवाल भी किया।' },
+  teacher:  { en: 'To share this practice with the teacher, send them this code:', hi: 'यह अभ्यास टीचर तक पहुँचाने के लिए उन्हें यह कोड भेजें:' },
   footer:   { en: '— Takhti', hi: '— तख़्ती' }
 };
+
+/* The app's own progress code (core/class-share.js), for a child linked
+   to a class. The name is labelled so the teacher can tell phone practice
+   from the same child's practice in the app. */
+function progressCodeFor(core, child) {
+  if (!child.profile || !child.profile.classCode) return null;
+  const { out } = core.withChild(child.profile, { lang: child.lang }, T =>
+    T.classReportCode(Object.assign({}, T.S, { name: T.S.name + ' (phone)' })));
+  return out;
+}
 const t = (k, lang, v) => { let s = R[k][lang] || R[k].en; for (const x in (v || {})) s = s.split('{' + x + '}').join(v[x]); return s; };
 
 function buildReport(core, child, session) {
@@ -208,7 +220,7 @@ function buildReport(core, child, session) {
   const mins = Math.max(1, Math.round((session.call && session.call.duration_s || 0) / 60));
   if (session.call && session.call.duration_s) lines.push(mins === 1 ? t('minute', lang, {}) : t('minutes', lang, { m: mins }));
 
-  const sums = session.items.filter(x => (x.kind === 'math' || x.kind === 'story') && x.outcome && x.outcome !== 'unsure');
+  const sums = session.items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure');
   const firstTry = sums.filter(x => x.outcome === 'correct').length;
   if (sums.length) {
     lines.push(t('maths', lang, { n: sums.length, c: firstTry }));
@@ -229,11 +241,19 @@ function buildReport(core, child, session) {
     if (clean && !words.includes(clean)) words.push(clean);
   }
   if (words.length) lines.push(t('words', lang, { w: words.slice(0, 3).join(', ') }));
+  const hw = session.items.find(x => x.kind === 'homework' && x.outcome && x.outcome !== 'unsure');
+  if (hw) lines.push(t('homework', lang, { name }));
   if (session.ended_by === 'stop') lines.push(t('stopped', lang, { name }));
 
   if (words.length) lines.push(t('tipRead', lang, { w: words[0] }));
   else if (sums.length && firstTry < sums.length / 2) lines.push(t('tipMath', lang, {}));
   else lines.push(t('tipGood', lang, { name }));
+
+  // linked to a class: the progress code the app's parent dashboard would
+  // offer ("Send to the teacher"), so phone practice reaches the teacher
+  // view by the same code, pasted by the same people
+  const code = progressCodeFor(core, child);
+  if (code) { lines.push(t('teacher', lang, {})); lines.push(code); }
   lines.push(t('footer', lang, {}));
 
   const text = lines.join('\n');
@@ -249,4 +269,4 @@ function missedReport(child, session) {
   return { lang: session.lang, text: t('missed', session.lang, { name: child.name }) };
 }
 
-module.exports = { processCallEnd, parseTranscript, alignToTranscript, buildReport, missedReport, TERMINAL };
+module.exports = { processCallEnd, parseTranscript, alignToTranscript, buildReport, missedReport, progressCodeFor, TERMINAL };

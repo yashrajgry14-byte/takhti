@@ -43,6 +43,9 @@ const L = {
   plus:       { en: 'What is {a} plus {b}?', hi: '{a} और {b} कितने होते हैं?' },
   minus:      { en: 'What is {a} take away {b}?', hi: '{a} में से {b} गए, तो कितने बचे?' },
   times:      { en: 'What is {a} times {b}?', hi: '{a} गुणा {b} कितना होता है?' },
+  divide:     { en: 'What is {a} divided by {b}?', hi: '{a} को {b} से भाग दो, तो कितना आता है?' },
+  divideWhy:  { en: '{a} divided by {b} is {ans}.', hi: '{a} को {b} से भाग देने पर {ans}।' },
+  homeworkLead: { en: "This one is from your teacher's homework.", hi: 'यह सवाल टीचर के होमवर्क से है।' },
   plusWhy:    { en: '{a} and {b} make {ans}.', hi: '{a} और {b} मिलकर {ans}।' },
   minusWhy:   { en: '{a} take away {b} leaves {ans}.', hi: '{a} में से {b} गए, {ans} बचे।' },
   timesWhy:   { en: '{a} times {b} is {ans}.', hi: '{a} गुणा {b} बराबर {ans}।' },
@@ -120,6 +123,12 @@ const STORY = {
   half:    { q: { en: 'What is half of {a}?', hi: '{a} का आधा कितना है?' }, expect: p => p.a / 2 }
 };
 
+/* skillProblem() operators that can be asked out loud without ambiguity.
+   'mix' (a + b × c) is left out on purpose: spoken aloud, "two plus three
+   times four" has no brackets and no written order — it would test
+   listening, not BODMAS. Those children get the homework in the app. */
+const SPOKEN_OPS = { '+': 'plus', '−': 'minus', '×': 'times', '÷': 'divide' };
+
 /* ---------------- small helpers ---------------- */
 function fill(tpl, lang, vars) {
   let s = tpl[lang] || tpl.en;
@@ -184,16 +193,35 @@ function planSession(core, child, opts) {
   const { out, trace } = core.withChild(child.profile, { lang, seed }, T => {
     const b = T.band();
     const slots = bandPlan(b.id);
+
+    // teacher homework this child hasn't worked through yet takes the
+    // story slot — if it can be asked out loud at all
+    const hw = T.personalizeContentForHomework(T.S);
+    let homework = null;
+    if (hw && hw.storySkill && hw.assignedAt !== T.S.hwDone) {
+      const sp = T.skillProblem(hw.storySkill, 1);
+      if (sp && SPOKEN_OPS[sp.op]) { slots[slots.indexOf('story')] = 'homework'; homework = hw.storySkill; }
+    }
+
+    // reading lines: sentences spaced repetition says are due come first,
+    // most overdue first (core/srs.js) — the same review the app's Reading
+    // Tree runs — then fresh lines at the child's level
     const nRead = slots.filter(s => s === 'read' || s === 'repeat').length;
-    const pool = T.ageSentences(lang, T.S.levels.read).slice();
-    const r = T.rng(T.seedOf(seed + '|lines'));
     const lines = [];
+    if (slots.includes('read')) {
+      const due = T.getDueSrsItems(T.S, 'read')
+        .filter(x => x.content && /[ऀ-ॿ]/.test(x.content) === (lang === 'hi'))   // this lesson's language only
+        .sort((x, y) => x.nextReview - y.nextReview);
+      for (const d of due) if (lines.length < nRead && !lines.includes(d.content)) lines.push(d.content);
+    }
+    const pool = T.ageSentences(lang, T.S.levels.read).filter(l => !lines.includes(l));
+    const r = T.rng(T.seedOf(seed + '|lines'));
     while (lines.length < nRead && pool.length) lines.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
-    return { band: b.id, slots, lines, levels: { ...T.S.levels } };
+    return { band: b.id, slots, lines, homework, levels: { ...T.S.levels } };
   });
   return {
     id, child_id: child.id, lang, seed,
-    band: out.band, slots: out.slots, lines: out.lines,
+    band: out.band, slots: out.slots, lines: out.lines, homework_skill: out.homework,
     levels_before: out.levels,
     status: 'planned', created_at: new Date().toISOString(),
     started_at: null, ended_at: null,
@@ -232,7 +260,7 @@ function buildItem(core, child, s, slot, storyBank) {
       // the clue is the CLOSEST wrong option: off-by-one is the mistake a
       // child actually makes, so it is the one worth choosing between
       const wrong = g.opts.filter(o => o !== g.ans).sort((x, y) => Math.abs(x - g.ans) - Math.abs(y - g.ans))[0];
-      return { kind: 'math', level: lvl, expect: 'number', answer: g.ans, distractor: wrong,
+      return { kind: 'math', level: lvl, skill: skillOfProblem(g), expect: 'number', answer: g.ans, distractor: wrong,
                problem: `${g.a} ${g.op} ${g.b}`,
                prompt: fill(L[op], lang, v), why: fill(L[op + 'Why'], lang, v) };
     }
@@ -255,6 +283,25 @@ function buildItem(core, child, s, slot, storyBank) {
       }
       return { kind: 'story', concept: st.concept, lesson_id: st.id, expect: 'number',
                answer: st.answer, distractor: st.distractor, prompt: fill(tpl.q, lang, v), why };
+    }
+    if (slot === 'homework') {
+      /* The teacher's homework, personalised by the app's own diagnose():
+         storySkill is the deepest confirmed gap that can be asked as one
+         question, so a child weak on tables who was given BODMAS hears a
+         tables question. skillProblem() makes the numbers really exercise
+         it, with the band's ceiling and real-mistake distractors. */
+      const hw = T.personalizeContentForHomework(T.S);
+      const sp = hw && hw.storySkill ? T.skillProblem(hw.storySkill, T.seedOf(s.seed + '|hw')) : null;
+      if (!sp || !SPOKEN_OPS[sp.op]) return null;
+      const v = { a: nw(sp.a, lang), b: nw(sp.b, lang), ans: nw(sp.ans, lang) };
+      const wrongs = sp.opts.map(Number).filter(o => o !== sp.ans);
+      // prefer the skill's own mistake (a dropped ten, one group too many)
+      // over a plain off-by-one, when the generator offered one
+      const distractor = wrongs.find(o => Math.abs(o - sp.ans) > 1) ?? wrongs[0];
+      return { kind: 'homework', skill: sp.skillId, assigned_at: hw.assignedAt, expect: 'number',
+               answer: sp.ans, distractor, problem: sp.text,
+               prompt: joinSay(L.homeworkLead[lang], fill(L[SPOKEN_OPS[sp.op]], lang, v)),
+               why: fill(L[SPOKEN_OPS[sp.op] + 'Why'], lang, v) };
     }
     if (slot === 'read' || slot === 'repeat') {
       const lineNo = s.items.filter(x => x.kind === 'read' || x.kind === 'repeat').length;
@@ -301,7 +348,7 @@ function finish(s, lead, why) {
   if (why === 'stop') line = L.stop[lang];
   else if (why === 'over') line = L.over[lang];
   else {
-    const m = s.items.filter(x => (x.kind === 'math' || x.kind === 'story') && x.outcome && x.outcome !== 'unsure').length;
+    const m = s.items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure').length;
     const rd = s.items.filter(x => (x.kind === 'read' || x.kind === 'repeat') && x.outcome && x.outcome !== 'unsure').length;
     if (!m && !rd) line = L.finishBare[lang];
     else {
@@ -374,10 +421,11 @@ function answer(core, child, s, storyBank, said) {
     if (right) {
       const first = it.attempts === 1;
       let lead = pick(L.praise, rngFor(s, it))[lang];
-      if (it.kind === 'math' || it.kind === 'story') {
-        const mv = recordOutcome(core, child, s, 'math', first);
+      if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework') {
+        const mv = recordOutcome(core, child, s, 'math', first, it);
         if (mv === 'up') lead = joinSay(lead, L.levelUp[lang]);
       }
+      if (it.kind === 'homework') child.profile.hwDone = it.assigned_at;
       return done(first ? 'correct' : 'correct_after_clue', lead);
     }
     if (it.attempts === 1) {
@@ -386,7 +434,9 @@ function answer(core, child, s, storyBank, said) {
       const tpl = intent === 'dontKnow' ? L.clueDK : L.clue;
       return ask(fill(tpl, lang, { x: nw(pair[0], lang), y: nw(pair[1], lang) }));
     }
-    if (it.kind === 'math' || it.kind === 'story') recordOutcome(core, child, s, 'math', false);
+    if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework') recordOutcome(core, child, s, 'math', false, it);
+    // the homework was worked through on the call; Munni stops pointing at it
+    if (it.kind === 'homework') child.profile.hwDone = it.assigned_at;
     const why = it.why || '';
     return done('revealed', fill(yn ? L.revealYN : L.reveal, lang, { ans: ansWord, why }).replace(/\s+/g, ' '));
   }
@@ -396,7 +446,9 @@ function answer(core, child, s, storyBank, said) {
     const g = gradeLine(core, child, s, it.target, [said]);
     // Intents only count when the child is clearly NOT reading the line:
     // a sentence on the card may itself contain "फिर से" or "नहीं है".
-    if (g.score < 40) {
+    // floors derived from this band's gate score, not hardcoded (ages.js)
+    const intentFloor = Math.round(g.gate * 0.6), coachFloor = Math.round(g.gate / 2);
+    if (g.score < intentFloor) {
       if (intent === 'stop') return stopNow();
       if (intent === 'repeat') return again();
       // "I don't have the card" → say-after-me, so the call still teaches
@@ -409,10 +461,11 @@ function answer(core, child, s, storyBank, said) {
     /* A phone transcript has no confidence score, so gradeVerdict() calls
        every partial reading 'unsure'. For what Munni SAYS, a child who read
        half the line deserves coaching, not "I couldn't hear" — so between
-       30 and the gate we coach. What gets RECORDED is decided after the
-       call, from Bolna's own transcript, with the app's verdict unchanged
-       (see report.js) — so the gate still protects the child's record. */
-    const verdict = g.verdict === 'unsure' && g.score >= 30 ? 'coach' : g.verdict;
+       half the band's gate score and the gate we coach. What gets RECORDED
+       is decided after the call, from Bolna's own transcript, with the
+       app's verdict unchanged (see report.js) — so the gate still protects
+       the child's record. */
+    const verdict = g.verdict === 'unsure' && g.score >= coachFloor ? 'coach' : g.verdict;
     it.live = it.live || [];
     it.live.push({ score: g.score, verdict, misread: g.misread, slips: g.slips });
 
@@ -453,10 +506,38 @@ function rngFor(s, it) {
 }
 
 /* record() is the app's adaptive engine — rolling window, age-clamped. */
-function recordOutcome(core, child, s, mod, ok) {
-  const { out, trace } = core.withChild(child.profile, { lang: s.lang }, T => T.record(mod, ok));
+/* record() is the app's adaptive engine — rolling window, age-clamped,
+   and since the skill graph landed it also feeds SRS and (for read/write)
+   the skill history. Maths items additionally tag the skill they really
+   exercised, exactly as a lesson checkpoint or cartoon answer does, so a
+   teacher's diagnosis sees phone practice as real evidence. */
+function recordOutcome(core, child, s, mod, ok, it) {
+  const ctx = it && it.target ? { sentence: it.target } : {};
+  const { out, trace } = core.withChild(child.profile, { lang: s.lang, ctx }, T => {
+    if (mod === 'math' && it) {
+      if (it.concept) T.noteSkillFromConcept(it.concept, ok);
+      else if (it.skill && T.skillById(it.skill)) T.noteSkillAttempt(it.skill, ok);
+    }
+    const mv = T.record(mod, ok);
+    T.mirrorToClassNow(T.S);
+    return mv;
+  });
   for (const t of trace) s.trace.push(t.msg);
   return out;
+}
+
+/* The skill a free-practice sum actually exercises, read off the numbers
+   the same way the skill graph defines them (content/skills.js): a two-
+   digit sum whose ones overflow IS carrying, one that doesn't is add2. */
+function skillOfProblem(g) {
+  if (g.op === '×') return 'tables';
+  if (g.op === '+') {
+    if (g.a < 10 && g.b < 10 && g.ans <= 10) return 'add10';
+    if (g.a < 10 && g.b < 10) return 'count20';
+    return (g.a % 10) + (g.b % 10) >= 10 ? 'carry' : 'add2';
+  }
+  if (g.a <= 10) return 'sub10';
+  return (g.a % 10) < (g.b % 10) ? 'borrow' : 'sub2';
 }
 
 /* The app's matcher, unchanged. A phone transcript carries no confidence
@@ -465,7 +546,10 @@ function recordOutcome(core, child, s, mod, ok) {
 function gradeLine(core, child, s, target, alternatives) {
   const { out } = core.withChild(child.profile, { lang: s.lang }, T => {
     const best = T.gradeBest(target, alternatives.map(t => ({ transcript: t, confidence: 0 })), s.lang);
-    return { score: best.score, verdict: T.gradeVerdict(best), misread: best.misread, slips: best.slips,
+    // the band's own thresholds (content/ages.js) — nothing hardcoded here
+    const th = T.getGradeThresholds();
+    return { score: best.score, verdict: T.gradeVerdict(best), gate: th.gateScore, pass: th.pass,
+             misread: best.misread, slips: best.slips,
              tokens: best.tokens.map(x => ({ text: x.text, state: x.state, heard: x.heard })) };
   });
   return out;

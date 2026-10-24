@@ -34,7 +34,8 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 24 test suites (see Testing)
+npm test           # all 25 test suites (see Testing)
+npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
 No build step, no bundler, no framework. Open `index.html` through the dev
@@ -134,6 +135,7 @@ src/
   app.js                    boot: load(), S.screen='arrival', render()
 api/ask.js                  serverless proxy; keeps the API key off the client
 sw.js                       service worker — offline cache
+voice/                      Munni on a phone call (Bolna) — a separate Node server, see below
 ```
 
 ## Screens and navigation
@@ -260,6 +262,10 @@ capture → normalize → align → grade → confidence gate → score.
 - **Never mark a child wrong for the recognizer's doubt.** Low confidence
   plus a low score is `'unsure'`: ask again, record nothing.
 - **Grade every alternative, keep the best.**
+- **Alignment takes the best of match or skip.** An alignable word pair is an
+  option, not an obligation — otherwise a child who read two words and
+  stopped had a later look-alike word steal the alignment (scored 27, not 40;
+  see the "stopped after two correct words" row in `test/matcher.test.js`).
 - **The pass bar moves with age**: `gradeVerdict()` uses the band's own
   `passScore`/`gateScore` (`content/ages.js`). Don't hardcode a threshold
   elsewhere.
@@ -339,6 +345,44 @@ its own `getUserMedia`/`MediaRecorder`; the clip never touches `fetch`,
 `URL.revokeObjectURL` runs at the same three reset points as
 `stopListening()`.
 
+## Munni on the phone — `voice/`
+
+A **second channel, not part of the app**: a small dependency-free Node
+server that a Bolna voice agent calls during a phone lesson, so a child
+with no smartphone (or no data) can practise. It is network-only by its
+nature and never touches the app's lesson path — the app still runs fully
+on-device. Full setup in `voice/README.md`.
+
+- **One engine.** `voice/takhti-core.js` loads the app's own Tier 0 files
+  (state, content, skill graph, diagnose, class-share, srs, matcher,
+  adaptive, mathgen, readability, lesson-gen) unchanged into a vm, and
+  switches children with the app's own `syncProfileIn()`/`syncProfileOut()`.
+  It gets its own `localStorage` (kept in the voice store) for the class
+  mirror and homework. If you change a signature in those files, run
+  `test/voice.test.js`.
+- **The voice model never teaches.** It speaks the `say` the server returns
+  and passes the child's words back (`/voice/tools/next`, `/voice/tools/answer`).
+  `voice/session.js` picks each item (warm-up count, `genProblem()` sums, one
+  story problem from the validated lesson bank, teacher homework via
+  `skillProblem()`, card lines from `ageSentences()` with SRS-due lines
+  first), grades it (`gradeBest()`/`gradeVerdict()` with the band's own
+  thresholds), gives a two-choice clue then a kind reveal, and records only
+  first tries through `record()` plus `noteSkillAttempt()`/
+  `noteSkillFromConcept()`.
+- **A phone can't show text**, so the family copies today's lines from a card
+  page onto the takhti before the call; 3–4 year olds say lines after Munni
+  instead.
+- **Reading is re-graded after the call** from Bolna's own transcript
+  (`voice/report.js`), because a voice model can tidy a child's misreading
+  before relaying it. That grade is what's recorded; the dashboard shows how
+  often the relay and the transcript disagreed.
+- **The class, by the same codes.** A teacher's homework code pasted on the
+  voice dashboard (`importHomework()`) links the child and puts the homework
+  in the next call; the parent report ends with the child's progress code
+  (`classReportCode()`, name labelled "(phone)") for the teacher view.
+- Spoken `a + b × c` is ambiguous without brackets, so BODMAS homework is
+  never asked on a call — it stays in the app.
+
 ## Product constraints that are not negotiable
 
 - **No streaks, no reminder notifications to children.** India's DPDP Act s.9
@@ -354,7 +398,7 @@ its own `getUserMedia`/`MediaRecorder`; the clip never touches `fetch`,
 
 ## Testing
 
-`npm test` runs 21 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 25 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -381,6 +425,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `homework-story` | vm | real skill-shaped questions, shuffled answers, the child's own game, stable card ids |
 | `video-generator` | vm | episodes, catalog band limits and theme filter, series, recommendation, evidence + card only for a right answer |
 | `app-flows` | jsdom | **every wired feature through real taps**: onboarding, map, Picture Hut, PIN gate, teacher view, homework end to end, the practice-line button, the on-device status, progress and homework codes, adding a sibling, once-a-day opening, goal celebration |
+| `voice` | vm + HTTP | the phone channel: spoken numbers (EN/HI/Hinglish, every Hindi word Munni speaks parses back), every Munni line bilingual and never "wrong", whole calls for every band, clue/reveal/first-try rules, doubt records nothing, "bas" stops, no-card fallback, band floor/ceiling over many calls, transcript re-grading and relay drift, skill tagging, homework code → call → progress code into a real teacher phone, SRS-due lines, the HTTP surface and auth, the Bolna graph, and the `genProblem(3)` hang regression |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -414,7 +459,16 @@ Honest edges of what's built:
    lessons, just no story.
 7. **Browser APIs are stubbed in the tests** (speech, the on-device model,
    audio). Check on a real handset before a demo — especially the microphone
-   and offline reading.
+   and offline reading. The jsdom suites also fail their "no uncaught errors"
+   check on a machine that can't reach Google Fonts (a sandbox with no open
+   internet), which is the network, not the app.
+8. **The phone channel is not yet proven on a live Bolna call.**
+   `voice/agent/build-agent.js` follows Bolna's documented graph-agent
+   structure but hasn't been imported into an account yet; children's speech
+   through a phone recognizer is untested; voice storage is one JSON file
+   per record (a pilot, not a serverless host); WhatsApp is a share link,
+   not automatic sending; consent is a checkbox and timestamp, not the
+   DPDP Rules' verifiable parental consent.
 
 ## Style
 

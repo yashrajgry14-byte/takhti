@@ -94,8 +94,10 @@ function reportPage(session, child) {
   }
   const [title, ...rest] = rep.text.split('\n');
   const share = rep.share ? `<a class="btn" href="${esc(rep.share)}">${lang === 'hi' ? 'WhatsApp पर शेयर करें' : 'Share on WhatsApp'}</a>` : '';
+  // a progress code is for copying, not reading: its own selectable box
+  const para = l => /^TKR1\./.test(l) ? `<pre style="user-select:all;word-break:break-all">${esc(l)}</pre>` : `<p>${esc(l)}</p>`;
   return shell(title, lang, `<div class="sheet rep"><div class="head">${MUNNI}<h1>${esc(title)}</h1></div>
-    ${rest.map(l => `<p>${esc(l)}</p>`).join('')}${share}</div>`);
+    ${rest.map(para).join('')}${share}</div>`);
 }
 
 /* ---------- the team dashboard: the judge trace panel, for calls ---------- */
@@ -118,6 +120,9 @@ function dashboardPage(brain, key) {
       <td><a href="/voice/admin/sessions/${esc(s.id)}?${q}">open</a></td></tr>`;
   }).join('');
   const kidOpts = kids.map(k => `<option value="${esc(k.id)}">${esc(k.name)} (${k.age}, ${k.lang})</option>`).join('');
+  const kidRows = kids.map(k => `<tr><td>${esc(k.name)}</td><td>${k.age} · ${esc(k.lang)}</td>
+    <td>${esc(JSON.stringify(k.profile.levels))}</td><td>${k.profile.classCode ? esc(k.profile.classCode) : '–'}</td>
+    <td><form method="post" action="/voice/admin/children/${esc(k.id)}/homework?${q}"><input name="code" placeholder="TKH1.… homework code" size="22"><button class="btn" style="margin:0;padding:6px 10px">Import</button></form></td></tr>`).join('');
   return shell('Takhti voice · dashboard', 'en', `<h1>Takhti voice</h1>
   <p class="sub">${kids.length} children · ${sessions.length} recent sessions · ${brain.storyBank.length} validated story problems</p>
   <h2>Add a child</h2>
@@ -127,6 +132,9 @@ function dashboardPage(brain, key) {
     <input name="parent_phone" placeholder="+91…" required>
     <label><input type="checkbox" name="consent" value="yes" required> Parent consents</label>
     <button class="btn" style="margin:0">Add</button></form>
+  <h2>Children</h2>
+  <table><tr><th>Name</th><th>Age · lang</th><th>Levels</th><th>Class</th><th>Teacher's homework code</th></tr>${kidRows || '<tr><td colspan="5">None yet</td></tr>'}</table>
+  <p class="note">A homework code from the app's teacher view links the child to that class; the next call asks the homework (personalised by the app's own diagnosis). After each call the parent report carries a progress code back to the teacher.</p>
   <h2>Plan a lesson</h2>
   <form method="post" action="/voice/admin/sessions?${q}"><select name="child_id">${kidOpts}</select>
     <label><input type="checkbox" name="call" value="yes"> and call now</label><button class="btn" style="margin:0">Plan</button></form>

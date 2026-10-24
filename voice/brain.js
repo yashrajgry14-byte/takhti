@@ -11,14 +11,18 @@ const crypto = require('crypto');
 const { createCore } = require('./takhti-core');
 const { createStore } = require('./store');
 const S = require('./session');
-const { processCallEnd } = require('./report');
+const { processCallEnd, progressCodeFor } = require('./report');
 
 const newId = () => crypto.randomBytes(12).toString('base64url');
 
 function createBrain(opts) {
   opts = opts || {};
-  const core = createCore();
   const store = opts.store || createStore(opts.dataDir);
+  // this server's own "localStorage": the class mirror and homework live here
+  const core = createCore({ persist: {
+    load: () => (store.get('mirror', 'storage') || {}).data,
+    save: data => store.put('mirror', 'storage', { data })
+  } });
   const { out: built } = core.withChild(core.freshProfile('x', 7), {}, T => S.buildStoryBank(T));
   const storyBank = built.bank;
   if (built.dropped.length) console.warn(`[takhti] ${built.dropped.length} story problems dropped by the cross-check:`, built.dropped.slice(0, 5));
@@ -49,6 +53,24 @@ function createBrain(opts) {
     };
     store.put('children', child.id, child);
     return { child };
+  }
+
+  /* ---------- the class, between phones (core/class-share.js) ----------
+     The server is one more phone. A teacher's HOMEWORK CODE pasted for a
+     child links them to the class and puts the homework where the app's
+     own personalizeContentForHomework() finds it; the next call asks it.
+     A PROGRESS CODE carries the child's phone practice back to the teacher
+     view — the same codes, the same checksum, nothing new to trust. */
+  function importHomeworkCode(childId, text) {
+    const child = store.get('children', childId);
+    if (!child) return { ok: false, why: 'no such child' };
+    const { out } = core.withChild(child.profile, { lang: child.lang }, T => T.importHomework(text, T.S));
+    if (out.ok) store.put('children', child.id, child);
+    return out;
+  }
+  function progressCode(childId) {
+    const child = store.get('children', childId);
+    return child ? progressCodeFor(core, child) : null;
   }
 
   /* Right to erasure: the child, every session, every transcript. */
@@ -159,6 +181,7 @@ function createBrain(opts) {
   return {
     core, store, storyBank, greeting,
     registerChild, deleteChild, createSession, toolNext, toolAnswer, onCallEvent, placeCall,
+    importHomeworkCode, progressCode,
     getChild: id => store.get('children', id),
     getSession: id => store.get('sessions', id),
     listChildren: () => store.list('children'),
