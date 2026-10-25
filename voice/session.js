@@ -231,6 +231,8 @@ function bandPlan(bandId) {
    the moment it is asked, so a level-up mid-call takes effect at once. */
 function planSession(core, child, opts) {
   opts = opts || {};
+  // "still stuck? Munni calls": the steps of one question (voice/help.js)
+  if (opts.kind === 'help') return require('./help').planHelp(core, child, opts);
   const id = opts.id || crypto.randomBytes(12).toString('base64url');
   const lang = child.lang === 'en' ? 'en' : 'hi';
   const seed = opts.seed || id;
@@ -333,6 +335,10 @@ function currentItem(s) {
 function buildItem(core, child, s, slot, storyBank) {
   const lang = s.lang;
   const k = s.items.length;
+  if (/^help:\d+$/.test(slot)) {
+    const h = s.help_items && s.help_items[Number(slot.slice(5))];
+    return h ? Object.assign(JSON.parse(JSON.stringify(h)), { slot, n: k + 1, attempts: 0, said: [], prompts: [], outcome: null, trace: [] }) : null;
+  }
   const { out, trace } = core.withChild(child.profile, { lang, seed: s.seed + '|' + k }, T => {
     const r = T.rng(T.seedOf(s.seed + '|item|' + k));
     const b = T.band();
@@ -481,6 +487,11 @@ function finish(s, lead, why) {
   let line;
   if (why === 'stop') line = L.stop[lang];
   else if (why === 'over') line = L.over[lang];
+  else if (s.kind === 'help') {
+    const HL = require('./help').HL;
+    const tried = s.items.some(x => x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent');
+    line = !tried ? HL.bare[lang] : s.help_what === 'read' ? HL.doneRead[lang] : HL.done[lang];
+  }
   else if (s.kind === 'english') {
     const w = s.items.filter(x => (x.kind === 'eword' || x.kind === 'esay') && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent').length;
     const p = s.items.filter(x => x.kind === 'ephrase' && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent').length;
@@ -512,7 +523,7 @@ function next(core, child, s, storyBank) {
   if (!s.started_at) { s.started_at = new Date().toISOString(); s.status = 'live'; }
   const open = currentItem(s);
   if (open) return reply(s, open.prompts[open.prompts.length - 1], open);
-  const start = s.kind === 'english' ? E.EL.start[s.lang] : L.start[s.lang];
+  const start = s.kind === 'english' ? E.EL.start[s.lang] : s.kind === 'help' ? require('./help').HL.start[s.lang] : L.start[s.lang];
   return advance(core, child, s, storyBank, s.items.length ? '' : start);
 }
 
@@ -550,7 +561,7 @@ function answer(core, child, s, storyBank, said) {
     }
     if (it.expect === 'yesno') return out(L.quietYN[lang]);
     if (it.kind === 'read' && it.target) return out(fill(L.quietRead, lang, { start: it.target.split(/\s+/).slice(0, 2).join(' ') }));
-    if (it.kind === 'repeat' && it.target) return out(fill(L.quietRepeat, lang, { line: it.target }));
+    if ((it.kind === 'repeat' || it.kind === 'helpsay') && it.target) return out(fill(L.quietRepeat, lang, { line: it.target }));
     return out(fill(L.quietAgain, lang, { prompt: it.prompts[0] }));
   }
   it.said.push(said);
@@ -689,22 +700,22 @@ function answer(core, child, s, storyBank, said) {
     if (verdict === 'unsure') {
       it.unheard = (it.unheard || 0) + 1;
       if (it.unheard >= 2) return done('unsure', L.moveOn[lang]);
-      return ask(it.kind === 'repeat' ? fill(L.repeatTry, lang, { line: it.target }) : L.notHeardRd[lang]);
+      return ask((it.kind === 'repeat' || it.kind === 'helpsay') ? fill(L.repeatTry, lang, { line: it.target }) : L.notHeardRd[lang]);
     }
     it.attempts++;
     if (verdict === 'pass') {
-      let lead = praiseFor(s, it.kind === 'repeat' ? 'repeatPraise' : 'readPraise', rngFor(s, it), lang, {});
+      let lead = praiseFor(s, (it.kind === 'repeat' || it.kind === 'helpsay') ? 'repeatPraise' : 'readPraise', rngFor(s, it), lang, {});
       // a pass can still skip or slip on one word: name it, gently, once
       const w = (g.misread || [])[0] || (g.slips || [])[0];
       if (it.kind === 'read' && w) lead = fill(L.readSlip, lang, { w: w.replace(/[.,!?।]/g, '') });
       return done(it.attempts === 1 ? 'correct' : 'correct_after_clue', lead);
     }
     if (it.attempts === 1) {
-      if (it.kind === 'repeat') return ask(fill(L.repeatTry, lang, { line: it.target }));
+      if (it.kind === 'repeat' || it.kind === 'helpsay') return ask(fill(L.repeatTry, lang, { line: it.target }));
       if (g.misread.length === 1) return ask(fill(L.readCoachW, lang, { w: g.misread[0] }));
       return ask(fill(L.readCoach, lang, { line: it.target }));
     }
-    return done('revealed', it.kind === 'repeat' ? L.repeatDone[lang] : fill(L.readModel, lang, { line: it.target }));
+    return done('revealed', (it.kind === 'repeat' || it.kind === 'helpsay') ? L.repeatDone[lang] : fill(L.readModel, lang, { line: it.target }));
   }
 
   return done('unsure', '');

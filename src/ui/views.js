@@ -1,6 +1,6 @@
 /* ================= SCREENS ================= */
 const $ = id => document.getElementById(id);
-function render(){ $('screen').innerHTML = VIEWS[S.screen](); if(AFTER[S.screen]) AFTER[S.screen](); }
+function render(){ $('screen').innerHTML = VIEWS[S.screen](); if(AFTER[S.screen]) AFTER[S.screen](); if(typeof askFab === 'function') askFab(); }
 /* Stops everything that belongs to the screen being left — the arrival
    scene, a live recognizer, a self-listen clip, a cartoon in progress,
    the map's ambient sound — and every OTHER game shell's loop, never the
@@ -23,6 +23,7 @@ function go(s){
   if(s!=='match')  matchStop();
   if(s!=='sort')   sortStop();
   if(s!=='archer') archerStop();
+  askFollow(s);    // Ask Munni's help belongs to the screen it was asked on
   talkFollow(s);   // a Talking Munni call lives at the Pond and in the games, nowhere else
   S.screen=s; S.ctx={}; render(); talkChip();
 }

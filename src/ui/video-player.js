@@ -60,8 +60,7 @@ function videoAnswer(k){
   av.picked = k;
   const ok = k === scene.correct;
   av.right = ok;
-  noteSkillAttempt(av.data.skillId, ok);
-  record('math', ok);
+  if(av.helpedAt !== av.sceneIdx){ noteSkillAttempt(av.data.skillId, ok); record('math', ok); }   // after Ask Munni: help, not evidence
   log(0, `Cartoon checkpoint · ${av.data.skillId} · ${ok ? 'correct' : 'incorrect'}`);
   if(ok){
     if(typeof sfxChime === 'function') sfxChime();

@@ -99,17 +99,21 @@ function createWeb(brain, envIn) {
     });
 
     // talks per day are limited, like the inbound line: a bounded tutor,
-    // not an always-on companion
+    // not an always-on companion. A help call ("still stuck? Munni calls",
+    // voice/help.js) is about one question and has its own, separate limit.
+    const help = body.help ? body.help : null;
     const today = new Date().toISOString().slice(0, 10);
     const used = (child.sessions || []).map(sid => store.get('sessions', sid))
-      .filter(s => s && s.channel === 'app' && s.started_at && s.started_at.slice(0, 10) === today).length;
-    if (used >= Number(env.TAKHTI_WEB_DAILY || 3)) {
+      .filter(s => s && s.channel === 'app' && s.started_at && s.started_at.slice(0, 10) === today && (s.kind === 'help') === !!help).length;
+    if (used >= Number(help ? (env.TAKHTI_HELP_DAILY || 6) : (env.TAKHTI_WEB_DAILY || 3))) {
       store.put('children', id, child);
       return { status: 429, body: { error: 'enough talking for today', limit: true } };
     }
     store.put('children', id, child);
 
-    const { session } = brain.createSession(id, { channel: 'app', kind: 'lesson', keypad: false });
+    const made = brain.createSession(id, { channel: 'app', kind: help ? 'help' : 'lesson', help, keypad: false });
+    if (made.error) return { status: 422, body: { error: made.error.join('; '), help: false } };
+    const { session } = made;
     const token = crypto.randomBytes(18).toString('base64url');
     session.web_token = token;
     store.put('sessions', session.id, session);
@@ -120,7 +124,7 @@ function createWeb(brain, envIn) {
       body: JSON.stringify({
         agent_id: env.BOLNA_WEB_AGENT_ID || env.BOLNA_AGENT_ID,
         user_data: { session_id: session.id, child_name: child.name, lesson_language: child.lang === 'hi' ? 'Hindi' : 'English',
-                     greeting: GREET[child.lang](child.name), registered: true, allowed: true, caller_kind: 'child' }
+                     greeting: (help ? require('./help').HL.greet : GREET)[child.lang](child.name), registered: true, allowed: true, caller_kind: 'child' }
       })
     }).catch(e => ({ ok: false, status: 502, json: async () => ({ error: String(e.message || e) }) }));
     const data = await mint.json().catch(() => ({}));
@@ -145,7 +149,7 @@ function createWeb(brain, envIn) {
     const base = { status: s.status, done: !!s.ended_by, say: lastSay, n: it ? it.n : 0, of: s.slots.length, mode: s.mode || 'lesson' };
     if (!it || it.outcome || s.ended_by || s.mode === 'play') return Object.assign(base, { screen: null });
     let screen;
-    if (it.expect === 'reading') screen = { kind: it.kind, text: it.target };
+    if (it.expect === 'reading') screen = { kind: it.kind === 'helpsay' ? 'repeat' : it.kind, text: it.target };
     else if (it.expect === 'yesno') screen = { kind: 'yesno', text: it.prompt, choices: ['yes', 'no'] };
     else if (it.expect === 'number') screen = { kind: 'number', text: it.problem ? `${it.problem} = ?` : it.prompt,
                                                 choices: it.choices || null };

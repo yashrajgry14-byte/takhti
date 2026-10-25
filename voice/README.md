@@ -311,7 +311,7 @@ surname, and the phone number only as the number to dial.
 | | `POST /voice/tools/note` `{session_id, teacher_said}` (teacher node) | same |
 | Bolna Workflows | `POST /voice/flow/plan`, `/gate`, `/result`, `/missed`, `/consent/plan`, `/consent/result` (see `flow.js`) | `Bearer TAKHTI_TOOL_TOKEN` |
 | Bolna, before an inbound call | `GET /voice/inbound/lookup?contact_number=…` | `Bearer TAKHTI_TOOL_TOKEN` |
-| The app (Talking Munni) | `POST /voice/web/session`, `GET /voice/web/state`, `POST /voice/web/tap`, `GET /voice/web/result`, `POST /voice/web/forget` | parent consent flag + per-child key; per-talk token; rate limits |
+| The app (Talking Munni, and Ask Munni's help call: the same mint with `help: {kind: math\|read\|lesson, …}`, see `help.js`) | `POST /voice/web/session`, `GET /voice/web/state`, `POST /voice/web/tap`, `GET /voice/web/result`, `POST /voice/web/forget` | parent consent flag + per-child key; per-talk token; rate limits |
 | The app (learning circle) | `POST /circle/sync`, `POST /circle/leave` `{child, key, erase}` (sync off, or delete the circle's data) (CORS) | the parent's tick (`consent.sync`), this phone's key after the first sync, rate limits |
 | Parents, tutors, teachers | `GET`/`POST /circle/p/:token`, `/circle/t/:token`, `/circle/c/:token` | the unguessable link |
 | Families | `GET /voice/card/:session`, `GET /voice/report/:session` | the unguessable link |

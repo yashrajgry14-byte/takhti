@@ -35,7 +35,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 31 test suites (see Testing)
+npm test           # all 32 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -64,16 +64,16 @@ core/srs.js, core/sfx.js, games/game-core.js
 content/anim.js, content/copy.js, content/competencies.js
 core/log.js, core/store.js, core/profiles.js
 core/voice.js, core/speech.js, core/matcher.js
-core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js, core/tier1.js
+core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js, core/tier1.js, core/explain.js
 ui/mascot.js, ui/readback.js, ui/elephant.js, ui/lesson-player.js, ui/anim-celebrate.js, ui/cards.js
 ui/views.js, ui/opening.js
 ui/arrival.js, ui/onboarding.js, ui/jungle-map.js, ui/video-player.js, ui/teacher.js
 games/runner.js, games/pop.js, games/tower.js, games/match.js, games/sort.js, games/archer.js
-ui/self-listen.js, ui/talk-munni.js, ui/circle.js, ui/handlers.js
+ui/self-listen.js, ui/talk-munni.js, ui/circle.js, ui/ask-munni.js, ui/handlers.js
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v33` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v34` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -117,6 +117,7 @@ src/
     lesson-gen.js           generates the lesson bank; genHomeworkStory(), genGameSvg()
     readability.js          a measurable difficulty score for a line
     tier1.js                practice lines for missed words (bank + on-device model)
+    explain.js              one question step by step (make ten, tens/ones, borrow, multiply first, a word in pieces) — Ask Munni and the help call
   games/
     game-core.js            shared round lifecycle + GAME_SHELLS registry
     runner, pop, tower, match, sort, archer   the six game shells
@@ -134,6 +135,7 @@ src/
     self-listen.js          hear-your-own-reading
     talk-munni.js           Talking Munni at the Pond and on into the games — parent opt-in, voice leaves the phone only during a talk
     circle.js               the learning circle's app side: the parent's sync tick, this week's step, the Friday check, the home question
+    ask-munni.js            "Ask Munni": instant step-by-step help on the question on screen; "still stuck?" → Munni calls (in the app)
     handlers.js             event handlers
   app.js                    boot: load(), S.screen='arrival', render()
 api/ask.js                  serverless proxy; keeps the API key off the client
@@ -351,9 +353,46 @@ its own `getUserMedia`/`MediaRecorder`; the clip never touches `fetch`,
 `URL.revokeObjectURL` runs at the same three reset points as
 `stopListening()`.
 
+## Ask Munni — `ui/ask-munni.js`, `core/explain.js`, `voice/help.js`
+
+Help with the question in front of the child, like a voice assistant that
+only knows this one question.
+
+- **The button.** A round 🐘 *Ask Munni* button floats (`askFab()`, called
+  by `render()`) on any screen that is asking something: Counting Stones,
+  the Reading Tree, a story lesson's question, a cartoon's "your turn".
+  Never on the map, and not on Munni's Friday check (that is the week's
+  measure). `askTarget()` says what is being asked.
+- **One tap: instant help, on the phone.** `explainMath()` /
+  `explainRead()` / `explainLessonBeat()` break the question down the way
+  a teacher would — fingers, make ten, tens then ones, the carried ten,
+  borrow a ten (ones first), groups and skip-counting, split a two-digit
+  number, multiply first — or a hard word in akshara pieces then the whole
+  line. Munni says each line (`speak()`) as it appears in the help sheet.
+  **She never says the final answer**: the last line asks it, and the
+  child answers on screen. No network, so it works offline.
+- **Still stuck? Munni calls.** With the parent's Talking Munni switch on
+  and a signal, *Still stuck? Talk to Munni* opens the same live web call
+  as Talking Munni (`talkHelp()`), about this one question. The server
+  (`voice/help.js`, `planHelp()`) plans the SAME steps from the same
+  `explain.js` and asks them one at a time ("first the tens: thirty and
+  twenty?"), with the usual clue and kind reveal, then the question itself,
+  then "now tap it on the screen too". The panel shows the step and, after
+  a slip, the two choices as buttons. The phone only sends what the
+  question is: the server recomputes every number, a reading line must be
+  one of the app's own `SENTENCES`, a lesson beat comes from its own lesson
+  bank — anything else is refused (`cleanHelp()`), so nothing the phone
+  makes up can be put in Munni's mouth. Its own daily limit
+  (`TAKHTI_HELP_DAILY`, 6). Leaving the screen ends it.
+- **Help is not evidence.** Help steps are never recorded, and the answer
+  the child gives on screen after help isn't either (`S.ctx.helped`,
+  `S.lesson.helpedAt`, `activeVideo.helpedAt`): no `record()`, no skill
+  attempt. The next question is the child's own again.
+
 ## Talking Munni — `ui/talk-munni.js`
 
-The one place in the app where a child's voice leaves the phone, so:
+The one place in the app where a child's voice leaves the phone (the help
+call from Ask Munni is the same call, about one question), so:
 
 - **This build has it only if `window.TAKHTI_VOICE` names a voice server**
   (`config.js` `TALK_URL`, set in `index.html`; empty by default). Empty →
@@ -597,14 +636,15 @@ app is a client of it, and only when a parent says so.
   turns it on behind the PIN after reading, in both languages, that the
   child's voice goes to the voice service while they talk (at the Pond, and
   in a game the talk carries on into, with the "Munni is with you" bar
-  showing). Nothing else
+  showing), and in Ask Munni's "still stuck? Munni calls", which the same
+  switch allows and the same notice names. Nothing else
   ever sends a voice. Keep it true, and keep saying so in both languages.
 - **A tutor, not a companion.** Bounded, task-scoped.
 - **Every child-facing string ships in Hindi and English.**
 
 ## Testing
 
-`npm test` runs 31 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 32 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -638,6 +678,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `voice-quiet` | vm + HTTP | silence is its own intent; an easier way in, then a different item, never a wrong answer or first-try credit; transcript-detected quiet moments; the kind report line and the kept "easier start" promise (once); ended-in-silence twice → check-in signal; the weekly call's quiet lines; placement quiet steps; games: lesson paused, hint only from the server's bank (mismatch or unknown id → nothing), throttled, silence is play, back to the lesson; the hush/play nodes and the web agent's silence hang-up |
 | `voice-circle` | vm + HTTP | the circle's server: sync only with the tick, progress only, this phone's key; the family code joins the school's record; the ledger (nothing counted twice); levels a phone lesson moved go back; weekly focus (class homework adapted to the child's gap, else the weakest step); the Friday check (app, call, reading) and next week's step; the home loop; tutors (parent invite, school link waiting for the parent, pack, results, notes); the three pages; the WhatsApp outbox (fake AiSensy); the scheduler's circle week |
 | `circle` | jsdom + the real voice server | the app side through real taps: nothing without a circle server; the bilingual grown-ups' step; nothing sent before the tick, progress only after it; family code → school, keeping the school's name; class homework via `importHomework()`, and withdrawn from the class page (the week remade, the app drops exactly that assignment, other homework left alone); this week on the map; the Friday check (real evidence, never "wrong", the verdict on the server); "We did it" and the child's home question; a phone lesson back as `circleHistory`, counted once; sync off reaches the server (also after a spell offline) and stops calls' circle items and messages; on again; erase (school record keeps its own, app-only record goes whole, another phone refused) |
+| `ask-munni` | jsdom + the real voice server + a stand-in Bolna | the steps for hundreds of sums of every kind never say the final answer and ask only true sub-answers; 38 + 24 and 52 − 27 broken down as a teacher would; Hindi words split into whole letters; the server refuses a made-up line, non-numbers, unknown signs or lessons, asks the steps one by one with a clue, records nothing; in the app: the button only where something is asked, instant help out loud with no server, "I get it", a helped answer not counted, reading help from the stumbled word, help leaves with the screen; with a voice server: no call until the parent's switch, then the call about this question, the step and the two choices on the panel, leaving ends it |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers

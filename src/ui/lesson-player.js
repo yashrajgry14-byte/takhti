@@ -263,8 +263,9 @@ function lesAnswer(k){
   log(0, `Lesson checkpoint · ${ok ? 'correct' : 'incorrect'}`);
   // a homework story names its skill directly; a bank lesson names a concept
   const les = S.lesson.data;
-  if(les.skillId) noteSkillAttempt(les.skillId, ok);
-  else if(les.concept) noteSkillFromConcept(les.concept, ok);
+  const helped = S.lesson.helpedAt === S.lesson.i;      // Ask Munni explained this one: help, not evidence
+  if(!helped && les.skillId) noteSkillAttempt(les.skillId, ok);
+  else if(!helped && les.concept) noteSkillFromConcept(les.concept, ok);
   render();
   speak(ok ? (S.lang==='hi'?'बिलकुल सही!':'Exactly right!')
            : (S.lang==='hi'?`देखो — जवाब है ${b.opts[b.correct]}`:`Look — the answer is ${b.opts[b.correct]}`),

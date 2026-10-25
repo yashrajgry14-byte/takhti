@@ -1263,3 +1263,17 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 .circlecard{border-left:4px solid var(--leaf)}
 .circleq{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(237,230,210,.2);font-size:13.5px}
 .circleq .btn{width:auto;flex:1;padding:9px 12px}
+
+/* Ask Munni: a round button on any screen that's asking something, and the
+   help sheet that opens from it */
+.askfab{position:fixed;right:16px;bottom:16px;z-index:55;display:flex;align-items:center;gap:6px;
+  background:var(--marigold);color:#16302B;border:0;border-radius:999px;padding:10px 14px 10px 10px;
+  font-weight:700;font-size:14px;box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:pointer}
+.askfab-ic{font-size:24px;line-height:1}
+.askpanel{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:58;width:min(520px,calc(100vw - 24px));
+  max-height:70vh;overflow:auto;background:var(--slate-2,#1E3B35);color:var(--chalk);border:1px solid rgba(237,230,210,.18);border-radius:18px;padding:14px 16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.askhead{font-weight:800;font-size:16px;margin-bottom:6px}
+.askline{font-size:16px;line-height:1.5;padding:4px 0;opacity:.75}
+.askline.now{opacity:1;font-weight:700}
+.askpanel .btn{width:auto;flex:1;margin:0}

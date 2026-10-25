@@ -205,7 +205,7 @@ function createBrain(opts) {
     // the learning circle: this week's focus (made if needed), the Friday
     // check when it's due, and the home question when there's one to ask
     let checkDue = false, homeAsk = null;
-    if (api.circle && api.circle.active(child) && o.kind !== 'placement' && o.kind !== 'english') {
+    if (api.circle && api.circle.active(child) && o.kind !== 'placement' && o.kind !== 'english' && o.kind !== 'help') {
       api.circle.focusFor(child);
       const fresh = store.get('children', child.id); Object.assign(child, fresh);
       checkDue = api.circle.checkDue();
@@ -214,9 +214,10 @@ function createBrain(opts) {
     }
     const s = o.kind === 'placement' ? PLC.planPlacement(core, child, { seed: o.seed, channel: o.channel,
       keypad: o.keypad != null ? o.keypad : process.env.TAKHTI_KEYPAD !== '0' }) : S.planSession(core, child, { checkDue, homeAsk,
-      seed: o.seed, channel: o.channel, kind: o.kind,
+      seed: o.seed, channel: o.channel, kind: o.kind, help: o.help,
       keypad: o.keypad != null ? o.keypad : process.env.TAKHTI_KEYPAD !== '0'
     });
+    if (!s) return { error: ['nothing Munni can help with on that question'] };
     child.sessions = (child.sessions || []).concat(s.id).slice(-200);
     store.put('sessions', s.id, s);
     store.put('children', child.id, child);

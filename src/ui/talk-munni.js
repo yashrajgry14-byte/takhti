@@ -74,6 +74,7 @@ function talkScreenHTML(){
 }
 
 function talkRefresh(){
+  if(TALK && TALK.help) return askPanel();      // a help call lives in the Ask Munni panel
   if(S.screen !== 'ask') return;
   const el = $('talkpanel');
   if(el && talkLive()) el.innerHTML = talkScreenHTML();
@@ -102,13 +103,25 @@ function talkStart(){
   if(sc) sc.onload = () => talkBegin();
 }
 
+/* "Still stuck? Munni calls" (ui/ask-munni.js): the same live call, about
+   the one question on screen. The server plans the steps (voice/help.js). */
+function talkHelp(item, onMsg){
+  if(!TALK_URL || !S.talkMunni || !S.online || talkLive()) return;
+  TALK = { childId: S.id, state: 'connecting', screen: null, msg: '', vol: 0, help: item, helpScreen: S.screen, onMsg };
+  if(window.BolnaWebCall) return talkBegin();
+  talkPreload();
+  const sc = $('bolna-sdk');
+  if(sc) sc.onload = () => talkBegin();
+}
+
 function talkBegin(){
   const call = new window.BolnaWebCall({ getSession: talkMint });
   TALK.call = call;
   call.on('call-start', () => {
     if(!TALK) return;
     TALK.state = 'active';
-    log(2, 'Talking Munni · live call — the voice goes to the voice service while talking');
+    log(2, TALK.help ? 'Ask Munni · Munni called to help with this question — the voice goes to the voice service while talking'
+                     : 'Talking Munni · live call — the voice goes to the voice service while talking');
     talkRefresh(); talkPoll();
   });
   call.on('call-end', () => talkEnded());
@@ -130,10 +143,11 @@ async function talkMint(){
   const res = await fetch(TALK_URL + '/voice/web/session', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ consent: true, key: S.talkKey || undefined, circle_key: S.circleKey || undefined,
+      help: TALK && TALK.help || undefined,
       child: { id: S.id, name: S.name, age: S.age || 6, lang: S.lang, levels: S.levels } })
   });
   const d = await res.json().catch(() => ({}));
-  if(!res.ok){ if(TALK) TALK.mintErr = d.limit ? 'limit' : 'mint_failed'; throw new Error(d.error || 'mint'); }
+  if(!res.ok){ if(TALK) TALK.mintErr = d.limit ? 'limit' : d.help === false ? 'no_help' : 'mint_failed'; throw new Error(d.error || 'mint'); }
   if(d.key){ S.talkKey = d.key; saveSoon(); }
   TALK.session = d.session_id; TALK.token = d.token;
   return d.bolna;
@@ -143,6 +157,7 @@ function talkErrorText(code){
   const hi = S.lang === 'hi';
   if(code === 'limit') return hi ? 'आज के लिए बहुत बात हो गई! कल फिर मिलेंगे।' : "That's enough talking for today! See you tomorrow.";
   if(code === 'microphone_denied') return hi ? 'माइक की अनुमति नहीं मिली। माता-पिता फ़ोन की सेटिंग में माइक चालू कर सकते हैं।' : 'The microphone was not allowed. A parent can turn it on in the phone settings.';
+  if(code === 'no_help') return hi ? 'इस सवाल पर मुन्नी अभी कॉल नहीं कर सकती। ऊपर के क़दम फिर से सुनो।' : "Munni can't call about this one yet. Listen to the steps again.";
   if(code === 'autoplay_blocked') return hi ? 'एक बार फिर दबाओ।' : 'Tap once more.';
   return hi ? 'अभी मुन्नी से जुड़ नहीं पाए। बाद में फिर कोशिश करो।' : "Couldn't reach Munni just now. Try again later.";
 }
@@ -187,6 +202,7 @@ function talkLeave(){ if(talkLive()) talkStop(); }
 const TALK_KEEP = ['ask', 'map', 'games', 'runner', 'pop', 'tower', 'match', 'sort', 'archer'];
 function talkFollow(screen){
   if(!talkLive()) return;
+  if(TALK.help){ if(screen !== TALK.helpScreen || TALK.childId !== S.id) talkStop(); return; }   // a help call is about this one screen
   if(!TALK_KEEP.includes(screen) || TALK.childId !== S.id) return talkStop();   // and never for a sibling
   if(screen === 'ask') talkMode('lesson');
   else if(screen !== 'map') talkMode('play');
@@ -211,7 +227,7 @@ function talkGame(event, it, score){
 /* The bar that stays on screen while the talk is live away from the Pond. */
 function talkChip(){
   let el = document.getElementById('talkchip');
-  const show = talkLive() && S.screen !== 'ask';
+  const show = talkLive() && S.screen !== 'ask' && !TALK.help;
   if(!show){ if(el) el.remove(); return; }
   const hi = S.lang === 'hi';
   if(!el){ el = document.createElement('div'); el.id = 'talkchip'; el.className = 'talkchip'; document.body.appendChild(el); }
@@ -227,6 +243,7 @@ function talkEnded(){
   if(was === 'active') log(2, 'Talking Munni · call ended');
   if(TALK.session) talkCollect(TALK.session, TALK.token, TALK.childId, 0);
   talkChip();
+  if(TALK.help){ if(TALK.msg && TALK.onMsg) TALK.onMsg(TALK.msg); return askPanel(); }
   if(S.screen === 'ask') render();
 }
 
@@ -277,8 +294,8 @@ function talkParentHTML(){
   <div class="metric">
     <div><b>${hi?'मुन्नी से बोलकर बात':'Talk out loud with Munni'}</b>
       <div style="font-size:12.5px;opacity:.75;line-height:1.5">${hi
-        ? `चालू होने पर ${n} मुन्नी के तालाब पर मुन्नी से बोलकर अभ्यास कर सकते हैं, और बात चलते-चलते खेल भी खेल सकते हैं (मुन्नी साथ रहती है)। बात करते समय बच्चे की आवाज़ इंटरनेट से तख़्ती की आवाज़-सेवा (Bolna) तक जाती है, फ़ोन कॉल की तरह, और पाठ जाँचने के लिए बातचीत के शब्द रखे जाते हैं। तख़्ती का बाकी सब इसी फ़ोन पर रहता है। शुरू में बंद; कभी भी बंद कर सकते हैं।`
-        : `When on, ${n} can practise out loud with Munni at Munni's Pond, and carry the talk into a game (Munni stays with them). While they talk, their voice goes over the internet to Takhti's voice service (Bolna), like a phone call, and the words of the talk are kept to check the lesson. Everything else in Takhti stays on this phone. Off to begin with; turn it off any time.`}</div>
+        ? `चालू होने पर ${n} मुन्नी के तालाब पर मुन्नी से बोलकर अभ्यास कर सकते हैं, और बात चलते-चलते खेल भी खेल सकते हैं (मुन्नी साथ रहती है)। किसी सवाल पर अटकें तो "मुन्नी से पूछो" के बाद मुन्नी ऐप में कॉल करके भी समझा सकती है। बात करते समय बच्चे की आवाज़ इंटरनेट से तख़्ती की आवाज़-सेवा (Bolna) तक जाती है, फ़ोन कॉल की तरह, और पाठ जाँचने के लिए बातचीत के शब्द रखे जाते हैं। तख़्ती का बाकी सब इसी फ़ोन पर रहता है। शुरू में बंद; कभी भी बंद कर सकते हैं।`
+        : `When on, ${n} can practise out loud with Munni at Munni's Pond, and carry the talk into a game (Munni stays with them). If they are stuck on a question, after "Ask Munni" Munni can also call them in the app and explain. While they talk, their voice goes over the internet to Takhti's voice service (Bolna), like a phone call, and the words of the talk are kept to check the lesson. Everything else in Takhti stays on this phone. Off to begin with; turn it off any time.`}</div>
     </div>
     <button class="toggle ${S.talkMunni?'on':''}" onclick="toggleTalkMunni()" aria-label="${S.talkMunni?'turn off Talking Munni':'turn on Talking Munni'}"><span></span></button>
   </div>

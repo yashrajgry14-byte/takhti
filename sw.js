@@ -9,7 +9,7 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v33';
+const CACHE = 'takhti-v34';
 // Recorded audio clips are content-hashed (see core/voice.js) — a given
 // filename can never change, so they live in a cache of their own that
 // the version cleanup below never touches. Bumping CACHE on a normal
@@ -30,14 +30,14 @@ const SHELL = [
   './src/core/log.js', './src/core/store.js', './src/core/profiles.js',
   './src/core/voice.js', './src/core/speech.js', './src/core/matcher.js',
   './src/core/adaptive.js', './src/core/daily-engine.js', './src/core/mathgen.js',
-  './src/core/readability.js', './src/core/tier1.js', './src/ui/mascot.js',
+  './src/core/readability.js', './src/core/tier1.js', './src/core/explain.js', './src/ui/mascot.js',
   './src/ui/readback.js', './src/ui/elephant.js', './src/ui/lesson-player.js',
   './src/ui/anim-celebrate.js', './src/ui/cards.js', './src/ui/views.js',
   './src/ui/opening.js', './src/ui/arrival.js', './src/ui/onboarding.js',
   './src/ui/jungle-map.js', './src/ui/video-player.js', './src/ui/teacher.js',
   './src/games/runner.js', './src/games/pop.js', './src/games/tower.js',
   './src/games/match.js', './src/games/sort.js', './src/games/archer.js',
-  './src/ui/self-listen.js', './src/ui/talk-munni.js', './src/ui/circle.js', './src/ui/handlers.js', './src/app.js',
+  './src/ui/self-listen.js', './src/ui/talk-munni.js', './src/ui/circle.js', './src/ui/ask-munni.js', './src/ui/handlers.js', './src/app.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png'
 ];
 

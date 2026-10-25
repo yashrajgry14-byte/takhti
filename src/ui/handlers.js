@@ -106,7 +106,8 @@ function checkRead(input){
     S.ctx.msg = S.lang==='hi' ? 'थोड़ा धीरे, पूरा वाक्य पढ़ो' : 'Slow down a little and read the whole line';
   }
 
-  const moved = record('read', ok);
+  S.ctx.missed = r.misread || [];             // Ask Munni starts from the word that tripped the child up
+  const moved = S.ctx.helped ? null : record('read', ok);
   if(moved==='up') S.ctx.msg += S.lang==='hi' ? ' · नया स्तर! 🎉' : ' · New level! 🎉';
   render();
 
@@ -399,7 +400,7 @@ function answerMath(o){
   const ok = o===S.ctx.p.ans;
   S.ctx.msg = ok ? (S.lang==='hi'?'सही! ⭐':'Correct! ⭐')
                  : (S.lang==='hi'?`जवाब है ${S.ctx.p.ans} — देखो कैसे`:`The answer is ${S.ctx.p.ans} — watch why`);
-  record('math', ok);
+  if(!S.ctx.helped) record('math', ok);       // after Ask Munni explained it, the answer isn't counted as the child's own
   render();
   if(ok) speak(S.lang==='hi'?'सही':'Correct');
   else setTimeout(playMath, 500);      // a wrong answer always earns the animation
