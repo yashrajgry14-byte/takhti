@@ -115,7 +115,7 @@ where they meet (`circle.js`, `circle-pages.js`, `messages.js`, `evidence.js`).
 
 Each person has a page by an unguessable link: `/circle/p/:token` (parent),
 `/circle/t/:token` (tutor), `/circle/c/:token` (class teacher: the class's
-week, focus, family codes, linking a tutor).
+week, setting or withdrawing the class focus, family codes, linking a tutor).
 
 ## The reading card
 

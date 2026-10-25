@@ -147,6 +147,9 @@ function classPage(circle, brain, teacher, msg) {
       <form method="post" action="/circle/c/${esc(teacher.token)}/focus"><input type="hidden" name="code" value="${esc(code)}">
         <select name="skill">${skillOpts}</select><input name="note" placeholder="Note for families (optional)" size="22">
         <button ${btn}>Set this week's class focus</button></form>
+      ${(() => { const hw = circle.classHomework(code); return hw ? `<form method="post" action="/circle/c/${esc(teacher.token)}/clear-focus" style="margin-top:6px"><input type="hidden" name="code" value="${esc(code)}">
+        <span ${small}>Class focus now: <b>${esc((hw.skills || []).map(id => circle.skillName(id, 'en')).join(', '))}</b>${hw.note ? ` — “${esc(hw.note)}”` : ''}</span>
+        <button ${btn}>Withdraw it</button></form>` : ''; })()}
       <p ${small}>Each child's app and calls adapt it to that child's real gap (a child weak on tables who's given BODMAS gets tables).${top ? ` Friday's checks suggest next: ${top}.` : ''}</p>
       <table><tr><th>Child</th><th>This week</th><th>Tries · right</th><th>Friday</th><th>Next</th><th>Home</th><th>Tutor</th><th>Family code</th></tr>${tr || '<tr><td colspan="8">No children linked to this class yet.</td></tr>'}</table>
       <form method="post" action="/circle/c/${esc(teacher.token)}/link-tutor" style="margin-top:10px"><select name="child">${rows.map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')}</select>

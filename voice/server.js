@@ -251,6 +251,11 @@ function createServer(opts) {
           if (req.method === 'POST') {
             const b = await readBody(req, 8 * 1024);
             const mine = id => { const ch = brain.getChild(String(id || '')); return ch && ch.profile && (t.class_codes || []).includes(String(ch.profile.classCode || '').toUpperCase()) ? ch : null; };
+            if (action === 'clear-focus') {
+              if (!(t.class_codes || []).includes(String(b.code || '').toUpperCase())) return back('Not your class.');
+              const r = C.clearClassFocus(b.code, t.name);
+              return back(r.ok ? `The class focus is withdrawn. ${r.children} children go back to their own next step.` : 'There was no class focus to withdraw.');
+            }
             if (action === 'focus') {
               if (!(t.class_codes || []).includes(String(b.code || '').toUpperCase())) return back('Not your class.');
               const r = C.setClassFocus(b.code, String(b.skill || ''), b.note, t.name);

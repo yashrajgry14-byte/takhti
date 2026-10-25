@@ -1,6 +1,7 @@
 # Takhti — working notes for Claude Code
 
-A foundational literacy and numeracy tutor for Indian children aged roughly 5–10.
+A foundational literacy and numeracy tutor for Indian children aged 3–10
+(four age bands in `content/ages.js`: 3–4, 5–6, 7–8, 9–10).
 Built for the iQOO Hackathon 2026, Smart Education track. This repo is the web
 prototype; the Android build ports the same logic to Kotlin + Compose.
 
@@ -72,7 +73,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/circle.js, ui/handlers.js
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v32` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v33` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -218,7 +219,9 @@ the deepest confirmed gap it can teach as a question (a child weak on tables
 who is assigned BODMAS gets tables). The Story Fire shows the banner: "Start
 with …", a homework story (solo or with a friend) if there's a `storySkill`,
 and the plan's lessons. Finishing the story sets `S.hwDone`, so Munni moves
-on. `clearHomework()` withdraws it.
+on. `clearHomework()` withdraws it. With the learning circle on, homework
+also arrives (and is withdrawn) through the sync — see **The learning
+circle**.
 
 ## The teacher view
 
@@ -541,6 +544,15 @@ app is a client of it, and only when a parent says so.
   saw (phone lessons, tutor ticks, teachers' notes). `appEvidence()` adds
   it to the child's own history; the server keeps the two apart
   (`voice/evidence.js`'s ledger), so nothing counts twice.
+- **Class homework, both ways.** A teacher sets the class focus on their
+  class page (`setClassFocus()`), and it reaches each synced app as
+  `homework_code`, imported by the app's own `importHomework()`;
+  `S.circleHw` remembers which assignment came that way. *Withdraw it* on
+  the class page (`clearClassFocus()`) clears the class's homework, remakes
+  every week that was built on it from the child's own next step (the old
+  week is kept in the history as "homework withdrawn"), and on its next
+  sync the app drops exactly that assignment — never homework from a code
+  a parent pasted or the teacher view on the phone.
 - **Family code.** A school's 8-letter code (from the class page or the
   voice dashboard) typed at onboarding or on the dashboard joins this phone
   to the school's record of the same child; a code used by another phone is
@@ -625,7 +637,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `voice-school` | vm + HTTP | school keys see only their own records (404 otherwise), calls on the school's own Bolna key, inbound scoped to the school; placement finds the boundary, tops it up to four attempts, reads, sets levels, kind to a child who knows nothing; teacher notes (recognised line, read-back, saved on yes only, evidence + focus, focus in the next call, other classes refused, same-name children asked apart, transcript check); class calls (shared gap, per-child standing, consent, quiet hours, once a day); corpus (research consent only, no names or ids, K-children threshold, letter swaps); the teacher node in the agent graph |
 | `voice-quiet` | vm + HTTP | silence is its own intent; an easier way in, then a different item, never a wrong answer or first-try credit; transcript-detected quiet moments; the kind report line and the kept "easier start" promise (once); ended-in-silence twice → check-in signal; the weekly call's quiet lines; placement quiet steps; games: lesson paused, hint only from the server's bank (mismatch or unknown id → nothing), throttled, silence is play, back to the lesson; the hush/play nodes and the web agent's silence hang-up |
 | `voice-circle` | vm + HTTP | the circle's server: sync only with the tick, progress only, this phone's key; the family code joins the school's record; the ledger (nothing counted twice); levels a phone lesson moved go back; weekly focus (class homework adapted to the child's gap, else the weakest step); the Friday check (app, call, reading) and next week's step; the home loop; tutors (parent invite, school link waiting for the parent, pack, results, notes); the three pages; the WhatsApp outbox (fake AiSensy); the scheduler's circle week |
-| `circle` | jsdom + the real voice server | the app side through real taps: nothing without a circle server; the bilingual grown-ups' step; nothing sent before the tick, progress only after it; family code → school, keeping the school's name; class homework via `importHomework()`; this week on the map; the Friday check (real evidence, never "wrong", the verdict on the server); "We did it" and the child's home question; a phone lesson back as `circleHistory`, counted once; sync off reaches the server (also after a spell offline) and stops calls' circle items and messages; on again; erase (school record keeps its own, app-only record goes whole, another phone refused) |
+| `circle` | jsdom + the real voice server | the app side through real taps: nothing without a circle server; the bilingual grown-ups' step; nothing sent before the tick, progress only after it; family code → school, keeping the school's name; class homework via `importHomework()`, and withdrawn from the class page (the week remade, the app drops exactly that assignment, other homework left alone); this week on the map; the Friday check (real evidence, never "wrong", the verdict on the server); "We did it" and the child's home question; a phone lesson back as `circleHistory`, counted once; sync off reaches the server (also after a spell offline) and stops calls' circle items and messages; on again; erase (school record keeps its own, app-only record goes whole, another phone refused) |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers

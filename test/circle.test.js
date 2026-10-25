@@ -21,6 +21,8 @@
      · the school's record keeps the school's name, not the avatar's
      · turning sync off reaches the server (after a spell offline too): the
        circle stops — no plan in calls, no messages — and on again resumes
+     · a teacher withdraws the class homework: the child's week is remade
+       and the app drops that homework (and only that one) on its next sync
      · a parent can erase the circle's data: the school's record keeps only
        its own records, a record only the app made goes whole
    ================================================================== */
@@ -86,7 +88,7 @@ appServer.listen(0, '127.0.0.1', () => voiceServer.listen(0, '127.0.0.1', async 
 
   // the school's side: a class, its teacher, a child the school registered, a family code
   const school = brain.createSchool({ name: 'Green Valley' }).school;
-  brain.registerTeacher({ name: 'Sunita', phone: '+919500000001', class_codes: ['CLS1B1'], school_id: school.id });
+  const teacher = brain.registerTeacher({ name: 'Sunita', phone: '+919500000001', class_codes: ['CLS1B1'], school_id: school.id }).teacher;
   const kid = brain.registerChild({ name: 'Aman', age: 7, lang: 'en', parent_phone: '+919500000002', consent: true, school_id: school.id }).child;
   { const r = brain.getChild(kid.id); r.profile.classCode = 'CLS1B1'; brain.store.put('children', r.id, r); }
   const familyCode = brain.circle.familyCode(kid.id);
@@ -201,6 +203,28 @@ appServer.listen(0, '127.0.0.1', () => voiceServer.listen(0, '127.0.0.1', async 
     const sk = Object.keys(far)[0];
     const own = E(`(S.skillHistory['${sk}'] || {n:0}).n`), ev = E(`appEvidence('${sk}')`);
     check('the app\'s diagnosis counts it once (own + circle)', (own + far[sk].n) < 4 ? ev === null : ev && ev.n === own + far[sk].n, JSON.stringify({ own, far: far[sk], ev }));
+
+    /* ---- the teacher withdraws the class homework ---- */
+    const page = await (await fetch(`${BASE}/circle/c/${teacher.token}`)).text();
+    check('the class page shows the class focus with a way to withdraw it', /Class focus now/.test(page) && /clear-focus/.test(page), page.slice(0, 200));
+    const wres = await fetch(`${BASE}/circle/c/${teacher.token}/clear-focus`, { method: 'POST', redirect: 'manual',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'code=CLS1B1' });
+    check('…withdrawing it remakes the child\'s week from their own next step', wres.status < 400 && brain.getChild(kid.id).circle.week.source !== 'homework' &&
+      brain.getChild(kid.id).circle.history.some(h => h.replaced === 'homework withdrawn'), JSON.stringify(brain.getChild(kid.id).circle.week.source));
+    await until(() => !E('CIRCLE_BUSY'));
+    E(`circleSync(true)`);
+    await until(() => !E('getAssignedHomework(S)'));
+    check('the app drops the withdrawn homework on its next sync', !E('getAssignedHomework(S)') && E('S.circle.week.source') !== 'homework' && E('S.circleHw') === null,
+      E('JSON.stringify(getAssignedHomework(S))'));
+    E(`go('lessons')`);
+    check('…and the Story Fire no longer shows it', !/Homework from your teacher/.test(screen()), '');
+    // homework the circle never sent (the teacher view on this phone, or a pasted code) is left alone
+    E(`assignHomework('CLS1B1', ['add10'], 'On paper')`);
+    await until(() => !E('CIRCLE_BUSY'));
+    E(`circleSync(true)`);
+    await wait(300);
+    check('homework the circle never sent is not touched by a sync', E('!!getAssignedHomework(S)') && E(`getAssignedHomework(S).note`) === 'On paper', E('JSON.stringify(getAssignedHomework(S))'));
+    E(`clearHomework('CLS1B1')`);
 
     /* ---- sync off reaches the server, even after a spell without signal ---- */
     const btn = on => $$('button').find(b => (b.getAttribute('onclick') || '') === on);

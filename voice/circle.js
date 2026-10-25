@@ -392,7 +392,8 @@ function createCircle(brain, envIn) {
     return { skill: next, source: 'takhti', why: { en: `The next step for ${child.name}: ${skillName(next, 'en').toLowerCase()}.`, hi: `${child.name} का अगला कदम: ${skillName(next, 'hi')}।` } };
   }
 
-  /* This week's focus (made, or remade if new homework arrived mid-week). */
+  /* This week's focus (made, or remade if new homework arrived mid-week,
+     or the teacher withdrew the homework this week was built on). */
   function focusFor(child, at) {
     const c = ensure(child);
     const lp = C.localParts(at || now(), env);
@@ -402,7 +403,8 @@ function createCircle(brain, envIn) {
       c.week = null;
     }
     const hwNow = withHistory(child, TT => { const h = TT.getAssignedHomework(TT.S); return h ? h.assignedAt : null; });
-    const stale = c.week && hwNow && c.week.homework_at !== hwNow && c.week.source !== 'teacher';
+    const stale = c.week && c.week.source !== 'teacher' && (hwNow ? c.week.homework_at !== hwNow : c.week.source === 'homework');
+    if (stale) { c.history.push(Object.assign(summaryOf(c.week), { replaced: hwNow ? 'new homework' : 'homework withdrawn' })); c.history = c.history.slice(-12); }
     if (!c.week || stale) {
       const f = chooseFocus(child, c);
       const hist = EV.combinedHistory(child);
@@ -433,6 +435,25 @@ function createCircle(brain, envIn) {
       if (fresh.circle.week.source === 'homework') { fresh.circle.week.set_by = by || 'teacher'; put(fresh); }
     }
     return { ok: true, children: n, homework_code: out };
+  }
+  /* The class's homework as it stands, and withdrawing it. Withdrawn, every
+     child's week built on it is remade from the child's own next step, and
+     each synced app drops it on its next sync (homework_code goes null). */
+  function classHomework(code) {
+    const up = String(code).toUpperCase();
+    return core.withChild(core.freshProfile('t', 7), {}, TT => { TT.S.classCode = up; return TT.getAssignedHomework(TT.S); }).out || null;
+  }
+  function clearClassFocus(code, by) {
+    const up = String(code).toUpperCase();
+    if (!classHomework(up)) return { ok: false, why: 'no class focus to withdraw' };
+    core.withChild(core.freshProfile('t', 7), {}, TT => TT.clearHomework(up));
+    let n = 0;
+    for (const child of classRoster(up)) {
+      const before = child.circle && child.circle.week;
+      focusFor(child);                                           // remakes a week that was built on the homework
+      if (before && before.source === 'homework') { n++; const fresh = brain.getChild(child.id); fresh.circle.week.withdrawn_by = by || 'teacher'; put(fresh); }
+    }
+    return { ok: true, children: n };
   }
   function classRoster(code) {
     const up = String(code).toUpperCase();
@@ -699,7 +720,7 @@ function createCircle(brain, envIn) {
 
   function attachMessages(m) { messages = m; }
 
-  return { active, sync, leave, familyCode, focusFor, setClassFocus, classRoster, classView, checkResult, readingCheck, checkQuestions, checkDue,
+  return { active, sync, leave, familyCode, focusFor, setClassFocus, clearClassFocus, classHomework, classRoster, classView, checkResult, readingCheck, checkQuestions, checkDue,
            homeDone, homeAsked, homeToAsk, inviteTutor, tutorDecision, tutorChildren, tutorPack, tutorResult, tutorNote, setTutorSchedule,
            members, view, attachMessages, isoWeek, ensure, skillName, HOME, SYNC_NOTICE,
            findByApp, hash, same,

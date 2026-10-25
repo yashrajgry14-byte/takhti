@@ -77,11 +77,26 @@ function circleApply(ok, status, d, sent){
   S.circleAt = new Date().toISOString();
   // a level a phone lesson moved since the last sync
   if(d.levels) for(const m of ['read','write','math']) if(d.levels[m]) S.levels[m] = clampLevel(m, d.levels[m]);
-  // the class homework, through the app's own import (it checks the code)
+  // the class homework, through the app's own import (it checks the code).
+  // S.circleHw remembers which assignment came this way, so that when the
+  // teacher withdraws it (no code any more) the app drops exactly that one —
+  // never homework a parent pasted from a code the circle didn't send.
   if(d.circle && d.circle.homework_code && typeof importHomework === 'function'){
     const hw = getAssignedHomework(S);
     const r = importHomework(d.circle.homework_code, S);
-    if(r.ok && !hw) log(2, 'Learning circle · the class homework arrived with the sync');
+    if(r.ok){
+      const now = getAssignedHomework(S);
+      S.circleHw = now ? now.assignedAt : null;
+      if(!hw || hw.assignedAt !== S.circleHw) log(2, 'Learning circle · the class homework arrived with the sync');
+    }
+  }else if(d.circle && S.circleHw != null){
+    const hw = getAssignedHomework(S);
+    const sameClass = !d.circle.members || !d.circle.members.class_code || d.circle.members.class_code === S.classCode;
+    if(hw && hw.assignedAt === S.circleHw && sameClass && typeof clearHomework === 'function'){
+      clearHomework(S.classCode);
+      log(2, 'Learning circle · the teacher withdrew the class homework, so it is gone here too');
+    }
+    S.circleHw = null;
   }
   // what was sent is done
   const out = S.circleOut || {};
@@ -217,7 +232,7 @@ function circleLeaveSend(){
 }
 function circleWipeLocal(){
   S.circleSync = false; S.circleKey = null; S.circle = null; S.circleAt = null; S.circleCode = '';
-  S.circleHistory = {}; S.circleChecks = {}; S.circleHomeAns = {}; S.circleOut = {};
+  S.circleHistory = {}; S.circleChecks = {}; S.circleHomeAns = {}; S.circleOut = {}; S.circleHw = null;
 }
 function circleErase(){
   if(!S.ctx.circleEraseAsk){ S.ctx.circleEraseAsk = true; return render(); }   // two taps: the first only explains
