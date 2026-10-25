@@ -21,6 +21,8 @@
 'use strict';
 const { parseNumber, parseYesNo, foldDev, intentOf } = require('./understand');
 const { gradeLine, recordOutcome } = require('./session');
+const E = require('./english');
+const { phraseScore } = require('./sounds');
 
 const TERMINAL = new Set(['completed', 'no-answer', 'busy', 'failed', 'canceled', 'stopped', 'error', 'balance-low', 'call-disconnected']);
 
@@ -127,9 +129,41 @@ function processCallEnd(core, child, session, payload) {
       else if (it.expect === 'yesno' && parseYesNo(relayed) !== parseYesNo(tx)) mismatched++;
       else if (it.expect === 'reading' && Math.abs(gradeLine(core, child, session, it.target, [relayed]).score -
                                                    gradeLine(core, child, session, it.target, [tx]).score) >= 15) mismatched++;
+      else if (it.expect === 'english' && E.gradeWord(it, relayed) !== E.gradeWord(it, tx)) mismatched++;
+      else if (it.expect === 'phrase' && Math.abs(phraseScore(it.target, relayed).score - phraseScore(it.target, tx).score) >= 15) mismatched++;
     });
   }
   session.relay = { checked, mismatched };
+
+  // spoken English, settled from the transcript like reading: the word
+  // history that picks tomorrow's words (voice record only — English is
+  // practice, not an app level)
+  if (session.kind === 'english' && !session.recorded_english) {
+    const { out: th } = core.withChild(child.profile, { lang: session.lang }, T => T.getGradeThresholds());
+    child.english_words = child.english_words || {};
+    for (const it of session.items) {
+      if (!['eword', 'esay', 'ephrase'].includes(it.kind)) continue;
+      const txs = (it.heard_tx || []).filter(Boolean);
+      const alts = txs.length ? txs : it.said.filter(Boolean);
+      const source = txs.length ? 'transcript' : 'relay';
+      if (!alts.length) { it.evidence = { source, verdict: 'unsure' }; continue; }
+      let first, best;
+      if (it.kind === 'eword') {
+        first = E.gradeWord(it, alts[0]) ? 'pass' : 'coach';
+        best = alts.some(a => E.gradeWord(it, a)) ? 'pass' : 'coach';
+      } else {
+        first = E.gradePhrase(it, alts[0], th.pass, th.gateScore).verdict;
+        best = alts.map(a => E.gradePhrase(it, a, th.pass, th.gateScore).verdict).includes('pass') ? 'pass' : first;
+      }
+      it.evidence = { source, first_verdict: first, verdict: best };
+      if (it.word && first !== 'unsure') {
+        const h = child.english_words[it.word] || { n: 0, right: 0 };
+        h.n++; if (first === 'pass') h.right++;
+        child.english_words[it.word] = h;
+      }
+    }
+    session.recorded_english = true;
+  }
 
   // reading evidence of record: the transcript, graded by the app's matcher
   for (const it of session.items) {
@@ -198,6 +232,10 @@ const R = {
   tipGood:  { en: 'Tip for today: ask {name} to teach you one sum from the call.', hi: 'आज की सलाह: {name} से कहें कि कॉल का एक सवाल आपको सिखाए।' },
   stopped:  { en: '{name} chose to stop early today, which is completely fine.', hi: '{name} ने आज जल्दी रुकना चुना, यह बिल्कुल ठीक है।' },
   missed:   { en: 'Munni could not reach {name} today. The next call will be at the usual time.', hi: 'मुन्नी आज {name} से बात नहीं कर पाई। अगली कॉल हमेशा के समय पर होगी।' },
+  enWords:  { en: 'Spoken English: knew {k} of {n} words straight away.', hi: 'अंग्रेज़ी बोलना: {n} में से {k} शब्द तुरंत बताए।' },
+  enPhrases:{ en: 'Said {k} of {n} English sentences clearly.', hi: 'अंग्रेज़ी के {n} में से {k} वाक्य साफ़ बोले।' },
+  enPractise:{ en: 'English words to use at home: {w}.', hi: 'घर पर इन अंग्रेज़ी शब्दों का इस्तेमाल करें: {w}।' },
+  tipEnglish:{ en: 'Tip for today: ask {name} to say "{w}" in English when you see one.', hi: 'आज की सलाह: जब भी दिखे, {name} से उसका अंग्रेज़ी नाम "{w}" बुलवाएँ।' },
   homework: { en: "{name} also did a question from the teacher's homework.", hi: '{name} ने टीचर के होमवर्क का एक सवाल भी किया।' },
   teacher:  { en: 'To share this practice with the teacher, send them this code:', hi: 'यह अभ्यास टीचर तक पहुँचाने के लिए उन्हें यह कोड भेजें:' },
   footer:   { en: '— Takhti', hi: '— तख़्ती' }
@@ -241,11 +279,22 @@ function buildReport(core, child, session) {
     if (clean && !words.includes(clean)) words.push(clean);
   }
   if (words.length) lines.push(t('words', lang, { w: words.slice(0, 3).join(', ') }));
+  // spoken English (an English-practice call)
+  const ew = session.items.filter(x => (x.kind === 'eword' || x.kind === 'esay') && x.evidence && x.evidence.verdict !== 'unsure');
+  const ep = session.items.filter(x => x.kind === 'ephrase' && x.evidence && x.evidence.verdict !== 'unsure');
+  const eMissed = ew.filter(x => x.evidence.first_verdict !== 'pass').map(x => x.word);
+  if (ew.length) lines.push(t('enWords', lang, { k: ew.filter(x => x.evidence.first_verdict === 'pass').length, n: ew.length }));
+  if (ep.length) lines.push(t('enPhrases', lang, { k: ep.filter(x => x.evidence.verdict === 'pass').length, n: ep.length }));
+  if (eMissed.length) lines.push(t('enPractise', lang, { w: eMissed.slice(0, 3).join(', ') }));
+
   const hw = session.items.find(x => x.kind === 'homework' && x.outcome && x.outcome !== 'unsure');
   if (hw) lines.push(t('homework', lang, { name }));
   if (session.ended_by === 'stop') lines.push(t('stopped', lang, { name }));
 
-  if (words.length) lines.push(t('tipRead', lang, { w: words[0] }));
+  if (session.kind === 'english') {
+    const w = eMissed[0] || (ew[0] && ew[0].word);
+    if (w) lines.push(t('tipEnglish', lang, { w, name }));
+  } else if (words.length) lines.push(t('tipRead', lang, { w: words[0] }));
   else if (sums.length && firstTry < sums.length / 2) lines.push(t('tipMath', lang, {}));
   else lines.push(t('tipGood', lang, { name }));
 

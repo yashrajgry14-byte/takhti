@@ -265,6 +265,8 @@ function numbersIn(utterance, lang) {
 
 /* The child's answer: the last number they said, or null if none. */
 function parseNumber(utterance, lang) {
+  const keys = keypadOf(utterance);
+  if (keys !== null) return /^\d{1,4}$/.test(keys) ? Number(keys) : null;   // pressed, not said
   const all = numbersIn(utterance, lang);
   return all.length ? all[all.length - 1] : null;
 }
@@ -272,7 +274,20 @@ function parseNumber(utterance, lang) {
 /* ---------- yes / no ---------- */
 const YES = ['yes', 'yeah', 'yep', 'yup', 'ya', 'haan', 'han', 'ha', 'haa', 'haanji', 'hanji', 'ji', 'jee', 'sahi', 'right', 'correct', 'हाँ', 'हां', 'हा', 'जी', 'सही'];
 const NO = ['no', 'nope', 'nah', 'nahi', 'nahin', 'nai', 'na', 'naa', 'नहीं', 'नही', 'ना', 'न'];
+/* ---------- keypad (DTMF) ----------
+   Bolna hands pressed keys to the model as "dtmf_number: 12" (collected
+   until #). Digits already parse as numbers; these cover the rest. */
+const DTMF = /dtmf_number\s*:\s*([0-9*#]*)/i;
+function keypadOf(utterance) {
+  const m = String(utterance || '').match(DTMF);
+  return m ? m[1].replace(/#/g, '') : null;
+}
+
 function parseYesNo(utterance) {
+  // on the keypad: 1 for yes, 2 for no — what Munni tells them to press
+  const keys = keypadOf(utterance);
+  if (keys === '1') return true;
+  if (keys === '2') return false;
   const toks = tokens(utterance).map(t => t.toLowerCase());
   let ans = null;
   for (const t of toks) {             // last one wins, same as numbers
@@ -304,6 +319,8 @@ function dev(alts) {
 function intentOf(utterance) {
   const u = String(utterance || '').trim();
   if (!u) return 'silence';
+  const keys = keypadOf(u);
+  if (keys !== null) return keys === '' || keys === '*' ? 'repeat' : 'answer';   // * = hear it again
   // a reply that carries a number is an answer, even if it also says "again"
   for (const name of ['stop', 'repeat', 'dontKnow']) {
     if (INTENTS[name].some(re => re.test(u))) {
@@ -326,4 +343,4 @@ function numberWord(n, lang) {
   return String(n);
 }
 
-module.exports = { parseNumber, numbersIn, parseYesNo, intentOf, numberWord, HI_TABLE, foldDev, foldRoman };
+module.exports = { parseNumber, numbersIn, parseYesNo, intentOf, keypadOf, numberWord, HI_TABLE, foldDev, foldRoman };

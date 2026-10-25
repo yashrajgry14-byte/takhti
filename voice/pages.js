@@ -69,7 +69,27 @@ const C = {
 };
 const f = (o, lang, v) => { let s = o[lang] || o.en; for (const k in v) s = s.split('{' + k + '}').join(v[k]); return s; };
 
+const EC = {
+  title: { en: "{name}'s English words for today", hi: '{name} के आज के अंग्रेज़ी शब्द' },
+  note:  { en: 'No need to prepare. If you like, say these words together before Munni calls.', hi: 'कुछ तैयार नहीं करना है। चाहें तो मुन्नी की कॉल से पहले ये शब्द साथ में बोल लें।' },
+  words: { en: 'Words', hi: 'शब्द' }, phrases: { en: 'Sentences', hi: 'वाक्य' }
+};
+function englishCard(session, child) {
+  const lang = session.lang, name = esc(child.name);
+  const { wordByEn, PHRASES } = require('./english');
+  const wordRows = (session.english.words || []).map(en => { const w = wordByEn(en); return `<li><span class="txt">${esc(en)}</span> <span class="sub">${esc(w ? w.hi : '')}</span></li>`; }).join('');
+  const phraseRows = (session.english.phrases || []).map(en => { const p = PHRASES.find(x => x.en === en);
+    return `<li><span class="txt" style="font-size:24px">${esc(en.replace('{name}', child.name))}</span> <span class="sub">${esc(p ? p.hi.replace('{name}', child.name) : '')}</span></li>`; }).join('');
+  return shell(f(EC.title, lang, { name: child.name }), lang, `<div class="sheet">
+    <div class="head">${MUNNI}<div><h1>${f(EC.title, lang, { name })}</h1><div class="sub">Takhti · तख़्ती</div></div></div>
+    <p>${f(EC.note, lang, {})}</p>
+    <h2>${f(EC.words, lang, {})}</h2><ul class="lines">${wordRows}</ul>
+    <h2>${f(EC.phrases, lang, {})}</h2><ul class="lines">${phraseRows}</ul>
+    <button class="btn" onclick="window.print()">${f(C.print, lang, {})}</button></div>`);
+}
+
 function cardPage(session, child) {
+  if (session.kind === 'english' && session.english) return englishCard(session, child);
   const lang = session.lang;
   const oral = session.slots.includes('repeat') && !session.slots.includes('read');
   const name = esc(child.name);
@@ -122,6 +142,7 @@ function dashboardPage(brain, key) {
   const kidOpts = kids.map(k => `<option value="${esc(k.id)}">${esc(k.name)} (${k.age}, ${k.lang})</option>`).join('');
   const kidRows = kids.map(k => `<tr><td>${esc(k.name)}</td><td>${k.age} · ${esc(k.lang)}</td>
     <td>${esc(JSON.stringify(k.profile.levels))}</td><td>${k.profile.classCode ? esc(k.profile.classCode) : '–'}</td>
+    <td><form method="post" action="/voice/admin/children/${esc(k.id)}/english?${q}"><input type="hidden" name="on" value="${k.english_practice ? 'no' : 'yes'}"><button class="btn" style="margin:0;padding:6px 10px;${k.english_practice ? '' : 'background:#6E6355'}">${k.english_practice ? 'On' : 'Off'}</button></form></td>
     <td><form method="post" action="/voice/admin/children/${esc(k.id)}/homework?${q}"><input name="code" placeholder="TKH1.… homework code" size="22"><button class="btn" style="margin:0;padding:6px 10px">Import</button></form></td></tr>`).join('');
   return shell('Takhti voice · dashboard', 'en', `<h1>Takhti voice</h1>
   <p class="sub">${kids.length} children · ${sessions.length} recent sessions · ${brain.storyBank.length} validated story problems</p>
@@ -133,10 +154,11 @@ function dashboardPage(brain, key) {
     <label><input type="checkbox" name="consent" value="yes" required> Parent consents</label>
     <button class="btn" style="margin:0">Add</button></form>
   <h2>Children</h2>
-  <table><tr><th>Name</th><th>Age · lang</th><th>Levels</th><th>Class</th><th>Teacher's homework code</th></tr>${kidRows || '<tr><td colspan="5">None yet</td></tr>'}</table>
+  <table><tr><th>Name</th><th>Age · lang</th><th>Levels</th><th>Class</th><th>English practice</th><th>Teacher's homework code</th></tr>${kidRows || '<tr><td colspan="6">None yet</td></tr>'}</table>
   <p class="note">A homework code from the app's teacher view links the child to that class; the next call asks the homework (personalised by the app's own diagnosis). After each call the parent report carries a progress code back to the teacher.</p>
   <h2>Plan a lesson</h2>
   <form method="post" action="/voice/admin/sessions?${q}"><select name="child_id">${kidOpts}</select>
+    <select name="kind"><option value="">Next in turn</option><option value="lesson">Reading + maths</option><option value="english">Spoken English</option></select>
     <label><input type="checkbox" name="call" value="yes"> and call now</label><button class="btn" style="margin:0">Plan</button></form>
   <h2>Sessions</h2>
   <table><tr><th>Child</th><th>Status</th><th>Items</th><th>Relay drift</th><th></th></tr>${rows || '<tr><td colspan="5">None yet</td></tr>'}</table>

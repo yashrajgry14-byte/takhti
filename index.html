@@ -69,7 +69,9 @@
 <!-- Where the Tier 2 (cloud) calls go.
      '/api/ask' is the serverless proxy in api/ask.js — it keeps the key off the client.
      If it is unreachable, the app degrades to the on-device pack. Nothing breaks. -->
-<script>window.TAKHTI_API = '/api/ask';</script>
+<script>window.TAKHTI_API = '/api/ask';
+// Talking Munni (voice/server.js) — empty = not in this build; a deployment sets its URL
+window.TAKHTI_VOICE = window.TAKHTI_VOICE || '';</script>
 
 <!-- Plain scripts, not ES modules: the inline onclick handlers in the views
      need these functions on window. Load order matters — see CLAUDE.md. -->
@@ -128,6 +130,7 @@
 <script src="src/games/sort.js"></script>
 <script src="src/games/archer.js"></script>
 <script src="src/ui/self-listen.js"></script>
+<script src="src/ui/talk-munni.js"></script>
 <script src="src/ui/handlers.js"></script>
 <script src="src/app.js"></script>
 

@@ -11,3 +11,9 @@
    cloud is optional, always.
    ================================================================== */
 const API_URL = (typeof window !== 'undefined' && window.TAKHTI_API) || '/api/ask';
+
+/* Talking Munni's voice server (voice/server.js). Empty means this build
+   has no Talking Munni at all: the parent toggle and the Pond button never
+   appear. Even when set, it is off for every child until a parent turns it
+   on — the child's voice leaves the phone while they talk. */
+const TALK_URL = ((typeof window !== 'undefined' && window.TAKHTI_VOICE) || '').replace(/\/$/, '');

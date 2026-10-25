@@ -38,26 +38,36 @@ How you work:
 3. Every time the child speaks during the lesson, call takhti_answer with exactly the words you heard: wrong numbers, half words, mistakes and all. Never correct them. Never guess what they meant.
 4. Never ask for personal information (address, school, phone numbers, family details). Never ask a child to keep a secret. Never talk about anything except today's lesson. If the child talks about something else, say one short warm sentence and continue with the lesson.
 5. If anyone wants to stop, pass their words to takhti_answer; it ends the lesson kindly.
-6. The lesson language is {{lesson_language}}. Hindi lines are written in Devanagari: read them naturally.`;
+6. The lesson language is {{lesson_language}}. Hindi lines are written in Devanagari: read them naturally.
+7. If you receive "dtmf_number: ..." the child pressed keys on the phone. Pass that text unchanged as child_said.`;
 
 const nodes = [
   {
     id: 'start',
-    prompt: 'You have greeted whoever answered and asked whether {{child_name}} is ready for the lesson. Wait for the reply. Do not start the lesson yourself and do not call any tool. If they ask who you are, say you are Munni from Takhti, calling for {{child_name}}\'s practice lesson, and ask again whether {{child_name}} is ready.',
+    prompt: 'Munni has just said the greeting. If it asked whether {{child_name}} is ready, wait for the reply. If it asked who is calling, wait for the child to say their name. If it said goodbye, say nothing more. Do not start the lesson yourself and do not call any tool. If someone asks who you are, say you are Munni from Takhti, here for a short practice lesson.',
     repeat_after_silence_seconds: 8,
     edges: [
-      { to_node_id: 'not_now', condition_type: 'expression', priority: 0,
+      // the inbound lookup said this line is closed (unregistered number,
+      // quiet hours, or today's lessons done): the greeting already said
+      // why and goodbye, so the next thing anyone says ends the call
+      { to_node_id: 'closed_end', condition_type: 'expression', priority: 0,
+        expression: { conditions: [{ variable: 'allowed', operator: 'eq', value: false }] } },
+      { to_node_id: 'not_now', condition_type: 'expression', priority: 1,
         expression: { conditions: [{ variable: '_silence_repeats', operator: 'gte', value: 2 }] } },
-      { to_node_id: 'lesson', condition: 'The person says the child is here or ready, hands the phone over, says yes / haan / okay, or a child starts speaking.' },
+      { to_node_id: 'lesson', condition: 'The person says the child is here or ready, hands the phone over, says yes / haan / okay, a child starts speaking, or (when Munni asked who is calling) the child says their name.',
+        parameters: { caller_name: { type: 'string', description: 'If Munni asked who is calling: the name the child said. Otherwise empty.' } } },
       { to_node_id: 'not_now', condition: 'The person says the child is not available, busy, sleeping or at school, asks to call later, does not want the call, or says it is a wrong number.' }
     ]
   },
   {
     id: 'lesson',
     function_call: 'takhti_next',
-    prompt: 'Call @takhti_next to get the first thing to say, and speak its "say" exactly. From then on, every time the child speaks, call @takhti_answer with their exact words, then speak the new "say" exactly. When a result has "done": true, its "say" is the goodbye: speak it and then stop talking.',
+    prompt: 'Call @takhti_next to get the first thing to say (pass caller_name = "{{caller_name}}" if the child said their name), and speak its "say" exactly. From then on, every time the child speaks, call @takhti_answer with their exact words, then speak the new "say" exactly. When a result has "done": true, its "say" is the goodbye: speak it and then stop talking.',
     repeat_after_silence_seconds: 9,
     edges: [
+      // Talking Munni in the app: the child tapped an answer on screen and
+      // the server pushed Munni's reply in (event injection)
+      { to_node_id: 'screen', condition_type: 'event', event_name: 'screen_answer' },
       { to_node_id: 'quiet_end', condition_type: 'expression', priority: 0,
         expression: { conditions: [{ variable: '_silence_repeats', operator: 'gte', value: 3 }] } },
       { to_node_id: 'end_now', condition_type: 'expression', priority: 1,
@@ -68,6 +78,14 @@ const nodes = [
         condition: 'Munni has already spoken the goodbye from a tool result with done = true (it ends with "Bye bye" or "बाय-बाय"), and the child says bye or anything else.' },
       { to_node_id: 'adult',
         condition: 'An adult (not the child) is now speaking and asks a question about Takhti, the call, or the child\'s progress.' }
+    ]
+  },
+  {
+    id: 'screen',
+    prompt: 'The child just answered by tapping the screen. Say exactly this, word for word, and nothing else: {{screen_say}}',
+    edges: [
+      // whatever the child says next is a lesson turn again
+      { to_node_id: 'lesson', condition_type: 'unconditional' }
     ]
   },
   {
@@ -102,6 +120,13 @@ const nodes = [
     edges: []
   },
   {
+    id: 'closed_end',
+    node_type: 'static',
+    static_message: say('बाय-बाय!', 'Bye bye!'),
+    function_call: 'end_call',
+    edges: []
+  },
+  {
     id: 'end_now',
     node_type: 'static',
     static_message: say('बाय-बाय!', 'Bye bye!'),
@@ -117,7 +142,10 @@ const tools = [
     description: 'Get the next thing Munni should say in today\'s lesson. Call it when the lesson starts, and again only if you have lost track of what to say.',
     parameters: {
       type: 'object',
-      properties: { session_id: { type: 'string', description: 'The lesson id: always {{session_id}}.' } },
+      properties: {
+        session_id: { type: 'string', description: 'The lesson id: always {{session_id}}.' },
+        caller_name: { type: 'string', description: 'Only if Munni asked who is calling: the name the child said. Otherwise leave empty.' }
+      },
       required: ['session_id']
     }
   },
@@ -161,19 +189,22 @@ const agent = {
             agent_information: PERSONA,
             routing_instructions: 'Route on what the person on the phone just said. During the lesson, stay on the lesson node unless one of its conditions clearly applies; a wrong answer, a half-read line or "I don\'t know" is part of the lesson, not a reason to leave it.',
             current_node_id: 'start',
+            // set by the server on every call (user_data) or inbound lookup
+            variable_types: { allowed: 'boolean', registered: 'boolean' },
             nodes
           }
         },
         api_tools: {
           tools,
           tools_params: {
-            takhti_next: toolParam('/voice/tools/next', { session_id: '%(session_id)s' }),
+            takhti_next: toolParam('/voice/tools/next', { session_id: '%(session_id)s', caller_name: '%(caller_name)s' }),
             takhti_answer: toolParam('/voice/tools/answer', { session_id: '%(session_id)s', child_said: '%(child_said)s' })
           }
         }
       },
       task_config: {
         hangup_after_LLMCall: false,       // required for end_call nodes
+        dtmf_enabled: true,                // keypad answers (Plivo / Twilio / SIP trunk only)
         call_terminate: 540,               // 9 minutes, hard stop
         hangup_after_silence: 25,
         optimize_latency: true

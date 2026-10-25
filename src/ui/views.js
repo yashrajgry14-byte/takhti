@@ -23,6 +23,7 @@ function go(s){
   if(s!=='match')  matchStop();
   if(s!=='sort')   sortStop();
   if(s!=='archer') archerStop();
+  if(s!=='ask') talkLeave();   // a Talking Munni call never outlives Munni's Pond
   S.screen=s; S.ctx={}; render();
 }
 
@@ -356,6 +357,7 @@ ask(){
   <div class="display" style="font-size:21px;margin:4px 0">${t('ask')}</div>
   <div class="muted">${t('askSub')}</div>
   ${elephantHTML()}
+  ${talkPanelHTML()}
   <input class="input" id="q" style="margin-top:12px" placeholder="${t('typeQ')}">
   <button class="btn" style="margin-top:10px" onclick="submitQuestion($('q').value)">${t('sendQ')}</button>
   <div style="margin-top:8px" class="row">
@@ -423,6 +425,8 @@ parent(){
       </div>
       <button class="toggle ${S.muted?'':'on'}" onclick="toggleMuted()" aria-label="${S.muted?'unmute':'mute'}"><span></span></button>
     </div>
+
+    ${talkSetUp() ? talkParentHTML() : ''}
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'बिना इंटरनेट':'WITHOUT INTERNET'}</div>
     ${(() => {

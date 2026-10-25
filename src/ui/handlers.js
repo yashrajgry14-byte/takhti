@@ -630,6 +630,7 @@ function setOnline(v){
   pill.textContent = v ? 'ONLINE · EXTRAS ON' : 'AIRPLANE MODE';
   $('netlabel').textContent = v? 'Signal' : 'No signal';
   log(null, v? 'Signal detected' : 'Signal lost — nothing in the lesson changes');
+  if(!v) talkLeave();   // a Talking Munni call needs the signal; everything else carries on
   if(v && S.queue.length) flushQueue();
 }
 async function flushQueue(){

@@ -31,6 +31,7 @@
 'use strict';
 const crypto = require('crypto');
 const { parseNumber, parseYesNo, intentOf, numberWord } = require('./understand');
+const E = require('./english');
 
 const MAX_CALL_MS = 8 * 60 * 1000;     // a lesson for a five-year-old, not a lecture
 const MAX_TURNS = 40;                  // hard stop however the call goes
@@ -68,11 +69,19 @@ const L = {
   revealYN:   { en: 'The answer is {ans}. {why} Good try!', hi: 'जवाब है {ans}। {why} अच्छी कोशिश!' },
   notHeard:   { en: "I didn't hear a number. Say it once more?", hi: 'मुझे संख्या सुनाई नहीं दी। फिर से बोलो?' },
   notHeardYN: { en: "I didn't hear. Say yes or no?", hi: 'मुझे सुनाई नहीं दिया। हाँ या नहीं बोलो?' },
+  // with keypad on: a noisy home or a quiet child can press instead
+  notHeardKey:   { en: "I didn't hear a number. Say it once more, or press it on your phone and then the hash key.",
+                   hi: 'मुझे संख्या सुनाई नहीं दी। फिर से बोलो, या फ़ोन पर नंबर दबाओ और फिर हैश वाला बटन।' },
+  notHeardYNKey: { en: "I didn't hear. Say yes or no, or press 1 for yes and 2 for no.",
+                   hi: 'मुझे सुनाई नहीं दिया। हाँ या नहीं बोलो, या हाँ के लिए एक और नहीं के लिए दो दबाओ।' },
   notHeardRd: { en: "I couldn't hear clearly. Read it once more?", hi: 'मुझे ठीक से सुनाई नहीं दिया। एक बार फिर पढ़ो?' },
   moveOn:     { en: "Let's try a new one.", hi: 'चलो, नया सवाल।' },
   next:       { en: 'Next one.', hi: 'अगला।' },
   readFirst:  { en: "Now look at today's card. Read line 1 to me.", hi: 'अब आज का कार्ड देखो। पहली लाइन पढ़कर सुनाओ।' },
   readNext:   { en: 'Now read line {k}.', hi: 'अब {k} लाइन पढ़ो।' },
+  // Talking Munni in the app: the line is on the screen, no card needed
+  readScreen: { en: 'Now read the line on the screen to me.', hi: 'अब स्क्रीन पर लिखी लाइन पढ़कर सुनाओ।' },
+  readScreenNext: { en: 'Now read the next line on the screen.', hi: 'अब स्क्रीन पर अगली लाइन पढ़ो।' },
   readCoachW: { en: 'Almost! Listen to this word: {w}. Now read the whole line again.', hi: 'लगभग! यह शब्द सुनो: {w}। अब पूरी लाइन फिर से पढ़ो।' },
   readCoach:  { en: 'Nice try! Listen: {line} Now you read it once more.', hi: 'अच्छी कोशिश! सुनो: {line} अब एक बार फिर पढ़ो।' },
   readModel:  { en: 'Well tried! It says: {line} We will read it again another day.', hi: 'बढ़िया कोशिश! इसमें लिखा है: {line} इसे फिर किसी दिन पढ़ेंगे।' },
@@ -190,8 +199,15 @@ function planSession(core, child, opts) {
   const id = opts.id || crypto.randomBytes(12).toString('base64url');
   const lang = child.lang === 'en' ? 'en' : 'hi';
   const seed = opts.seed || id;
+  const kind = opts.kind === 'english' ? 'english' : 'lesson';
   const { out, trace } = core.withChild(child.profile, { lang, seed }, T => {
     const b = T.band();
+    if (kind === 'english') {
+      const r = T.rng(T.seedOf(seed + '|english'));
+      const pick = E.chooseEnglish(child, b.id, r);
+      return { band: b.id, slots: pick.slots, lines: [], english: { words: pick.words, phrases: pick.phrases },
+               homework: null, levels: { ...T.S.levels } };
+    }
     const slots = bandPlan(b.id);
 
     // teacher homework this child hasn't worked through yet takes the
@@ -217,10 +233,16 @@ function planSession(core, child, opts) {
     const pool = T.ageSentences(lang, T.S.levels.read).filter(l => !lines.includes(l));
     const r = T.rng(T.seedOf(seed + '|lines'));
     while (lines.length < nRead && pool.length) lines.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
-    return { band: b.id, slots, lines, homework, levels: { ...T.S.levels } };
+    return { band: b.id, slots, lines, english: null, homework, levels: { ...T.S.levels } };
   });
   return {
-    id, child_id: child.id, lang, seed,
+    id, child_id: child.id, lang, seed, kind,
+    english: out.english,
+    // 'call' (Munni rang), 'inbound' (the child rang), 'app' (Talking Munni)
+    channel: opts.channel || 'call',
+    // keypad answers exist only on a phone line, and only where the
+    // telephony provider passes keys through (not Exotel / Vobiz)
+    keypad: (opts.channel || 'call') !== 'app' && opts.keypad !== false,
     band: out.band, slots: out.slots, lines: out.lines, homework_skill: out.homework,
     levels_before: out.levels,
     status: 'planned', created_at: new Date().toISOString(),
@@ -303,6 +325,9 @@ function buildItem(core, child, s, slot, storyBank) {
                prompt: joinSay(L.homeworkLead[lang], fill(L[SPOKEN_OPS[sp.op]], lang, v)),
                why: fill(L[SPOKEN_OPS[sp.op] + 'Why'], lang, v) };
     }
+    if (slot === 'eword' || slot === 'esay' || slot === 'ephrase') {
+      return E.buildEnglishItem(slot, s, child, lang, k, r);
+    }
     if (slot === 'read' || slot === 'repeat') {
       const lineNo = s.items.filter(x => x.kind === 'read' || x.kind === 'repeat').length;
       const line = s.lines[lineNo];
@@ -311,7 +336,9 @@ function buildItem(core, child, s, slot, storyBank) {
         return { kind: 'repeat', expect: 'reading', target: line, line_no: lineNo + 1,
                  prompt: fill(L.repeatMe, lang, { line }) };
       }
-      const prompt = lineNo === 0 ? fill(L.readFirst, lang, {})
+      const prompt = s.channel === 'app'
+        ? (lineNo === 0 ? L.readScreen[lang] : L.readScreenNext[lang])
+        : lineNo === 0 ? fill(L.readFirst, lang, {})
         : fill(L.readNext, lang, { k: lang === 'hi' ? L.ordinal.hi[lineNo] : L.ordinal.en[lineNo] });
       return { kind: 'read', expect: 'reading', target: line, line_no: lineNo + 1, prompt };
     }
@@ -347,7 +374,11 @@ function finish(s, lead, why) {
   let line;
   if (why === 'stop') line = L.stop[lang];
   else if (why === 'over') line = L.over[lang];
-  else {
+  else if (s.kind === 'english') {
+    const w = s.items.filter(x => (x.kind === 'eword' || x.kind === 'esay') && x.outcome && x.outcome !== 'unsure').length;
+    const p = s.items.filter(x => x.kind === 'ephrase' && x.outcome && x.outcome !== 'unsure').length;
+    line = w + p ? E.fill(E.EL.finish, lang, { w: nw(w, lang), p: nw(p, lang) }) : L.finishBare[lang];
+  } else {
     const m = s.items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure').length;
     const rd = s.items.filter(x => (x.kind === 'read' || x.kind === 'repeat') && x.outcome && x.outcome !== 'unsure').length;
     if (!m && !rd) line = L.finishBare[lang];
@@ -374,7 +405,8 @@ function next(core, child, s, storyBank) {
   if (!s.started_at) { s.started_at = new Date().toISOString(); s.status = 'live'; }
   const open = currentItem(s);
   if (open) return reply(s, open.prompts[open.prompts.length - 1], open);
-  return advance(core, child, s, storyBank, s.items.length ? '' : L.start[s.lang]);
+  const start = s.kind === 'english' ? E.EL.start[s.lang] : L.start[s.lang];
+  return advance(core, child, s, storyBank, s.items.length ? '' : start);
 }
 
 /* The child said something. Decide, record, and say what comes next. */
@@ -413,7 +445,8 @@ function answer(core, child, s, storyBank, said) {
       // doubt, not a miss: one more try, then move on recording nothing
       it.unheard = (it.unheard || 0) + 1;
       if (it.unheard >= 2) return done('unsure', L.moveOn[lang]);
-      return ask(yn ? L.notHeardYN[lang] : L.notHeard[lang]);
+      const key = s.keypad ? 'Key' : '';
+      return ask((yn ? L['notHeardYN' + key] : L['notHeard' + key])[lang]);
     }
 
     it.attempts++;
@@ -431,6 +464,7 @@ function answer(core, child, s, storyBank, said) {
     if (it.attempts === 1) {
       if (yn) return ask(L.clueYN[lang]);
       const pair = rngFor(s, it)() < 0.5 ? [it.answer, it.distractor] : [it.distractor, it.answer];
+      it.choices = pair;                       // Talking Munni shows these two as buttons
       const tpl = intent === 'dontKnow' ? L.clueDK : L.clue;
       return ask(fill(tpl, lang, { x: nw(pair[0], lang), y: nw(pair[1], lang) }));
     }
@@ -439,6 +473,50 @@ function answer(core, child, s, storyBank, said) {
     if (it.kind === 'homework') child.profile.hwDone = it.assigned_at;
     const why = it.why || '';
     return done('revealed', fill(yn ? L.revealYN : L.reveal, lang, { ans: ansWord, why }).replace(/\s+/g, ' '));
+  }
+
+  /* ---- spoken English: a word in answer to its Hindi meaning ---- */
+  if (it.expect === 'english') {
+    if (intent === 'stop') return stopNow();
+    if (intent === 'repeat') return again();
+    const heard = /[a-zA-Zऀ-ॿ]/.test(said);
+    if (!heard && intent !== 'dontKnow') {
+      it.unheard = (it.unheard || 0) + 1;
+      if (it.unheard >= 2) return done('unsure', L.moveOn[lang]);
+      return ask(E.EL.notHeard[lang]);
+    }
+    it.attempts++;
+    if (intent !== 'dontKnow' && E.gradeWord(it, said)) {
+      return done(it.attempts === 1 ? 'correct' : 'correct_after_clue', pick(L.praise, rngFor(s, it))[lang]);
+    }
+    if (it.attempts === 1) {
+      const pair = rngFor(s, it)() < 0.5 ? [it.word, it.distractor] : [it.distractor, it.word];
+      return ask(E.fill(intent === 'dontKnow' ? E.EL.wordClueDK : E.EL.wordClue, lang, { x: pair[0], y: pair[1] }));
+    }
+    return done('revealed', E.fill(E.EL.wordReveal, lang, { hi: it.meaning, en: it.word }));
+  }
+
+  /* ---- spoken English: a phrase (or a word) said after Munni ---- */
+  if (it.expect === 'phrase') {
+    const { out: th } = core.withChild(child.profile, { lang }, T => T.getGradeThresholds());
+    const g = E.gradePhrase(it, said, th.pass, th.gateScore);
+    // as with card reading: intents only when the child is clearly not
+    // saying the phrase ("bye" might be part of one)
+    if (g.verdict === 'unsure') {
+      if (intent === 'stop') return stopNow();
+      if (intent === 'repeat') return again();
+    }
+    it.live = it.live || [];
+    it.live.push({ score: g.score, verdict: g.verdict, missed: g.missed });
+    if (g.verdict === 'unsure') {
+      it.unheard = (it.unheard || 0) + 1;
+      if (it.unheard >= 2) return done('unsure', E.EL.phraseDone[lang]);
+      return ask(E.fill(E.EL.phraseTry, lang, { en: it.target }));
+    }
+    it.attempts++;
+    if (g.verdict === 'pass') return done(it.attempts === 1 ? 'correct' : 'correct_after_clue', E.EL.phraseGood[lang]);
+    if (it.attempts === 1) return ask(E.fill(E.EL.phraseTry, lang, { en: it.target }));
+    return done('revealed', E.EL.phraseDone[lang]);
   }
 
   /* ---- reading a line from the card, or saying it after Munni ---- */

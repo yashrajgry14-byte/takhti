@@ -21,6 +21,7 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const { createBrain } = require('./brain');
+const { createWeb } = require('./web');
 const P = require('./pages');
 
 /* tiny .env loader so `node voice/server.js` just works */
@@ -48,6 +49,7 @@ function createServer(opts) {
   const HOOK = opts.webhookKey || secret('TAKHTI_WEBHOOK_KEY');
   const ADMIN = opts.adminKey || secret('TAKHTI_ADMIN_KEY');
   const env = opts.env || process.env;
+  const web = createWeb(brain, env);
   const base = () => (env.TAKHTI_PUBLIC_URL || '').replace(/\/$/, '');
 
   const same = (a, b) => {
@@ -93,15 +95,39 @@ function createServer(opts) {
     try {
       if (p === '/voice/health') return send(res, 200, { ok: true, stories: brain.storyBank.length });
 
+      /* ---- Talking Munni in the app (CORS: the app may live on another origin) ---- */
+      if (p.startsWith('/voice/web/')) {
+        res.setHeader('Access-Control-Allow-Origin', env.TAKHTI_APP_ORIGIN || '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+        const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+        let r;
+        if (req.method === 'POST' && p === '/voice/web/session') r = await web.startSession(await readBody(req, 16 * 1024), ip);
+        else if (req.method === 'GET' && p === '/voice/web/state') r = web.state(url.searchParams.get('session'), url.searchParams.get('token'));
+        else if (req.method === 'POST' && p === '/voice/web/tap') { const b = await readBody(req, 4 * 1024); r = await web.tap(b.session, b.token, b.choice); }
+        else if (req.method === 'GET' && p === '/voice/web/result') r = web.result(url.searchParams.get('session'), url.searchParams.get('token'));
+        else if (req.method === 'POST' && p === '/voice/web/forget') { const b = await readBody(req, 4 * 1024); r = web.forget(b.child_id, b.key); }
+        else r = { status: 404, body: { error: 'not found' } };
+        return send(res, r.status, r.body);
+      }
+
       /* ---- the two tools the voice agent may call ---- */
       if (req.method === 'POST' && (p === '/voice/tools/next' || p === '/voice/tools/answer')) {
         if (!same(bearer(req), TOOL)) return send(res, 401, { error: 'unauthorized' });
         const b = await readBody(req, 64 * 1024);
         const id = sid(b.session_id);
-        const out = p.endsWith('next') ? brain.toolNext(id) : brain.toolAnswer(id, b.child_said);
+        const out = p.endsWith('next') ? brain.toolNext(id, b.caller_name) : brain.toolAnswer(id, b.child_said);
         if (out.error) console.warn('[takhti] tool call for unknown session', JSON.stringify(b.session_id));
         // the model only needs these four fields; less text = less to misread
         return send(res, 200, { say: out.say, expect: out.expect, done: out.done, item: out.item });
+      }
+
+      /* ---- Bolna's caller lookup for the inbound line (GET, Bearer, < 3 s) ---- */
+      if (req.method === 'GET' && p === '/voice/inbound/lookup') {
+        if (!same(bearer(req), TOOL)) return send(res, 401, { error: 'unauthorized' });
+        const q = Object.fromEntries(url.searchParams);
+        return send(res, 200, brain.inboundLookup(q, env));
       }
 
       /* ---- Bolna's post-call webhook ---- */
@@ -147,6 +173,12 @@ function createServer(opts) {
             : send(res, 400, `<!doctype html><p>That homework code was not accepted (${P.esc(r.why)}).</p><p><a href="/voice/admin?${q}">back</a></p>`);
           return send(res, r.ok ? 200 : 400, r);
         }
+        if (req.method === 'POST' && (mm = m(/^\/voice\/admin\/children\/([A-Za-z0-9_-]+)\/english$/))) {
+          const b = await readBody(req, 4 * 1024);
+          const r = brain.setEnglishPractice(mm[1], b.on === true || b.on === 'yes');
+          if (wantsHtml) return redirect(res, `/voice/admin?${q}`);
+          return send(res, r ? 200 : 404, r || { error: 'no such child' });
+        }
         if (req.method === 'GET' && (mm = m(/^\/voice\/admin\/children\/([A-Za-z0-9_-]+)\/progress-code$/))) {
           const code = brain.progressCode(mm[1]);
           return send(res, code ? 200 : 404, code ? { code } : { error: 'child not linked to a class yet — import a homework code first' });
@@ -156,7 +188,9 @@ function createServer(opts) {
         }
         if (req.method === 'POST' && p === '/voice/admin/sessions') {
           const b = await readBody(req, 64 * 1024);
-          const r = brain.createSession(b.child_id, { seed: b.seed });
+          const kid = brain.getChild(b.child_id);
+          const kind = b.kind === 'english' || b.kind === 'lesson' ? b.kind : (kid ? brain.nextKind(kid) : 'lesson');
+          const r = brain.createSession(b.child_id, { seed: b.seed, kind });
           if (r.error) return send(res, 400, { error: r.error });
           const links = sessionLinks(r.session);
           let call = null;

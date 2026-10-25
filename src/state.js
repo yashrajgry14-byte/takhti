@@ -42,7 +42,10 @@ function newProfile(name){
     muted: false,          // per child, not per device — see core/speech.js's speak()/ui/elephant.js's trumpet()
     avatar: null,          // the animal a child taps to say who they are, see ui/onboarding.js
     ob: null,              // in-progress onboarding step ('who'|'age'), see ui/onboarding.js's onboardHTML()
-    srs: {}                // Spaced Repetition Memory Engine records (itemId -> SRS item)
+    srs: {},               // Spaced Repetition Memory Engine records (itemId -> SRS item)
+    talkMunni: false,      // a parent turned on Talking Munni (voice goes to the voice service while talking) — see ui/talk-munni.js
+    talkKey: null,         // this child's key on the voice server, so only this phone can use or erase that record
+    talkApplied: []        // talk sessions already replayed into this record, so a talk never counts twice
   };
 }
 const PROFILE_FIELDS = Object.keys(newProfile());

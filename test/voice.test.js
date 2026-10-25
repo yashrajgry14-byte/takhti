@@ -90,6 +90,32 @@ await test('intents: repeat / don\'t know / stop, and Devanagari word edges', ()
   for (const [s, i] of Object.entries(want)) assert.strictEqual(U.intentOf(s), i, `"${s}" → ${U.intentOf(s)}, want ${i}`);
 });
 
+await test('keypad: pressed digits, * to repeat, 1/2 for yes/no', () => {
+  assert.strictEqual(U.parseNumber('dtmf_number: 12', 'hi'), 12);
+  assert.strictEqual(U.parseNumber('dtmf_number: 7#', 'en'), 7);
+  assert.strictEqual(U.intentOf('dtmf_number: *'), 'repeat');
+  assert.strictEqual(U.parseYesNo('dtmf_number: 1'), true);
+  assert.strictEqual(U.parseYesNo('dtmf_number: 2'), false);
+});
+await test('keypad: a call can be answered entirely by pressing keys, and Munni offers it after a doubt', () => {
+  const r = run(kid(7, 'hi', 'Keys'), (it, s, i) => {
+    if (i === 0) return 'उम्म';                                      // not heard → keypad hint
+    if (it.expect === 'number') return 'dtmf_number: ' + it.answer + '#';
+    if (it.expect === 'yesno') return 'dtmf_number: ' + (it.answer ? 1 : 2);
+    return it.target;
+  }, 'keys');
+  assert.ok(r.says.some(x => x.includes('हैश वाला बटन')), 'no keypad hint after an unheard answer');
+  const sums = r.s.items.filter(i => i.expect === 'number' || i.expect === 'yesno');
+  assert.ok(sums.every(i => /^correct/.test(i.outcome)), sums.map(i => i.outcome).join());
+});
+await test('keypad: never offered where there is no keypad (Talking Munni in the app)', () => {
+  const c = kid(7, 'en', 'NoKeys');
+  const { session } = brain.createSession(c.id, { seed: 'nokey', channel: 'app' });
+  brain.toolNext(session.id);
+  const r = brain.toolAnswer(session.id, 'hmm');
+  assert.ok(!/press/i.test(r.say), r.say);
+});
+
 /* ---------------- content ---------------- */
 await test('every Munni line exists in Hindi and English with the same placeholders', () => {
   const ph = s => [...new Set(s.match(/\{[a-z]+\}/g) || [])].sort().join();
@@ -394,6 +420,128 @@ await test('reading thresholds come from the age band, not the voice layer', () 
   assert.ok(!/g\.score\s*[<>]=?\s*\d/.test(src), 'a hardcoded reading threshold crept into session.js');
 });
 
+/* ---------------- spoken English ---------------- */
+const SND = require('../voice/sounds');
+const ENG = require('../voice/english');
+await test('sounds: English words match their Devanagari transcription, and names across scripts', () => {
+  const same = [['water', 'वॉटर'], ['water', 'वाटर'], ['father', 'फ़ादर'], ['mother', 'मदर'], ['orange', 'ऑरेंज'], ['school', 'स्कूल'],
+    ['flower', 'फ्लावर'], ['happy', 'हैप्पी'], ['night', 'नाइट'], ['apple', 'एप्पल'], ['window', 'विंडो'], ['brother', 'ब्रदर'],
+    ['Riya', 'रिया'], ['Kabir', 'कबीर'], ['Arjun', 'अर्जुन'], ['Ishaan', 'ईशान'], ['the', 'द'], ['you', 'यू']];
+  for (const [a, b] of same) assert.ok(SND.soundsLike(a, b), `${a} ≠ ${b} (${SND.skeleton(a)} / ${SND.skeleton(b)})`);
+  const differ = [['water', 'पानी'], ['tree', 'door'], ['red', 'rain'], ['star', 'sister'], ['ball', 'blue'], ['dog', 'duck'], ['Riya', 'Kabir']];
+  for (const [a, b] of differ) assert.ok(!SND.soundsLike(a, b), `${a} matched ${b}`);
+  assert.strictEqual(SND.phraseScore('My name is Riya.', 'माय नेम इज़ रिया').score, 100);
+  assert.strictEqual(SND.phraseScore('I am fine', 'आई एम फाइन').score, 100);
+});
+await test('english bank: no two words sound alike to the checker, every line is bilingual', () => {
+  for (const w of ENG.WORDS) for (const a of w.accept) for (const o of ENG.WORDS)
+    assert.ok(o === w || !o.accept.some(x => SND.soundsLike(x, a)), `${w.en}/${a} clashes with ${o.en}`);
+  for (const w of ENG.WORDS) assert.ok(w.en && w.hi && SND.skeleton(w.en), w.en);
+  for (const p of ENG.PHRASES) assert.ok(p.en && p.hi && SND.phraseScore(p.en.replace('{name}', 'Riya'), p.en.replace('{name}', 'Riya')).score === 100, p.en);
+  for (const [k, v] of Object.entries(ENG.EL)) assert.ok(v.en && v.hi, 'EL.' + k);
+});
+await test('english call: a Hindi word gets a clue, the English word in Devanagari counts, phrases graded by sound', () => {
+  const c = kid(7, 'hi', 'Esha');
+  const { session } = brain.createSession(c.id, { seed: 'eng', kind: 'english' });
+  assert.strictEqual(session.kind, 'english');
+  assert.ok(session.slots.includes('eword') && session.slots.includes('ephrase'));
+  const says = [brain.toolNext(session.id).say];
+  let r = { done: false }, first = true;
+  for (let i = 0; i < 30 && !r.done; i++) {
+    const s = brain.getSession(session.id), it = s.items[s.items.length - 1];
+    let said;
+    if (it.expect === 'english') { said = first ? it.meaning : it.word; first = false; }
+    else said = it.target;
+    r = brain.toolAnswer(session.id, said); says.push(r.say);
+  }
+  const s = brain.getSession(session.id);
+  assert.ok(says.some(x => x.includes('एक बार फिर सोचो')), 'no clue after a Hindi answer');
+  assert.ok(s.items.filter(i => i.kind === 'ephrase').every(i => i.outcome === 'correct'));
+  assert.ok(/अंग्रेज़ी के .* शब्द/.test(r.say), r.say);
+});
+await test('english call: English practice never touches the app\'s reading/maths levels; word history picks tomorrow\'s words', () => {
+  const c = kid(6, 'hi', 'Om');
+  const before = JSON.stringify(brain.getChild(c.id).profile);
+  const { session } = brain.createSession(c.id, { seed: 'eng3', kind: 'english' });
+  let x = brain.toolNext(session.id);
+  for (let i = 0; i < 30 && !x.done; i++) {
+    const s = brain.getSession(session.id), it = s.items[s.items.length - 1];
+    x = brain.toolAnswer(session.id, it.expect === 'english' ? 'उम्म नहीं पता' : it.target);
+  }
+  const tx = brain.getSession(session.id).live_turns.map(t => `${t.role}: ${t.text}`).join('\n');
+  webhook(session.id, tx);
+  const child = brain.getChild(c.id);
+  const done = brain.getSession(session.id);
+  const asked = done.items.filter(i => i.kind === 'eword').map(i => i.word);
+  assert.ok(asked.every(w => child.english_words[w] && child.english_words[w].right === 0), JSON.stringify(child.english_words));
+  assert.ok(/English|अंग्रेज़ी/.test(done.report.text));
+  // the app record (levels, attempts, SRS, skill history) is untouched
+  const after = JSON.parse(JSON.stringify(child.profile)), was = JSON.parse(before);
+  for (const k of ['levels', 'attempts', 'correct', 'srs', 'skillHistory']) assert.deepStrictEqual(after[k], was[k], k + ' changed');
+  // the next English call brings the missed words back
+  const next = brain.createSession(c.id, { seed: 'eng4', kind: 'english' }).session;
+  assert.ok(next.english.words.some(w => asked.includes(w)), 'missed words did not come back');
+});
+await test('english practice alternates with the normal lesson when a parent turns it on', () => {
+  const c = kid(8, 'hi', 'Alt');
+  assert.strictEqual(brain.nextKind(brain.getChild(c.id)), 'lesson');
+  brain.setEnglishPractice(c.id, true);
+  run(brain.getChild(c.id), perfect, 'alt1');               // a normal lesson happened
+  assert.strictEqual(brain.nextKind(brain.getChild(c.id)), 'english');
+});
+
+/* ---------------- the inbound line ---------------- */
+const reg = (name, age, lang, phone) => brain.registerChild({ name, age, lang, parent_phone: phone, consent: true }).child;
+const notQuiet = { TAKHTI_QUIET_HOURS: 'off' };
+await test('inbound: an unregistered number hears why, and the line closes', () => {
+  const r = brain.inboundLookup({ contact_number: '+919111111111' }, notQuiet);
+  assert.strictEqual(r.allowed, false);
+  assert.strictEqual(r.registered, false);
+  assert.ok(/registered/.test(r.greeting) && /जुड़ा नहीं/.test(r.greeting), r.greeting);
+});
+await test('inbound: a registered child is greeted by name and gets a lesson with keypad on', () => {
+  const c = reg('Pari', 7, 'hi', '+919122222222');
+  const r = brain.inboundLookup({ contact_number: '9122222222', execution_id: 'ex-in-1' }, notQuiet);
+  assert.ok(r.allowed && r.registered && r.child_name === 'Pari', JSON.stringify(r));
+  assert.ok(r.greeting.includes('Pari'));
+  const s = brain.getSession(r.session_id);
+  assert.strictEqual(s.channel, 'inbound'); assert.strictEqual(s.keypad, true); assert.strictEqual(s.child_id, c.id);
+  assert.ok(!brain.toolNext(r.session_id).done);
+});
+await test('inbound: siblings on one phone — Munni asks who, and the answer picks the right child (रिया → Riya)', () => {
+  const a = reg('Kabir', 6, 'hi', '+919133333333');
+  const b = reg('Riya', 8, 'hi', '+919133333333');
+  const r = brain.inboundLookup({ contact_number: '+91 91333 33333' }, notQuiet);
+  assert.ok(r.allowed && /Kabir/.test(r.greeting) && /Riya/.test(r.greeting), r.greeting);
+  brain.toolNext(r.session_id, 'मैं रिया');
+  const s = brain.getSession(r.session_id);
+  assert.strictEqual(s.child_id, b.id, 'stayed on the first sibling');
+  assert.strictEqual(s.band, 'developing');
+  assert.ok(brain.getChild(b.id).sessions.includes(s.id) && !brain.getChild(a.id).sessions.includes(s.id));
+});
+await test('inbound: after today\'s lessons the line says rest, not another sum', () => {
+  reg('Dev', 7, 'en', '+919144444444');
+  for (let k = 0; k < 2; k++) {
+    const r = brain.inboundLookup({ contact_number: '9144444444' }, notQuiet);
+    assert.ok(r.allowed); brain.toolNext(r.session_id);
+  }
+  const r3 = brain.inboundLookup({ contact_number: '9144444444' }, notQuiet);
+  assert.strictEqual(r3.allowed, false);
+  assert.ok(/already practised/.test(r3.greeting), r3.greeting);
+});
+await test('inbound: quiet hours close the line kindly', () => {
+  reg('Noor', 7, 'hi', '+919155555555');
+  const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', hour: '2-digit', hour12: false }).format(new Date())) % 24;
+  const r = brain.inboundLookup({ contact_number: '9155555555' }, { TAKHTI_QUIET_HOURS: `${h}-${(h + 1) % 24}` });
+  assert.strictEqual(r.allowed, false);
+  assert.ok(r.greeting.includes('आराम का समय'), r.greeting);
+});
+await test('graph: a closed line hangs up on the next thing anyone says', () => {
+  const start = nodes.find(n => n.id === 'start');
+  const e = start.edges.find(x => x.to_node_id === 'closed_end');
+  assert.ok(e && e.condition_type === 'expression' && e.priority === 0);
+});
+
 /* ---------------- HTTP ---------------- */
 await test('HTTP: tools need the token, webhook needs the key, family links work, unknown sessions end gracefully', async () => {
   const { server } = createServer({ brain, toolToken: 'tt', webhookKey: 'hk', adminKey: 'ak', env: {} });
@@ -418,6 +566,10 @@ await test('HTTP: tools need the token, webhook needs the key, family links work
     const u = await call('POST', '/voice/tools/answer', { session_id: '%(session_id)s', child_said: '5' }, { Authorization: 'Bearer tt' });
     assert.strictEqual(JSON.parse(u.body).done, true, 'unknown session must end the call politely');
     assert.strictEqual((await call('POST', '/voice/webhook', { id: 'x' })).status, 401);
+    assert.strictEqual((await call('GET', '/voice/inbound/lookup?contact_number=9111111111')).status, 401);
+    const look = await call('GET', '/voice/inbound/lookup?contact_number=9111111111', null, { Authorization: 'Bearer tt' });
+    assert.strictEqual(look.status, 200);
+    assert.strictEqual(JSON.parse(look.body).allowed, false);
     assert.strictEqual((await call('POST', '/voice/webhook?key=hk', { id: 'x', status: 'completed' })).status, 200);
     const card = await call('GET', '/voice/card/' + id);
     assert.strictEqual(card.status, 200);
@@ -425,6 +577,112 @@ await test('HTTP: tools need the token, webhook needs the key, family links work
     assert.strictEqual((await call('GET', '/voice/admin')).status, 401);
     assert.strictEqual((await call('GET', '/voice/admin?key=ak', null, { Accept: 'text/html' })).status, 200);
   } finally { server.close(); }
+});
+
+/* ---------------- Talking Munni in the app: server half, against a fake Bolna ---------------- */
+await test('web talk: mint, screen, a tap pushed into the live call, results for the app, limits, erase', async () => {
+  const injected = [];
+  const fake = http.createServer((req, res) => {
+    let b = ''; req.on('data', c => b += c); req.on('end', () => {
+      if (req.url === '/web-call/session') {
+        const body = JSON.parse(b);
+        assert.ok(body.user_data.session_id && body.user_data.greeting && req.headers.authorization === 'Bearer bk');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ run_id: 'run-' + body.user_data.session_id, agent_id: body.agent_id, expires_in: 120 }));
+      }
+      const m = req.url.match(/^\/v1\/call\/([^/]+)\/events$/);
+      if (m) { injected.push({ run: m[1], body: JSON.parse(b) }); res.writeHead(202); return res.end('{}'); }
+      res.writeHead(404); res.end();
+    });
+  });
+  await new Promise(r => fake.listen(0, r));
+  const env = { BOLNA_API_KEY: 'bk', BOLNA_AGENT_ID: 'agent-1', BOLNA_API_BASE: `http://127.0.0.1:${fake.address().port}`,
+                TAKHTI_WEB_DAILY: '2', TAKHTI_WEB_GRACE_MS: '999999999' };
+  const { server } = createServer({ brain, toolToken: 'tt', webhookKey: 'hk', adminKey: 'ak', env });
+  await new Promise(r => server.listen(0, r));
+  const port = server.address().port;
+  const call = (method, p, body) => new Promise((resolve, reject) => {
+    const req = http.request({ port, path: p, method, headers: { 'Content-Type': 'application/json', Origin: 'http://app.example' } }, res => {
+      let d = ''; res.on('data', c => d += c); res.on('end', () => resolve({ status: res.statusCode, body: d ? JSON.parse(d) : null, headers: res.headers }));
+    });
+    req.on('error', reject); if (body) req.write(JSON.stringify(body)); req.end();
+  });
+  try {
+    const child = { id: 'cAPPKID01', name: 'Mira', age: 7, lang: 'en', levels: { read: 3, write: 2, math: 3 } };
+    assert.strictEqual((await call('POST', '/voice/web/session', { child })).status, 403, 'started without parent opt-in');
+    const pre = await call('OPTIONS', '/voice/web/session');
+    assert.strictEqual(pre.status, 204); assert.ok(pre.headers['access-control-allow-origin']);
+
+    const st = await call('POST', '/voice/web/session', { child, consent: true });
+    assert.strictEqual(st.status, 200, JSON.stringify(st.body));
+    const { session_id: sid, token, key } = st.body;
+    assert.ok(st.body.bolna.run_id && token && key);
+    assert.strictEqual((await call('POST', '/voice/web/session', { child, consent: true })).status, 403, 'another phone took this child');
+    const sv = brain.getSession(sid);
+    assert.strictEqual(sv.channel, 'app'); assert.strictEqual(sv.keypad, false);
+    assert.deepStrictEqual(brain.getChild('app_cAPPKID01').profile.levels.math, 3, 'did not start from the app\'s level');
+
+    brain.toolNext(sid);                               // the call has started
+    let state = (await call('GET', `/voice/web/state?session=${sid}&token=${token}`)).body;
+    assert.strictEqual(state.screen.kind, 'number');
+    assert.strictEqual((await call('GET', `/voice/web/state?session=${sid}&token=wrong`)).status, 404);
+
+    // a wrong tap → the clue's two choices appear as buttons; Munni's reply went into the call
+    const cur = () => { const s = brain.getSession(sid); return s.items[s.items.length - 1]; };
+    let r = await call('POST', '/voice/web/tap', { session: sid, token, choice: String(cur().answer + 2) });
+    assert.strictEqual(r.status, 200);
+    assert.ok(Array.isArray(r.body.screen.choices) && r.body.screen.choices.includes(cur().answer), JSON.stringify(r.body.screen));
+    assert.strictEqual(injected.length, 1);
+    assert.strictEqual(injected[0].run, 'run-' + sid);
+    assert.strictEqual(injected[0].body.event, 'screen_answer');
+    assert.ok(injected[0].body.properties.screen_say.includes('Is it'), injected[0].body.properties.screen_say);
+    r = await call('POST', '/voice/web/tap', { session: sid, token, choice: String(cur().answer) });
+    assert.ok(r.body.injected);
+
+    // play the rest by voice; reading items show the line itself on screen
+    let sawLine = false, x = { done: false };
+    for (let i = 0; i < 40 && !x.done; i++) {
+      state = (await call('GET', `/voice/web/state?session=${sid}&token=${token}`)).body;
+      const it = cur();
+      if (it.expect === 'reading') { sawLine = sawLine || state.screen.text === it.target; assert.ok(/screen/.test(it.prompts[0]) || it.kind === 'repeat'); }
+      x = brain.toolAnswer(sid, perfect(it));
+    }
+    assert.ok(sawLine, 'the line to read was not on screen');
+    assert.strictEqual((await call('GET', `/voice/web/result?session=${sid}&token=${token}`)).body.pending, true);
+    webhook(sid, brain.getSession(sid).live_turns.map(t => `${t.role}: ${t.text}`).join('\n'));
+    const res = (await call('GET', `/voice/web/result?session=${sid}&token=${token}`)).body;
+    assert.strictEqual(res.source, 'transcript');
+    const math = res.records.filter(z => z.mod === 'math'), read = res.records.filter(z => z.mod === 'read');
+    const sums = brain.getSession(sid).items.filter(i => ['math', 'story', 'homework'].includes(i.kind));
+    assert.strictEqual(math.length, sums.length, 'every sum (and only sums — not the warm-up) comes back for the app');
+    assert.ok(math.every(z => z.ok === true), 'perfect sums came back as misses');
+    assert.ok(read.length >= 1 && read.every(z => z.sentence), JSON.stringify(read));
+
+    // a second talk today is fine; a third is not
+    assert.strictEqual((await call('POST', '/voice/web/session', { child, consent: true, key })).status, 200);
+    const s2 = brain.listSessions().filter(s => s.child_id === 'app_cAPPKID01' && !s.started_at)[0];
+    brain.toolNext(s2.id);
+    const third = await call('POST', '/voice/web/session', { child, consent: true, key });
+    assert.strictEqual(third.status, 429); assert.strictEqual(third.body.limit, true);
+
+    assert.strictEqual((await call('POST', '/voice/web/forget', { child_id: 'cAPPKID01', key: 'nope' })).status, 404);
+    assert.strictEqual((await call('POST', '/voice/web/forget', { child_id: 'cAPPKID01', key })).status, 200);
+    assert.strictEqual(brain.getChild('app_cAPPKID01'), null);
+    assert.strictEqual(brain.getSession(sid), null);
+  } finally { server.close(); fake.close(); }
+});
+await test('web talk: minting is rate-limited per address', async () => {
+  const { createWeb } = require('../voice/web');
+  const w = createWeb(brain, { BOLNA_API_KEY: 'k', BOLNA_AGENT_ID: 'a', BOLNA_API_BASE: 'http://127.0.0.1:9', TAKHTI_WEB_PER_HOUR: '2' });
+  const body = n => ({ consent: true, child: { id: 'rateKid' + n, name: 'R', age: 6, lang: 'hi' } });
+  await w.startSession(body(1), '9.9.9.9'); await w.startSession(body(2), '9.9.9.9');
+  assert.strictEqual((await w.startSession(body(3), '9.9.9.9')).status, 429);
+});
+await test('graph: a screen tap event makes Munni speak at once, then the lesson carries on', () => {
+  const lesson = nodes.find(n => n.id === 'lesson'), screen = nodes.find(n => n.id === 'screen');
+  assert.ok(lesson.edges.some(e => e.condition_type === 'event' && e.event_name === 'screen_answer' && e.to_node_id === 'screen'));
+  assert.ok(/\{\{screen_say\}\}/.test(screen.prompt));
+  assert.ok(screen.edges.some(e => e.condition_type === 'unconditional' && e.to_node_id === 'lesson'));
 });
 
 /* ---------------- the Bolna graph ---------------- */

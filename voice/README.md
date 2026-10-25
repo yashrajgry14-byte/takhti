@@ -30,6 +30,16 @@ hears.
 phone is a separate channel and needs the network by its nature. It only
 *reads* `src/`, loading the same files the tests load.
 
+## Five ways in
+
+| | What it is | Where |
+|---|---|---|
+| **Munni calls** | the outbound lesson call | `placeCall()`, dashboard *Call now* |
+| **The child calls Munni** | the inbound line: Munni knows registered numbers, asks siblings who's calling, and keeps a daily limit and quiet hours | `/voice/inbound/lookup` |
+| **Keypad answers** | press the number (`#` to finish), `*` to hear it again, 1 / 2 for yes / no. Munni offers this after an unheard answer | `understand.js` `keypadOf()` |
+| **Spoken English** | a parent's per-child choice, alternating with the normal lesson: Hindi meaning → English word, short phrases said back, graded by sound | `english.js`, `sounds.js` |
+| **Talking Munni in the app** | parent opt-in. A live voice talk at Munni's Pond, with the line to read on screen and tap choices that Munni answers instantly through event injection | `web.js` + `src/ui/talk-munni.js` |
+
 ## The reading card
 
 A phone call can't show text. So before the call the family opens the card link
@@ -141,9 +151,31 @@ read the item-by-item record, what the tools heard, and the engine trace.
 11. Copy the agent id into `BOLNA_AGENT_ID`, and your API key into
     `BOLNA_API_KEY`.
 
-**Variables the agent uses:** `session_id`, `child_name`, `lesson_language` and
-`greeting`. All four are sent by `placeCall()` in `brain.js`. Nothing else is:
-no age, no surname, and the phone number only as the number to dial.
+**Variables the agent uses:** `session_id`, `child_name`, `lesson_language`,
+`greeting`, `registered` and `allowed`. They come from `placeCall()` (outbound),
+the inbound lookup, or the web-session mint. Nothing else is sent: no age, no
+surname, and the phone number only as the number to dial.
+
+12. **Keypad answers.** `dtmf_enabled: true` is already in the config (the
+    Calling tab's *Keypad Input (DTMF)*). Keys reach the agent as
+    `dtmf_number: 12`, collected until `#`. This works on Plivo, Twilio and SIP
+    trunks, but not on Exotel or Vobiz: on those set `TAKHTI_KEYPAD=0` so
+    Munni never offers it.
+13. **Inbound line.** In the Calling tab, turn on *Inbound Calling*, pick the
+    number and choose *Use your internal APIs*. Set the endpoint to
+    `<PUBLIC_URL>/voice/inbound/lookup` and the token to `TAKHTI_TOOL_TOKEN`.
+    Bolna sends a GET with `contact_number` and expects an answer within 3
+    seconds. Use the same agent: an unregistered, quiet-hours or
+    already-practised caller gets `allowed: false`, the greeting explains why,
+    and the graph's `closed_end` node hangs up. `TAKHTI_INBOUND_DAILY` sets the
+    daily limit (default 2), `TAKHTI_QUIET_HOURS` the quiet hours (default
+    `21-7`) and `TAKHTI_TZ` the time zone (default `Asia/Kolkata`).
+14. **Talking Munni in the app.** Ask Bolna in the builders' Slack to switch on
+    the Web Call SDK for your account. Set `window.TAKHTI_VOICE` in the app's
+    `index.html` to `<PUBLIC_URL>`, and `TAKHTI_APP_ORIGIN` on the server to the
+    app's origin (for CORS). Optionally set `BOLNA_WEB_AGENT_ID`; it falls back
+    to the same agent. The graph's `screen` node and its `screen_answer` event
+    edge are already in the config.
 
 ## Endpoints
 
@@ -152,6 +184,8 @@ no age, no surname, and the phone number only as the number to dial.
 | Bolna, during a call | `POST /voice/tools/next` `{session_id}` | `Bearer TAKHTI_TOOL_TOKEN` |
 | | `POST /voice/tools/answer` `{session_id, child_said}` | same |
 | Bolna, after a call | `POST /voice/webhook?key=…` (execution payload) | `TAKHTI_WEBHOOK_KEY` |
+| Bolna, before an inbound call | `GET /voice/inbound/lookup?contact_number=…` | `Bearer TAKHTI_TOOL_TOKEN` |
+| The app (Talking Munni) | `POST /voice/web/session`, `GET /voice/web/state`, `POST /voice/web/tap`, `GET /voice/web/result`, `POST /voice/web/forget` | parent consent flag + per-child key; per-talk token; rate limits |
 | Families | `GET /voice/card/:session`, `GET /voice/report/:session` | the unguessable link |
 | Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `POST /voice/admin/children/:id/homework` `{code}`, `GET /voice/admin/children/:id/progress-code`, `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` |
 
@@ -201,5 +235,14 @@ never leaves a child listening to silence.
 - **Consent** is a checkbox and a timestamp. A production launch needs the
   verifiable parental consent mechanism under the DPDP Rules. Check the current
   requirements before any real pilot.
-- **Talking Munni inside the app** (Bolna's Web Call SDK) isn't built yet. When
-  it is, it must stay optional and must never gate a lesson.
+- **Talking Munni's minting endpoint** is open to any browser. It is limited
+  per address (`TAKHTI_WEB_PER_HOUR`) and per child per day
+  (`TAKHTI_WEB_DAILY`), but not authenticated. Put it behind the app's own
+  login before a public launch.
+- **Event injection** is built to Bolna's documented `POST /v1/call/{run_id}/events`
+  and is tested against a stand-in. Confirm on a live web call that Munni
+  speaks within a second of a tap.
+- **The English sound matcher** is lenient by design. It accepts words that
+  differ only in a vowel (sun / son), and the word bank avoids such pairs. It
+  hasn't been checked against real children's English through a Hindi phone
+  recognizer.
