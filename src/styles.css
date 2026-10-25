@@ -1252,3 +1252,9 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 .talkdot{width:12px;height:12px;border-radius:50%;background:var(--leaf,#1E8F55);transition:transform .1s linear}
 .talkline{font-family:'Baloo 2',system-ui,sans-serif;font-size:30px;line-height:1.35;margin:14px 0 4px;font-weight:700}
 .talkq{font-family:'Baloo 2',system-ui,sans-serif;font-size:24px;margin:14px 0 8px;font-weight:600}
+
+/* Talking Munni away from the Pond: a live microphone is never invisible */
+.talkchip{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:10px;
+  background:var(--card,#FFFDF6);border:1px solid rgba(42,33,24,.18);border-radius:999px;padding:6px 8px 6px 14px;
+  box-shadow:0 6px 20px rgba(42,33,24,.18);font-size:14px;max-width:calc(100vw - 32px)}
+.talkchip .btn{margin:0;padding:6px 12px;font-size:13px}

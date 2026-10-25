@@ -84,6 +84,55 @@ function alignToTranscript(session, turns) {
   }
 }
 
+/* ---------- quiet moments, from Bolna's own transcript ----------
+   Whether or not the live call told us (the graph's "hush" node), the
+   transcript shows it: Munni says the same line twice with nothing from
+   the child in between — the platform repeating after silence. And a call
+   that ended on the quiet-hang-up line ended because the child went
+   quiet. Both are kept as observations, never as wrong answers. */
+const QUIET_END = /now (is not|isn't) a good time|अभी सही समय नहीं है/i;
+function quietFromTranscript(session, text) {
+  const lines = [];
+  for (const raw of String(text || '').split(/\r?\n/)) {
+    const m = raw.match(/^\s*(assistant|user|agent|bot|human|caller)\s*:\s*(.*)$/i);
+    if (m) lines.push({ role: /assistant|agent|bot/i.test(m[1]) ? 'assistant' : 'user', text: m[2] });
+  }
+  const byItem = {};
+  let repeats = 0;
+  for (let i = 1; i < lines.length; i++) {
+    const a = lines[i], b = lines[i - 1];
+    if (a.role !== 'assistant' || b.role !== 'assistant' || overlap(a.text, b.text, session.lang) < 0.6) continue;
+    repeats++;
+    let best = 0, who = null;
+    for (const it of session.items || []) for (const p of it.prompts || []) {
+      const o = overlap(p, a.text, session.lang);
+      if (o > best) { best = o; who = it; }
+    }
+    if (who && best >= 0.6) byItem[who.n] = (byItem[who.n] || 0) + 1;
+  }
+  const last = lines.filter(l => l.role === 'assistant').pop();
+  return { repeats, byItem, ended: !!(last && QUIET_END.test(last.text)) };
+}
+/* what the call's quiet moments add up to, kept on the session and the child */
+function settleQuiet(child, session) {
+  const tx = quietFromTranscript(session, session.transcript);
+  const items = new Set((session.silence_log || []).map(x => x.n));
+  for (const it of session.items || []) {
+    it.silent_tx = tx.byItem[it.n] || 0;
+    if (it.silent_tx || it.silences) items.add(it.n);
+  }
+  session.silence = { live: (session.silence_log || []).length, transcript: tx.repeats, items: [...items].sort((a, b) => a - b),
+                      ended_in_silence: tx.ended || session.ended_by === 'quiet' };
+  child.last_call_session = session.id;
+  if (session.silence.items.length || session.silence.ended_in_silence) {
+    child.quiet = (child.quiet || []).concat({ at: new Date().toISOString(), session: session.id, items: session.silence.items.length,
+                                               ended: session.silence.ended_in_silence }).slice(-30);
+    child.quiet_skills = child.quiet_skills || {};
+    for (const it of session.items || []) if ((it.silences || it.silent_tx) && it.skill) child.quiet_skills[it.skill] = (child.quiet_skills[it.skill] || 0) + 1;
+  }
+  return session.silence;
+}
+
 /* The call is over: settle the record. Idempotent per execution id. */
 function processCallEnd(core, child, session, payload) {
   const status = String(payload.status || '').toLowerCase();
@@ -112,6 +161,7 @@ function processCallEnd(core, child, session, payload) {
     // the phone was answered but no lesson started (child not there,
     // voicemail), or it was never answered. Nothing is recorded either way.
     session.status = session.call.duration_s > 0 && !session.call.answered_by_voice_mail ? 'no_lesson' : 'missed';
+    if (session.status === 'no_lesson') settleQuiet(child, session);
     session.report = missedReport(child, session);
     return { changed: true, status: session.status };
   }
@@ -119,6 +169,7 @@ function processCallEnd(core, child, session, payload) {
 
   const turns = parseTranscript(session.transcript);
   alignToTranscript(session, turns);
+  settleQuiet(child, session);
 
   // relay check: did the words the model passed us match the recognizer?
   let checked = 0, mismatched = 0;
@@ -186,7 +237,7 @@ function processCallEnd(core, child, session, payload) {
                     tokens: first.tokens };
     // only a first reading of a card line counts toward the reading level;
     // a line said after Munni is speaking practice, not reading
-    if (it.kind === 'read' && !session.recorded_read && first.verdict !== 'unsure') {
+    if (it.kind === 'read' && !session.recorded_read && first.verdict !== 'unsure' && !it.eased) {
       const mv = recordOutcome(core, child, session, 'read', first.verdict === 'pass', it);
       it.evidence.level_move = mv || null;
     }
@@ -235,6 +286,10 @@ const R = {
   tipMath:  { en: 'Tip for today: count something together at dinner, like rotis or spoons.', hi: 'आज की सलाह: खाने के समय साथ में कुछ गिनें, जैसे रोटियाँ या चम्मच।' },
   tipRead:  { en: 'Tip for today: find the word "{w}" together on a sign, a box or a newspaper.', hi: 'आज की सलाह: "{w}" शब्द किसी बोर्ड, डिब्बे या अख़बार पर साथ में ढूँढें।' },
   tipGood:  { en: 'Tip for today: ask {name} to teach you one sum from the call.', hi: 'आज की सलाह: {name} से कहें कि कॉल का एक सवाल आपको सिखाए।' },
+  quiet:    { en: "{name} went quiet on {k}. That's okay: a quiet moment often means a question felt hard. Munni will start the next call a little easier.",
+              hi: '{k} पर {name} की ओर से जवाब नहीं आया। कोई बात नहीं: अक्सर इसका मतलब होता है कि सवाल कठिन लगा। अगली कॉल मुन्नी थोड़ी आसान शुरुआत से करेगी।' },
+  quietOne: { en: 'one question', hi: 'एक सवाल' }, quietMany: { en: '{k} questions', hi: '{k} सवालों' },
+  quietEnd: { en: 'The call ended because {name} went quiet. That is fine; nothing is lost.', hi: 'कॉल इसलिए ख़त्म हुई क्योंकि {name} की ओर से जवाब नहीं आ रहा था। कोई बात नहीं, कुछ भी नहीं बिगड़ा।' },
   stopped:  { en: '{name} chose to stop early today, which is completely fine.', hi: '{name} ने आज जल्दी रुकना चुना, यह बिल्कुल ठीक है।' },
   missed:   { en: 'Munni could not reach {name} today.', hi: 'मुन्नी आज {name} से बात नहीं कर पाई।' },
   noLesson: { en: "Munni called, but today's lesson with {name} didn't happen. That's fine.", hi: 'मुन्नी ने फ़ोन किया, पर आज {name} के साथ पाठ नहीं हो पाया। कोई बात नहीं।' },
@@ -273,7 +328,7 @@ function buildReport(core, child, session) {
   const mins = Math.max(1, Math.round((session.call && session.call.duration_s || 0) / 60));
   if (session.call && session.call.duration_s) lines.push(mins === 1 ? t('minute', lang, {}) : t('minutes', lang, { m: mins }));
 
-  const sums = session.items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure');
+  const sums = session.items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent');
   const firstTry = sums.filter(x => x.outcome === 'correct').length;
   if (sums.length) {
     lines.push(t('maths', lang, { n: sums.length, c: firstTry }));
@@ -302,9 +357,12 @@ function buildReport(core, child, session) {
   if (ep.length) lines.push(t('enPhrases', lang, { k: ep.filter(x => x.evidence.verdict === 'pass').length, n: ep.length }));
   if (eMissed.length) lines.push(t('enPractise', lang, { w: eMissed.slice(0, 3).join(', ') }));
 
-  const hw = session.items.find(x => x.kind === 'homework' && x.outcome && x.outcome !== 'unsure');
+  const hw = session.items.find(x => x.kind === 'homework' && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent');
   if (hw) lines.push(t(hw.focus ? 'focusDone' : 'homework', lang, { name }));
   if (session.ended_by === 'stop') lines.push(t('stopped', lang, { name }));
+  const q = session.silence;
+  if (q && q.ended_in_silence) lines.push(t('quietEnd', lang, { name }));
+  else if (q && q.items.length) lines.push(t('quiet', lang, { name, k: q.items.length === 1 ? t('quietOne', lang, {}) : t('quietMany', lang, { k: q.items.length }) }));
 
   if (session.kind === 'english') {
     const w = eMissed[0] || (ew[0] && ew[0].word);
@@ -354,4 +412,4 @@ function missedReport(child, session, info) {
   return { lang, text, lines: [text], short: [parts[0], parts[1] || (lang === 'hi' ? 'धन्यवाद।' : 'Thank you.'), t('footer', lang, {})], missed: true };
 }
 
-module.exports = { processCallEnd, parseTranscript, alignToTranscript, buildReport, missedReport, progressCodeFor, TERMINAL };
+module.exports = { settleQuiet, quietFromTranscript, processCallEnd, parseTranscript, alignToTranscript, buildReport, missedReport, progressCodeFor, TERMINAL };

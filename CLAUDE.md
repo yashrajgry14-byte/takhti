@@ -34,7 +34,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 28 test suites (see Testing)
+npm test           # all 29 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -72,7 +72,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/handlers.js
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v29` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v30` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -131,7 +131,7 @@ src/
     video-player.js         the Picture Hut (VIEWS.theater)
     teacher.js              the teacher view (VIEWS.teacher)
     self-listen.js          hear-your-own-reading
-    talk-munni.js           Talking Munni at the Pond — parent opt-in, voice leaves the phone only during a talk
+    talk-munni.js           Talking Munni at the Pond and on into the games — parent opt-in, voice leaves the phone only during a talk
     handlers.js             event handlers
   app.js                    boot: load(), S.screen='arrival', render()
 api/ask.js                  serverless proxy; keeps the API key off the client
@@ -162,7 +162,7 @@ disappearing between visits:
 | Counting Stones | `math` | free maths practice |
 | The Story Fire | `lessons` | story lessons + homework |
 | The Play Clearing | `games` | the six game shells |
-| Munni's Pond | `ask` | questions for Tier 2 (shows how many wait for signal); Talking Munni, if a parent turned it on |
+| Munni's Pond | `ask` | questions for Tier 2 (shows how many wait for signal); Talking Munni, if a parent turned it on (it carries on into the games) |
 | The Picture Hut | `theater` | cartoon episodes |
 
 Above the map: `topGamifyBar()` (the child's avatar and stars) and
@@ -359,9 +359,18 @@ The one place in the app where a child's voice leaves the phone, so:
   words are kept to check the lesson, everything else stays on the phone.
   The same section can erase the child's voice-server record (`talkForget()`,
   authorised by `S.talkKey`).
-- **Only at Munni's Pond, only with a signal** (`S.online`); otherwise an
-  honest sentence. It never gates anything else. `go()` leaving the Pond
-  and `setOnline(false)` end a live talk (`talkLeave()`).
+- **Starts only at Munni's Pond, only with a signal** (`S.online`);
+  otherwise an honest sentence. It never gates anything else. It **carries
+  on into the games** (`TALK_KEEP`: the Pond, the map between, the Play
+  Clearing and the six shells — `talkFollow()` in `go()`): the lesson waits
+  (`/voice/web/mode` → `play`), and `gameAnswer()`/`gameEnd()` tell the
+  server about a miss (by **item id** — the server says the hint from its
+  own copy of the validated lesson bank, and only if the phone's answer
+  text matches it) or a finished round; at most one line every 6 s. A
+  fixed **"Munni is with you"** bar with an end button is on screen
+  whenever the talk is live away from the Pond (`talkChip()`): a live
+  microphone is never invisible. Any other screen (the Reading Tree needs
+  the mic), a different child, or `setOnline(false)` ends it.
 - The Bolna Web Call SDK is loaded from its CDN only when opted in and the
   Pond is open (`talkPreload()`, `AFTER.ask`) — not part of the offline
   shell. The browser never holds a key: `voice/server.js` mints a one-use
@@ -462,6 +471,20 @@ on-device. Full setup in `voice/README.md`.
   children with `consent.research` (its own consent-call question, notice
   v2), no names or ids, heard forms only from `TAKHTI_CORPUS_MIN_CHILDREN`
   children. `voice/BOLNA-QUESTIONS.md` lists what Bolna must confirm.
+- **When a child goes quiet** — an observation, never a wrong answer. Live:
+  the graph's `hush` node (on `_silence_repeats`) sends `(silence)`
+  (`intentOf()` → `'silence'`); the first time `session.answer()` gives an
+  easier way into the same item (two choices, the first words) and marks it
+  `eased` (no first-try credit), the second time outcome `'silent'` (counted
+  nowhere) and a different item. After the call `report.js`
+  `settleQuiet()` adds what the transcript shows (a line repeated with
+  nothing between, the quiet goodbye) → `session.silence`,
+  `child.quiet`, `child.quiet_skills`. The report says it kindly and
+  promises an easier start, which `planSession()` keeps (an extra unscored
+  warm-up after a quiet call, once). The weekly call and "behind?" mention
+  it; `quietSignal()` flags "check in with the family" after two calls in a
+  week ended quiet (for a person; nothing is sent). Placement counts a
+  quiet step as "not yet seen".
 - **Keypad**: a child can press the answer (`dtmf_number: …`; `*` repeats,
   1/2 = yes/no). Munni offers it after an unheard answer — only on phone
   channels, and only where the provider passes keys (not Exotel/Vobiz).
@@ -487,14 +510,16 @@ on-device. Full setup in `voice/README.md`.
 - **Photos and voice clips never leave the device** — with one exception a
   parent chooses: Talking Munni (below), off for every child until a parent
   turns it on behind the PIN after reading, in both languages, that the
-  child's voice goes to the voice service while they talk. Nothing else
+  child's voice goes to the voice service while they talk (at the Pond, and
+  in a game the talk carries on into, with the "Munni is with you" bar
+  showing). Nothing else
   ever sends a voice. Keep it true, and keep saying so in both languages.
 - **A tutor, not a companion.** Bounded, task-scoped.
 - **Every child-facing string ships in Hindi and English.**
 
 ## Testing
 
-`npm test` runs 28 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 29 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -521,10 +546,11 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `homework-story` | vm | real skill-shaped questions, shuffled answers, the child's own game, stable card ids |
 | `video-generator` | vm | episodes, catalog band limits and theme filter, series, recommendation, evidence + card only for a right answer |
 | `app-flows` | jsdom | **every wired feature through real taps**: onboarding, map, Picture Hut, PIN gate, teacher view, homework end to end, the practice-line button, the on-device status, progress and homework codes, adding a sibling, once-a-day opening, goal celebration |
-| `talk-munni` | jsdom | Talking Munni through real taps with a stand-in voice server and SDK: hidden and SDK-free until a parent opts in, the bilingual disclosure, offline honesty, minting with consent, the line and the clue choices on screen, a tap to the server, leaving/losing signal ends the call, answers replayed into the record once (record, skill history, SRS), erase, and a build with no voice server shows nothing |
+| `talk-munni` | jsdom | Talking Munni through real taps with a stand-in voice server and SDK: hidden and SDK-free until a parent opts in, the bilingual disclosure, offline honesty, minting with consent, the line and the clue choices on screen, a tap to the server, the talk carrying on into the games (bar shown, mode play, a miss sent by item id, the round's score, back to the lesson), the Reading Tree/losing signal ends the call, answers replayed into the record once (record, skill history, SRS), erase, and a build with no voice server shows nothing |
 | `voice` | vm + HTTP | the phone channel: spoken numbers (EN/HI/Hinglish, every Hindi word Munni speaks parses back), every Munni line bilingual and never "wrong", whole calls for every band, clue/reveal/first-try rules, doubt records nothing, "bas" stops, no-card fallback, band floor/ceiling over many calls, transcript re-grading and relay drift, skill tagging, homework code → call → progress code into a real teacher phone, SRS-due lines, keypad answers, the inbound line (unregistered, siblings, daily limit, quiet hours), the sound matcher and English practice, the in-app talk server against a fake Bolna (mint, screen, tap → event injection, results, limits, erase), the HTTP surface and auth, the Bolna graph, and the `genProblem(3)` hang regression |
 | `voice-parent` | vm + HTTP | consent call (Hindi/English): notice content, nothing before it, transcript-settled consent, relay/transcript disagreement → review, no transcript → review, refusal, unclear never a yes, quiet-hour times; weekly call from real lessons, honest "behind?", a parent's changes applied; scheduler: on time, once, one retry, truthful missed message, quiet hours, no consent, already practised, Sunday weekly call; workflow endpoints idempotent; both workflow definitions and the parent agent graph checked; HTTP auth |
 | `voice-school` | vm + HTTP | school keys see only their own records (404 otherwise), calls on the school's own Bolna key, inbound scoped to the school; placement finds the boundary, tops it up to four attempts, reads, sets levels, kind to a child who knows nothing; teacher notes (recognised line, read-back, saved on yes only, evidence + focus, focus in the next call, other classes refused, same-name children asked apart, transcript check); class calls (shared gap, per-child standing, consent, quiet hours, once a day); corpus (research consent only, no names or ids, K-children threshold, letter swaps); the teacher node in the agent graph |
+| `voice-quiet` | vm + HTTP | silence is its own intent; an easier way in, then a different item, never a wrong answer or first-try credit; transcript-detected quiet moments; the kind report line and the kept "easier start" promise (once); ended-in-silence twice → check-in signal; the weekly call's quiet lines; placement quiet steps; games: lesson paused, hint only from the server's bank (mismatch or unknown id → nothing), throttled, silence is play, back to the lesson; the hush/play nodes and the web agent's silence hang-up |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -574,7 +600,10 @@ Honest edges of what's built:
    WhatsApp node is fire-and-forget. Talking Munni's minting
    endpoint is open to any browser (rate-limited per address and per child,
    not authenticated), and the English sound matcher accepts words that
-   differ only in a vowel (sun/son) — the bank avoids such pairs.
+   differ only in a vowel (sun/son) — the bank avoids such pairs. The live
+   silence signal depends on how Bolna's `_silence_repeats` and expression
+   edges behave on a silent turn (unconfirmed — `BOLNA-QUESTIONS.md` 8);
+   the transcript check after the call works either way.
 
 ## Style
 

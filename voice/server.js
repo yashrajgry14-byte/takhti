@@ -116,6 +116,8 @@ function createServer(opts) {
         else if (req.method === 'POST' && p === '/voice/web/tap') { const b = await readBody(req, 4 * 1024); r = await web.tap(b.session, b.token, b.choice); }
         else if (req.method === 'GET' && p === '/voice/web/result') r = web.result(url.searchParams.get('session'), url.searchParams.get('token'));
         else if (req.method === 'POST' && p === '/voice/web/forget') { const b = await readBody(req, 4 * 1024); r = web.forget(b.child_id, b.key); }
+        else if (req.method === 'POST' && p === '/voice/web/mode') { const b = await readBody(req, 4 * 1024); r = await web.mode(b.session, b.token, b.mode); }
+        else if (req.method === 'POST' && p === '/voice/web/game') { const b = await readBody(req, 4 * 1024); r = await web.game(b.session, b.token, b); }
         else r = { status: 404, body: { error: 'not found' } };
         return send(res, r.status, r.body);
       }

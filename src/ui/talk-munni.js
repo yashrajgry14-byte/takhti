@@ -17,7 +17,14 @@
      screen, and after a first miss the two clue choices appear as buttons.
      A tap is graded on the server and Munni answers it at once (the
      server pushes her reply into the live call).
-   - Leaving the Pond, losing signal, or switching child ends the talk.
+   - It stays on into the games (the Play Clearing and the six shells): the
+     lesson waits, and Munni keeps the child company — a missed answer gets
+     the right one, kindly, said from the server's own copy of the
+     validated lesson bank; a finished round gets "well played". A small
+     "Munni is with you" bar stays on screen the whole time, with an end
+     button, so a live microphone is never invisible.
+   - Going anywhere else (reading, writing, the parent dashboard…), losing
+     signal, or switching child ends the talk.
    - Afterwards the talk's attempts are replayed through this child's own
      record() / skill history — once per talk (S.talkApplied), and only
      into the child who talked.
@@ -171,8 +178,46 @@ async function talkTap(choice){
 
 function talkStop(){ if(TALK && TALK.call) TALK.call.stop(); else talkEnded(); }
 
-/* Called by go() when the Pond is left, and by setOnline(false). */
+/* Called by setOnline(false), switching child, and turning it off. */
 function talkLeave(){ if(talkLive()) talkStop(); }
+
+/* go() calls this on every screen change. The talk lives at the Pond and
+   in the games; the map is the path between them. Anywhere else it ends —
+   the Reading Tree needs the microphone for itself. */
+const TALK_KEEP = ['ask', 'map', 'games', 'runner', 'pop', 'tower', 'match', 'sort', 'archer'];
+function talkFollow(screen){
+  if(!talkLive()) return;
+  if(!TALK_KEEP.includes(screen) || TALK.childId !== S.id) return talkStop();   // and never for a sibling
+  if(screen === 'ask') talkMode('lesson');
+  else if(screen !== 'map') talkMode('play');
+}
+function talkMode(m){
+  if(!talkLive() || !TALK.session || TALK.mode === m) return;
+  if(!TALK.mode && m === 'lesson') { TALK.mode = m; return; }   // the talk starts as a lesson
+  TALK.mode = m;
+  fetch(TALK_URL + '/voice/web/mode', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session: TALK.session, token: TALK.token, mode: m }) }).catch(() => {});
+}
+/* game-core.js tells us about a missed answer and a finished round. Only
+   the item's id goes (the server says the hint from its own bank), plus
+   the answer as this phone shows it, so the server can check they match. */
+function talkGame(event, it, score){
+  if(!talkLive() || !TALK.session || TALK.mode !== 'play') return;
+  const body = { session: TALK.session, token: TALK.token, event };
+  if(it){ body.item = it.id; if(it.right) body.right = S.lang === 'hi' ? it.right.hi : it.right.en; }
+  if(score != null) body.score = score;
+  fetch(TALK_URL + '/voice/web/game', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).catch(() => {});
+}
+/* The bar that stays on screen while the talk is live away from the Pond. */
+function talkChip(){
+  let el = document.getElementById('talkchip');
+  const show = talkLive() && S.screen !== 'ask';
+  if(!show){ if(el) el.remove(); return; }
+  const hi = S.lang === 'hi';
+  if(!el){ el = document.createElement('div'); el.id = 'talkchip'; el.className = 'talkchip'; document.body.appendChild(el); }
+  el.innerHTML = `<span class="talkdot"></span>${hi ? 'मुन्नी साथ है' : 'Munni is with you'}
+    <button class="btn ghost" onclick="talkStop()">${hi ? 'बात ख़त्म करो' : 'End the talk'}</button>`;
+}
 
 function talkEnded(){
   if(!TALK) return;
@@ -181,6 +226,7 @@ function talkEnded(){
   TALK.state = 'ended';
   if(was === 'active') log(2, 'Talking Munni · call ended');
   if(TALK.session) talkCollect(TALK.session, TALK.token, TALK.childId, 0);
+  talkChip();
   if(S.screen === 'ask') render();
 }
 
@@ -231,8 +277,8 @@ function talkParentHTML(){
   <div class="metric">
     <div><b>${hi?'मुन्नी से बोलकर बात':'Talk out loud with Munni'}</b>
       <div style="font-size:12.5px;opacity:.75;line-height:1.5">${hi
-        ? `चालू होने पर ${n} मुन्नी के तालाब पर मुन्नी से बोलकर अभ्यास कर सकते हैं। बात करते समय बच्चे की आवाज़ इंटरनेट से तख़्ती की आवाज़-सेवा (Bolna) तक जाती है, फ़ोन कॉल की तरह, और पाठ जाँचने के लिए बातचीत के शब्द रखे जाते हैं। तख़्ती का बाकी सब इसी फ़ोन पर रहता है। शुरू में बंद; कभी भी बंद कर सकते हैं।`
-        : `When on, ${n} can practise out loud with Munni at Munni's Pond. While they talk, their voice goes over the internet to Takhti's voice service (Bolna), like a phone call, and the words of the talk are kept to check the lesson. Everything else in Takhti stays on this phone. Off to begin with; turn it off any time.`}</div>
+        ? `चालू होने पर ${n} मुन्नी के तालाब पर मुन्नी से बोलकर अभ्यास कर सकते हैं, और बात चलते-चलते खेल भी खेल सकते हैं (मुन्नी साथ रहती है)। बात करते समय बच्चे की आवाज़ इंटरनेट से तख़्ती की आवाज़-सेवा (Bolna) तक जाती है, फ़ोन कॉल की तरह, और पाठ जाँचने के लिए बातचीत के शब्द रखे जाते हैं। तख़्ती का बाकी सब इसी फ़ोन पर रहता है। शुरू में बंद; कभी भी बंद कर सकते हैं।`
+        : `When on, ${n} can practise out loud with Munni at Munni's Pond, and carry the talk into a game (Munni stays with them). While they talk, their voice goes over the internet to Takhti's voice service (Bolna), like a phone call, and the words of the talk are kept to check the lesson. Everything else in Takhti stays on this phone. Off to begin with; turn it off any time.`}</div>
     </div>
     <button class="toggle ${S.talkMunni?'on':''}" onclick="toggleTalkMunni()" aria-label="${S.talkMunni?'turn off Talking Munni':'turn on Talking Munni'}"><span></span></button>
   </div>

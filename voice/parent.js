@@ -208,6 +208,11 @@ const L = {
   weekEng:  { en: (g, k) => ` In English, ${g} of ${k} words came straight away.`, hi: (g, k) => ` अंग्रेज़ी में ${k} में से ${g} शब्द तुरंत आ गए।` },
   weekUp:   { en: (n, mod) => ` Munni moved ${n} up a step in ${mod}.`, hi: (n, mod) => ` मुन्नी ने ${mod} में ${n} को एक कदम आगे बढ़ाया।` },
   and:      { en: () => ' and ', hi: () => ' और ' },
+  weekQuiet: { en: (n, k) => ` ${n} went quiet on ${k} questions this week, which often means they felt hard.`,
+               hi: (n, k) => ` इस हफ़्ते ${k} सवालों पर ${n} की ओर से जवाब नहीं आया; अक्सर इसका मतलब होता है कि सवाल कठिन लगे।` },
+  weekEased: { en: () => ' So Munni started the next calls more gently.', hi: () => ' इसलिए मुन्नी ने अगली कॉल्स आसान शुरुआत से कीं।' },
+  quietMost: { en: (n, sk) => ` ${n} went quiet most often on "${sk}". That is worth a gentle look together.`,
+               hi: (n, sk) => ` सबसे ज़्यादा बार "${sk}" पर ${n} की ओर से जवाब नहीं आया। इस पर साथ में प्यार से ध्यान दें।` },
   weekHw:   { en: n => ` ${n} also worked on the teacher's homework.`, hi: n => ` ${n} ने टीचर का होमवर्क भी किया।` },
   tooEarly: {
     en: n => `It's too early to say: Munni has only heard ${n} a few times so far. After two or three weeks of lessons I can tell you more.`,
@@ -279,7 +284,7 @@ function weekFacts(child, sessions, now) {
   const done = wk.filter(s => s.status === 'done');
   const tried = wk.filter(s => s.status === 'missed' || s.status === 'no_lesson').length;
   const items = done.flatMap(s => s.items || []);
-  const sums = items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure');
+  const sums = items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent');
   const reads = items.filter(x => x.kind === 'read' && x.evidence && x.evidence.verdict !== 'unsure');
   const eng = items.filter(x => (x.kind === 'eword' || x.kind === 'esay') && x.evidence && x.evidence.verdict !== 'unsure');
   const words = [];
@@ -291,18 +296,20 @@ function weekFacts(child, sessions, now) {
   for (const s of done) for (const m of ['read', 'math']) {
     if (s.levels_before && s.levels_after && s.levels_after[m] > s.levels_before[m]) up[m] = true;
   }
+  const quiet = wk.reduce((a, x) => a + ((x.silence && x.silence.items.length) || 0), 0);
   return {
+    quiet, eased: wk.some(x => x.ease),
     calls: done.length, tried,
     minutes: Math.max(done.length ? 1 : 0, Math.round(done.reduce((a, s) => a + ((s.call && s.call.duration_s) || 0), 0) / 60)),
     sums: sums.length, sumsFirst: sums.filter(x => x.outcome === 'correct').length,
     reads: reads.length, readsGood: reads.filter(x => x.evidence.verdict === 'pass').length,
     eng: eng.length, engGood: eng.filter(x => x.evidence.first_verdict === 'pass').length,
     words: words.slice(0, 3), engMissed: engMissed.slice(0, 3), up,
-    homework: items.some(x => x.kind === 'homework' && x.outcome && x.outcome !== 'unsure'),
+    homework: items.some(x => x.kind === 'homework' && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent'),
     // how much first-try evidence the last month holds: below this, "is
     // she behind?" gets "too early to say", not a guess
     evidence: recent(sessions, 30, now).filter(s => s.status === 'done').flatMap(s => s.items || [])
-      .filter(x => (x.outcome && x.outcome !== 'unsure') || (x.evidence && x.evidence.verdict !== 'unsure')).length
+      .filter(x => (x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent') || (x.evidence && x.evidence.verdict !== 'unsure')).length
   };
 }
 function weekSummary(child, f, lang) {
@@ -315,6 +322,7 @@ function weekSummary(child, f, lang) {
   const up = ['read', 'math'].filter(m => f.up[m]).map(m => MOD[m][lang === 'hi' ? 'hi' : 'en']);
   if (up.length) s += say('weekUp', lang, n, up.join(say('and', lang)));
   if (f.homework) s += say('weekHw', lang, n);
+  if (f.quiet >= 2) s += say('weekQuiet', lang, n, f.quiet) + (f.eased ? say('weekEased', lang) : '');
   return s;
 }
 
@@ -522,7 +530,7 @@ function answerQuestion(s, intent, said, ctx, lead, more, how) {
       if ((f.evidence || 0) < 6) return out(say('tooEarly', lang, n));
       const only = ['read', 'math'].filter(m => ANY(said, R[m === 'read' ? 'reading' : 'maths']));
       const rows = standing(ctx.core, child, lang).filter(r => !only.length || only.includes(r.m));
-      return out(say('behindIntro', lang, n) + rows.map(r => say(r.rel, lang, n, MOD[r.m][L2], r.comp)).join(''));
+      return out(say('behindIntro', lang, n) + rows.map(r => say(r.rel, lang, n, MOD[r.m][L2], r.comp)).join('') + quietMostLine(ctx, child, lang));
     }
     case 'practise': {
       let t = say('homeIntro', lang);
@@ -543,7 +551,7 @@ function answerQuestion(s, intent, said, ctx, lead, more, how) {
       const st = standing(ctx.core, child, lang).find(r => r.m === 'math');
       let t = f.sums ? say('weekMath', lang, f.sumsFirst, f.sums).trim() : say('noMath', lang, n);
       if (st && st.comp) t += say('nowPractising', lang, st.comp);
-      return out(t);
+      return out(t + quietMostLine(ctx, child, lang));
     }
     case 'english': {
       if (!child.english_practice) { s.pending = 'english_on'; return ask(s, 'talk', lead + say('engOff', lang, n)); }
@@ -562,6 +570,14 @@ function answerQuestion(s, intent, said, ctx, lead, more, how) {
       if (s.unknowns >= 3) return finish(s, 'ended', lead + say('bye', lang));
       return ask(s, 'talk', lead + say('onlyLessons', lang, n) + say('menu', lang, n));
   }
+}
+
+/* where the child went quiet most (two or more times): worth knowing */
+function quietMostLine(ctx, child, lang) {
+  const top = Object.entries(child.quiet_skills || {}).filter(([, k]) => k >= 2).sort((a, b) => b[1] - a[1])[0];
+  if (!top) return '';
+  const sk = ctx.core.T.skillById(top[0]);
+  return sk ? say('quietMost', lang, child.name, lang === 'hi' ? sk.hi : sk.en.toLowerCase()) : '';
 }
 
 function setTime(s, t, days, ctx, more, lead) {

@@ -135,7 +135,7 @@ function dashboardPage(brain, key, scope) {
   const rows = sessions.map(s => {
     const k = byId[s.child_id];
     return `<tr><td>${esc(k ? k.name : '?')}<br><span class="sub">${esc(s.created_at.slice(0, 16).replace('T', ' '))}</span></td>
-      <td>${esc(s.status)}${s.flags && s.flags.safeguarding ? '<br><span class="flag">review</span>' : ''}</td>
+      <td>${esc(s.status)}${s.flags && s.flags.safeguarding ? '<br><span class="flag">review</span>' : ''}${s.silence && (s.silence.items.length || s.silence.ended_in_silence) ? `<br><span class="sub">quiet on ${s.silence.items.length}${s.silence.ended_in_silence ? ' · ended quiet' : ''}</span>` : ''}${s.ease ? '<br><span class="sub">eased start</span>' : ''}</td>
       <td>${chips(s)}</td>
       <td>${s.relay ? `${s.relay.mismatched}/${s.relay.checked}` : '–'}</td>
       <td><a href="/voice/admin/sessions/${esc(s.id)}?${q}">open</a></td></tr>`;
@@ -168,8 +168,13 @@ function dashboardPage(brain, key, scope) {
       <form method="post" action="/voice/admin/children/${esc(k.id)}/weekly-call?${q}"><button ${btn} style="margin:4px 0 0;padding:6px 10px;background:#6E6355">Weekly call now</button></form>
       ${k.requested_time ? `<span class="sub">parent asked for ${esc(k.requested_time)}</span>` : ''}`;
   };
+  const quietCell = k => {
+    const q = brain.quietSignal ? brain.quietSignal(k) : null;
+    if (!q || !q.week_calls) return '';
+    return `<br><span class="sub">went quiet on ${q.week_items} in 7 days${q.skills.length ? ' (most: ' + esc(q.skills.map(x => x.skill).join(', ')) + ')' : ''}</span>${q.check_in ? '<br><span class="flag">ended quiet twice this week: check in with the family</span>' : ''}`;
+  };
   const kidRows = kids.map(k => `<tr><td>${esc(k.name)}</td><td>${k.age} · ${esc(k.lang)}${k.parent_lang && k.parent_lang !== k.lang ? ` · parent ${esc(k.parent_lang)}` : ''}</td>
-    <td>${consentCell(k)}</td><td>${scheduleCell(k)}</td>
+    <td>${consentCell(k)}${quietCell(k)}</td><td>${scheduleCell(k)}</td>
     <td>${esc(JSON.stringify(k.profile.levels))}</td><td>${k.profile.classCode ? esc(k.profile.classCode) : '–'}</td>
     <td><form method="post" action="/voice/admin/children/${esc(k.id)}/english?${q}"><input type="hidden" name="on" value="${k.english_practice ? 'no' : 'yes'}"><button class="btn" style="margin:0;padding:6px 10px;${k.english_practice ? '' : 'background:#6E6355'}">${k.english_practice ? 'On' : 'Off'}</button></form></td>
     <td><form method="post" action="/voice/admin/children/${esc(k.id)}/homework?${q}"><input name="code" placeholder="TKH1.… homework code" size="22"><button class="btn" style="margin:0;padding:6px 10px">Import</button></form></td></tr>`).join('');
@@ -247,7 +252,7 @@ function sessionAdminPage(s, child, key) {
   const items = s.items.map(it => `<tr><td>${it.n}</td><td>${esc(it.kind)}</td>
     <td>${esc(it.problem || it.target || it.prompt || '')}</td><td>${esc(it.answer != null ? String(it.answer) : '')}</td>
     <td>${esc((it.said || []).join(' | '))}</td><td>${esc((it.heard_tx || []).map(x => x == null ? '·' : x).join(' | '))}</td>
-    <td><span class="chip ${OUT[it.outcome] || 'no'}">${esc(it.outcome || 'open')}</span>${it.evidence ? `<br>${esc(it.evidence.source)}: ${esc(it.evidence.verdict)} ${it.evidence.score}` : ''}</td></tr>`).join('');
+    <td><span class="chip ${OUT[it.outcome] || 'no'}">${esc(it.outcome || 'open')}</span>${it.silences || it.silent_tx ? `<br><span class="sub">quiet: ${it.silences || 0} live, ${it.silent_tx || 0} in transcript</span>` : ''}${it.evidence ? `<br>${esc(it.evidence.source)}: ${esc(it.evidence.verdict)} ${it.evidence.score}` : ''}</td></tr>`).join('');
   const trace = s.trace.concat(...s.items.map(i => i.trace || [])).map(t => 'T0 · ' + t).join('\n');
   return shell('Session ' + s.id, 'en', `<p><a href="/voice/admin?${q}">← dashboard</a></p>
   <h1>${esc(child.name)} · ${esc(s.band)} · ${esc(s.lang)}</h1>

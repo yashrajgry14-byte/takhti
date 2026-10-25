@@ -13,6 +13,7 @@ const { createStore } = require('./store');
 const S = require('./session');
 const { processCallEnd, progressCodeFor, missedReport } = require('./report');
 const { soundsLike } = require('./sounds');
+const { intentOf } = require('./understand');
 const PC = require('./parent');
 const NT = require('./notes');
 const PLC = require('./placement');
@@ -228,9 +229,26 @@ function createBrain(opts) {
     save(x.s, x.child);
     return r;
   }
+  /* While a Talking Munni child is playing a game the lesson waits: what
+     they say gets one short line (or ends the talk on "bas"), silence is
+     simply play, and nothing is graded. web.js says the game's hints. */
+  const PLAYTALK = { en: "I'm watching! Tap your answer, and I'll help if one is tricky.", hi: 'मैं देख रही हूँ! अपना जवाब दबाओ, कोई मुश्किल लगे तो मैं मदद करूँगी।' };
+  function playReply(x, said) {
+    const intent = intentOf(said);
+    if (intent === 'stop') return S.finish(x.s, '', 'stop');
+    if (intent === 'silence') return { say: '', expect: 'none', done: false, item: null };
+    return { say: PLAYTALK[x.s.lang === 'hi' ? 'hi' : 'en'], expect: 'none', done: false, item: null };
+  }
   function toolAnswer(sessionId, said) {
     const x = load(sessionId);
     if (!x) return { say: SORRY, expect: 'none', done: true, error: 'unknown session' };
+    if (x.s.mode === 'play') {
+      log(x.s, 'user', said);
+      const r = playReply(x, said);
+      if (r.say) log(x.s, 'assistant', r.say);
+      save(x.s, x.child);
+      return r;
+    }
     log(x.s, 'user', said);
     const r = x.s.kind === 'placement' ? PLC.answer(core, x.child, x.s, said) : S.answer(core, x.child, x.s, storyBank, said);
     log(x.s, 'assistant', r.say);
@@ -519,6 +537,19 @@ function createBrain(opts) {
     return { ok: true, session_id: s.id, type: 'teacher', notes: s.notes.length };
   }
 
+  /* ---------- quiet moments, for the team and the teacher ----------
+     A child going quiet is an observation, never a mistake. The week's
+     count, the skills it happened on most, and one signal for a person:
+     two or more calls in a week that ended because the child went quiet
+     → "check in with the family". Nothing is sent to anyone automatically. */
+  function quietSignal(child, now) {
+    const since = (now || Date.now()) - 7 * 864e5;
+    const wk = (child.quiet || []).filter(q => Date.parse(q.at) >= since);
+    const skills = Object.entries(child.quiet_skills || {}).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([id, k]) => ({ skill: id, times: k }));
+    const ended = wk.filter(q => q.ended).length;
+    return { week_items: wk.reduce((a, q) => a + q.items, 0), week_calls: wk.length, ended_calls: ended, check_in: ended >= 2, skills };
+  }
+
   /* ---------- class-wide parent calls ----------
      A teacher picks a class (and a skill, or lets Takhti find the gap the
      class shares) and every parent who agreed to calls hears the same
@@ -549,7 +580,8 @@ function createBrain(opts) {
   function classSummary(code, schoolId, superScope) {
     const kids = classRoster(code, schoolId, superScope);
     return { code: String(code).toUpperCase(), gaps: sharedGaps(kids),
-             children: kids.map(c => ({ id: c.id, name: c.name, consent: (c.consent && c.consent.status) || 'none', phone: !!c.parent_phone })) };
+             children: kids.map(c => ({ id: c.id, name: c.name, consent: (c.consent && c.consent.status) || 'none', phone: !!c.parent_phone,
+                                        quiet: quietSignal(c) })) };
   }
   async function classParentCalls(code, o, env, scope) {
     env = env || process.env;
@@ -752,7 +784,7 @@ function createBrain(opts) {
     importHomeworkCode, progressCode, inboundLookup, nextKind, setEnglishPractice,
     createParentSession, toolParent, placeParentCall, requestConsentCall, confirmConsent, setSchedule,
     runWorkflow, childSessions,
-    toolNote, saveTeacherNote, classParentCalls, classSummary, sharedGaps,
+    toolNote, saveTeacherNote, classParentCalls, classSummary, sharedGaps, quietSignal,
     getTeacherCall: id => store.get('teachercalls', id), listTeacherCalls: () => store.list('teachercalls'),
     createSchool, updateSchool, schoolByKey, publicSchool, envFor, registerTeacher, classChildren,
     getSchool: id => store.get('schools', id), listSchools: () => store.list('schools'),

@@ -23,8 +23,8 @@ function go(s){
   if(s!=='match')  matchStop();
   if(s!=='sort')   sortStop();
   if(s!=='archer') archerStop();
-  if(s!=='ask') talkLeave();   // a Talking Munni call never outlives Munni's Pond
-  S.screen=s; S.ctx={}; render();
+  talkFollow(s);   // a Talking Munni call lives at the Pond and in the games, nowhere else
+  S.screen=s; S.ctx={}; render(); talkChip();
 }
 
 /* ---------- profile switcher: one phone, up to MAX_PROFILES siblings.

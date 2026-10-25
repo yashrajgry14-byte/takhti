@@ -38,10 +38,19 @@ says where in the code it matters.
    (boolean) and `caller_kind` (string), declared in `variable_types` and set
    in `user_data` or by the inbound lookup. Do expression edges see those
    values on the first turn?
-8. **Silence.** `repeat_after_silence_seconds` repeats the last line, and
-   `_silence_repeats` lets us end the call. Could a silence also reach our tool
-   (for example as an empty utterance), so Munni can ask an easier version
-   instead of the same line?
+8. **Silence (built; please confirm the semantics).** When a child goes
+   quiet, we want the tutor to know, because it's part of what we observe
+   about the child. The lesson node has an expression edge on
+   `_silence_repeats >= 1` to a `hush` node, which calls `takhti_answer` with
+   `child_said = "(silence)"` and then goes straight back to the lesson. The
+   server answers with an easier way into the same question, and a different
+   question the second time. Questions: does `_silence_repeats` count up
+   after each of Munni's automatic repeats, and reset when the child speaks?
+   Is an expression edge checked on a silence (no user turn), or only after
+   the child speaks? If neither, is there a silence event we can route on?
+   We also count quiet moments from the transcript after the call (a line
+   repeated with nothing in between): is a repeat-after-silence written into
+   the transcript that way? (`voice/report.js` `quietFromTranscript()`)
 9. **Static `end_call` nodes.** Our goodbye nodes are `node_type: 'static'`
    with `function_call: 'end_call'`, and `hangup_after_LLMCall: false`. Is that
    the right way to have a fixed safety line ("tell a grown-up… 1098 / 112")
@@ -137,3 +146,16 @@ says where in the code it matters.
 30. **Per-minute price** for India telephony (outbound, inbound, web calls)
     with a Hindi transcriber and voice, so we can show cost per child per
     month. Are there credits for the buildathon beyond the $5?
+
+## Games on a web call
+
+31. **Long silent stretches on a web call.** While a child plays a game in
+    the app, the talk stays live but nobody speaks for minutes. We build a
+    separate web agent (`build-agent.js web`) with `hangup_after_silence: 600`
+    and `call_terminate: 1200`, and its `play` node has no
+    `repeat_after_silence_seconds`. Are those allowed values? Can silence
+    hang-up be turned off per node instead of per agent?
+32. **Events from any node.** We inject `play_mode`, `game_say` and
+    `lesson_mode` (and `screen_answer`) with `properties.screen_say`. Does an
+    `event` edge fire from whichever node the call is on? Does the
+    `play_say` node speak `{{screen_say}}` from the latest event's properties?

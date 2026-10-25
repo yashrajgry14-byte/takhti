@@ -39,6 +39,13 @@ const MAX_TURNS = 40;                  // hard stop however the call goes
 /* ---------------- every line Munni can say, both languages ---------------- */
 const L = {
   start:      { en: "Let's begin!", hi: 'चलो शुरू करें!' },
+  // when the child goes quiet: an easier way in, never a scolding
+  quietClue:  { en: 'Take your time. Is it {x} or {y}?', hi: 'आराम से सोचो। {x} या {y}?' },
+  quietYN:    { en: 'Take your time. Just say yes or no.', hi: 'आराम से सोचो। बस हाँ या नहीं बोलो।' },
+  quietRead:  { en: 'Take your time. Start with: {start}', hi: 'आराम से। ऐसे शुरू करो: {start}' },
+  quietRepeat:{ en: 'Take your time. Say it with me: {line}', hi: 'आराम से। मेरे साथ बोलो: {line}' },
+  quietAgain: { en: 'Take your time. Here it is again: {prompt}', hi: 'आराम से सोचो। फिर से सुनो: {prompt}' },
+  quietMoveOn:{ en: "That's okay! Let's try a different one.", hi: 'कोई बात नहीं! चलो, कोई दूसरा करते हैं।' },
   warmCount:  { en: 'Count with me: {seq}. What comes next?', hi: 'मेरे साथ गिनो: {seq}। आगे क्या आता है?' },
   warmSkip:   { en: 'Count in {s}s with me: {seq}. What comes next?', hi: '{s}-{s} करके गिनो: {seq}। आगे क्या आता है?' },
   plus:       { en: 'What is {a} plus {b}?', hi: '{a} और {b} कितने होते हैं?' },
@@ -210,6 +217,11 @@ function planSession(core, child, opts) {
                homework: null, levels: { ...T.S.levels } };
     }
     const slots = bandPlan(b.id);
+    // the last call went quiet: start this one with an extra easy warm-up
+    // (unscored), as the parent report promised
+    const q = (child.quiet || [])[(child.quiet || []).length - 1];
+    const ease = !!(q && q.session === child.last_call_session && (q.items >= 2 || q.ended) && Date.now() - Date.parse(q.at) < 14 * 864e5);
+    if (ease) slots.unshift('warm');
 
     // teacher homework this child hasn't worked through yet takes the
     // story slot — if it can be asked out loud at all
@@ -248,7 +260,7 @@ function planSession(core, child, opts) {
       while (lines.length < nRead && hit.length) { const l = hit.splice(Math.floor(r() * hit.length), 1)[0]; lines.push(l); pool = pool.filter(x => x !== l); }
     }
     while (lines.length < nRead && pool.length) lines.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
-    return { band: b.id, slots, lines, english: null, homework, focus, levels: { ...T.S.levels } };
+    return { band: b.id, slots, lines, english: null, homework, focus, ease, levels: { ...T.S.levels } };
   });
   return {
     id, child_id: child.id, lang, seed, kind,
@@ -259,6 +271,7 @@ function planSession(core, child, opts) {
     // telephony provider passes keys through (not Exotel / Vobiz)
     keypad: (opts.channel || 'call') !== 'app' && opts.keypad !== false,
     band: out.band, slots: out.slots, lines: out.lines, homework_skill: out.homework, focus_source: out.focus || null,
+    ease: out.ease ? 'after a quiet call' : null,
     levels_before: out.levels,
     status: 'planned', created_at: new Date().toISOString(),
     started_at: null, ended_at: null,
@@ -392,12 +405,12 @@ function finish(s, lead, why) {
   if (why === 'stop') line = L.stop[lang];
   else if (why === 'over') line = L.over[lang];
   else if (s.kind === 'english') {
-    const w = s.items.filter(x => (x.kind === 'eword' || x.kind === 'esay') && x.outcome && x.outcome !== 'unsure').length;
-    const p = s.items.filter(x => x.kind === 'ephrase' && x.outcome && x.outcome !== 'unsure').length;
+    const w = s.items.filter(x => (x.kind === 'eword' || x.kind === 'esay') && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent').length;
+    const p = s.items.filter(x => x.kind === 'ephrase' && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent').length;
     line = w + p ? E.fill(E.EL.finish, lang, { w: nw(w, lang), p: nw(p, lang) }) : L.finishBare[lang];
   } else {
-    const m = s.items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure').length;
-    const rd = s.items.filter(x => (x.kind === 'read' || x.kind === 'repeat') && x.outcome && x.outcome !== 'unsure').length;
+    const m = s.items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent').length;
+    const rd = s.items.filter(x => (x.kind === 'read' || x.kind === 'repeat') && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent').length;
     if (!m && !rd) line = L.finishBare[lang];
     else {
       let what;
@@ -440,6 +453,29 @@ function answer(core, child, s, storyBank, said) {
   if (!it) return next(core, child, s, storyBank);
   const lang = s.lang;
   const intent = intentOf(said);
+
+  /* ---- the child went quiet ----
+     Not a wrong answer and not a doubt: something to notice. The first
+     time, an easier way into the same question (two choices instead of
+     recall, the first words of the line); the second time, a different
+     question. Every quiet moment is kept (s.silence_log) — for the
+     report, the teacher, and an easier start next time. */
+  if (intent === 'silence') {
+    it.silences = (it.silences || 0) + 1;
+    s.silence_log = (s.silence_log || []).concat({ n: it.n, kind: it.kind, skill: it.skill || null, at: Date.now(), source: 'live' });
+    const out = say => { it.prompts.push(say); return reply(s, say, it); };
+    if (it.silences >= 2) { it.outcome = 'silent'; return advance(core, child, s, storyBank, L.quietMoveOn[lang]); }
+    it.eased = true;               // an easier way in: a right answer now is not a first-try answer
+    if (it.expect === 'number' && it.distractor != null) {
+      const pair = rngFor(s, it)() < 0.5 ? [it.answer, it.distractor] : [it.distractor, it.answer];
+      it.choices = pair;
+      return out(fill(L.quietClue, lang, { x: nw(pair[0], lang), y: nw(pair[1], lang) }));
+    }
+    if (it.expect === 'yesno') return out(L.quietYN[lang]);
+    if (it.kind === 'read' && it.target) return out(fill(L.quietRead, lang, { start: it.target.split(/\s+/).slice(0, 2).join(' ') }));
+    if (it.kind === 'repeat' && it.target) return out(fill(L.quietRepeat, lang, { line: it.target }));
+    return out(fill(L.quietAgain, lang, { prompt: it.prompts[0] }));
+  }
   it.said.push(said);
 
   const ask = (say) => { it.prompts.push(say); return reply(s, say, it); };
@@ -469,7 +505,7 @@ function answer(core, child, s, storyBank, said) {
     it.attempts++;
     const right = got === it.answer;
     if (right) {
-      const first = it.attempts === 1;
+      const first = it.attempts === 1 && !it.eased;
       let lead = pick(L.praise, rngFor(s, it))[lang];
       if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework') {
         const mv = recordOutcome(core, child, s, 'math', first, it);
@@ -669,7 +705,7 @@ function homeworkStatus(core, child, sessions) {
     return { assigned: true, skill: hw.storySkill || null, assignedAt: hw.assignedAt, spoken: !!(sp && SPOKEN_OPS[sp.op]) };
   });
   if (out.assigned) out.asked = (sessions || []).some(s => s && s.homework_skill && Date.parse(s.created_at) >= (out.assignedAt || 0) &&
-    (s.items || []).some(x => x.kind === 'homework' && x.outcome && x.outcome !== 'unsure'));
+    (s.items || []).some(x => x.kind === 'homework' && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent'));
   return out;
 }
 

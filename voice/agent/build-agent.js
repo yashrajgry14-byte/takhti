@@ -25,6 +25,10 @@ const base = (process.env.TAKHTI_PUBLIC_URL || 'https://YOUR-TUNNEL.example').re
 const TOOL = process.env.TAKHTI_TOOL_TOKEN || 'REPLACE_WITH_TAKHTI_TOOL_TOKEN';
 const HOOK = process.env.TAKHTI_WEBHOOK_KEY || 'REPLACE_WITH_TAKHTI_WEBHOOK_KEY';
 const MODEL = process.env.TAKHTI_AGENT_MODEL || 'gpt-4.1-mini';
+// `node build-agent.js web` → the Talking Munni agent (BOLNA_WEB_AGENT_ID):
+// a child may play a game in silence for minutes, so the call must not hang
+// up on silence the way a phone lesson does
+const WEB = process.argv.includes('web') || process.env.TAKHTI_AGENT_FOR === 'web';
 
 /* a static line: one string for a single-language agent, a per-language
    map for a multilingual one (Bolna plays the clip for the live language) */
@@ -39,7 +43,8 @@ How you work:
 4. Never ask for personal information (address, school, phone numbers, family details). Never ask a child to keep a secret. Never talk about anything except today's lesson. If the child talks about something else, say one short warm sentence and continue with the lesson.
 5. If anyone wants to stop, pass their words to takhti_answer; it ends the lesson kindly.
 6. The lesson language is {{lesson_language}}. Hindi lines are written in Devanagari: read them naturally.
-7. If you receive "dtmf_number: ..." the child pressed keys on the phone. Pass that text unchanged as child_said.`;
+7. If you receive "dtmf_number: ..." the child pressed keys on the phone. Pass that text unchanged as child_said.
+8. If the child says nothing at all after you have repeated the question, call takhti_answer with child_said = "(silence)". Never treat silence as an answer.`;
 
 const nodes = [
   {
@@ -73,10 +78,16 @@ const nodes = [
       // Talking Munni in the app: the child tapped an answer on screen and
       // the server pushed Munni's reply in (event injection)
       { to_node_id: 'screen', condition_type: 'event', event_name: 'screen_answer' },
+      // ...or left the Pond to play a game: the lesson waits
+      { to_node_id: 'play_say', condition_type: 'event', event_name: 'play_mode' },
       { to_node_id: 'quiet_end', condition_type: 'expression', priority: 0,
         expression: { conditions: [{ variable: '_silence_repeats', operator: 'gte', value: 3 }] } },
       { to_node_id: 'end_now', condition_type: 'expression', priority: 1,
         expression: { conditions: [{ variable: '_total_turns', operator: 'gte', value: 60 }] } },
+      // the child went quiet (after Munni's own repeat): tell the tutor, so
+      // the next line is an easier way in — and the quiet moment is kept
+      { to_node_id: 'hush', condition_type: 'expression', priority: 2,
+        expression: { conditions: [{ variable: '_silence_repeats', operator: 'gte', value: 1 }] } },
       { to_node_id: 'safe', priority: 10,
         condition: 'The child says someone is hurting them, that they are scared of someone, that they are in danger, or that they want to hurt themselves.' },
       { to_node_id: 'end_now',
@@ -84,6 +95,30 @@ const nodes = [
       { to_node_id: 'adult',
         condition: 'An adult (not the child) is now speaking and asks a question about Takhti, the call, or the child\'s progress.' }
     ]
+  },
+  {
+    // Talking Munni while the child plays a game on screen. Silence here is
+    // just play: no repeats, no "are you there?", no quiet hang-up.
+    id: 'play',
+    prompt: 'The child is playing a game on the screen. Stay quiet. Only if the child speaks, call @takhti_answer with their exact words and speak its "say" exactly (if "say" is empty, say nothing).',
+    edges: [
+      { to_node_id: 'play_say', condition_type: 'event', event_name: 'game_say' },
+      { to_node_id: 'screen', condition_type: 'event', event_name: 'lesson_mode' },
+      { to_node_id: 'safe', priority: 10,
+        condition: 'The child says someone is hurting them, that they are scared of someone, that they are in danger, or that they want to hurt themselves.' },
+      { to_node_id: 'end_now', condition: 'Munni has already spoken a goodbye from a tool result with done = true, and the child says anything.' }
+    ]
+  },
+  {
+    id: 'play_say',
+    prompt: 'Say exactly this, word for word, and nothing else: {{screen_say}}',
+    edges: [{ to_node_id: 'play', condition_type: 'unconditional' }]
+  },
+  {
+    id: 'hush',
+    function_call: 'takhti_answer',
+    prompt: 'The child has gone quiet. Call @takhti_answer with child_said = "(silence)" and speak its "say" exactly, gently. Do not add anything.',
+    edges: [{ to_node_id: 'lesson', condition_type: 'unconditional' }]
   },
   {
     id: 'teacher',
@@ -202,7 +237,7 @@ const toolParam = (pathname, param, node) => ({
 
 const agent = {
   agent_config: {
-    agent_name: 'Munni · Takhti',
+    agent_name: WEB ? 'Munni · Takhti app' : 'Munni · Takhti',
     // the greeting is written by the server in the lesson's language and
     // passed in user_data, so one agent serves Hindi and English families
     agent_welcome_message: '{{greeting}}',
@@ -228,7 +263,7 @@ const agent = {
           tools,
           tools_params: {
             takhti_next: toolParam('/voice/tools/next', { session_id: '%(session_id)s', caller_name: '%(caller_name)s' }),
-            takhti_answer: toolParam('/voice/tools/answer', { session_id: '%(session_id)s', child_said: '%(child_said)s' }),
+            takhti_answer: Object.assign(toolParam('/voice/tools/answer', { session_id: '%(session_id)s', child_said: '%(child_said)s' }), { nodes: ['lesson', 'hush', 'play'] }),
             takhti_note: toolParam('/voice/tools/note', { session_id: '%(session_id)s', teacher_said: '%(teacher_said)s' }, 'teacher')
           }
         }
@@ -236,8 +271,8 @@ const agent = {
       task_config: {
         hangup_after_LLMCall: false,       // required for end_call nodes
         dtmf_enabled: true,                // keypad answers (Plivo / Twilio / SIP trunk only)
-        call_terminate: 540,               // 9 minutes, hard stop
-        hangup_after_silence: 25,
+        call_terminate: WEB ? 1200 : 540,  // hard stop: 9 minutes on the phone, 20 with games on screen
+        hangup_after_silence: WEB ? 600 : 25,
         optimize_latency: true
       }
     }]

@@ -318,7 +318,9 @@ function dev(alts) {
 }
 function intentOf(utterance) {
   const u = String(utterance || '').trim();
-  if (!u) return 'silence';
+  // nothing said — or the graph's own marker when the child went quiet
+  // (agent/build-agent.js, the "hush" node)
+  if (!u || /^[\[(]\s*(silence|silent|quiet|no reply|no response)\s*[\])]$/i.test(u)) return 'silence';
   const keys = keypadOf(u);
   if (keys !== null) return keys === '' || keys === '*' ? 'repeat' : 'answer';   // * = hear it again
   // a reply that carries a number is an answer, even if it also says "again"

@@ -11,7 +11,9 @@
      · a talk mints through the voice server with consent, shows the
        line or the sum on screen, turns a first miss into tap choices,
        and a tap goes to the server
-     · leaving the Pond or losing signal ends the call
+     · the talk carries on into the games: the lesson pauses, a missed
+       answer asks Munni for a hint by item id, a visible bar stays up;
+       anywhere else (the Reading Tree) or losing signal ends it
      · afterwards the talk's answers enter THIS child's record once
      · a parent can erase the voice-side record
      · a build with no voice server shows none of it
@@ -51,6 +53,8 @@ function fakeVoice(){
     if(u.pathname === '/voice/web/tap') return json(200, { injected: true, screen: { kind: 'number', text: '7 − 2 = ?', choices: null } });
     if(u.pathname === '/voice/web/result') return json(200, result);
     if(u.pathname === '/voice/web/forget') return json(200, { forgotten: true });
+    if(u.pathname === '/voice/web/mode') return json(200, { mode: body.mode, changed: true, injected: true });
+    if(u.pathname === '/voice/web/game') return json(200, { said: 'Almost!', injected: true });
     return Promise.reject(new Error('offline in this test: ' + url));
   };
   return { fetch, log, setScreens: s => { screens = s; }, setResult: r => { result = r; } };
@@ -169,11 +173,33 @@ server.listen(0, '127.0.0.1', () => {
       const session = A.calls[0].session && A.voice.log.find(x => x.path === '/voice/web/result').query.session;
       check('the same talk can never count twice', E(`talkApply(${JSON.stringify(session)}, S.id, [{mod:'math', ok:true, skill:'sub10'}])`) === 0 && E('S.attempts.math') === before.m + 2, '');
 
-      /* ---- leaving the Pond, or losing signal, ends a talk ---- */
+      /* ---- the talk goes on into the games ---- */
       tap($$('button').find(b => (b.getAttribute('onclick') || '') === 'talkStart()'));
       await wait(40);
       E(`go('map')`);
-      check('leaving the Pond ends the call', A.calls[1] && A.calls[1].state === 'ended', A.calls[1] && A.calls[1].state);
+      check('the map (the path to the games) keeps the talk', A.calls[1] && A.calls[1].state === 'active', A.calls[1] && A.calls[1].state);
+      check('…with a visible "Munni is with you" bar and an end button', !!A.w.document.getElementById('talkchip') && /talkStop/.test(A.w.document.getElementById('talkchip').innerHTML), '');
+      E(`go('games')`);
+      await wait(10);
+      const modePlay = A.voice.log.filter(x => x.path === '/voice/web/mode').pop();
+      check('entering the games pauses the lesson (mode: play)', A.calls[1].state === 'active' && !!modePlay && modePlay.body.mode === 'play' && modePlay.body.token === 'tok', JSON.stringify(modePlay && modePlay.body));
+      E(`playGame('runner')`);
+      const it = E(`(() => { const x = gameCurrent(); return x && { id: x.id, right: S.lang === 'hi' ? x.right.hi : x.right.en }; })()`);
+      E(`gameAnswer(false)`);
+      await wait(10);
+      const miss = A.voice.log.filter(x => x.path === '/voice/web/game').pop();
+      check('a missed answer in a game asks Munni for a hint — by item id, with the answer this phone shows', !!miss && miss.body.event === 'miss' && miss.body.item === it.id && miss.body.right === it.right, JSON.stringify({ miss: miss && miss.body, it }));
+      check('…and the game still records the attempt itself, as before', E('S.game_.wrong') === 1, String(E('S.game_.wrong')));
+      E(`gameEnd()`);
+      await wait(10);
+      const end = A.voice.log.filter(x => x.path === '/voice/web/game').pop();
+      check('a finished round tells Munni the score', !!end && end.body.event === 'end' && end.body.score === E('S.game_.right'), JSON.stringify(end && end.body));
+      E(`go('ask')`);
+      await wait(10);
+      const modeBack = A.voice.log.filter(x => x.path === '/voice/web/mode').pop();
+      check('back at the Pond the lesson carries on (mode: lesson), and the bar goes', modeBack.body.mode === 'lesson' && !A.w.document.getElementById('talkchip'), JSON.stringify(modeBack.body));
+      E(`go('read')`);
+      check('the Reading Tree (it needs the microphone) ends the call', A.calls[1].state === 'ended' && !A.w.document.getElementById('talkchip'), A.calls[1].state);
       E(`go('ask')`);
       tap($$('button').find(b => (b.getAttribute('onclick') || '') === 'talkStart()'));
       await wait(40);

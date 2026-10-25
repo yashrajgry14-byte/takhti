@@ -38,7 +38,28 @@ phone is a separate channel and needs the network by its nature. It only
 | **The child calls Munni** | the inbound line: Munni knows registered numbers, asks siblings who's calling, and keeps a daily limit and quiet hours | `/voice/inbound/lookup` |
 | **Keypad answers** | press the number (`#` to finish), `*` to hear it again, 1 / 2 for yes / no. Munni offers this after an unheard answer | `understand.js` `keypadOf()` |
 | **Spoken English** | a parent's per-child choice, alternating with the normal lesson: Hindi meaning → English word, short phrases said back, graded by sound | `english.js`, `sounds.js` |
-| **Talking Munni in the app** | parent opt-in. A live voice talk at Munni's Pond, with the line to read on screen and tap choices that Munni answers instantly through event injection | `web.js` + `src/ui/talk-munni.js` |
+| **Talking Munni in the app** | parent opt-in. A live voice talk at Munni's Pond, with the line to read on screen and tap choices that Munni answers instantly through event injection. It carries on into the games: the lesson pauses, and a missed answer gets the right one from the server's own validated lesson bank (the phone sends only the item id), at most one line every 6 s. A "Munni is with you" bar stays on screen | `web.js` + `src/ui/talk-munni.js` |
+
+## When a child goes quiet
+
+A child going quiet is something to notice, not a wrong answer.
+- **During the call:** after Munni's own repeat, the graph's `hush` node tells
+  the tutor `(silence)`. The first time, Munni gives an easier way into the
+  same question: two choices instead of recall, or the first words of the
+  line. A right answer then doesn't count as a first try. The second time,
+  she moves to a different question. Nothing is recorded as an attempt.
+- **After the call:** the transcript is checked too (a line said twice with
+  nothing from the child in between, or the call ending on the quiet
+  goodbye), so quiet moments are counted even if the live signal never
+  arrives.
+- **Where it shows:** a gentle line in the parent report ("went quiet on two
+  questions: a quiet moment often means a question felt hard"), and the next
+  call starts with an extra easy warm-up, as the report says. The weekly call
+  and "is she behind?" mention where the child went quiet most. On the
+  dashboard there's a count per child and per skill, plus a **check in with
+  the family** flag after two calls in a week ended in silence. That flag is
+  for a person; nothing is sent to anyone automatically. The placement call
+  counts quiet steps as "not yet seen", never as mistakes.
 
 ## For parents
 
@@ -208,12 +229,15 @@ surname, and the phone number only as the number to dial.
     and the graph's `closed_end` node hangs up. `TAKHTI_INBOUND_DAILY` sets the
     daily limit (default 2), `TAKHTI_QUIET_HOURS` the quiet hours (default
     `21-7`) and `TAKHTI_TZ` the time zone (default `Asia/Kolkata`).
-14. **Talking Munni in the app.** Ask Bolna in the builders' Slack to switch on
+14. **Talking Munni in the app.** Build its agent with
+    `node voice/agent/build-agent.js web` (it doesn't hang up on a child
+    playing a game in silence) and put its id in `BOLNA_WEB_AGENT_ID`. Ask Bolna in the builders' Slack to switch on
     the Web Call SDK for your account. Set `window.TAKHTI_VOICE` in the app's
     `index.html` to `<PUBLIC_URL>`, and `TAKHTI_APP_ORIGIN` on the server to the
-    app's origin (for CORS). Optionally set `BOLNA_WEB_AGENT_ID`; it falls back
-    to the same agent. The graph's `screen` node and its `screen_answer` event
-    edge are already in the config.
+    app's origin (for CORS). Without `BOLNA_WEB_AGENT_ID` it falls back to the
+    phone agent, which hangs up after 25 s of silence, so a silent game would
+    end the talk. The graph's `screen`, `play` and `play_say` nodes and their
+    event edges are already in the config.
 
 15. **The parent agent.** Generate it with
     `node voice/agent/build-parent-agent.js > voice/agent/munni-parent.agent.json`,

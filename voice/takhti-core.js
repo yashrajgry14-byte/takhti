@@ -89,7 +89,7 @@ function createCore(opts) {
     skillProblem, skillHasProblem, skillById, noteSkillAttempt, noteSkillFromConcept,
     personalizeContentForHomework, getAssignedHomework, importHomework, classReportCode,
     mirrorToClassNow, getDueSrsItems,
-    CONCEPTS, validateLesson, newProfile, PROFILE_FIELDS,
+    CONCEPTS, validateLesson, lessonBank, newProfile, PROFILE_FIELDS,
     syncProfileIn, syncProfileOut, COMPETENCY, seedOf, rng, SENTENCES
   };`, sandbox);
   const T = sandbox.__T;

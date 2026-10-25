@@ -40,6 +40,7 @@ const PL = {
   right: [{ en: 'Yes!', hi: 'हाँ!' }, { en: 'Right!', hi: 'सही!' }, { en: 'Good!', hi: 'बढ़िया!' }],
   thanks: [{ en: 'Thank you!', hi: 'धन्यवाद!' }, { en: 'Okay!', hi: 'ठीक है!' }],
   fine: { en: "That's fine!", hi: 'कोई बात नहीं!' },
+  takeTime: { en: 'Take your time.', hi: 'आराम से सोचो।' },
   notHeard: { en: "I didn't hear a number. Can you say it again?", hi: 'मुझे संख्या सुनाई नहीं दी। फिर से बोलोगे?' },
   toRead: { en: 'Now some reading. Take the card. Read line 1 for me.', hi: 'अब थोड़ा पढ़ना। कार्ड लो। लाइन 1 पढ़कर सुनाओ।' },
   toSay: { en: "Now say this after me: {line}", hi: 'अब मेरे बाद बोलो: {line}' },
@@ -168,7 +169,29 @@ function answer(core, child, s, said) {
   if (!it || it.outcome) return next(core, child, s);
   const intent = intentOf(said);
   if (intent === 'stop') { it.outcome = 'stopped'; return end(s, 'stop', ''); }
-  if (intent === 'repeat' || intent === 'silence') { it.prompts.push(it.prompt); return { say: it.prompt, expect: it.expect, done: false, item: { n: it.n, kind: it.kind } }; }
+  if (intent === 'repeat') { it.prompts.push(it.prompt); return { say: it.prompt, expect: it.expect, done: false, item: { n: it.n, kind: it.kind } }; }
+  // went quiet: kept as an observation, never as a wrong answer
+  if (intent === 'silence') {
+    it.silences = (it.silences || 0) + 1;
+    s.silence_log = (s.silence_log || []).concat({ n: it.n, kind: it.kind, skill: it.skill || null, at: Date.now(), source: 'live' });
+    if (it.silences < 2) { const t = SS.joinSay(T2(PL.takeTime, s.lang), it.prompt); it.prompts.push(t); return { say: t, expect: it.expect, done: false, item: { n: it.n, kind: it.kind } }; }
+    it.outcome = 'silent';
+    const P0 = s.place;
+    if (it.expect === 'number') {
+      P0.replaced = P0.replaced || {};
+      if (!P0.replaced[it.skill]) { P0.replaced[it.skill] = true; P0.queue.unshift(it.skill); }
+      else {
+        // quiet again on the same step: for the search, treat it as not yet
+        // there (go easier) — but record no attempt, because none was made
+        const rec = P0.tested[it.skill] || { counted: 0, right: 0 };
+        rec.counted = Math.max(rec.counted, 2); rec.quiet = true;
+        P0.tested[it.skill] = rec;
+        P0.queue = P0.queue.filter(x => x !== it.skill);
+      }
+    }
+    else { P0.misses++; P0.line++; return toReading(core, child, s, T2(PL.fine, s.lang)); }
+    return nextQuestion(core, child, s, T2(PL.fine, s.lang));
+  }
   it.said.push(String(said || ''));
   const P = s.place;
 
@@ -223,6 +246,7 @@ function processPlacementEnd(core, child, s, payload, R) {
   if (!answered.length) { s.status = 'missed'; s.report = R.missedReport(child, s, {}); return { changed: true, status: s.status }; }
   s.status = 'done';
   R.alignToTranscript(s, R.parseTranscript(s.transcript));
+  R.settleQuiet(child, s);
   // the same relay check as a lesson: did the voice model pass on what the recognizer heard?
   let checked = 0, mismatched = 0;
   for (const it of s.items) it.said.forEach((relayed, k) => {
@@ -273,6 +297,8 @@ const PR = {
   mathTop: { en: 'Maths: {name} can do {a}, the hardest step Munni asked.', hi: 'गणित: {name} को {a} आता है, जो मुन्नी का सबसे कठिन सवाल था।' },
   mathStart: { en: 'Maths: {name} will start with {b}.', hi: 'गणित: {name} की शुरुआत {b} से होगी।' },
   read: { en: 'Reading: Munni will start at "{c}".', hi: 'पढ़ना: मुन्नी "{c}" से शुरू करेगी।' },
+  quiet: { en: '{name} went quiet on {k} of the questions; Munni counted those as "not yet seen", not as mistakes.',
+           hi: '{k} सवालों पर {name} की ओर से जवाब नहीं आया; मुन्नी ने उन्हें गलती नहीं, "अभी देखा नहीं" माना।' },
   from: { en: 'Lessons start from here and move with {name}.', hi: 'पाठ यहीं से शुरू होंगे और {name} के साथ आगे बढ़ेंगे।' }
 };
 function placementReport(core, child, s, lv, passed, nextStep, R) {
@@ -282,6 +308,7 @@ function placementReport(core, child, s, lv, passed, nextStep, R) {
   const lines = [f('title', {})];
   if (s.place.ladder.length) lines.push(passed && nextStep ? f('mathBoth', { a: nm(passed), b: nm(nextStep) }) : passed ? f('mathTop', { a: nm(passed) }) : f('mathStart', { b: nm(nextStep || s.place.ladder[0]) }));
   if (s.items.some(x => x.kind === 'pread' && x.said.length) && lv.comp.read) lines.push(f('read', { c: lv.comp.read[lang] }));
+  if (s.silence && s.silence.items.length) lines.push(f('quiet', { k: s.silence.items.length }));
   lines.push(f('from', {}));
   const code = R.progressCodeFor(core, child);
   if (code) { lines.push(lang === 'hi' ? 'यह अभ्यास टीचर तक पहुँचाने के लिए उन्हें यह कोड भेजें:' : 'To share this with the teacher, send them this code:'); lines.push(code); }

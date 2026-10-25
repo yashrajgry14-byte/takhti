@@ -236,6 +236,8 @@ function gameAnswer(ok){
   if(typeof noteSkillAttempt === 'function')
     for(const sid of it.skills) noteSkillAttempt(sid, ok);
   if(typeof record === 'function' && it.strand === 'num') record('math', ok);
+  // a live Talking Munni call: a miss gets a kind hint (ui/talk-munni.js)
+  if(!ok && typeof talkGame === 'function') talkGame('miss', it);
   g.i++;
   if(g.i >= g.items.length) gameEnd();
   return ok;
@@ -247,6 +249,7 @@ function gameEnd(){
   if(g.right > (S.gameBest[g.kind] || 0)) { g.newBest = true; S.gameBest[g.kind] = g.right; }
   const secs = Math.round((Date.now() - g.started) / 1000);
   log(0, `Game over · ${g.right}/${g.items.length} in ${secs}s${g.newBest ? ' · new best' : ''}`);
+  if(typeof talkGame === 'function') talkGame('end', null, g.right);
 }
 
 /* Shown at the end. Deliberately about THIS round and the child's own

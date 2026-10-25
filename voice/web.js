@@ -15,6 +15,10 @@
      GET  /voice/web/result    after the call: the attempts to replay into
                                the app's own record, so the slate knows
      POST /voice/web/forget    erase this child's voice-side record
+     POST /voice/web/mode      the child left the Pond to play (or came back):
+                               the lesson pauses, Munni keeps them company
+     POST /voice/web/game      a missed answer or a finished round in a game:
+                               Munni says a hint from the validated lesson bank
 
    The screen and the voice share one lesson: the same session the phone
    uses, with the line to read shown on screen instead of on a card, and
@@ -128,8 +132,8 @@ function createWeb(brain, envIn) {
   function screenOf(s) {
     const it = s.items[s.items.length - 1];
     const lastSay = (s.live_turns || []).filter(t => t.role === 'assistant').map(t => t.text).pop() || '';
-    const base = { status: s.status, done: !!s.ended_by, say: lastSay, n: it ? it.n : 0, of: s.slots.length };
-    if (!it || it.outcome || s.ended_by) return Object.assign(base, { screen: null });
+    const base = { status: s.status, done: !!s.ended_by, say: lastSay, n: it ? it.n : 0, of: s.slots.length, mode: s.mode || 'lesson' };
+    if (!it || it.outcome || s.ended_by || s.mode === 'play') return Object.assign(base, { screen: null });
     let screen;
     if (it.expect === 'reading') screen = { kind: it.kind, text: it.target };
     else if (it.expect === 'yesno') screen = { kind: 'yesno', text: it.prompt, choices: ['yes', 'no'] };
@@ -158,19 +162,108 @@ function createWeb(brain, envIn) {
     // the child to speak (Bolna event injection into the graph's
     // 'screen' node). If this fails the next spoken turn still works.
     const fresh = store.get('sessions', s.id);
-    const runId = fresh.call && fresh.call.run_id;
+    const injected = await inject(fresh, 'screen_answer', { screen_say: r.say });
+    store.put('sessions', fresh.id, fresh);
+    return { status: 200, body: Object.assign({ injected }, screenOf(fresh)) };
+  }
+
+  /* ---------- Munni pushes a line into the live call ---------- */
+  async function inject(s, event, props) {
+    const runId = s.call && s.call.run_id;
     let injected = false;
     if (runId && env.BOLNA_API_KEY) {
       const res = await fetch(`${env.BOLNA_API_BASE || 'https://api.bolna.ai'}/v1/call/${encodeURIComponent(runId)}/events`, {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + env.BOLNA_API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event: 'screen_answer', properties: { screen_say: r.say } })
+        body: JSON.stringify({ event, properties: props })
       }).catch(() => null);
-      injected = !!(res && res.status === 202 || res && res.ok);
+      injected = !!(res && (res.status === 202 || res.ok));
     }
-    fresh.events = (fresh.events || []).concat({ at: Date.now(), event: 'screen_answer', injected }).slice(-50);
-    store.put('sessions', fresh.id, fresh);
-    return { status: 200, body: Object.assign({ injected }, screenOf(fresh)) };
+    s.events = (s.events || []).concat({ at: Date.now(), event, injected }).slice(-80);
+    return injected;
+  }
+
+  /* ---------- games: the talk stays on while the child plays ----------
+     The lesson pauses (brain: s.mode = 'play'), and Munni speaks only
+     when there is something worth saying: a missed answer gets the right
+     one, kindly, from the validated lesson bank — never text the phone
+     sent, so nothing but checked content can be put in her mouth — and a
+     finished round gets "well played". At most one line every few
+     seconds, and a cap per talk: company, not commentary. */
+  const PLAY = {
+    enter:   { en: "Let's play! If one is tricky, I'll help.", hi: 'चलो खेलें! कोई मुश्किल लगे तो मैं मदद करूँगी।' },
+    back:    { en: "Welcome back! Let's carry on.", hi: 'वापस आ गए! चलो आगे बढ़ें।' },
+    almostQ: { en: 'Almost! {q} The answer is {a}.', hi: 'लगभग! {q} जवाब है {a}।' },
+    almost:  { en: 'Almost! The answer was {a}.', hi: 'लगभग! जवाब था {a}।' },
+    almostSet: { en: 'Almost! Look for the one that is different from the others.', hi: 'लगभग! वह ढूँढो जो बाकियों से अलग है।' },
+    end:     { en: 'Well played! {k} right.', hi: 'बहुत बढ़िया खेले! {k} सही।' }
+  };
+  const fillP = (o, lang, v) => { let t = o[lang === 'hi' ? 'hi' : 'en']; for (const k in v) t = t.split('{' + k + '}').join(v[k]); return t; };
+  let BEATS = null;          // "lessonId:beatIndex" → beat, from the same bank the app's games draw on
+  function beatOf(id) {
+    if (!BEATS) {
+      BEATS = new Map();
+      const { out } = brain.core.withChild(brain.core.freshProfile('x', 7), {}, T => T.lessonBank());
+      for (const les of out) les.beats.forEach((b, i) => { if (b.t === 'ask' && b.opts) BEATS.set(les.id + ':' + i, b); });
+    }
+    return BEATS.get(String(id || '')) || null;
+  }
+  function hintFor(item, lang, appRight) {
+    const b = beatOf(item);
+    if (b) {
+      const a = String((lang === 'hi' ? (b.hiOpts || b.opts) : b.opts)[b.correct]);
+      // the phone's copy must say the same thing as ours, or we stay generic
+      if (appRight != null && String(appRight) !== a && String(appRight) !== String(b.opts[b.correct])) return null;
+      const q = b.q && b.q[lang === 'hi' ? 'hi' : 'en'];
+      return q && q.length <= 110 ? fillP(PLAY.almostQ, lang, { q: q.replace(/\s+/g, ' '), a }) : fillP(PLAY.almost, lang, { a });
+    }
+    if (/^set-/.test(String(item || ''))) return fillP(PLAY.almostSet, lang, {});
+    return null;
+  }
+
+  async function mode(sessionId, token, m) {
+    const s = load(sessionId, token);
+    if (!s) return { status: 404, body: { error: 'no such talk' } };
+    if (s.ended_by) return { status: 409, body: { error: 'the talk is over' } };
+    const want = m === 'play' ? 'play' : 'lesson';
+    if ((s.mode || 'lesson') === want) return { status: 200, body: { mode: want, changed: false } };
+    s.mode = want;
+    let say;
+    if (want === 'play') say = fillP(PLAY.enter, s.lang, {});
+    else {
+      const it = s.items[s.items.length - 1];
+      say = fillP(PLAY.back, s.lang, {}) + (it && !it.outcome ? ' ' + it.prompts[it.prompts.length - 1] : '');
+    }
+    s.play = s.play || { lines: 0, last: 0, misses: 0 };
+    store.put('sessions', s.id, s);
+    const injected = await inject(s, want === 'play' ? 'play_mode' : 'lesson_mode', { screen_say: say });
+    store.put('sessions', s.id, s);
+    return { status: 200, body: { mode: want, changed: true, injected } };
+  }
+
+  async function game(sessionId, token, b) {
+    const s = load(sessionId, token);
+    if (!s) return { status: 404, body: { error: 'no such talk' } };
+    if (s.ended_by || s.mode !== 'play') return { status: 200, body: { said: null, why: 'not playing' } };
+    b = b || {};
+    s.play = s.play || { lines: 0, last: 0, misses: 0 };
+    if (b.event === 'miss') s.play.misses++;
+    const now = Date.now();
+    if (now - s.play.last < Number(env.TAKHTI_PLAY_GAP_MS || 6000) || s.play.lines >= Number(env.TAKHTI_PLAY_MAX || 25)) {
+      store.put('sessions', s.id, s);
+      return { status: 200, body: { said: null, why: 'quiet for now' } };
+    }
+    let say = null;
+    if (b.event === 'miss') say = hintFor(b.item, s.lang, b.right);
+    else if (b.event === 'end') {
+      const k = Number(b.score);
+      if (Number.isInteger(k) && k >= 0 && k < 100) say = fillP(PLAY.end, s.lang, { k: String(k) });
+    }
+    if (!say) { store.put('sessions', s.id, s); return { status: 200, body: { said: null } }; }
+    s.play.lines++; s.play.last = now;
+    const injected = await inject(s, 'game_say', { screen_say: say });
+    store.put('sessions', s.id, s);
+    return { status: 200, body: { said: say, injected } };
   }
 
   /* ---------- after the talk: what the app should record ----------
@@ -184,7 +277,7 @@ function createWeb(brain, envIn) {
     if (!s.processed && !graceOver) return { status: 200, body: { pending: true } };
     const records = [];
     for (const it of s.items) {
-      if (!it.outcome || it.outcome === 'unsure') continue;
+      if (!it.outcome || it.outcome === 'unsure' || it.outcome === 'silent') continue;
       if (['math', 'story', 'homework'].includes(it.kind))
         records.push({ mod: 'math', ok: it.outcome === 'correct', skill: it.concept ? null : (it.skill || null), concept: it.concept || null });
       if (it.kind === 'read') {
@@ -204,7 +297,7 @@ function createWeb(brain, envIn) {
     return { status: 200, body: { forgotten: true } };
   }
 
-  return { startSession, state, tap, result, forget };
+  return { startSession, state, tap, result, forget, mode, game };
 }
 
 module.exports = { createWeb };
