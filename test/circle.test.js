@@ -18,7 +18,11 @@
        whether they taught someone; the answer reaches the circle
      · a phone lesson's evidence comes back as circleHistory and the
        app's diagnosis counts it, once
-     · the parent can turn sync off, and then nothing more is sent
+     · the school's record keeps the school's name, not the avatar's
+     · turning sync off reaches the server (after a spell offline too): the
+       circle stops — no plan in calls, no messages — and on again resumes
+     · a parent can erase the circle's data: the school's record keeps only
+       its own records, a record only the app made goes whole
    ================================================================== */
 const fs = require('fs'), os = require('os'), path = require('path'), http = require('http');
 const { JSDOM, VirtualConsole } = require('jsdom');
@@ -127,6 +131,8 @@ appServer.listen(0, '127.0.0.1', () => voiceServer.listen(0, '127.0.0.1', async 
     check('after the grown-ups\' step the child picks a game as before', E('S.screen') === 'pick', E('S.screen'));
     const joined = await until(() => E('!!(S.circle && S.circle.members && S.circle.members.school)'));
     check('the family code joins this phone to the school\'s record', joined && E('S.circle.members.school') === 'Green Valley' && brain.getChild(kid.id).circle.app.id === E('S.id'), E('JSON.stringify(S.circle && S.circle.members)'));
+    check('the school\'s record keeps the school\'s name, not the animal the child tapped', brain.getChild(kid.id).name === 'Aman' && E('S.name') !== 'Aman',
+      `${brain.getChild(kid.id).name} / app: ${E('S.name')}`);
     check('the phone got its own key, and the code is spent', !!E('S.circleKey') && E('S.circleCode') === '', E('S.circleKey'));
 
     const ALLOWED = ['child', 'key', 'consent', 'link', 'parent_phone', 'progress', 'check', 'home', 'invite', 'tutor'];
@@ -196,13 +202,61 @@ appServer.listen(0, '127.0.0.1', () => voiceServer.listen(0, '127.0.0.1', async 
     const own = E(`(S.skillHistory['${sk}'] || {n:0}).n`), ev = E(`appEvidence('${sk}')`);
     check('the app\'s diagnosis counts it once (own + circle)', (own + far[sk].n) < 4 ? ev === null : ev && ev.n === own + far[sk].n, JSON.stringify({ own, far: far[sk], ev }));
 
-    /* ---- sync off: nothing more is sent ---- */
+    /* ---- sync off reaches the server, even after a spell without signal ---- */
+    const btn = on => $$('button').find(b => (b.getAttribute('onclick') || '') === on);
+    await until(() => !E('CIRCLE_BUSY'));
     E(`go('parent')`);
-    $$('button').find(b => (b.getAttribute('onclick') || '') === 'toggleCircle()').click();
+    E(`setOnline(false)`);
+    btn('toggleCircle()').click();
     const n0 = A.sent.length;
+    check('off without signal: nothing sent yet, and the parent is told it will be', A.sent.length === n0 && E('!!S.circleLeave') && /will be told/.test(screen()), screen().slice(-300));
+    check('…the server still has it on until then', brain.circle.active(brain.getChild(kid.id)), '');
+    E(`setOnline(true)`);
+    await until(() => !E('S.circleLeave'));
+    const rec = brain.getChild(kid.id);
+    check('when the signal comes back the server is told: the circle stops for this child', A.sent.slice(n0).some(x => x.url === '/circle/leave' && !x.body.erase) &&
+      !brain.circle.active(rec) && rec.circle.sync.on === false, JSON.stringify(rec.circle.sync));
+    // a check would be due this week again if the circle were still on
+    { const x = brain.getChild(kid.id); delete x.circle.week.check; brain.store.put('children', x.id, x); }
+    const quiet = brain.createSession(kid.id).session;
+    check('…so a phone lesson carries no circle items (no Friday check, no home question)', quiet && !quiet.slots.some(x => x === 'check' || x === 'home'), JSON.stringify(quiet.slots));
+    brain.messages.queue && brain.messages.queue({ role: 'parent', kind: 'test', child_id: kid.id, to: { phone: '+919500000002', name: 'p' }, text: 'x', link: 'y' });
+    await brain.messages.flush(new Date(Date.now() + 864e5 * 2));
+    check('…and no message about this child goes out', !brain.messages.list().some(m => m.child_id === kid.id && m.status === 'sent' && m.kind === 'test'),
+      JSON.stringify(brain.messages.list().filter(m => m.child_id === kid.id).map(m => [m.kind, m.status, m.error])));
+    const n1 = A.sent.length;
     E(`circleSync(true); go('map')`);
     await wait(150);
-    check('turned off: nothing more is sent', E('S.circleSync') === false && A.sent.length === n0, `${n0} → ${A.sent.length}`);
+    check('off: nothing more is sent from the app', E('S.circleSync') === false && A.sent.length === n1, `${n1} → ${A.sent.length}`);
+
+    /* ---- on again, then the parent erases the circle's data ---- */
+    E(`go('parent')`);
+    btn('toggleCircle()').click();
+    await until(() => brain.circle.active(brain.getChild(kid.id)) && !E('CIRCLE_BUSY'));
+    check('turned on again, the circle picks up where it was', brain.circle.active(brain.getChild(kid.id)) && brain.getChild(kid.id).circle.app.id === E('S.id'), '');
+    E(`render()`);
+    btn('circleErase()').click();
+    check('erase asks first, saying what goes and what stays with the school', /This deletes everything the circle keeps/.test(screen()) && /school's own records/.test(screen()) &&
+      brain.getChild(kid.id).circle.app, screen().slice(-500));
+    E(`S.lang='hi'; render()`);
+    check('…in Hindi too', /घेरे में रखा/.test(screen()) && /स्कूल के अपने रिकॉर्ड/.test(screen()), '');
+    E(`S.lang='en'; render()`);
+    btn('circleErase()').click();
+    await until(() => !E('S.circleLeave'));
+    const gone = brain.getChild(kid.id);
+    check('erased: the circle is gone from the school\'s record and stays off', gone && !gone.circle.app && !gone.circle.app_snapshot && !gone.circle.week && !brain.circle.active(gone),
+      JSON.stringify(gone && gone.circle));
+    check('…the school\'s own records stay (its phone lessons)', (gone.sessions || []).length > 0, '');
+    check('…no message about the child is left', !brain.messages.list().some(m => m.child_id === kid.id), '');
+    check('…and the phone forgets the circle too (its own progress stays)', !E('S.circleKey') && !E('S.circle') && !Object.keys(E('S.circleHistory')).length && E('S.circleSync') === false &&
+      Object.keys(E('S.skillHistory')).length > 0, '');
+
+    /* ---- a child only the app knew is erased whole ---- */
+    const solo = await brain.circle.sync({ child: { id: 'appSOLO001', name: 'Tiger', age: 6, lang: 'en' }, consent: { sync: true }, progress: { seq: 1, skillHistory: {} } }, 'ipx');
+    check('a record the app made takes the app\'s name', brain.getChild('app_appSOLO001').name === 'Tiger', JSON.stringify(solo.body).slice(0, 200));
+    check('a different phone cannot turn it off or erase it', brain.circle.leave({ child: { id: 'appSOLO001' }, key: 'nope', erase: true }).status === 403 && !!brain.getChild('app_appSOLO001'), '');
+    const er = brain.circle.leave({ child: { id: 'appSOLO001' }, key: solo.body.key, erase: true });
+    check('erasing a record only the app made deletes it whole', er.status === 200 && er.body.erased === 'all' && !brain.getChild('app_appSOLO001'), JSON.stringify(er.body));
 
     check('no uncaught script errors', A.jsErrors.length === 0, A.jsErrors.join(' | ').slice(0, 400));
   }catch(e){

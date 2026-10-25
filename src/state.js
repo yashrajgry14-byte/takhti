@@ -58,7 +58,8 @@ function newProfile(name){
     circleHistory: {},     // skill evidence only the circle saw (phone lessons, tutor's ticks, teachers' notes) — appEvidence() adds it
     circleChecks: {},      // week -> this child's Friday check
     circleHomeAns: {},     // home activity id -> the child's answer
-    circleOut: {}          // waiting to be sent: check, home answers, a tutor invite or decision
+    circleOut: {},         // waiting to be sent: check, home answers, a tutor invite or decision
+    circleLeave: null      // {erase} — a parent's "off" or "delete" waiting for a signal to reach the server
   };
 }
 const PROFILE_FIELDS = Object.keys(newProfile());

@@ -33,6 +33,7 @@ const hiL = () => S.lang === 'hi';
 
 /* ---------- sync ---------- */
 function circleSync(force){
+  if(S.circleLeave) return circleLeaveSend();   // an "off" or an erase waiting for the signal goes first
   if(!circleOn() || !S.online) return;
   if(CIRCLE_BUSY){ if(force) CIRCLE_AGAIN = true; return; }
   if(!force && S.circleAt && Date.now() - Date.parse(S.circleAt) < 120e3) return;   // not more than every two minutes
@@ -121,6 +122,7 @@ function circleOnboardDone(useTick){
 }
 function circleTurnOn(code){
   S.circleSync = true; S.circleSyncAt = new Date().toISOString();
+  if(S.circleLeave && !S.circleLeave.erase) S.circleLeave = null;   // an "off" not yet sent is simply undone
   if(code && code.trim()) S.circleCode = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
   log(null, `Learning circle turned on by a parent for ${S.name || 'this child'} — progress only, never a voice or a photo`);
   circleSync(true);
@@ -137,7 +139,7 @@ function circleParentHTML(){
       : `${n}'s school, tuition teacher and family stay on the same step. Only practice progress goes, never a voice, a photo or a typed question.`}</div></div>
     <button class="toggle ${S.circleSync ? 'on' : ''}" onclick="toggleCircle()" aria-label="sync"><span></span></button></div>
   ${S.ctx.circleMsg ? `<div class="muted" style="font-size:12.5px">${attr(S.ctx.circleMsg)}</div>` : ''}`;
-  if(!S.circleSync) return head;
+  if(!S.circleSync) return head + (S.circleLeave && !S.circleLeave.erase ? `<div class="muted" style="font-size:12.5px">${hi ? 'घेरे को बताना बाकी है: इंटरनेट मिलते ही।' : 'The circle will be told when there is a signal.'}</div>` : '') + circleEraseHTML();
   const c = S.circle;
   if(!c) return head + `<div class="muted" style="font-size:12.5px">${S.online ? (hi ? 'जोड़ रहे हैं…' : 'Connecting…') : (hi ? 'इंटरनेट मिलने पर जुड़ेगा।' : 'Will connect when there is a signal.')}</div>`;
   const w = c.week, m = c.members;
@@ -166,12 +168,75 @@ function circleParentHTML(){
   ${(c.notes || []).length ? `<div style="font-size:12.5px;font-weight:600;margin-top:8px">${hi ? 'टीचर्स के नोट' : 'Notes from teachers'}</div>${c.notes.slice(0, 3).map(x => `<div style="font-size:12.5px">${attr(x.by)}: ${attr(L2(x.skill_name))} ${x.ok ? '✓' : '✗'}</div>`).join('')}` : ''}
   <div style="font-size:12px;opacity:.65;margin-top:8px">${hi ? 'आख़िरी बार जुड़ा' : 'Last synced'}: ${attr(String(S.circleAt || '').slice(0, 16).replace('T', ' '))}
     ${c.parent_page ? ` · <a href="${attr(c.parent_page)}" target="_blank" rel="noopener">${hi ? 'घेरे का पेज' : 'Circle page'}</a>` : ''}</div>
-  <button class="btn ghost" onclick="circleSync(true)">${hi ? 'अभी जोड़ें' : 'Sync now'}</button>`;
+  <button class="btn ghost" onclick="circleSync(true)">${hi ? 'अभी जोड़ें' : 'Sync now'}</button>
+  ${circleEraseHTML()}`;
 }
 function toggleCircle(){
-  if(S.circleSync){ S.circleSync = false; log(null, `Learning circle sync turned off for ${S.name || 'this child'}`); saveSoon(); return render(); }
+  if(S.circleSync){
+    S.circleSync = false;
+    // the server must hear it too, or the circle (messages, the plan, its parts of calls) would carry on
+    if(S.circleKey && !(S.circleLeave && S.circleLeave.erase)) S.circleLeave = { erase: false };
+    log(null, `Learning circle sync turned off for ${S.name || 'this child'}`);
+    S.ctx.circleMsg = S.circleKey && !S.online ? (hiL() ? 'इंटरनेट मिलते ही घेरे को बता देंगे।' : 'The circle will be told as soon as there is a signal.') : '';
+    saveSoon(); circleLeaveSend(); return render();
+  }
   circleTurnOn('');
   saveSoon(); render();
+}
+/* Off or erase, to the server. It waits for a signal like everything else;
+   until it has gone the dashboard says so. */
+function circleLeaveSend(){
+  const want = S.circleLeave;
+  if(!want) return;
+  if(CIRCLE_BUSY){ CIRCLE_AGAIN = true; return; }   // runs right after the sync in flight
+  if(!S.circleKey){ S.circleLeave = null; if(want.erase) circleWipeLocal(); saveSoon(); return; }   // the server never had this child
+  if(!circleSetUp() || !S.online) return;
+  CIRCLE_BUSY = true;
+  const childId = S.id;
+  fetch(TALK_URL + '/circle/leave', { method:'POST', headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ child: { id: S.id }, key: S.circleKey, erase: !!want.erase }) })
+    .then(r => r.json().then(d => ({ ok: r.ok, d })))
+    .then(({ ok, d }) => {
+      CIRCLE_BUSY = false;
+      if(S.id !== childId || !ok) return;
+      S.circleLeave = null;
+      const hi = hiL();
+      if(want.erase){
+        circleWipeLocal();
+        S.ctx.circleMsg = hi ? 'घेरे का डेटा मिटा दिया।' : "The circle's data is deleted.";
+        log(null, `Learning circle data erased for ${S.name || 'this child'} (${d.erased || 'nothing kept'})`);
+      }else{
+        S.ctx.circleMsg = hi ? 'घेरे को बता दिया: अब कुछ नहीं जाएगा।' : 'The circle has been told: nothing more will go.';
+        log(null, `Learning circle told: sync off for ${S.name || 'this child'}`);
+      }
+      saveSoon();
+      if(S.circleSync) circleSync(true);
+      if(S.screen === 'parent') render();
+    })
+    .catch(() => { CIRCLE_BUSY = false; });
+}
+function circleWipeLocal(){
+  S.circleSync = false; S.circleKey = null; S.circle = null; S.circleAt = null; S.circleCode = '';
+  S.circleHistory = {}; S.circleChecks = {}; S.circleHomeAns = {}; S.circleOut = {};
+}
+function circleErase(){
+  if(!S.ctx.circleEraseAsk){ S.ctx.circleEraseAsk = true; return render(); }   // two taps: the first only explains
+  S.ctx.circleEraseAsk = false;
+  S.circleLeave = { erase: true };
+  S.circleSync = false;
+  S.ctx.circleMsg = S.online || !S.circleKey ? '' : (hiL() ? 'इंटरनेट मिलते ही मिटा देंगे।' : 'It will be deleted as soon as there is a signal.');
+  saveSoon();
+  circleLeaveSend();
+  render();
+}
+function circleEraseHTML(){
+  if(!S.circleKey && !S.circleLeave) return '';
+  const hi = hiL(), n = attr(S.name || '');
+  if(S.circleLeave && S.circleLeave.erase) return `<div class="muted" style="font-size:12.5px">${hi ? 'मिटाना बाकी है: इंटरनेट मिलते ही होगा।' : 'Deleting: it will happen when there is a signal.'}</div>`;
+  return `${S.ctx.circleEraseAsk ? `<div style="font-size:12.5px;line-height:1.5;margin-top:8px">${hi
+      ? `इससे घेरे में रखा ${n} का सब मिट जाएगा: जुड़ी हुई प्रगति, इस हफ़्ते की योजना, शुक्रवार के टेस्ट, घर की गतिविधियाँ, ट्यूशन टीचर का जुड़ाव और संदेश। स्कूल के अपने रिकॉर्ड (फ़ोन वाले पाठ, टीचर के नोट) स्कूल के पास रहते हैं, उन्हें मिटाने के लिए स्कूल से कहें। फ़ोन पर ${n} की अपनी प्रगति वैसी ही रहेगी।`
+      : `This deletes everything the circle keeps about ${n}: the synced progress, this week's plan, the Friday checks, home activities, the tuition teacher's link and the messages. The school's own records (phone lessons, teachers' notes) stay with the school; ask the school to delete those. ${n}'s progress on this phone stays as it is.`}</div>` : ''}
+  <button class="btn ghost" onclick="circleErase()">🗑️ ${S.ctx.circleEraseAsk ? (hi ? 'हाँ, मिटाएँ' : 'Yes, delete') : (hi ? 'घेरे का डेटा मिटाएँ' : "Delete the circle's data")}</button>`;
 }
 function circleQueue(kind, val){
   S.circleOut = S.circleOut || {};

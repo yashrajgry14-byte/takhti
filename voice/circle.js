@@ -147,6 +147,7 @@ function createCircle(brain, envIn) {
      school registered, a child with a tutor, or one the team switched on. */
   function active(child) {
     const c = child && child.circle;
+    if (c && c.stopped) return false;          // the parent turned sync off in the app: their choice wins, school child or not
     return !!(child && (child.school_id || (c && ((c.sync && c.sync.on) || (c.tutors || []).length || c.on))));
   }
 
@@ -204,9 +205,16 @@ function createCircle(brain, envIn) {
     }
     const cc = ensure(child);
     if (!cc.app || !cc.app.key_hash) { key = tok(); cc.app = { id: c.id, key_hash: hash(key), since: now().toISOString() }; }
-    cc.sync = { on: true, at: (cc.sync && cc.sync.at) || now().toISOString(), by: 'parent (app)', notice: SYNC_NOTICE, last: now().toISOString() };
-    child.name = name.charAt(0).toUpperCase() + name.slice(1); child.age = age;
-    if (c.lang === 'en' || c.lang === 'hi') child.lang = c.lang;
+    cc.sync = { on: true, at: (cc.sync && !cc.stopped && cc.sync.at) || now().toISOString(), by: 'parent (app)', notice: SYNC_NOTICE, last: now().toISOString() };
+    delete cc.stopped;
+    // The app knows a child by the animal they tapped ("Tiger"), so it only
+    // names a record the app itself made. A record the school made keeps the
+    // school's name and age: the teacher's page, the messages and Munni's
+    // calls must say "Aman", not "Tiger".
+    if (child.kind === 'app') {
+      child.name = name.charAt(0).toUpperCase() + name.slice(1); child.age = age;
+      if (c.lang === 'en' || c.lang === 'hi') child.lang = c.lang;
+    }
     if (body.parent_phone && /^\+\d{10,15}$/.test(String(body.parent_phone).replace(/[\s-]/g, ''))) child.parent_phone = child.parent_phone || String(body.parent_phone).replace(/[\s-]/g, '');
 
     // ---- up: progress only ----
@@ -258,6 +266,44 @@ function createCircle(brain, envIn) {
     const out = Object.assign({ child_id: fresh.id, circle: view(fresh, 'app') }, key ? { key } : {});
     if (Object.keys(levelsBack).length) out.levels = levelsBack;
     return { status: 200, body: out };
+  }
+
+  /* The parent turns sync off (or erases) in the app. Off: nothing more is
+     taken from the app, and the circle stops for this child — no weekly
+     plan, no messages, no circle parts in calls — until the parent turns
+     it on again. Erase: everything the circle keeps goes. A record only the
+     app made goes whole; a record the school made keeps only what is the
+     school's own (its registration, its phone lessons, its teachers'
+     notes), which the family can ask the school to delete. */
+  function leave(body) {
+    body = body || {};
+    const c = body.child || {};
+    if (!/^[A-Za-z0-9_-]{4,60}$/.test(String(c.id || ''))) return { status: 400, body: { error: 'child id missing' } };
+    const child = findByApp(c.id) || store.get('children', 'app_' + c.id);
+    if (!child) return { status: 200, body: { ok: true, nothing: true } };     // nothing kept: already as the parent wants
+    const k = child.circle && child.circle.app && child.circle.app.key_hash;
+    if (!k || !same(hash(body.key || ''), k)) return { status: 403, body: { error: 'this child belongs to another phone' } };
+    const at = now().toISOString();
+    if (!body.erase) {
+      const cc = ensure(child);
+      cc.sync = Object.assign({}, cc.sync, { on: false, off_at: at });
+      cc.stopped = { at, by: 'parent (app)' };
+      put(child);
+      dropQueued(child.id);
+      return { status: 200, body: { ok: true, off: true } };
+    }
+    // messages about this child, sent or not, carry the parent's number and the child's name
+    for (const m of store.list('outbox')) if (m.child_id === child.id) store.remove('outbox', m.id);
+    for (const t of store.list('tutors')) if ((t.children || []).includes(child.id)) { t.children = t.children.filter(x => x !== child.id); store.put('tutors', t.id, t); }
+    if (child.kind === 'app') { brain.deleteChild(child.id); return { status: 200, body: { ok: true, erased: 'all' } }; }
+    // the school's record: the circle goes, and it stays off
+    child.circle = { stopped: { at, by: 'parent (app)', erased: true } };
+    put(child);
+    return { status: 200, body: { ok: true, erased: 'circle' } };
+  }
+  /* messages not yet sent about this child are dropped */
+  function dropQueued(childId) {
+    for (const m of store.list('outbox')) if (m.child_id === childId && m.status === 'queued') { m.status = 'skipped'; m.error = 'the parent turned the circle off'; store.put('outbox', m.id, m); }
   }
 
   /* an app child who had synced on its own, now joining the school's record */
@@ -653,7 +699,7 @@ function createCircle(brain, envIn) {
 
   function attachMessages(m) { messages = m; }
 
-  return { active, sync, familyCode, focusFor, setClassFocus, classRoster, classView, checkResult, readingCheck, checkQuestions, checkDue,
+  return { active, sync, leave, familyCode, focusFor, setClassFocus, classRoster, classView, checkResult, readingCheck, checkQuestions, checkDue,
            homeDone, homeAsked, homeToAsk, inviteTutor, tutorDecision, tutorChildren, tutorPack, tutorResult, tutorNote, setTutorSchedule,
            members, view, attachMessages, isoWeek, ensure, skillName, HOME, SYNC_NOTICE,
            findByApp, hash, same,

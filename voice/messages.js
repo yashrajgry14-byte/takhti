@@ -81,6 +81,10 @@ function createMessages(brain, circle, envIn) {
     const due = store.list('outbox').filter(m => m.status === 'queued' && new Date(m.send_after) <= t);
     const out = [];
     for (const m of due) {
+      if (m.child_id) {
+        const ch = brain.getChild(m.child_id);
+        if (!ch || !circle.active(ch)) { m.status = 'skipped'; m.error = ch ? 'the circle is off for this child' : 'the child was erased'; store.put('outbox', m.id, m); continue; }
+      }
       if (m.role === 'parent') {
         const ch = brain.getChild(m.child_id);
         if (ch && ch.circle && ch.circle.messages_off) { m.status = 'skipped'; m.error = 'the parent stopped messages'; store.put('outbox', m.id, m); continue; }

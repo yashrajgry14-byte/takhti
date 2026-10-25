@@ -179,14 +179,15 @@ function createServer(opts) {
       }
 
       /* ---- the learning circle ---- */
-      if (p === '/circle/sync') {
+      if (p === '/circle/sync' || p === '/circle/leave') {
         res.setHeader('Access-Control-Allow-Origin', env.TAKHTI_APP_ORIGIN || '*');
         res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
         if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
         if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
         const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
-        const r = await brain.circle.sync(await readBody(req, 128 * 1024), ip);
+        const r = p === '/circle/leave' ? brain.circle.leave(await readBody(req, 8 * 1024))
+                                        : await brain.circle.sync(await readBody(req, 128 * 1024), ip);
         return send(res, r.status, r.body);
       }
       let cm;

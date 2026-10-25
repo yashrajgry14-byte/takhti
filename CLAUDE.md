@@ -72,7 +72,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/circle.js, ui/handlers.js
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v31` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v32` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -512,8 +512,21 @@ app is a client of it, and only when a parent says so.
   onboarding with a grown-ups' step (`circleOnboardHTML()`, once per child,
   `S.circleAsked`), and the parent dashboard has the same switch
   (`circleParentHTML()`). Both say, in Hindi and English, that only practice
-  progress goes, never a voice, a photo or a typed question. Off → nothing is
-  sent. No voice server → no step, no section.
+  progress goes, never a voice, a photo or a typed question. No voice
+  server → no step, no section.
+- **Off and erase reach the server** (`POST /circle/leave`, waiting in
+  `S.circleLeave` for a signal if need be). Off: nothing more is sent, and
+  the server stops the circle for this child (`active()` false: no weekly
+  plan, no messages, no check or home question in calls) until it is turned
+  on again. *Delete the circle's data* (two taps, the first explains, in
+  both languages): a record only the app made is deleted whole; a school's
+  record loses everything the circle kept (app link, snapshot, weeks,
+  checks, home activities, tutor links, messages) and stays off, keeping
+  only the school's own records (phone lessons, teachers' notes). The phone
+  keeps its own progress.
+- **Names.** The app knows a child by the animal they tapped, so a sync
+  names only a record the app made; a school's record keeps the school's
+  name and age.
 - **Sync** (`circleSync()` → `POST /circle/sync`): at the map (between
   activities, at most every two minutes), when the signal comes back, after
   the Friday check / a home answer / a dashboard action, and *Sync now*.
@@ -612,7 +625,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `voice-school` | vm + HTTP | school keys see only their own records (404 otherwise), calls on the school's own Bolna key, inbound scoped to the school; placement finds the boundary, tops it up to four attempts, reads, sets levels, kind to a child who knows nothing; teacher notes (recognised line, read-back, saved on yes only, evidence + focus, focus in the next call, other classes refused, same-name children asked apart, transcript check); class calls (shared gap, per-child standing, consent, quiet hours, once a day); corpus (research consent only, no names or ids, K-children threshold, letter swaps); the teacher node in the agent graph |
 | `voice-quiet` | vm + HTTP | silence is its own intent; an easier way in, then a different item, never a wrong answer or first-try credit; transcript-detected quiet moments; the kind report line and the kept "easier start" promise (once); ended-in-silence twice → check-in signal; the weekly call's quiet lines; placement quiet steps; games: lesson paused, hint only from the server's bank (mismatch or unknown id → nothing), throttled, silence is play, back to the lesson; the hush/play nodes and the web agent's silence hang-up |
 | `voice-circle` | vm + HTTP | the circle's server: sync only with the tick, progress only, this phone's key; the family code joins the school's record; the ledger (nothing counted twice); levels a phone lesson moved go back; weekly focus (class homework adapted to the child's gap, else the weakest step); the Friday check (app, call, reading) and next week's step; the home loop; tutors (parent invite, school link waiting for the parent, pack, results, notes); the three pages; the WhatsApp outbox (fake AiSensy); the scheduler's circle week |
-| `circle` | jsdom + the real voice server | the app side through real taps: nothing without a circle server; the bilingual grown-ups' step; nothing sent before the tick, progress only after it; family code → school; class homework via `importHomework()`; this week on the map; the Friday check (real evidence, never "wrong", the verdict on the server); "We did it" and the child's home question; a phone lesson back as `circleHistory`, counted once; sync off sends nothing |
+| `circle` | jsdom + the real voice server | the app side through real taps: nothing without a circle server; the bilingual grown-ups' step; nothing sent before the tick, progress only after it; family code → school, keeping the school's name; class homework via `importHomework()`; this week on the map; the Friday check (real evidence, never "wrong", the verdict on the server); "We did it" and the child's home question; a phone lesson back as `circleHistory`, counted once; sync off reaches the server (also after a spell offline) and stops calls' circle items and messages; on again; erase (school record keeps its own, app-only record goes whole, another phone refused) |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
