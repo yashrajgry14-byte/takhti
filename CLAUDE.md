@@ -34,7 +34,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 26 test suites (see Testing)
+npm test           # all 27 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -411,6 +411,27 @@ on-device. Full setup in `voice/README.md`.
   (`classReportCode()`, name labelled "(phone)") for the teacher view.
 - Spoken `a + b × c` is ambiguous without brackets, so BODMAS homework is
   never asked on a call — it stays in the app.
+- **Parent calls** (`voice/parent.js`, a second Bolna agent from
+  `agent/build-parent-agent.js`, one tool `takhti_parent`). The **consent
+  call** is the first call to a family registered with `consent: 'call'`:
+  the notice (what is kept, that Bolna turns the call into text, how to stop
+  or delete), then yes/no for lessons and for recording, then time, days and
+  the weekly call. No lesson can be planned before it (`createSession()`
+  refuses). Consent is settled **after** the call from Bolna's transcript,
+  like reading: relay and transcript must both say yes, else `needs_review`
+  for a person (`confirmConsent()`); doubt is never a yes. The **weekly
+  call** reads the week from real sessions (`weekFacts()`), answers "is she
+  behind?" only against the band's start level (`standing()`, "too early"
+  below six first tries a month), and applies what a parent asks — time,
+  English on, weekly off, lessons paused. Hindi parent lines avoid gendered
+  verbs for the child (no gender is stored).
+- **Schedule and the daily sequence.** `voice/schedule.js` (runs inside
+  the server) starts each family's lesson at their time: through the Bolna
+  Workflow from `agent/build-workflow.js` (WhatsApp card → call → retry →
+  WhatsApp three lines, every decision via `/voice/flow/*` in
+  `voice/flow.js`), or a direct call with one retry (`brain.afterMissed()`).
+  Never in quiet hours, never twice a day, never without consent. A
+  missed-call message names only what will really happen next.
 - **Keypad**: a child can press the answer (`dtmf_number: …`; `*` repeats,
   1/2 = yes/no). Munni offers it after an unheard answer — only on phone
   channels, and only where the provider passes keys (not Exotel/Vobiz).
@@ -443,7 +464,7 @@ on-device. Full setup in `voice/README.md`.
 
 ## Testing
 
-`npm test` runs 26 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 27 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -472,6 +493,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `app-flows` | jsdom | **every wired feature through real taps**: onboarding, map, Picture Hut, PIN gate, teacher view, homework end to end, the practice-line button, the on-device status, progress and homework codes, adding a sibling, once-a-day opening, goal celebration |
 | `talk-munni` | jsdom | Talking Munni through real taps with a stand-in voice server and SDK: hidden and SDK-free until a parent opts in, the bilingual disclosure, offline honesty, minting with consent, the line and the clue choices on screen, a tap to the server, leaving/losing signal ends the call, answers replayed into the record once (record, skill history, SRS), erase, and a build with no voice server shows nothing |
 | `voice` | vm + HTTP | the phone channel: spoken numbers (EN/HI/Hinglish, every Hindi word Munni speaks parses back), every Munni line bilingual and never "wrong", whole calls for every band, clue/reveal/first-try rules, doubt records nothing, "bas" stops, no-card fallback, band floor/ceiling over many calls, transcript re-grading and relay drift, skill tagging, homework code → call → progress code into a real teacher phone, SRS-due lines, keypad answers, the inbound line (unregistered, siblings, daily limit, quiet hours), the sound matcher and English practice, the in-app talk server against a fake Bolna (mint, screen, tap → event injection, results, limits, erase), the HTTP surface and auth, the Bolna graph, and the `genProblem(3)` hang regression |
+| `voice-parent` | vm + HTTP | consent call (Hindi/English): notice content, nothing before it, transcript-settled consent, relay/transcript disagreement → review, no transcript → review, refusal, unclear never a yes, quiet-hour times; weekly call from real lessons, honest "behind?", a parent's changes applied; scheduler: on time, once, one retry, truthful missed message, quiet hours, no consent, already practised, Sunday weekly call; workflow endpoints idempotent; both workflow definitions and the parent agent graph checked; HTTP auth |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -514,7 +536,11 @@ Honest edges of what's built:
    through a phone recognizer is untested; voice storage is one JSON file
    per record (a pilot, not a serverless host); WhatsApp is a share link,
    not automatic sending; consent is a checkbox and timestamp, not the
-   DPDP Rules' verifiable parental consent. Talking Munni's minting
+   DPDP Rules' verifiable parental consent: the consent call records a
+   transcript-checked yes, but doesn't verify the parent is an identifiable
+   adult (Rule 10, in force 13 May 2027). The Bolna Workflows follow the
+   documented (beta) definition format but haven't run in an account; the
+   WhatsApp node is fire-and-forget. Talking Munni's minting
    endpoint is open to any browser (rate-limited per address and per child,
    not authenticated), and the English sound matcher accepts words that
    differ only in a vowel (sun/son) — the bank avoids such pairs.

@@ -139,8 +139,36 @@ function dashboardPage(brain, key) {
       <td>${s.relay ? `${s.relay.mismatched}/${s.relay.checked}` : '–'}</td>
       <td><a href="/voice/admin/sessions/${esc(s.id)}?${q}">open</a></td></tr>`;
   }).join('');
+  const parentRows = (brain.listParentCalls ? brain.listParentCalls() : []).sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 30)
+    .map(c => `<tr><td>${esc(byId[c.child_id] ? byId[c.child_id].name : '?')}<br><span class="sub">${esc(c.created_at.slice(0, 16).replace('T', ' '))}</span></td>
+      <td>${esc(c.kind)}</td><td>${esc(c.status)}</td><td>${esc(c.consent ? c.consent.status : c.outcome || '–')}${(c.changes || []).length ? '<br><span class="sub">' + esc(c.changes.join(', ')) + '</span>' : ''}</td>
+      <td><a href="/voice/admin/parentcalls/${esc(c.id)}?${q}">open</a></td></tr>`).join('');
   const kidOpts = kids.map(k => `<option value="${esc(k.id)}">${esc(k.name)} (${k.age}, ${k.lang})</option>`).join('');
-  const kidRows = kids.map(k => `<tr><td>${esc(k.name)}</td><td>${k.age} · ${esc(k.lang)}</td>
+  const btn = 'class="btn" style="margin:0;padding:6px 10px"';
+  const consentCell = k => {
+    const c = k.consent || {};
+    const label = { given: 'given', pending: 'waiting', needs_review: 'needs review', refused: 'refused' }[c.status || (c.given ? 'given' : 'pending')] || c.status;
+    const how = c.given ? `${esc(c.method || '')}${c.recording ? ' · recording ok' : ' · no recording'}` : esc(c.why || c.last_result || '');
+    const act = c.given ? '' : c.status === 'needs_review'
+      ? `<form method="post" action="/voice/admin/children/${esc(k.id)}/consent-confirm?${q}"><a href="/voice/admin/parentcalls/${esc(c.call && c.call.session_id)}?${q}">listen</a> <button ${btn}>I heard a clear yes</button></form>`
+      : c.status === 'refused' ? '' : `<form method="post" action="/voice/admin/children/${esc(k.id)}/consent-call?${q}"><button ${btn}>Consent call</button></form>`;
+    return `<span class="chip ${c.given ? 'ok' : c.status === 'needs_review' ? 'mid' : 'no'}">${esc(label)}</span><br><span class="sub">${how}</span>${act}`;
+  };
+  const scheduleCell = k => {
+    if (!k.consent || !k.consent.given) return '<span class="sub">after consent</span>';
+    const sc = k.schedule || {}, w = k.weekly || {};
+    const days = sc.days && sc.days.length === 7 ? 'daily' : 'alternate';
+    return `<form method="post" action="/voice/admin/children/${esc(k.id)}/schedule?${q}">
+      <input type="time" name="time" value="${esc(sc.time || '17:00')}">
+      <select name="days"><option value="alternate"${days === 'alternate' ? ' selected' : ''}>Mon·Wed·Fri</option><option value="daily"${days === 'daily' ? ' selected' : ''}>every day</option></select>
+      <select name="enabled"><option value="yes"${sc.enabled ? ' selected' : ''}>lessons on</option><option value="no"${sc.enabled ? '' : ' selected'}>lessons off</option></select>
+      <select name="weekly"><option value="yes"${w.enabled ? ' selected' : ''}>weekly call on</option><option value="no"${w.enabled ? '' : ' selected'}>weekly call off</option></select>
+      <button ${btn}>Save</button></form>
+      <form method="post" action="/voice/admin/children/${esc(k.id)}/weekly-call?${q}"><button ${btn} style="margin:4px 0 0;padding:6px 10px;background:#6E6355">Weekly call now</button></form>
+      ${k.requested_time ? `<span class="sub">parent asked for ${esc(k.requested_time)}</span>` : ''}`;
+  };
+  const kidRows = kids.map(k => `<tr><td>${esc(k.name)}</td><td>${k.age} · ${esc(k.lang)}${k.parent_lang && k.parent_lang !== k.lang ? ` · parent ${esc(k.parent_lang)}` : ''}</td>
+    <td>${consentCell(k)}</td><td>${scheduleCell(k)}</td>
     <td>${esc(JSON.stringify(k.profile.levels))}</td><td>${k.profile.classCode ? esc(k.profile.classCode) : '–'}</td>
     <td><form method="post" action="/voice/admin/children/${esc(k.id)}/english?${q}"><input type="hidden" name="on" value="${k.english_practice ? 'no' : 'yes'}"><button class="btn" style="margin:0;padding:6px 10px;${k.english_practice ? '' : 'background:#6E6355'}">${k.english_practice ? 'On' : 'Off'}</button></form></td>
     <td><form method="post" action="/voice/admin/children/${esc(k.id)}/homework?${q}"><input name="code" placeholder="TKH1.… homework code" size="22"><button class="btn" style="margin:0;padding:6px 10px">Import</button></form></td></tr>`).join('');
@@ -151,15 +179,19 @@ function dashboardPage(brain, key) {
     <input name="name" placeholder="First name" required><input name="age" type="number" min="3" max="10" placeholder="Age" required>
     <select name="lang"><option value="hi">Hindi</option><option value="en">English</option></select>
     <input name="parent_phone" placeholder="+91…" required>
-    <label><input type="checkbox" name="consent" value="yes" required> Parent consents</label>
+    <select name="parent_lang"><option value="">Parent: same language</option><option value="hi">Parent: Hindi</option><option value="en">Parent: English</option></select>
+    <select name="consent" required><option value="call">Ask on a consent call</option><option value="yes">Parent consented in person</option></select>
     <button class="btn" style="margin:0">Add</button></form>
+  <p class="note">A consent call explains what Takhti keeps and asks the parent, yes or no, before any lesson; their answers are checked against Bolna's transcript afterwards. The time and days they choose start the daily lessons.</p>
   <h2>Children</h2>
-  <table><tr><th>Name</th><th>Age · lang</th><th>Levels</th><th>Class</th><th>English practice</th><th>Teacher's homework code</th></tr>${kidRows || '<tr><td colspan="6">None yet</td></tr>'}</table>
+  <table><tr><th>Name</th><th>Age · lang</th><th>Consent</th><th>Lessons · weekly call</th><th>Levels</th><th>Class</th><th>English practice</th><th>Teacher's homework code</th></tr>${kidRows || '<tr><td colspan="8">None yet</td></tr>'}</table>
   <p class="note">A homework code from the app's teacher view links the child to that class; the next call asks the homework (personalised by the app's own diagnosis). After each call the parent report carries a progress code back to the teacher.</p>
   <h2>Plan a lesson</h2>
   <form method="post" action="/voice/admin/sessions?${q}"><select name="child_id">${kidOpts}</select>
     <select name="kind"><option value="">Next in turn</option><option value="lesson">Reading + maths</option><option value="english">Spoken English</option></select>
     <label><input type="checkbox" name="call" value="yes"> and call now</label><button class="btn" style="margin:0">Plan</button></form>
+  <h2>Parent calls</h2>
+  <table><tr><th>Child</th><th>Kind</th><th>Status</th><th>Outcome</th><th></th></tr>${parentRows || '<tr><td colspan="5">None yet</td></tr>'}</table>
   <h2>Sessions</h2>
   <table><tr><th>Child</th><th>Status</th><th>Items</th><th>Relay drift</th><th></th></tr>${rows || '<tr><td colspan="5">None yet</td></tr>'}</table>
   <p class="note">Relay drift = answers where the words the voice model passed to the tools differ from Bolna's own transcript. It should stay near zero.</p>`);
@@ -187,4 +219,23 @@ function sessionAdminPage(s, child, key) {
   ${s.transcript ? `<h2>Bolna transcript</h2><pre>${esc(s.transcript)}</pre>` : ''}`);
 }
 
-module.exports = { cardPage, reportPage, dashboardPage, sessionAdminPage, esc };
+/* ---------- one parent call, for the team ---------- */
+function parentCallPage(s, child, key) {
+  const q = 'key=' + encodeURIComponent(key);
+  const name = child ? child.name : '?';
+  const turns = (s.live_turns || []).map(t => `<div class="turn"><b>${t.role === 'user' ? 'Parent' : 'Munni'}:</b> ${esc(t.text)}</div>`).join('');
+  const items = s.items.map(it => `<tr><td>${esc(it.step)}</td><td>${esc(it.prompts[it.prompts.length - 1])}</td>
+    <td>${esc(it.said.join(' | '))}</td><td>${esc((it.heard_tx || []).map(x => x == null ? '·' : x).join(' | '))}</td></tr>`).join('');
+  const c = s.consent;
+  return shell('Parent call ' + s.id, 'en', `<p><a href="/voice/admin?${q}">← dashboard</a></p>
+  <h1>${esc(name)} · ${esc(s.kind)} call · ${esc(s.lang)}</h1>
+  <p class="sub">${esc(s.status)} · outcome ${esc(s.outcome || '–')}${c ? ` · consent check: <b>${esc(c.status)}</b>${c.why ? ' (' + esc(c.why) + ')' : ''}` : ''}${s.notice ? ' · notice ' + esc(s.notice) : ''}</p>
+  ${s.call && s.call.recording_url ? `<p><a href="${esc(s.call.recording_url)}">recording</a></p>` : ''}
+  ${c && c.terms ? `<p>Agreed terms: ${esc(c.terms.time)} · days ${esc(c.terms.days.join(','))} · recording ${c.terms.recording ? 'yes' : 'no'} · weekly ${c.terms.weekly ? 'yes' : 'no'}</p>` : ''}
+  ${(s.changes || []).length ? `<p>Changes the parent asked for: ${esc(s.changes.join(', '))}</p>` : ''}
+  <h2>Questions</h2><table><tr><th>Step</th><th>Munni asked</th><th>Relayed</th><th>Transcript</th></tr>${items}</table>
+  <h2>What the tool heard</h2>${turns || '<p class="sub">No turns yet.</p>'}
+  ${s.transcript ? `<h2>Bolna transcript</h2><pre>${esc(s.transcript)}</pre>` : ''}`);
+}
+
+module.exports = { cardPage, reportPage, dashboardPage, sessionAdminPage, parentCallPage, esc };

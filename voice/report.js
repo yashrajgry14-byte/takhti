@@ -88,7 +88,9 @@ function alignToTranscript(session, turns) {
 function processCallEnd(core, child, session, payload) {
   const status = String(payload.status || '').toLowerCase();
   if (!TERMINAL.has(status)) return { changed: false, reason: 'not terminal: ' + status };
-  if (session.processed && session.call && session.call.execution_id === payload.id) return { changed: false, reason: 'already processed' };
+  // idempotent per call: the id placeCall() stored is the call to settle,
+  // so the guard is the id we last SETTLED, not the last one we dialled
+  if (session.processed && session.processed_exec === payload.id) return { changed: false, reason: 'already processed' };
 
   const tel = payload.telephony_data || {};
   session.call = Object.assign(session.call || {}, {
@@ -99,7 +101,7 @@ function processCallEnd(core, child, session, payload) {
     cost_cents: payload.total_cost != null ? payload.total_cost : null
   });
   session.transcript = String(payload.transcript || '');
-  session.processed = true;
+  session.processed = true; session.processed_exec = payload.id;
   session.processed_at = new Date().toISOString();
 
   // safeguarding is a human's job, never automated messaging — flag only
@@ -231,7 +233,16 @@ const R = {
   tipRead:  { en: 'Tip for today: find the word "{w}" together on a sign, a box or a newspaper.', hi: 'आज की सलाह: "{w}" शब्द किसी बोर्ड, डिब्बे या अख़बार पर साथ में ढूँढें।' },
   tipGood:  { en: 'Tip for today: ask {name} to teach you one sum from the call.', hi: 'आज की सलाह: {name} से कहें कि कॉल का एक सवाल आपको सिखाए।' },
   stopped:  { en: '{name} chose to stop early today, which is completely fine.', hi: '{name} ने आज जल्दी रुकना चुना, यह बिल्कुल ठीक है।' },
-  missed:   { en: 'Munni could not reach {name} today. The next call will be at the usual time.', hi: 'मुन्नी आज {name} से बात नहीं कर पाई। अगली कॉल हमेशा के समय पर होगी।' },
+  missed:   { en: 'Munni could not reach {name} today.', hi: 'मुन्नी आज {name} से बात नहीं कर पाई।' },
+  noLesson: { en: "Munni called, but today's lesson with {name} didn't happen. That's fine.", hi: 'मुन्नी ने फ़ोन किया, पर आज {name} के साथ पाठ नहीं हो पाया। कोई बात नहीं।' },
+  retry:    { en: 'She will try once more at {clock}.', hi: 'वह {clock} एक बार और कोशिश करेगी।' },
+  next:     { en: 'The next call is {when}.', hi: 'अगली कॉल {when} होगी।' },
+  short1:   { en: '{name} practised with Munni today: {parts}.', hi: '{name} ने आज मुन्नी के साथ अभ्यास किया: {parts}।' },
+  short1b:  { en: '{name} practised with Munni today.', hi: '{name} ने आज मुन्नी के साथ अभ्यास किया।' },
+  pSums:    { en: '{c} of {n} sums right first time', hi: '{n} में से {c} सवाल पहली बार में सही' },
+  pRead:    { en: '{g} of {n} lines read well', hi: '{n} में से {g} लाइनें अच्छे से पढ़ीं' },
+  pEng:     { en: '{k} of {n} English words straight away', hi: '{n} में से {k} अंग्रेज़ी शब्द तुरंत' },
+  good:     { en: 'A good lesson today.', hi: 'आज का पाठ अच्छा रहा।' },
   enWords:  { en: 'Spoken English: knew {k} of {n} words straight away.', hi: 'अंग्रेज़ी बोलना: {n} में से {k} शब्द तुरंत बताए।' },
   enPhrases:{ en: 'Said {k} of {n} English sentences clearly.', hi: 'अंग्रेज़ी के {n} में से {k} वाक्य साफ़ बोले।' },
   enPractise:{ en: 'English words to use at home: {w}.', hi: 'घर पर इन अंग्रेज़ी शब्दों का इस्तेमाल करें: {w}।' },
@@ -307,15 +318,36 @@ function buildReport(core, child, session) {
 
   const text = lines.join('\n');
   const phone = String(child.parent_phone || '').replace(/[^\d]/g, '');
-  return { lang, text, lines,
+
+  // three single lines for a WhatsApp template (no line breaks allowed in
+  // a template variable): what was done, what to practise, one tip
+  const parts = [];
+  if (sums.length) parts.push(t('pSums', lang, { c: firstTry, n: sums.length }));
+  if (reads.length) parts.push(t('pRead', lang, { g: reads.filter(x => x.evidence.verdict === 'pass').length, n: reads.length }));
+  if (ew.length) parts.push(t('pEng', lang, { k: ew.filter(x => x.evidence.first_verdict === 'pass').length, n: ew.length }));
+  const tip = lines.find(l => /^(Tip for today|आज की सलाह)/.test(l));
+  const second = lines.find(l => /^(Worth practising|साथ में अभ्यास|English words to use|घर पर इन अंग्रेज़ी)/.test(l)) || t('good', lang, {});
+  const short = [parts.length ? t('short1', lang, { name, parts: parts.join(', ') }) : t('short1b', lang, { name }), second, tip || t('footer', lang, {})]
+    .map(l => l.replace(/\s+/g, ' ').trim());
+  return { lang, text, lines, short,
            // for the team: open a WhatsApp chat with this parent, report typed in
            whatsapp: phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : null,
            // for the parent: forward it to the other parent or the teacher
            share: `https://wa.me/?text=${encodeURIComponent(text)}` };
 }
 
-function missedReport(child, session) {
-  return { lang: session.lang, text: t('missed', session.lang, { name: child.name }) };
+/* A call with no lesson. The message says only what will really happen
+   next (info comes from the scheduler): a retry, the next scheduled call,
+   or nothing at all. */
+function missedReport(child, session, info) {
+  info = info || {};
+  const lang = session.lang;
+  const C = require('./clock');
+  const parts = [t(session.status === 'no_lesson' ? 'noLesson' : 'missed', lang, { name: child.name })];
+  if (info.retry) parts.push(t('retry', lang, { clock: C.clockSay(info.retry, lang) }));
+  else if (info.next) parts.push(t('next', lang, { when: C.whenSay(info.next.day, info.next.time, lang) }));
+  const text = parts.join(' ');
+  return { lang, text, lines: [text], short: [parts[0], parts[1] || (lang === 'hi' ? 'धन्यवाद।' : 'Thank you.'), t('footer', lang, {})], missed: true };
 }
 
 module.exports = { processCallEnd, parseTranscript, alignToTranscript, buildReport, missedReport, progressCodeFor, TERMINAL };

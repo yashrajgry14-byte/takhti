@@ -7,6 +7,8 @@
 
    Bolna (during a call)   POST /voice/tools/next        Bearer TAKHTI_TOOL_TOKEN
                            POST /voice/tools/answer
+                           POST /voice/tools/parent      (parent calls)
+   Bolna Workflows         POST /voice/flow/*            Bearer TAKHTI_TOOL_TOKEN
    Bolna (after a call)    POST /voice/webhook?key=TAKHTI_WEBHOOK_KEY
    Families                GET  /voice/card/:session     unguessable link
                            GET  /voice/report/:session   unguessable link
@@ -22,6 +24,8 @@ const path = require('path');
 const fs = require('fs');
 const { createBrain } = require('./brain');
 const { createWeb } = require('./web');
+const { createFlow } = require('./flow');
+const { createScheduler } = require('./schedule');
 const P = require('./pages');
 
 /* tiny .env loader so `node voice/server.js` just works */
@@ -50,6 +54,8 @@ function createServer(opts) {
   const ADMIN = opts.adminKey || secret('TAKHTI_ADMIN_KEY');
   const env = opts.env || process.env;
   const web = createWeb(brain, env);
+  const flow = createFlow(brain, env);
+  const scheduler = createScheduler(brain, env);
   const base = () => (env.TAKHTI_PUBLIC_URL || '').replace(/\/$/, '');
 
   const same = (a, b) => {
@@ -123,6 +129,25 @@ function createServer(opts) {
         return send(res, 200, { say: out.say, expect: out.expect, done: out.done, item: out.item });
       }
 
+      /* ---- the parent agent's one tool ---- */
+      if (req.method === 'POST' && p === '/voice/tools/parent') {
+        if (!same(bearer(req), TOOL)) return send(res, 401, { error: 'unauthorized' });
+        const b = await readBody(req, 64 * 1024);
+        const out = brain.toolParent(sid(b.session_id), b.parent_said, env);
+        return send(res, 200, { say: out.say, done: out.done });
+      }
+
+      /* ---- Bolna Workflows: the daily sequence and the consent call ---- */
+      if (req.method === 'POST' && p.startsWith('/voice/flow/')) {
+        if (!same(bearer(req), TOOL)) return send(res, 401, { error: 'unauthorized' });
+        const b = await readBody(req, 16 * 1024);
+        const fn = { '/voice/flow/plan': flow.plan, '/voice/flow/gate': flow.gate, '/voice/flow/result': flow.result,
+                     '/voice/flow/missed': flow.missed, '/voice/flow/consent/plan': flow.consentPlan,
+                     '/voice/flow/consent/result': flow.consentResult }[p];
+        if (!fn) return send(res, 404, { error: 'not found' });
+        return send(res, 200, fn(b));
+      }
+
       /* ---- Bolna's caller lookup for the inbound line (GET, Bearer, < 3 s) ---- */
       if (req.method === 'GET' && p === '/voice/inbound/lookup') {
         if (!same(bearer(req), TOOL)) return send(res, 401, { error: 'unauthorized' });
@@ -134,7 +159,7 @@ function createServer(opts) {
       if (req.method === 'POST' && p === '/voice/webhook') {
         if (!same(url.searchParams.get('key'), HOOK)) return send(res, 401, { error: 'unauthorized' });
         const b = await readBody(req, 4 * 1024 * 1024);
-        const r = brain.onCallEvent(b);
+        const r = brain.onCallEvent(b, env);
         return send(res, 200, r);
       }
 
@@ -160,8 +185,8 @@ function createServer(opts) {
         if (req.method === 'POST' && p === '/voice/admin/children') {
           const b = await readBody(req, 64 * 1024);
           const r = brain.registerChild({
-            name: b.name, age: Number(b.age), lang: b.lang, parent_phone: b.parent_phone,
-            consent: b.consent === true || b.consent === 'yes', consent_by: b.consent_by
+            name: b.name, age: Number(b.age), lang: b.lang, parent_lang: b.parent_lang, parent_phone: b.parent_phone,
+            consent: b.consent === true || b.consent === 'yes' ? true : b.consent === 'call' ? 'call' : false, consent_by: b.consent_by
           });
           if (r.error) return send(res, 400, wantsHtml ? `<!doctype html><p>${P.esc(r.error.join('; '))}</p><p><a href="/voice/admin?${q}">back</a></p>` : { error: r.error });
           return wantsHtml ? redirect(res, `/voice/admin?${q}`) : send(res, 201, { child: publicChild(r.child) });
@@ -178,6 +203,25 @@ function createServer(opts) {
           const r = brain.setEnglishPractice(mm[1], b.on === true || b.on === 'yes');
           if (wantsHtml) return redirect(res, `/voice/admin?${q}`);
           return send(res, r ? 200 : 404, r || { error: 'no such child' });
+        }
+        if (req.method === 'POST' && (mm = m(/^\/voice\/admin\/children\/([A-Za-z0-9_-]+)\/(consent-call|weekly-call|consent-confirm|schedule)$/))) {
+          const b = await readBody(req, 8 * 1024);
+          let r;
+          if (mm[2] === 'consent-call') r = await brain.requestConsentCall(mm[1], env);
+          else if (mm[2] === 'weekly-call') r = await brain.placeParentCall(mm[1], 'weekly', env);
+          else if (mm[2] === 'consent-confirm') r = brain.confirmConsent(mm[1], b.by || 'team');
+          else r = brain.setSchedule(mm[1], { time: b.time, days: Array.isArray(b.days) ? b.days : b.days, enabled: b.enabled,
+                                               weekly: b.weekly, by: b.by || 'team' });
+          const bad = r && (r.error || r.ok === false);
+          if (wantsHtml) return bad ? send(res, 400, `<!doctype html><p>${P.esc([].concat(r.error || r.why).join('; '))}</p><pre>${P.esc(JSON.stringify(r.detail || {}, null, 1))}</pre><p><a href="/voice/admin?${q}">back</a></p>`)
+                                    : redirect(res, `/voice/admin?${q}`);
+          return send(res, bad ? 400 : 200, r);
+        }
+        if (req.method === 'GET' && (mm = m(/^\/voice\/admin\/parentcalls\/([A-Za-z0-9_-]+)$/))) {
+          const s = brain.getParentCall(mm[1]);
+          if (!s) return send(res, 404, { error: 'no such call' });
+          const child = brain.getChild(s.child_id);
+          return wantsHtml ? send(res, 200, P.parentCallPage(s, child, key)) : send(res, 200, s);
         }
         if (req.method === 'GET' && (mm = m(/^\/voice\/admin\/children\/([A-Za-z0-9_-]+)\/progress-code$/))) {
           const code = brain.progressCode(mm[1]);
@@ -231,12 +275,14 @@ function createServer(opts) {
   function publicChild(c) { const { profile, ...rest } = c; return rest; }
 
   const server = http.createServer(handle);
-  return { server, brain, tokens: { TOOL, HOOK, ADMIN } };
+  return { server, brain, scheduler, flow, tokens: { TOOL, HOOK, ADMIN } };
 }
 
 if (require.main === module) {
-  const { server, brain } = createServer();
+  const { server, brain, scheduler } = createServer();
   const port = Number(process.env.PORT || 8787);
+  // the daily lessons and weekly parent calls, at the times parents chose
+  if (process.env.TAKHTI_SCHEDULER !== '0') scheduler.start();
   server.listen(port, () => {
     console.log(`[takhti] voice server on http://localhost:${port}  ·  ${brain.storyBank.length} validated story problems`);
     console.log(`[takhti] dashboard: http://localhost:${port}/voice/admin?key=${process.env.TAKHTI_ADMIN_KEY}`);

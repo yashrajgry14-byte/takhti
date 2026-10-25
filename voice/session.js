@@ -633,4 +633,18 @@ function gradeLine(core, child, s, target, alternatives) {
   return out;
 }
 
-module.exports = { planSession, next, answer, finish, buildStoryBank, gradeLine, recordOutcome, L, STORY, MAX_CALL_MS, MAX_TURNS };
+/* For the weekly parent call: is there teacher homework, can it be asked
+   out loud, and has a call already asked it? */
+function homeworkStatus(core, child, sessions) {
+  const { out } = core.withChild(child.profile, { lang: child.lang === 'en' ? 'en' : 'hi' }, T => {
+    const hw = T.personalizeContentForHomework(T.S);
+    if (!hw) return { assigned: false };
+    const sp = hw.storySkill ? T.skillProblem(hw.storySkill, 1) : null;
+    return { assigned: true, skill: hw.storySkill || null, assignedAt: hw.assignedAt, spoken: !!(sp && SPOKEN_OPS[sp.op]) };
+  });
+  if (out.assigned) out.asked = (sessions || []).some(s => s && s.homework_skill && Date.parse(s.created_at) >= (out.assignedAt || 0) &&
+    (s.items || []).some(x => x.kind === 'homework' && x.outcome && x.outcome !== 'unsure'));
+  return out;
+}
+
+module.exports = { homeworkStatus, planSession, next, answer, finish, buildStoryBank, gradeLine, recordOutcome, L, STORY, MAX_CALL_MS, MAX_TURNS };

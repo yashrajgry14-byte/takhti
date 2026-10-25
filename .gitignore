@@ -8,3 +8,5 @@ voice/.env
 voice/agent/munni.agent.json
 
 .vercel
+voice/agent/munni-parent.agent.json
+voice/agent/*.workflow.json

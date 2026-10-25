@@ -40,6 +40,29 @@ phone is a separate channel and needs the network by its nature. It only
 | **Spoken English** | a parent's per-child choice, alternating with the normal lesson: Hindi meaning → English word, short phrases said back, graded by sound | `english.js`, `sounds.js` |
 | **Talking Munni in the app** | parent opt-in. A live voice talk at Munni's Pond, with the line to read on screen and tap choices that Munni answers instantly through event injection | `web.js` + `src/ui/talk-munni.js` |
 
+## For parents
+
+| | What it is | Where |
+|---|---|---|
+| **Consent call** | the first call to a family. Munni says who she is, what Takhti keeps, that Bolna turns the call into text, and how to stop or delete everything. Then she asks one yes/no at a time: may Munni call the child, may calls be recorded. Then the time, the days and the weekly call. Nobody calls the child before it | `parent.js`, `POST /voice/admin/children/:id/consent-call` |
+| **Weekly progress call** | Sunday, at the parent's time, in the parent's language. The week from the child's real record, then questions: *is she behind?*, *what should we do at home?*, reading, maths, English, homework, privacy. A parent can change the time, switch on English practice, stop the weekly call or pause lessons, on the call | `parent.js`, `schedule.js` |
+| **Daily sequence** | at the time the parent chose: WhatsApp the reading card, call the child, WhatsApp three lines after. Nobody answers → one retry half an hour later → WhatsApp what happens next | Bolna Workflow (`agent/build-workflow.js`) + `flow.js`; without a workflow, `schedule.js` calls directly and retries once |
+
+**Consent is settled from the transcript, not the live relay.** After the
+consent call, the parent's reply to each consent question is taken from
+Bolna's own transcript and must agree with what was relayed live. A
+disagreement, or a reply missing from the transcript, goes to **needs
+review**: a person listens (the dashboard links the call) and presses *I
+heard a clear yes*. A muddled answer, "pata nahi" or silence is never a yes.
+A doubtful recording answer means no recording.
+
+**Missed calls say only what will really happen.** "She will try once more
+at 5:30", or "the next call is on Wednesday at 5", or nothing at all. The
+scheduler never calls in quiet hours, never twice a day, never if the child
+already practised that day, and never without consent. Nothing ever goes to
+a child except the lesson itself, at a time a parent picked: no reminders
+and no "you missed a day" (DPDP s.9).
+
 ## The reading card
 
 A phone call can't show text. So before the call the family opens the card link
@@ -75,6 +98,8 @@ say-after-me and are never asked to read.
 ```bash
 npm run voice:sim -- --auto --mistakes          # a scripted child, Hindi, age 7
 npm run voice:sim -- --age 5 --lang en          # you type as the child
+npm run voice:sim -- --parent consent --auto    # the consent call, then what it set up
+npm run voice:sim -- --parent weekly --lang en  # a weekly progress call; you are the parent
 npm test                                         # includes test/voice.test.js
 ```
 
@@ -177,6 +202,39 @@ surname, and the phone number only as the number to dial.
     to the same agent. The graph's `screen` node and its `screen_answer` event
     edge are already in the config.
 
+15. **The parent agent.** Generate it with
+    `node voice/agent/build-parent-agent.js > voice/agent/munni-parent.agent.json`,
+    import it as a second graph agent, add the `takhti_parent` custom function
+    (`POST <PUBLIC_URL>/voice/tools/parent`, param `{"session_id": "%(session_id)s", "parent_said": "%(parent_said)s"}`,
+    scoped to the `talk` node) and put its id in `BOLNA_PARENT_AGENT_ID`. Use
+    the same webhook. Turn on keypad input for 1 / 2 answers.
+16. **WhatsApp templates (AiSensy).** In AiSensy, create these utility
+    templates in Hindi and English, get them approved by Meta, and launch each
+    one as an **API campaign** (approved templates alone don't show up in
+    Bolna). Then link AiSensy in Bolna (Integrations).
+
+    | template | English text |
+    |---|---|
+    | `takhti_card` | Namaste! Here are {{1}}'s lines for today's lesson with Munni: {{2}} Please copy them onto the takhti together before the call. — Takhti |
+    | `takhti_report` | Today with Munni: {{1}} {{2}} {{3}} Full report: {{4}} — Takhti |
+    | `takhti_missed` | Takhti update: {{1}} — Takhti |
+    | `takhti_consent` | Thank you for talking to Munni. {{1}} {{2}} — Takhti |
+
+    Hindi: `takhti_card` "नमस्ते! मुन्नी के साथ आज के पाठ के लिए {{1}} की लाइनें यहाँ हैं: {{2}} कॉल से पहले इन्हें साथ में तख़्ती पर लिख लें। — तख़्ती";
+    `takhti_report` "आज मुन्नी के साथ: {{1}} {{2}} {{3}} पूरी रिपोर्ट: {{4}} — तख़्ती";
+    `takhti_missed` "तख़्ती: {{1}} — तख़्ती"; `takhti_consent` "मुन्नी से बात करने के लिए धन्यवाद। {{1}} {{2}} — तख़्ती".
+    Line breaks between the variables are fine in the template; the
+    variables themselves never contain one. Other names: `TAKHTI_WA_CARD`,
+    `TAKHTI_WA_REPORT`, `TAKHTI_WA_MISSED`, `TAKHTI_WA_CONSENT`.
+17. **The workflows.** `node voice/agent/build-workflow.js daily --push` (and
+    `consent --push`) creates each as a draft in your Bolna account and runs
+    Bolna's validator. Look at it in the editor, publish it, and put the ids
+    in `BOLNA_DAILY_WORKFLOW_ID` and `BOLNA_CONSENT_WORKFLOW_ID`. Without
+    `--push` it prints the definition. The scheduler runs inside the server
+    (`TAKHTI_SCHEDULER=0` turns it off) and starts each family's daily
+    workflow at their time. Without a daily workflow it calls directly, retries
+    once, and the WhatsApp step stays a link on the dashboard.
+
 ## Endpoints
 
 | Who | Route | Auth |
@@ -184,10 +242,12 @@ surname, and the phone number only as the number to dial.
 | Bolna, during a call | `POST /voice/tools/next` `{session_id}` | `Bearer TAKHTI_TOOL_TOKEN` |
 | | `POST /voice/tools/answer` `{session_id, child_said}` | same |
 | Bolna, after a call | `POST /voice/webhook?key=…` (execution payload) | `TAKHTI_WEBHOOK_KEY` |
+| | `POST /voice/tools/parent` `{session_id, parent_said}` (parent agent) | same |
+| Bolna Workflows | `POST /voice/flow/plan`, `/gate`, `/result`, `/missed`, `/consent/plan`, `/consent/result` (see `flow.js`) | `Bearer TAKHTI_TOOL_TOKEN` |
 | Bolna, before an inbound call | `GET /voice/inbound/lookup?contact_number=…` | `Bearer TAKHTI_TOOL_TOKEN` |
 | The app (Talking Munni) | `POST /voice/web/session`, `GET /voice/web/state`, `POST /voice/web/tap`, `GET /voice/web/result`, `POST /voice/web/forget` | parent consent flag + per-child key; per-talk token; rate limits |
 | Families | `GET /voice/card/:session`, `GET /voice/report/:session` | the unguessable link |
-| Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `POST /voice/admin/children/:id/homework` `{code}`, `GET /voice/admin/children/:id/progress-code`, `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` |
+| Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `POST /voice/admin/children/:id/homework` `{code}`, `GET /voice/admin/children/:id/progress-code`, `POST /voice/admin/children/:id/consent-call`, `/consent-confirm`, `/weekly-call`, `/schedule` `{time, days: daily\|alternate, enabled, weekly}`, `GET /voice/admin/parentcalls/:id`, `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` |
 
 The tools always return `200` with `{say, expect, done, item}`. An unknown
 session gets a polite bilingual goodbye with `done: true`, so a broken link
@@ -210,8 +270,11 @@ never leaves a child listening to silence.
   "next call at the usual time". There is no automatic re-dialling of children.
   The goodbye counts what was done, never what was missed.
 - **Every line in Hindi and English,** with matching placeholders (tested).
-- **Consent first.** A child can't be registered without `consent: true`.
-  `DELETE` erases the child and every session and transcript.
+- **Consent first.** A child is registered with consent given in person
+  (`consent: true`) or to be asked on a consent call (`consent: "call"`). No
+  lesson is planned, dialled or answered on the inbound line until consent is
+  given. `DELETE` erases the child and every session, parent call and
+  transcript.
 
 ## Honest gaps
 
@@ -229,12 +292,22 @@ never leaves a child listening to silence.
 - **Storage** is one JSON file per record (`voice/store.js`). That's fine for a
   pilot on one small server, but not for a serverless host. The interface is
   get/put/list, so swap it there.
-- **WhatsApp** is a share link (`wa.me`) for now. Bolna Workflows can send real
-  WhatsApp templates through AiSensy: that's the next step for sending the card
-  before the call and the report after it.
-- **Consent** is a checkbox and a timestamp. A production launch needs the
-  verifiable parental consent mechanism under the DPDP Rules. Check the current
-  requirements before any real pilot.
+- **The workflows are built to Bolna's documented definition format** (beta)
+  and tested here for shape and against the server's own endpoints, not yet
+  run in an account. `--push` runs Bolna's validator on them: fix anything it
+  reports before publishing. Bolna's WhatsApp node is fire-and-forget, so a
+  WhatsApp that fails to deliver isn't seen.
+- **Consent by phone is not the DPDP Rules' *verifiable* consent.** The
+  consent call gives the notice, records a clear yes checked against the
+  transcript, and keeps which notice was agreed to. Rule 10 also requires
+  checking that the person is an identifiable adult (from details already
+  held, or an identity/age token such as DigiLocker). Takhti doesn't do that
+  yet. Those provisions come into force on 13 May 2027; add that check before
+  then.
+- **The weekly call answers from Takhti's own record.** "Is she behind?" is
+  answered against where Takhti starts for that age, not against the class or
+  any test norm, and it says so. Below about six first tries in a month it
+  says it's too early to tell.
 - **Talking Munni's minting endpoint** is open to any browser. It is limited
   per address (`TAKHTI_WEB_PER_HOUR`) and per child per day
   (`TAKHTI_WEB_DAILY`), but not authenticated. Put it behind the app's own

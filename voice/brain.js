@@ -11,8 +11,10 @@ const crypto = require('crypto');
 const { createCore } = require('./takhti-core');
 const { createStore } = require('./store');
 const S = require('./session');
-const { processCallEnd, progressCodeFor } = require('./report');
+const { processCallEnd, progressCodeFor, missedReport } = require('./report');
 const { soundsLike } = require('./sounds');
+const PC = require('./parent');
+const C = require('./clock');
 
 const newId = () => crypto.randomBytes(12).toString('base64url');
 
@@ -39,15 +41,22 @@ function createBrain(opts) {
     if (!Number.isInteger(age) || age < 3 || age > 10) errs.push('age must be a whole number from 3 to 10');
     if (!lang) errs.push('lang must be "hi" or "en"');
     if (!/^\+\d{10,15}$/.test(phone)) errs.push('parent_phone must be in international format, e.g. +919876543210');
-    // a child's data is processed only with a parent's consent (DPDP Act s.9)
-    if (input.consent !== true) errs.push('a parent must consent before Munni can call (consent: true)');
+    // a child's data is processed only with a parent's consent (DPDP Act
+    // s.9): given in person (consent: true), or asked for on a consent call
+    // (consent: 'call') — then nobody calls the child until that call, and
+    // the transcript check after it, say yes
+    const byCall = input.consent === 'call';
+    if (input.consent !== true && !byCall) errs.push('a parent must consent before Munni can call (consent: true), or ask on a consent call (consent: "call")');
+    const plang = input.parent_lang === 'en' ? 'en' : input.parent_lang === 'hi' ? 'hi' : lang;
     if (errs.length) return { error: errs };
 
     const child = {
-      id: newId(), name: name.charAt(0).toUpperCase() + name.slice(1), age, lang,
+      id: newId(), name: name.charAt(0).toUpperCase() + name.slice(1), age, lang, parent_lang: plang,
       parent_phone: phone,
-      consent: { given: true, by: String(input.consent_by || 'parent').slice(0, 60), at: new Date().toISOString(),
-                 recording: input.consent_recording !== false },
+      consent: byCall
+        ? { given: false, status: 'pending', method: 'call', asked_at: null }
+        : { given: true, status: 'given', method: 'in person', by: String(input.consent_by || 'parent').slice(0, 60), at: new Date().toISOString(),
+            recording: input.consent_recording !== false },
       created_at: new Date().toISOString(),
       profile: core.freshProfile(name, age),
       sessions: []
@@ -89,6 +98,7 @@ function createBrain(opts) {
     const child = store.get('children', id);
     if (!child) return false;
     for (const sid of child.sessions || []) store.remove('sessions', sid);
+    for (const pid of child.parent_calls || []) store.remove('parentcalls', pid);
     store.remove('children', id);
     return true;
   }
@@ -97,6 +107,7 @@ function createBrain(opts) {
   function createSession(childId, o) {
     const child = store.get('children', childId);
     if (!child) return { error: ['no such child'] };
+    if (!child.consent || !child.consent.given) return { error: ['waiting for a parent\'s consent (' + ((child.consent && child.consent.status) || 'none') + ')'] };
     o = o || {};
     const s = S.planSession(core, child, {
       seed: o.seed, channel: o.channel, kind: o.kind,
@@ -258,15 +269,213 @@ function createBrain(opts) {
   }
 
   /* ---------- after the call ---------- */
-  function onCallEvent(payload) {
+  function onCallEvent(payload, env, nowIn) {
+    env = env || process.env;
     const rd = (payload.context_details && payload.context_details.recipient_data) || {};
     const sessionId = rd.session_id || payload.session_id;
+    const pc = sessionId && store.get('parentcalls', String(sessionId));
+    if (pc) return onParentCallEnd(pc, payload, env);
     const x = load(sessionId);
     if (!x) return { ok: false, reason: 'no session for this call' };
-    x.s.call = Object.assign(x.s.call || {}, { execution_id: payload.id, last_status: payload.status });
+    // processCallEnd records the execution id itself: setting it here first
+    // made every later event (a retry's own call) look "already processed"
+    x.s.call = Object.assign(x.s.call || {}, { last_status: payload.status });
     const r = processCallEnd(core, x.child, x.s, payload);
+    if (r.changed && (x.s.status === 'missed' || x.s.status === 'no_lesson')) afterMissed(x.child, x.s, env, nowIn);
     save(x.s, x.child);
     return Object.assign({ ok: true, session_id: x.s.id }, r);
+  }
+
+  /* A daily call nobody answered gets ONE more try, half an hour later,
+     only if that is still before quiet hours and still today — and the
+     parent's message says exactly what will happen next, because nothing
+     else will. A call that was answered but had no lesson (the child
+     wasn't there, a parent said "not now") is not retried. The Bolna
+     Workflow does its own retry; this is for the server's own scheduler. */
+  function afterMissed(child, s, env, nowIn) {
+    const now = nowIn ? new Date(nowIn) : new Date();
+    const lp = C.localParts(now, env);
+    const d = child.daily && Object.values(child.daily).find(e => e.session_id === s.id);
+    let info = {};
+    if (d && d.mode === 'direct' && s.status === 'missed' && !d.retry_at) {
+      const mins = Number(env.TAKHTI_RETRY_MINUTES || 30);
+      const at = new Date(now.getTime() + mins * 60e3);
+      const la = C.localParts(at, env);
+      if (la.day === lp.day && !C.inQuiet(la.minutes, env.TAKHTI_QUIET_HOURS)) {
+        d.retry_at = at.toISOString();
+        info.retry = C.fromMinutes(la.minutes);
+      }
+    }
+    if (!info.retry && child.schedule && child.schedule.enabled) {
+      const nx = C.nextCallDay(child.schedule.days, lp);
+      if (nx) info.next = { day: nx, time: child.schedule.time };
+    }
+    s.report = missedReport(child, s, info);
+  }
+
+  /* ---------- parent calls: consent, and the weekly progress call ---------- */
+  function contact(env) { return String((env || process.env).TAKHTI_HELP_CONTACT || '').slice(0, 60); }
+  function childSessions(child) { return (child.sessions || []).map(id => store.get('sessions', id)).filter(Boolean); }
+
+  function createParentSession(childId, kind, env) {
+    env = env || process.env;
+    const child = store.get('children', childId);
+    if (!child) return { error: ['no such child'] };
+    if (kind === 'consent' && child.consent && child.consent.given) return { error: ['consent is already given'] };
+    if (kind === 'weekly' && !(child.consent && child.consent.given)) return { error: ['no consent yet'] };
+    let summary = null, facts = null;
+    if (kind === 'weekly') {
+      const sessions = childSessions(child);
+      facts = PC.weekFacts(child, sessions);
+      summary = PC.weekSummary(child, facts, (child.parent_lang || child.lang) === 'en' ? 'en' : 'hi');
+    }
+    const s = PC.planParentCall(kind, child, { contact: contact(env), quiet: env.TAKHTI_QUIET_HOURS,
+                                               keypad: env.TAKHTI_KEYPAD !== '0', summary, facts });
+    store.put('parentcalls', s.id, s);
+    child.parent_calls = (child.parent_calls || []).concat(s.id).slice(-60);
+    if (kind === 'consent') child.consent = Object.assign({}, child.consent, { asked_at: s.created_at, last_call: s.id });
+    store.put('children', child.id, child);
+    return { session: s, child };
+  }
+
+  function toolParent(sessionId, said, env) {
+    env = env || process.env;
+    const s = sessionId && store.get('parentcalls', String(sessionId));
+    const child = s && store.get('children', s.child_id);
+    if (!s || !child) return { say: SORRY_PARENT, done: true, error: 'unknown session' };
+    log(s, 'user', said);
+    const r = PC.parentTurn(s, said, {
+      core, child, env, now: new Date(),
+      homework: s.kind === 'weekly' ? S.homeworkStatus(core, child, childSessions(child)) : null,
+      apply: change => applyParentChange(child, change, s)
+    });
+    log(s, 'assistant', r.say);
+    store.put('parentcalls', s.id, s);
+    store.put('children', child.id, child);
+    return r;
+  }
+  const SORRY_PARENT = 'माफ़ कीजिए, अभी यह कॉल ठीक से नहीं खुल रही। हम बाद में फिर फ़ोन करेंगे। ' +
+                       "Sorry, I can't open this call properly right now. We'll call another time. Goodbye!";
+
+  /* what a parent asked for on the weekly call, done at once */
+  function applyParentChange(child, c, s) {
+    const at = new Date().toISOString();
+    if (c.weekly_enabled === false) child.weekly = Object.assign({}, child.weekly, { enabled: false, changed_at: at, changed_by: 'parent (weekly call)' });
+    if (c.lessons_enabled === false && child.schedule) child.schedule = Object.assign({}, child.schedule, { enabled: false, changed_at: at, changed_by: 'parent (weekly call)' });
+    if (c.english_practice === true) child.english_practice = true;
+    if (c.time) {
+      if (child.schedule) child.schedule = Object.assign({}, child.schedule, { time: c.time, days: c.days || child.schedule.days, changed_at: at, changed_by: 'parent (weekly call)' });
+      else child.requested_time = c.time;          // no schedule yet: the team sees what they asked for
+    }
+    (child.changes = child.changes || []).push({ at, call: s.id, change: c });
+    child.changes = child.changes.slice(-50);
+  }
+
+  function onParentCallEnd(s, payload, env) {
+    const child = store.get('children', s.child_id);
+    if (!child) return { ok: false, reason: 'no child for this call' };
+    const r = PC.processParentEnd(child, s, payload);
+    if (r.changed && s.kind === 'consent' && s.consent) applyConsent(child, s, s.consent);
+    if (r.changed && s.kind === 'weekly') child.weekly_last = { call: s.id, status: s.status, at: new Date().toISOString() };
+    store.put('parentcalls', s.id, s);
+    store.put('children', child.id, child);
+    return Object.assign({ ok: true, session_id: s.id, type: 'parent' }, r);
+  }
+
+  /* The consent record: who agreed, how, when, to which notice, on which
+     call — and the schedule they chose. needs_review keeps every answer
+     for a person to check; it never starts a lesson by itself. */
+  function applyConsent(child, s, c, reviewedBy) {
+    const at = new Date().toISOString();
+    if (c.status === 'given') {
+      child.consent = { given: true, status: 'given', method: reviewedBy ? 'call (reviewed)' : 'call', by: 'parent (phone)',
+                        reviewed_by: reviewedBy || null, at, call: { session_id: s.id, execution_id: (s.call && s.call.execution_id) || null },
+                        recording: c.terms.recording, notice: s.notice };
+      child.schedule = { enabled: true, time: c.terms.time, days: c.terms.days, set_by: 'parent (consent call)', changed_at: at };
+      const wt = C.toMinutes(c.terms.time) >= 16 * 60 && C.toMinutes(c.terms.time) <= 20 * 60 ? c.terms.time : '18:00';
+      child.weekly = { enabled: c.terms.weekly, day: 7, time: wt, set_by: 'parent (consent call)' };
+    } else if (c.status === 'needs_review') {
+      child.consent = { given: false, status: 'needs_review', method: 'call', why: c.why, call: { session_id: s.id }, at };
+    } else if (c.status === 'refused') {
+      child.consent = { given: false, status: 'refused', method: 'call', call: { session_id: s.id }, at };
+    } else {
+      child.consent = Object.assign({}, child.consent, { given: false, status: 'pending', last_result: c.why, last_call: s.id });
+    }
+  }
+  /* A person listened to a consent call the transcript check couldn't
+     settle, and heard a clear yes. */
+  function confirmConsent(childId, by) {
+    const child = store.get('children', childId);
+    if (!child || !child.consent || child.consent.status !== 'needs_review') return { ok: false, why: 'nothing to review' };
+    const s = store.get('parentcalls', child.consent.call.session_id);
+    if (!s || !s.consent || !s.consent.terms) return { ok: false, why: 'no call to review' };
+    applyConsent(child, s, { status: 'given', terms: s.consent.terms }, String(by || 'team').slice(0, 60));
+    store.put('children', child.id, child);
+    return { ok: true, consent: child.consent };
+  }
+
+  /* The lesson schedule and the weekly call, set by the team for a family
+     that agreed in person (a consent call sets them itself). */
+  function setSchedule(childId, o) {
+    const child = store.get('children', childId);
+    if (!child) return { error: ['no such child'] };
+    const time = o.time != null ? C.parseClock(o.time) || (/^\d{2}:\d{2}$/.test(o.time) ? o.time : null) : (child.schedule && child.schedule.time) || '17:00';
+    const days = Array.isArray(o.days) ? o.days.map(Number).filter(d => d >= 1 && d <= 7) : C.DAYS[o.days] || (child.schedule && child.schedule.days) || C.DAYS.alternate;
+    if (!time) return { error: ['time must look like 17:30'] };
+    if (C.inQuiet(C.toMinutes(time), process.env.TAKHTI_QUIET_HOURS)) return { error: ['that time is inside quiet hours'] };
+    child.schedule = { enabled: o.enabled !== false && o.enabled !== 'no', time, days, set_by: String(o.by || 'team').slice(0, 60), changed_at: new Date().toISOString() };
+    if (o.weekly != null) child.weekly = Object.assign({ day: 7, time: '18:00' }, child.weekly, { enabled: o.weekly === true || o.weekly === 'yes' });
+    store.put('children', child.id, child);
+    return { schedule: child.schedule, weekly: child.weekly || null };
+  }
+
+  async function bolnaCall(env, agentId, phone, userData) {
+    const body = { agent_id: agentId, recipient_phone_number: phone, user_data: userData };
+    if (env.BOLNA_FROM_NUMBER) body.from_phone_number = env.BOLNA_FROM_NUMBER;
+    const res = await fetch((env.BOLNA_API_BASE || 'https://api.bolna.ai') + '/call', {
+      method: 'POST', headers: { Authorization: 'Bearer ' + env.BOLNA_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).catch(e => ({ ok: false, status: 502, json: async () => ({ error: String(e.message || e) }) }));
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { ok: true, execution_id: data.execution_id } : { error: `Bolna said ${res.status}`, detail: data };
+  }
+
+  /* A parent call through Munni's parent agent (agent/build-parent-agent.js). */
+  async function placeParentCall(childId, kind, env) {
+    env = env || process.env;
+    if (!env.BOLNA_API_KEY || !env.BOLNA_PARENT_AGENT_ID) return { error: 'set BOLNA_API_KEY and BOLNA_PARENT_AGENT_ID' };
+    const r = createParentSession(childId, kind, env);
+    if (r.error) return { error: r.error.join('; ') };
+    const s = r.session;
+    const out = await bolnaCall(env, env.BOLNA_PARENT_AGENT_ID, r.child.parent_phone, {
+      session_id: s.id, child_name: r.child.name, lesson_language: s.lang === 'hi' ? 'Hindi' : 'English', greeting: s.greeting, call_kind: kind
+    });
+    if (out.ok) { s.call = { execution_id: out.execution_id, queued_at: new Date().toISOString() }; s.status = 'calling'; store.put('parentcalls', s.id, s); }
+    return Object.assign({ session_id: s.id }, out);
+  }
+
+  /* One family through a published Bolna Workflow (agent/build-workflow.js):
+     the workflow calls back into /voice/flow/* for everything it needs. */
+  async function runWorkflow(workflowId, child, reference, env) {
+    env = env || process.env;
+    if (!env.BOLNA_API_KEY) return { error: 'set BOLNA_API_KEY' };
+    const res = await fetch((env.BOLNA_API_BASE || 'https://api.bolna.ai') + `/workflows/${encodeURIComponent(workflowId)}/run`, {
+      method: 'POST', headers: { Authorization: 'Bearer ' + env.BOLNA_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference_id: reference, mobile_number: child.parent_phone, name: child.name, child_id: child.id })
+    }).catch(e => ({ ok: false, status: 502, json: async () => ({ error: String(e.message || e) }) }));
+    const data = await res.json().catch(() => ({}));
+    return res.ok ? { ok: true, execution: data.id || data.execution_id || null } : { error: `Bolna said ${res.status}`, detail: data };
+  }
+
+  /* The consent call: through the consent workflow when there is one (it
+     also sends the written copy on WhatsApp), else a direct call. */
+  async function requestConsentCall(childId, env) {
+    env = env || process.env;
+    const child = store.get('children', childId);
+    if (!child) return { error: 'no such child' };
+    if (child.consent && child.consent.given) return { error: 'consent is already given' };
+    if (env.BOLNA_CONSENT_WORKFLOW_ID) return runWorkflow(env.BOLNA_CONSENT_WORKFLOW_ID, child, `${child.id}_consent_${Date.now()}`, env);
+    return placeParentCall(childId, 'consent', env);
   }
 
   /* ---------- placing a call through Bolna ---------- */
@@ -274,6 +483,7 @@ function createBrain(opts) {
     env = env || process.env;
     const x = load(sessionId);
     if (!x) return { error: 'no such session' };
+    if (!x.child.consent || !x.child.consent.given) return { error: 'no parent consent' };
     if (!env.BOLNA_API_KEY || !env.BOLNA_AGENT_ID) return { error: 'set BOLNA_API_KEY and BOLNA_AGENT_ID' };
     const body = {
       agent_id: env.BOLNA_AGENT_ID,
@@ -311,6 +521,10 @@ function createBrain(opts) {
     core, store, storyBank, greeting,
     registerChild, deleteChild, createSession, toolNext, toolAnswer, onCallEvent, placeCall,
     importHomeworkCode, progressCode, inboundLookup, nextKind, setEnglishPractice,
+    createParentSession, toolParent, placeParentCall, requestConsentCall, confirmConsent, setSchedule,
+    runWorkflow, childSessions,
+    getParentCall: id => store.get('parentcalls', id),
+    listParentCalls: () => store.list('parentcalls'),
     getChild: id => store.get('children', id),
     getSession: id => store.get('sessions', id),
     listChildren: () => store.list('children'),
