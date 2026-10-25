@@ -14,6 +14,9 @@ const S = require('./session');
 const { processCallEnd, progressCodeFor, missedReport } = require('./report');
 const { soundsLike } = require('./sounds');
 const PC = require('./parent');
+const NT = require('./notes');
+const PLC = require('./placement');
+const R = require('./report');
 const C = require('./clock');
 
 const newId = () => crypto.randomBytes(12).toString('base64url');
@@ -50,19 +53,103 @@ function createBrain(opts) {
     const plang = input.parent_lang === 'en' ? 'en' : input.parent_lang === 'hi' ? 'hi' : lang;
     if (errs.length) return { error: errs };
 
+    if (input.school_id && !store.get('schools', String(input.school_id))) return { error: ['no such school'] };
     const child = {
       id: newId(), name: name.charAt(0).toUpperCase() + name.slice(1), age, lang, parent_lang: plang,
+      school_id: input.school_id ? String(input.school_id) : null,
+      placement_due: input.placement === true || input.placement === 'yes',
       parent_phone: phone,
       consent: byCall
         ? { given: false, status: 'pending', method: 'call', asked_at: null }
         : { given: true, status: 'given', method: 'in person', by: String(input.consent_by || 'parent').slice(0, 60), at: new Date().toISOString(),
-            recording: input.consent_recording !== false },
+            recording: input.consent_recording !== false,
+            // using the words a child reads (no name, no voice) to improve
+            // Takhti is a separate purpose: only with its own yes
+            research: input.consent_research === true },
       created_at: new Date().toISOString(),
       profile: core.freshProfile(name, age),
       sessions: []
     };
     store.put('children', child.id, child);
     return { child };
+  }
+
+  /* ---------- schools: one isolated account each ----------
+     A school sees only its own children, calls and teachers (its own admin
+     key), and calls go out on its own Bolna account — a Bolna sub-account,
+     so each school's data is separate on Bolna's side too, with one bill.
+     The keys a school's calls use replace the server's own (envFor()). */
+  const hash = k => crypto.createHash('sha256').update(String(k)).digest('hex');
+  const BOLNA_FIELDS = { api_key: 'BOLNA_API_KEY', agent_id: 'BOLNA_AGENT_ID', parent_agent_id: 'BOLNA_PARENT_AGENT_ID',
+                         from_number: 'BOLNA_FROM_NUMBER', daily_workflow_id: 'BOLNA_DAILY_WORKFLOW_ID',
+                         consent_workflow_id: 'BOLNA_CONSENT_WORKFLOW_ID' };
+  function createSchool(input) {
+    const name = String(input.name || '').trim().slice(0, 80);
+    if (!name) return { error: ['a school needs a name'] };
+    const key = crypto.randomBytes(24).toString('base64url');
+    const school = { id: 'sch_' + newId(), name, contact: String(input.contact || '').slice(0, 60), key_hash: hash(key),
+                     bolna: {}, created_at: new Date().toISOString() };
+    setBolnaFields(school, input.bolna || {});
+    store.put('schools', school.id, school);
+    // the key is shown once; only its hash is kept
+    return { school: publicSchool(school), key };
+  }
+  function setBolnaFields(school, b) {
+    for (const f of Object.keys(BOLNA_FIELDS)) if (b[f] != null && b[f] !== '') school.bolna[f] = String(b[f]).slice(0, 200);
+  }
+  function updateSchool(id, input) {
+    const school = store.get('schools', id);
+    if (!school) return { error: ['no such school'] };
+    if (input.name) school.name = String(input.name).slice(0, 80);
+    if (input.contact != null) school.contact = String(input.contact).slice(0, 60);
+    setBolnaFields(school, input.bolna || {});
+    store.put('schools', id, school);
+    return { school: publicSchool(school) };
+  }
+  function schoolByKey(key) {
+    if (!key) return null;
+    const h = Buffer.from(hash(key));
+    return store.list('schools').find(sc => { const x = Buffer.from(sc.key_hash || ''); return x.length === h.length && crypto.timingSafeEqual(x, h); }) || null;
+  }
+  // never hand a stored Bolna key back out
+  function publicSchool(sc) {
+    const { key_hash, bolna, ...rest } = sc;
+    return Object.assign(rest, { bolna: Object.fromEntries(Object.entries(bolna || {}).map(([k, v]) => [k, k === 'api_key' ? '•••' + v.slice(-4) : v])) });
+  }
+  /* The settings a call for this child uses: the school's own Bolna
+     account where it has one, else the server's. */
+  function envFor(child, env) {
+    env = env || process.env;
+    const sc = child && child.school_id && store.get('schools', child.school_id);
+    if (!sc) return env;
+    const over = {};
+    for (const [f, k] of Object.entries(BOLNA_FIELDS)) if (sc.bolna && sc.bolna[f]) over[k] = sc.bolna[f];
+    if (sc.contact) over.TAKHTI_HELP_CONTACT = sc.contact;
+    return Object.assign({}, env, over);
+  }
+
+  /* ---------- teachers (voice notes, class calls) ---------- */
+  function registerTeacher(input) {
+    const name = String(input.name || '').trim().slice(0, 60);
+    const phone = String(input.phone || '').replace(/[\s-]/g, '');
+    const codes = [].concat(input.class_codes || input.class_code || []).map(c => String(c).trim().toUpperCase()).filter(Boolean);
+    const errs = [];
+    if (!name) errs.push('name is required');
+    if (!/^\+\d{10,15}$/.test(phone)) errs.push('phone must be in international format');
+    if (input.school_id && !store.get('schools', String(input.school_id))) errs.push('no such school');
+    if (errs.length) return { error: errs };
+    const t = { id: 'tch_' + newId(), name, phone, lang: input.lang === 'en' ? 'en' : 'hi', class_codes: codes,
+                school_id: input.school_id ? String(input.school_id) : null,
+      placement_due: input.placement === true || input.placement === 'yes', created_at: new Date().toISOString() };
+    store.put('teachers', t.id, t);
+    return { teacher: t };
+  }
+  /* the children a teacher may talk about: their classes, their school */
+  function classChildren(teacherOrCodes, schoolId) {
+    const codes = Array.isArray(teacherOrCodes) ? teacherOrCodes : teacherOrCodes.class_codes;
+    const sch = Array.isArray(teacherOrCodes) ? schoolId : teacherOrCodes.school_id;
+    return store.list('children').filter(c => c.kind !== 'app' && c.profile && codes.includes(String(c.profile.classCode || '').toUpperCase()) &&
+      (c.school_id || null) === (sch || null));
   }
 
   /* ---------- the class, between phones (core/class-share.js) ----------
@@ -109,7 +196,9 @@ function createBrain(opts) {
     if (!child) return { error: ['no such child'] };
     if (!child.consent || !child.consent.given) return { error: ['waiting for a parent\'s consent (' + ((child.consent && child.consent.status) || 'none') + ')'] };
     o = o || {};
-    const s = S.planSession(core, child, {
+    if (o.kind === 'placement' && child.age < 5) return { error: ['the placement call is for ages 5 and up'] };
+    const s = o.kind === 'placement' ? PLC.planPlacement(core, child, { seed: o.seed, channel: o.channel,
+      keypad: o.keypad != null ? o.keypad : process.env.TAKHTI_KEYPAD !== '0' }) : S.planSession(core, child, {
       seed: o.seed, channel: o.channel, kind: o.kind,
       keypad: o.keypad != null ? o.keypad : process.env.TAKHTI_KEYPAD !== '0'
     });
@@ -134,7 +223,7 @@ function createBrain(opts) {
     let x = load(sessionId);
     if (x && x.s.candidates && !x.s.started_at) x = resolveSibling(x, callerName);
     if (!x) return { say: SORRY, expect: 'none', done: true, error: 'unknown session' };
-    const r = S.next(core, x.child, x.s, storyBank);
+    const r = x.s.kind === 'placement' ? PLC.next(core, x.child, x.s) : S.next(core, x.child, x.s, storyBank);
     log(x.s, 'assistant', r.say);
     save(x.s, x.child);
     return r;
@@ -143,7 +232,7 @@ function createBrain(opts) {
     const x = load(sessionId);
     if (!x) return { say: SORRY, expect: 'none', done: true, error: 'unknown session' };
     log(x.s, 'user', said);
-    const r = S.answer(core, x.child, x.s, storyBank, said);
+    const r = x.s.kind === 'placement' ? PLC.answer(core, x.child, x.s, said) : S.answer(core, x.child, x.s, storyBank, said);
     log(x.s, 'assistant', r.say);
     save(x.s, x.child);
     return r;
@@ -184,8 +273,20 @@ function createBrain(opts) {
   function inboundLookup(q, env) {
     env = env || process.env;
     const num = lastTen(q.contact_number);
-    const kids = num.length === 10 ? store.list('children').filter(c => c.consent && c.consent.given && lastTen(c.parent_phone) === num) : [];
-    const closed = greeting => ({ registered: kids.length > 0, allowed: false, session_id: 'none', child_name: kids[0] ? kids[0].name : '',
+    // a school's own inbound number rings its own agent: only its children
+    const school = q.agent_id ? store.list('schools').find(sc => sc.bolna && sc.bolna.agent_id === q.agent_id) : null;
+    const inSchool = c => !school || c.school_id === school.id;
+    // a teacher ringing in leaves a voice note (notes.js), whatever the hour
+    const teacher = num.length === 10 ? store.list('teachers').find(t => inSchool(t) && lastTen(t.phone) === num) : null;
+    if (teacher) {
+      const ns = NT.planNoteCall(teacher);
+      ns.call = { execution_id: q.execution_id || null, inbound: true };
+      store.put('teachercalls', ns.id, ns);
+      return { registered: true, allowed: true, caller_kind: 'teacher', session_id: ns.id, child_name: '',
+               lesson_language: ns.lang === 'hi' ? 'Hindi' : 'English', greeting: ns.greeting };
+    }
+    const kids = num.length === 10 ? store.list('children').filter(c => c.consent && c.consent.given && inSchool(c) && lastTen(c.parent_phone) === num) : [];
+    const closed = greeting => ({ registered: kids.length > 0, allowed: false, caller_kind: 'child', session_id: 'none', child_name: kids[0] ? kids[0].name : '',
                                   lesson_language: kids[0] && kids[0].lang === 'en' ? 'English' : 'Hindi', greeting });
     if (!kids.length) return closed(INBOUND_TEXT.unknown);
 
@@ -217,7 +318,7 @@ function createBrain(opts) {
     store.put('sessions', session.id, session);
     const child = open[0];
     return {
-      registered: true, allowed: true, session_id: session.id, child_name: open.length === 1 ? child.name : '',
+      registered: true, allowed: true, caller_kind: 'child', session_id: session.id, child_name: open.length === 1 ? child.name : '',
       lesson_language: lang === 'hi' ? 'Hindi' : 'English',
       greeting: (open.length === 1 ? INBOUND_TEXT.hello[lang](child.name) : INBOUND_TEXT.who[lang](open.map(c => c.name))) + rec
     };
@@ -256,6 +357,8 @@ function createBrain(opts) {
   /* Which kind of lesson comes next. A parent who turned on English
      practice gets it every other call, never instead of reading and maths. */
   function nextKind(child) {
+    // a new admission the school asked to place: the first call finds the starting point
+    if (child.placement_due && !child.placement && child.age >= 5) return 'placement';
     if (!child.english_practice) return 'lesson';
     const last = (child.sessions || []).map(id => store.get('sessions', id)).filter(s => s && s.started_at).pop();
     return last && last.kind !== 'english' ? 'english' : 'lesson';
@@ -275,12 +378,14 @@ function createBrain(opts) {
     const sessionId = rd.session_id || payload.session_id;
     const pc = sessionId && store.get('parentcalls', String(sessionId));
     if (pc) return onParentCallEnd(pc, payload, env);
+    const tc = sessionId && store.get('teachercalls', String(sessionId));
+    if (tc) return onTeacherCallEnd(tc, payload);
     const x = load(sessionId);
     if (!x) return { ok: false, reason: 'no session for this call' };
     // processCallEnd records the execution id itself: setting it here first
     // made every later event (a retry's own call) look "already processed"
     x.s.call = Object.assign(x.s.call || {}, { last_status: payload.status });
-    const r = processCallEnd(core, x.child, x.s, payload);
+    const r = x.s.kind === 'placement' ? PLC.processPlacementEnd(core, x.child, x.s, payload, R) : processCallEnd(core, x.child, x.s, payload);
     if (r.changed && (x.s.status === 'missed' || x.s.status === 'no_lesson')) afterMissed(x.child, x.s, env, nowIn);
     save(x.s, x.child);
     return Object.assign({ ok: true, session_id: x.s.id }, r);
@@ -317,20 +422,24 @@ function createBrain(opts) {
   function contact(env) { return String((env || process.env).TAKHTI_HELP_CONTACT || '').slice(0, 60); }
   function childSessions(child) { return (child.sessions || []).map(id => store.get('sessions', id)).filter(Boolean); }
 
-  function createParentSession(childId, kind, env) {
-    env = env || process.env;
+  function createParentSession(childId, kind, env, extra) {
     const child = store.get('children', childId);
     if (!child) return { error: ['no such child'] };
+    env = envFor(child, env || process.env);
     if (kind === 'consent' && child.consent && child.consent.given) return { error: ['consent is already given'] };
-    if (kind === 'weekly' && !(child.consent && child.consent.given)) return { error: ['no consent yet'] };
+    if ((kind === 'weekly' || kind === 'class') && !(child.consent && child.consent.given)) return { error: ['no consent yet'] };
+    if (kind === 'class' && !(child.consent && child.consent.given)) return { error: ['no consent yet'] };
     let summary = null, facts = null;
-    if (kind === 'weekly') {
+    if (kind === 'weekly' || kind === 'class') {
       const sessions = childSessions(child);
       facts = PC.weekFacts(child, sessions);
-      summary = PC.weekSummary(child, facts, (child.parent_lang || child.lang) === 'en' ? 'en' : 'hi');
+      summary = kind === 'class' ? String((extra && extra.summary) || '')
+        : PC.weekSummary(child, facts, (child.parent_lang || child.lang) === 'en' ? 'en' : 'hi');
+      if (!summary) return { error: ['a class call needs its message'] };
     }
     const s = PC.planParentCall(kind, child, { contact: contact(env), quiet: env.TAKHTI_QUIET_HOURS,
                                                keypad: env.TAKHTI_KEYPAD !== '0', summary, facts });
+    if (extra && extra.class_code) Object.assign(s, { class_code: extra.class_code, class_skill: extra.class_skill || null });
     store.put('parentcalls', s.id, s);
     child.parent_calls = (child.parent_calls || []).concat(s.id).slice(-60);
     if (kind === 'consent') child.consent = Object.assign({}, child.consent, { asked_at: s.created_at, last_call: s.id });
@@ -356,6 +465,125 @@ function createBrain(opts) {
   }
   const SORRY_PARENT = 'माफ़ कीजिए, अभी यह कॉल ठीक से नहीं खुल रही। हम बाद में फिर फ़ोन करेंगे। ' +
                        "Sorry, I can't open this call properly right now. We'll call another time. Goodbye!";
+
+  /* ---------- teacher voice notes ---------- */
+  function toolNote(sessionId, said) {
+    const s = sessionId && store.get('teachercalls', String(sessionId));
+    const t = s && store.get('teachers', s.teacher_id);
+    if (!s || !t) return { say: SORRY_PARENT, done: true, error: 'unknown session' };
+    log(s, 'user', said);
+    const r = NT.noteTurn(s, said, {
+      teacher: t, kids: classChildren(t),
+      skillName: id => { const sk = core.T.skillById(id); return sk ? (s.lang === 'hi' ? sk.hi : sk.en.toLowerCase()) : ''; },
+      save: note => saveTeacherNote(t, s, note)
+    });
+    log(s, 'assistant', r.say);
+    store.put('teachercalls', s.id, s);
+    return r;
+  }
+  /* A teacher's observation is evidence: one observed attempt on that
+     skill, in the same skill history the diagnosis reads, mirrored to the
+     class. A difficulty also becomes what the next calls practise (for a
+     sum Munni can ask out loud, or the letters in the reading lines). */
+  function saveTeacherNote(teacher, call, note) {
+    const child = store.get('children', note.child_id);
+    if (!child) return {};
+    const id = 'note_' + newId();
+    core.withChild(child.profile, { lang: child.lang }, T => {
+      if (T.skillById(note.skill)) T.noteSkillAttempt(note.skill, note.ok, T.S);
+      T.mirrorToClassNow(T.S);
+    });
+    const at = new Date();
+    child.teacher_notes = (child.teacher_notes || []).concat({ id, by: teacher.name, teacher_id: teacher.id, call: call.id,
+      skill: note.skill, ok: note.ok, letters: note.letters, text: note.text, at: at.toISOString() }).slice(-100);
+    let focus = false;
+    if (note.ok === false) {
+      const until = new Date(at.getTime() + 7 * 864e5).toISOString();
+      if (S.skillSpoken(core, child, note.skill)) { child.focus = { skill: note.skill, until, source: 'teacher note', note: id }; focus = true; }
+      if (note.letters && child.lang === 'hi' === note.letters.some(l => /[ऀ-ॿ]/.test(l))) { child.focus_letters = { letters: note.letters, until, note: id }; focus = true; }
+    }
+    store.put('children', child.id, child);
+    return { note_id: id, focus };
+  }
+  function onTeacherCallEnd(s, payload) {
+    const status = String(payload.status || '').toLowerCase();
+    s.call = Object.assign(s.call || {}, { execution_id: payload.id, status,
+      duration_s: Number(payload.conversation_duration || (payload.telephony_data || {}).duration || 0) });
+    s.transcript = String(payload.transcript || '');
+    s.processed = true; s.status = s.notes.length ? 'done' : 'no_notes';
+    // a saved note is "heard" if the child's name is in the teacher's own
+    // words in Bolna's transcript, as the recognizer wrote them
+    const said = s.transcript.split(/\r?\n/).filter(l => /^\s*(user|human|caller)\s*:/i.test(l)).join(' ').split(/\s+/);
+    for (const n of s.notes) n.heard_in_transcript = n.child_name.split(/\s+/).some(p => said.some(w => soundsLike(p, w.replace(/[.,!?।]/g, ''))));
+    store.put('teachercalls', s.id, s);
+    return { ok: true, session_id: s.id, type: 'teacher', notes: s.notes.length };
+  }
+
+  /* ---------- class-wide parent calls ----------
+     A teacher picks a class (and a skill, or lets Takhti find the gap the
+     class shares) and every parent who agreed to calls hears the same
+     message — plus where their own child stands on it, and one thing to
+     do at home. Never in quiet hours, never twice a day per family. */
+  const sameCode = (a, b) => String(a || '').toUpperCase() === String(b || '').toUpperCase();
+  function classRoster(code, schoolId, superScope) {
+    return store.list('children').filter(c => c.kind !== 'app' && c.profile && sameCode(c.profile.classCode, code) &&
+      (superScope || c.school_id === schoolId));
+  }
+  function standingOn(child, skill) {
+    const h = (child.profile.skillHistory || {})[skill];
+    if (!h || h.n < 4) return 'unseen';
+    return h.right / h.n >= 0.8 ? 'solid' : 'working';
+  }
+  /* skills two or more children in the class are below 60% on (four or
+     more attempts each) — the same bar as the app's diagnosis */
+  function sharedGaps(kids) {
+    const count = {};
+    for (const c of kids) for (const [id, h] of Object.entries(c.profile.skillHistory || {})) {
+      if (h.n >= 4 && h.right / h.n < 0.6) (count[id] = count[id] || []).push(c.id);
+    }
+    return Object.entries(count).filter(([, ids]) => ids.length >= 2).map(([id, ids]) => {
+      const sk = core.T.skillById(id);
+      return { skill: id, en: sk ? sk.en : id, hi: sk ? sk.hi : id, children: ids.length };
+    }).sort((a, b) => b.children - a.children);
+  }
+  function classSummary(code, schoolId, superScope) {
+    const kids = classRoster(code, schoolId, superScope);
+    return { code: String(code).toUpperCase(), gaps: sharedGaps(kids),
+             children: kids.map(c => ({ id: c.id, name: c.name, consent: (c.consent && c.consent.status) || 'none', phone: !!c.parent_phone })) };
+  }
+  async function classParentCalls(code, o, env, scope) {
+    env = env || process.env;
+    o = o || {};
+    scope = scope || { super: true };
+    const kids = classRoster(code, scope.school && scope.school.id, scope.super);
+    if (!kids.length) return { error: 'no children in that class' };
+    const skill = o.skill || (sharedGaps(kids)[0] || {}).skill;
+    const sk = skill && core.T.skillById(skill);
+    if (!sk) return { error: 'choose a skill: Takhti found no gap the class shares yet' };
+    const now = C.localParts(new Date(), env);
+    if (C.inQuiet(now.minutes, env.TAKHTI_QUIET_HOURS)) return { error: 'quiet hours: families are not called now' };
+    const placed = [], skipped = [];
+    for (const kid of kids) {
+      if (!kid.consent || !kid.consent.given) { skipped.push({ child: kid.name, why: 'no consent' }); continue; }
+      if (!kid.parent_phone) { skipped.push({ child: kid.name, why: 'no phone' }); continue; }
+      const today = (kid.parent_calls || []).map(id => store.get('parentcalls', id))
+        .some(pc => pc && pc.kind === 'class' && C.localParts(pc.created_at, env).day === now.day);
+      if (today) { skipped.push({ child: kid.name, why: 'already called today' }); continue; }
+      const lang = (kid.parent_lang || kid.lang) === 'en' ? 'en' : 'hi';
+      const promise = S.skillSpoken(core, kid, skill);
+      const summary = PC.classMessage(kid, skill, { skillName: lang === 'hi' ? sk.hi : sk.en.toLowerCase(), teacher: o.teacher || '',
+        note: o.note || '', standing: standingOn(kid, skill), promise }, lang);
+      const r = await placeParentCall(kid.id, 'class', env, { summary, class_code: String(code).toUpperCase(), class_skill: skill });
+      if (r.error) { skipped.push({ child: kid.name, why: r.error }); continue; }
+      if (promise) {
+        const c = store.get('children', kid.id);
+        c.focus = { skill, until: new Date(Date.now() + 7 * 864e5).toISOString(), source: 'class call', call: r.session_id };
+        store.put('children', c.id, c);
+      }
+      placed.push({ child: kid.name, session_id: r.session_id });
+    }
+    return { ok: true, skill, placed, skipped };
+  }
 
   /* what a parent asked for on the weekly call, done at once */
   function applyParentChange(child, c, s) {
@@ -390,7 +618,7 @@ function createBrain(opts) {
     if (c.status === 'given') {
       child.consent = { given: true, status: 'given', method: reviewedBy ? 'call (reviewed)' : 'call', by: 'parent (phone)',
                         reviewed_by: reviewedBy || null, at, call: { session_id: s.id, execution_id: (s.call && s.call.execution_id) || null },
-                        recording: c.terms.recording, notice: s.notice };
+                        recording: c.terms.recording, research: !!c.terms.research, notice: s.notice };
       child.schedule = { enabled: true, time: c.terms.time, days: c.terms.days, set_by: 'parent (consent call)', changed_at: at };
       const wt = C.toMinutes(c.terms.time) >= 16 * 60 && C.toMinutes(c.terms.time) <= 20 * 60 ? c.terms.time : '18:00';
       child.weekly = { enabled: c.terms.weekly, day: 7, time: wt, set_by: 'parent (consent call)' };
@@ -441,10 +669,10 @@ function createBrain(opts) {
   }
 
   /* A parent call through Munni's parent agent (agent/build-parent-agent.js). */
-  async function placeParentCall(childId, kind, env) {
-    env = env || process.env;
+  async function placeParentCall(childId, kind, env, extra) {
+    env = envFor(store.get('children', childId), env || process.env);
     if (!env.BOLNA_API_KEY || !env.BOLNA_PARENT_AGENT_ID) return { error: 'set BOLNA_API_KEY and BOLNA_PARENT_AGENT_ID' };
-    const r = createParentSession(childId, kind, env);
+    const r = createParentSession(childId, kind, env, extra);
     if (r.error) return { error: r.error.join('; ') };
     const s = r.session;
     const out = await bolnaCall(env, env.BOLNA_PARENT_AGENT_ID, r.child.parent_phone, {
@@ -457,7 +685,7 @@ function createBrain(opts) {
   /* One family through a published Bolna Workflow (agent/build-workflow.js):
      the workflow calls back into /voice/flow/* for everything it needs. */
   async function runWorkflow(workflowId, child, reference, env) {
-    env = env || process.env;
+    env = envFor(child, env || process.env);
     if (!env.BOLNA_API_KEY) return { error: 'set BOLNA_API_KEY' };
     const res = await fetch((env.BOLNA_API_BASE || 'https://api.bolna.ai') + `/workflows/${encodeURIComponent(workflowId)}/run`, {
       method: 'POST', headers: { Authorization: 'Bearer ' + env.BOLNA_API_KEY, 'Content-Type': 'application/json' },
@@ -470,9 +698,9 @@ function createBrain(opts) {
   /* The consent call: through the consent workflow when there is one (it
      also sends the written copy on WhatsApp), else a direct call. */
   async function requestConsentCall(childId, env) {
-    env = env || process.env;
     const child = store.get('children', childId);
     if (!child) return { error: 'no such child' };
+    env = envFor(child, env || process.env);
     if (child.consent && child.consent.given) return { error: 'consent is already given' };
     if (env.BOLNA_CONSENT_WORKFLOW_ID) return runWorkflow(env.BOLNA_CONSENT_WORKFLOW_ID, child, `${child.id}_consent_${Date.now()}`, env);
     return placeParentCall(childId, 'consent', env);
@@ -484,13 +712,14 @@ function createBrain(opts) {
     const x = load(sessionId);
     if (!x) return { error: 'no such session' };
     if (!x.child.consent || !x.child.consent.given) return { error: 'no parent consent' };
+    env = envFor(x.child, env);
     if (!env.BOLNA_API_KEY || !env.BOLNA_AGENT_ID) return { error: 'set BOLNA_API_KEY and BOLNA_AGENT_ID' };
     const body = {
       agent_id: env.BOLNA_AGENT_ID,
       recipient_phone_number: x.child.parent_phone,
       // the minimum Bolna needs: no age, no surname, no phone in the prompt
       user_data: { session_id: x.s.id, child_name: x.child.name, lesson_language: x.s.lang === 'hi' ? 'Hindi' : 'English',
-                   greeting: greeting(x.child, x.s.lang), registered: true, allowed: true }
+                   greeting: greeting(x.child, x.s.lang), registered: true, allowed: true, caller_kind: 'child' }
     };
     if (env.BOLNA_FROM_NUMBER) body.from_phone_number = env.BOLNA_FROM_NUMBER;
     if (env.BOLNA_MULTILINGUAL === '1') body.agent_data = { language: x.s.lang };
@@ -523,6 +752,11 @@ function createBrain(opts) {
     importHomeworkCode, progressCode, inboundLookup, nextKind, setEnglishPractice,
     createParentSession, toolParent, placeParentCall, requestConsentCall, confirmConsent, setSchedule,
     runWorkflow, childSessions,
+    toolNote, saveTeacherNote, classParentCalls, classSummary, sharedGaps,
+    getTeacherCall: id => store.get('teachercalls', id), listTeacherCalls: () => store.list('teachercalls'),
+    createSchool, updateSchool, schoolByKey, publicSchool, envFor, registerTeacher, classChildren,
+    getSchool: id => store.get('schools', id), listSchools: () => store.list('schools'),
+    getTeacher: id => store.get('teachers', id), listTeachers: () => store.list('teachers'),
     getParentCall: id => store.get('parentcalls', id),
     listParentCalls: () => store.list('parentcalls'),
     getChild: id => store.get('children', id),

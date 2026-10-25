@@ -690,7 +690,8 @@ await test('graph: every edge lands on a real node, tools are scoped to the less
   const ids = new Set(nodes.map(n => n.id));
   for (const n of nodes) for (const e of n.edges) assert.ok(ids.has(e.to_node_id), `${n.id} → ${e.to_node_id}`);
   const tp = agent.agent_config.tasks[0].tools_config.api_tools.tools_params;
-  for (const t of tools) assert.deepStrictEqual(tp[t.name].nodes, ['lesson'], t.name + ' is not scoped to the lesson');
+  // lesson tools live only on the lesson node; the teacher's note tool only on the teacher node
+  for (const t of tools) assert.deepStrictEqual(tp[t.name].nodes, [t.name === 'takhti_note' ? 'teacher' : 'lesson'], t.name + ' is scoped to the wrong node');
   for (const n of nodes.filter(n => !n.edges.length)) assert.strictEqual(n.function_call, 'end_call', n.id + ' is a dead end');
   assert.ok(agent.agent_config.tasks[0].task_config.hangup_after_LLMCall === false);
 });

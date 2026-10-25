@@ -31,7 +31,7 @@ const C = require('./clock');
 
 // bump when the consent notice's wording changes: the record says which
 // notice a parent agreed to
-const NOTICE_VERSION = 'consent-2026-10-v1';
+const NOTICE_VERSION = 'consent-2026-10-v2';   // v2: the separate question about improving Takhti
 const MAX_TURNS = 30;
 const MAX_QUESTIONS = 8;
 
@@ -103,6 +103,21 @@ const L = {
     en: n => `Namaste! This is Munni from Takhti. I'm calling about practice lessons for ${n}. Am I speaking with ${n}'s parent or guardian?`,
     hi: n => `नमस्ते! मैं तख़्ती से मुन्नी बोल रही हूँ। ${n} के अभ्यास पाठों के बारे में फ़ोन किया है। क्या मैं ${n} के माता-पिता या अभिभावक से बात कर रही हूँ?`
   },
+  greetClass: {
+    en: n => `Namaste! This is Munni from Takhti, with a message from ${n}'s class teacher. Am I speaking with ${n}'s parent or guardian?`,
+    hi: n => `नमस्ते! मैं तख़्ती से मुन्नी बोल रही हूँ, ${n} की कक्षा के टीचर का एक संदेश लेकर। क्या मैं ${n} के माता-पिता या अभिभावक से बात कर रही हूँ?`
+  },
+  classIntro: {
+    en: (n, t, skill) => `${t ? t + ', ' + n + "'s teacher, asked me to call. " : ''}This week, several children in ${n}'s class found "${skill}" hard.`,
+    hi: (n, t, skill) => `${t ? t + ' जी, ' + n + ' के टीचर, ने यह फ़ोन करने को कहा है। ' : ''}इस हफ़्ते ${n} की कक्षा के कई बच्चों को "${skill}" में दिक्कत हुई।`
+  },
+  classNote: { en: note => ` The teacher says: ${note}`, hi: note => ` टीचर का कहना है: ${note}` },
+  classSolid: { en: n => ` ${n} is already doing well at this.`, hi: n => ` ${n} इसमें पहले से अच्छा कर रहे हैं।` },
+  classWorking: { en: n => ` ${n} is still working on this too.`, hi: n => ` ${n} का भी इस पर अभ्यास चल रहा है।` },
+  classUnseen: { en: n => ` Munni hasn't practised this with ${n} yet.`, hi: n => ` मुन्नी ने अभी तक ${n} के साथ इसका अभ्यास नहीं किया है।` },
+  classPromise: { en: n => ` Munni will practise it with ${n} on the next calls.`, hi: n => ` मुन्नी अगली कॉल्स में ${n} के साथ इसका अभ्यास कराएगी।` },
+  classTipLead: { en: () => ' At home:', hi: () => ' घर पर:' },
+  notNowClass: { en: () => "No problem. The teacher has the same message. Goodbye!", hi: () => 'कोई बात नहीं। यही संदेश टीचर के पास भी है। नमस्ते!' },
   greetWeekly: {
     en: n => `Namaste! This is Munni from Takhti, with ${n}'s week of practice. Am I speaking with ${n}'s parent or guardian?`,
     hi: n => `नमस्ते! मैं तख़्ती से मुन्नी बोल रही हूँ, ${n} के इस हफ़्ते के अभ्यास के बारे में। क्या मैं ${n} के माता-पिता या अभिभावक से बात कर रही हूँ?`
@@ -132,6 +147,14 @@ const L = {
   recordingAgain: {
     en: () => 'Sorry, I didn\'t catch that. May we keep the recordings? Yes or no?',
     hi: () => 'माफ़ कीजिए, मैं समझ नहीं पाई। क्या हम रिकॉर्डिंग रख सकते हैं? हाँ या नहीं?'
+  },
+  research: {
+    en: (n, kp) => `And may Takhti use the words ${n} reads on the calls (never the name, never the voice) to make Takhti better for all children? The lessons work just the same if you say no.${kp}`,
+    hi: (n, kp) => `और क्या तख़्ती, कॉल पर ${n} के पढ़े हुए शब्दों को (नाम या आवाज़ कभी नहीं) सभी बच्चों के लिए तख़्ती को बेहतर बनाने में इस्तेमाल कर सकती है? अगर आप नहीं कहें, तब भी पाठ वैसे ही चलेंगे।${kp}`
+  },
+  researchAgain: {
+    en: () => "Sorry, I didn't catch that. May Takhti use the words, without the name? Yes or no?",
+    hi: () => 'माफ़ कीजिए, मैं समझ नहीं पाई। क्या तख़्ती बिना नाम के शब्दों का इस्तेमाल कर सकती है? हाँ या नहीं?'
   },
   time: {
     en: n => `What time should Munni call ${n}? For example, five in the evening.`,
@@ -309,12 +332,37 @@ function standing(core, child, lang) {
   return out;
 }
 
+/* ---------- a class-wide message ---------- */
+const TIP = [
+  [/^(add10|count20|bonds10|n-count5|l-count10|u-count20|u-addpic)$/, { en: ' add small things together, like 3 spoons and 2 spoons.', hi: ' छोटी चीज़ें साथ में जोड़ें, जैसे 3 चम्मच और 2 चम्मच।' }],
+  [/^(add2|carry|place2|place3)$/, { en: ' make two numbers with bundles of ten sticks or coins, then put them together.', hi: ' दस-दस की गड्डियों या सिक्कों से दो संख्याएँ बनाएँ, फिर उन्हें मिलाएँ।' }],
+  [/^(sub10|sub2|borrow|u-subpic)$/, { en: ' take away together: "we had 12 rotis and ate 5; how many are left?"', hi: ' साथ में घटाएँ: "12 रोटियाँ थीं, 5 खा लीं, कितनी बचीं?"' }],
+  [/^(tables|mult2x1|mult2x2|skip)$/, { en: ' say a times table together on the way to school.', hi: ' स्कूल जाते हुए साथ में पहाड़ा बोलें।' }],
+  [/^(divshare|divrem|longdiv)$/, { en: ' share things out equally, like 12 sweets between 3 people.', hi: ' चीज़ें बराबर बाँटें, जैसे 12 टॉफ़ी 3 लोगों में।' }],
+  [/^money2$/, { en: ' let them count the money at the shop.', hi: ' दुकान पर पैसे उन्हें गिनने दें।' }],
+  [/^(read\d|h\d-\w+|u-\w+|e\d-\w+|l-\w+)$/, { en: ' read one line together every day, from a sign, a box or a newspaper.', hi: ' हर दिन साथ में एक लाइन पढ़ें, किसी बोर्ड, डिब्बे या अख़बार से।' }]
+];
+function tipFor(skill, lang) {
+  const row = TIP.find(([re]) => re.test(skill));
+  return row ? row[1][lang === 'hi' ? 'hi' : 'en'] : (lang === 'hi' ? ' बच्चे से कहें कि इसका एक उदाहरण आपको दिखाएँ।' : ' ask them to show you one example.');
+}
+/* o: { skillName, teacher, note, standing: 'solid'|'working'|'unseen', promise } */
+function classMessage(child, skill, o, lang) {
+  const n = child.name;
+  let m = say('classIntro', lang, n, o.teacher || '', o.skillName);
+  if (o.note) m += say('classNote', lang, String(o.note).replace(/\s+/g, ' ').slice(0, 200).replace(/[.।]?$/, lang === 'hi' ? '।' : '.'));
+  m += say(o.standing === 'solid' ? 'classSolid' : o.standing === 'working' ? 'classWorking' : 'classUnseen', lang, n);
+  if (o.standing !== 'solid') m += say('classTipLead', lang) + tipFor(skill, lang);
+  if (o.promise) m += say('classPromise', lang, n);
+  return m;
+}
+
 /* ---------- planning a parent call ---------- */
 function planParentCall(kind, child, o) {
   o = o || {};
   const lang = (child.parent_lang || child.lang) === 'en' ? 'en' : 'hi';
   const id = o.id || crypto.randomBytes(12).toString('base64url');
-  const greeting = kind === 'consent' ? say('greetConsent', lang, child.name) : say('greetWeekly', lang, child.name);
+  const greeting = say(kind === 'consent' ? 'greetConsent' : kind === 'class' ? 'greetClass' : 'greetWeekly', lang, child.name);
   return {
     id, type: 'parent', kind, child_id: child.id, lang, keypad: o.keypad !== false,
     contact: o.contact || '', quiet: o.quiet || '21-7',
@@ -378,6 +426,10 @@ function consentTurn(s, said, ctx) {
     case 'recording':
       if (yn === null && it.retries < 1) return again(s, say('recordingAgain', lang));
       s.answers.recording = yn === true;                                        // doubt = no recording
+      return ask(s, 'research', say('research', lang, n, kp));
+    case 'research':
+      if (yn === null && it.retries < 1) return again(s, say('researchAgain', lang));
+      s.answers.research = yn === true;                                         // doubt = not used
       return ask(s, 'time', say('time', lang, n));
     case 'time': {
       const t = C.parseClock(said);
@@ -421,7 +473,7 @@ function weeklyTurn(s, said, ctx) {
   if (s.step === 'who') {
     const yn = strictYesNo(said);
     // on the weekly call a "no" is as likely to mean "not now" as "not the parent"
-    if (yn === false || intent === 'bye') return finish(s, 'not_now', say('notNow', lang));
+    if (yn === false || intent === 'bye') return finish(s, 'not_now', say(s.kind === 'class' ? 'notNowClass' : 'notNow', lang));
     const question = !['yes', 'unknown', 'repeat'].includes(intent);
     if (yn === null && !question && s.items[0].retries < 1) return again(s, say('whoAgain', lang, n));
     s.answers.parent = true;
@@ -543,7 +595,7 @@ function settleConsent(s) {
     const txs = (it.heard_tx || []).filter(x => x != null);
     return { relay: relayed, tx: txs.length ? strictYesNo(txs[txs.length - 1]) : null, heard: txs.length > 0 };
   };
-  const who = decided('who'), les = decided('lessons'), rec = decided('recording');
+  const who = decided('who'), les = decided('lessons'), rec = decided('recording'), res = decided('research');
   const a = s.answers;
   if (a.parent !== true || a.lessons !== true) {
     return { status: a.lessons === false ? 'refused' : 'pending', why: s.outcome || 'call ended early' };
@@ -552,6 +604,7 @@ function settleConsent(s) {
   const ok = q => q.relay === true && q.tx === true;
   const terms = {
     recording: ok(rec),                       // a doubtful recording answer is simply "no"
+    research: ok(res),                        // same for using the words to improve Takhti
     time: a.time || '17:00', days: C.DAYS[a.days || 'alternate'], weekly: a.weekly === true
   };
   if (ok(who) && ok(les)) return { status: 'given', terms };
@@ -578,5 +631,5 @@ function processParentEnd(child, s, payload) {
   return { changed: true, status: s.status, consent: s.consent || null };
 }
 
-module.exports = { processParentEnd, settleConsent, planParentCall, parentTurn, parentIntent, strictYesNo, weekFacts, weekSummary, standing,
+module.exports = { classMessage, tipFor, processParentEnd, settleConsent, planParentCall, parentTurn, parentIntent, strictYesNo, weekFacts, weekSummary, standing,
                    contactHow, NOTICE_VERSION, L };

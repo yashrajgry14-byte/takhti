@@ -6,6 +6,7 @@
      node voice/simulate.js --age 5 --lang en
      node voice/simulate.js --auto               a scripted child plays
      node voice/simulate.js --auto --mistakes    ...and gets some wrong
+     node voice/simulate.js --kind placement --auto   a placement call for a new admission
      node voice/simulate.js --parent consent     the consent call (you are the parent)
      node voice/simulate.js --parent weekly --auto   a weekly progress call
 
@@ -51,7 +52,7 @@ function autoChild(it, turn, mistakes) {
 /* A parent who agrees on the consent call, or asks the usual questions
    on the weekly one. */
 const AUTO_PARENT = {
-  consent: { hi: ['हाँ जी', 'हाँ', 'नहीं', 'शाम साढ़े पाँच बजे', 'एक दिन छोड़कर', 'हाँ'], en: ['yes', 'yes', 'no', '5:30 pm', 'every other day', 'yes'] },
+  consent: { hi: ['हाँ जी', 'हाँ', 'नहीं', 'हाँ', 'शाम साढ़े पाँच बजे', 'एक दिन छोड़कर', 'हाँ'], en: ['yes', 'yes', 'no', 'yes', '5:30 pm', 'every other day', 'yes'] },
   weekly: { hi: ['हाँ', 'क्या वो पीछे है?', 'घर पर क्या कराएँ?', 'बस, धन्यवाद'], en: ['yes', 'is she behind?', 'what should we do at home?', 'that\'s all, thanks'] }
 };
 async function parentCall(o, brain, rl) {
@@ -107,7 +108,8 @@ async function main() {
   const brain = createBrain({ dataDir: dir });
   const r = brain.registerChild({ name: o.name, age: o.age, lang: o.lang, parent_phone: o.phone || '+919800000000', consent: true });
   if (r.error) { console.error(r.error.join('\n')); process.exit(1); }
-  const { session } = brain.createSession(r.child.id, { seed: o.seed });
+  const { session, error } = brain.createSession(r.child.id, { seed: o.seed, kind: o.kind });
+  if (error) { console.error(error.join('\n')); process.exit(1); }
   const out = (who, text) => console.log(`${who === 'munni' ? '\x1b[33mMunni\x1b[0m' : '\x1b[36m' + r.child.name + '\x1b[0m'}: ${text}`);
 
   console.log(`\n${r.child.name}, age ${o.age}, ${o.lang} · band ${session.band} · plan: ${session.slots.join(' → ')}`);

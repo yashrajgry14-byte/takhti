@@ -63,6 +63,19 @@ already practised that day, and never without consent. Nothing ever goes to
 a child except the lesson itself, at a time a parent picked: no reminders
 and no "you missed a day" (DPDP s.9).
 
+## For schools
+
+| | What it is | Where |
+|---|---|---|
+| **One account per school** | each school gets its own admin key (shown once, only a hash kept) and sees only its own children, calls and teachers. With a Bolna sub-account key, its calls run on that account; its inbound number only knows its own families | `brain.createSchool()`, `envFor()`, `POST /voice/admin/schools` |
+| **Placement call** | for a new admission (tick *placement* when adding the child): a binary search up the spoken-maths ladder, two sums a step, then two more at the boundary so each side has four real attempts, then one reading line per level. It sets the starting levels and fills the skill history the teacher's diagnosis reads | `placement.js`, `npm run voice:sim -- --kind placement --auto` |
+| **Teacher voice notes** | a teacher rings the same Munni number and says "Riya confused ण and न today". The child is matched by sound within that teacher's classes only. Munni asks for anything missing, reads the note back and saves it on a yes, as one observed attempt on the skill. For a difficulty, it's also what the next calls practise: the sum in the story slot, or reading lines with those letters | `notes.js`, the `teacher` node in the child agent |
+| **Class-wide parent calls** | *Call all parents* on a class: the gap the class shares (or a skill the teacher picks), where each family's own child stands on it, one thing to do at home. Only families who consented, never in quiet hours, never twice a day. Spoken-maths skills become what the next calls practise | `brain.classParentCalls()`, `POST /voice/admin/classes/:code/parent-calls` |
+| **Misreading corpus** | what children actually read for each word, and letter swaps (ण→न), from transcript-graded readings. Only children whose parent said yes to this separate question on the consent call; no names, ids or audio; a heard form appears only once `TAKHTI_CORPUS_MIN_CHILDREN` children produced it | `corpus.js`, `GET /voice/admin/corpus(.csv)` |
+
+Questions for the Bolna team, one per assumption we made, are in
+[`BOLNA-QUESTIONS.md`](BOLNA-QUESTIONS.md).
+
 ## The reading card
 
 A phone call can't show text. So before the call the family opens the card link
@@ -243,11 +256,13 @@ surname, and the phone number only as the number to dial.
 | | `POST /voice/tools/answer` `{session_id, child_said}` | same |
 | Bolna, after a call | `POST /voice/webhook?key=…` (execution payload) | `TAKHTI_WEBHOOK_KEY` |
 | | `POST /voice/tools/parent` `{session_id, parent_said}` (parent agent) | same |
+| | `POST /voice/tools/note` `{session_id, teacher_said}` (teacher node) | same |
 | Bolna Workflows | `POST /voice/flow/plan`, `/gate`, `/result`, `/missed`, `/consent/plan`, `/consent/result` (see `flow.js`) | `Bearer TAKHTI_TOOL_TOKEN` |
 | Bolna, before an inbound call | `GET /voice/inbound/lookup?contact_number=…` | `Bearer TAKHTI_TOOL_TOKEN` |
 | The app (Talking Munni) | `POST /voice/web/session`, `GET /voice/web/state`, `POST /voice/web/tap`, `GET /voice/web/result`, `POST /voice/web/forget` | parent consent flag + per-child key; per-talk token; rate limits |
 | Families | `GET /voice/card/:session`, `GET /voice/report/:session` | the unguessable link |
-| Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `POST /voice/admin/children/:id/homework` `{code}`, `GET /voice/admin/children/:id/progress-code`, `POST /voice/admin/children/:id/consent-call`, `/consent-confirm`, `/weekly-call`, `/schedule` `{time, days: daily\|alternate, enabled, weekly}`, `GET /voice/admin/parentcalls/:id`, `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` |
+| Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `POST /voice/admin/children/:id/homework` `{code}`, `GET /voice/admin/children/:id/progress-code`, `POST /voice/admin/children/:id/consent-call`, `/consent-confirm`, `/weekly-call`, `/schedule` `{time, days: daily\|alternate, enabled, weekly}`, `GET /voice/admin/parentcalls/:id`, `POST`/`GET /voice/admin/teachers`, `GET /voice/admin/teachercalls/:id`, `GET /voice/admin/classes/:code`, `POST /voice/admin/classes/:code/parent-calls` `{skill, teacher, note}`, `GET /voice/admin/corpus(.csv)`, `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` (everything), or a school's key (its own records; 404 for anything else) |
+| Server key only | `GET`/`POST /voice/admin/schools`, `POST /voice/admin/schools/:id` `{name, contact, api_key, agent_id, parent_agent_id, from_number, daily_workflow_id, consent_workflow_id}` | `TAKHTI_ADMIN_KEY` |
 
 The tools always return `200` with `{say, expect, done, item}`. An unknown
 session gets a polite bilingual goodbye with `done: true`, so a broken link
@@ -304,6 +319,14 @@ never leaves a child listening to silence.
   held, or an identity/age token such as DigiLocker). Takhti doesn't do that
   yet. Those provisions come into force on 13 May 2027; add that check before
   then.
+- **School Bolna keys are stored in the voice store** (never returned by the
+  API, only the last four characters). On a real host, keep that store
+  encrypted at rest or move the keys to a secrets manager.
+- **A teacher's number wins.** If a teacher's phone is also registered as a
+  parent's, a call from it takes a note, not a lesson.
+- **Teacher notes are one observation each.** A note adds one attempt to
+  the skill history; the diagnosis needs four before it calls anything solid
+  or a gap, so one note never overrides the app's own evidence.
 - **The weekly call answers from Takhti's own record.** "Is she behind?" is
   answered against where Takhti starts for that age, not against the class or
   any test norm, and it says so. Below about six first tries in a month it

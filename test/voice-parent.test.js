@@ -148,11 +148,12 @@ await test('consent call (Hindi): nobody calls the child before it; afterwards t
   assert.strictEqual(brain.inboundLookup({ contact_number: c.parent_phone }, { TAKHTI_QUIET_HOURS: '0-0' }).allowed, false, 'inbound line open before consent');
   const { session } = brain.createParentSession(c.id, 'consent');
   assert.ok(/माता-पिता या अभिभावक/.test(session.greeting));
-  const says = talk(brain, session.id, ['haan ji', 'haan', 'nahi', 'shaam saadhe paanch baje', 'ek din chhod ke', 'haan']);
+  const says = talk(brain, session.id, ['haan ji', 'haan', 'nahi', 'haan', 'shaam saadhe paanch baje', 'ek din chhod ke', 'haan']);
   assert.ok(/Bolna/.test(says[0]) && /पहला नाम, उम्र, यह फ़ोन नंबर/.test(says[0]) && /मिटवाने/.test(says[0]), 'notice incomplete: ' + says[0]);
   assert.ok(/1.*2/.test(says[0]), 'keypad not offered');
-  assert.ok(/शाम साढ़े पाँच बजे/.test(says[3]), 'time not said back');
-  assert.ok(/सोमवार, बुधवार और शुक्रवार को शाम साढ़े पाँच बजे/.test(says[5]), says[5]);
+  assert.ok(/बेहतर बनाने/.test(says[2]) && /नाम या आवाज़ कभी नहीं/.test(says[2]), 'the improving-Takhti question is missing');
+  assert.ok(/शाम साढ़े पाँच बजे/.test(says[4]), 'time not said back');
+  assert.ok(/सोमवार, बुधवार और शुक्रवार को शाम साढ़े पाँच बजे/.test(says[6]), says[6]);
   // the call is over, but nothing is given until the transcript agrees
   assert.strictEqual(brain.getChild(c.id).consent.given, false);
   const r = hangUp(brain, session.id);
@@ -160,6 +161,7 @@ await test('consent call (Hindi): nobody calls the child before it; afterwards t
   const k = brain.getChild(c.id);
   assert.ok(k.consent.given && k.consent.method === 'call' && k.consent.notice === PC.NOTICE_VERSION && k.consent.call.execution_id);
   assert.strictEqual(k.consent.recording, false, 'they said no to recording');
+  assert.strictEqual(k.consent.research, true, 'they said yes to improving Takhti');
   assert.deepStrictEqual([k.schedule.time, k.schedule.days, k.schedule.enabled], ['17:30', [1, 3, 5], true]);
   assert.ok(k.weekly.enabled && k.weekly.day === 7);
   assert.ok(!brain.createSession(c.id).error, 'lesson still blocked after consent');
@@ -169,7 +171,7 @@ await test('consent call (Hindi): nobody calls the child before it; afterwards t
 await test('consent: the relay said "haan" but the recognizer heard "nahi" → a person reviews; nothing starts until they do', () => {
   const c = brain.registerChild({ name: 'Aman', age: 6, lang: 'hi', parent_phone: phone(), consent: 'call' }).child;
   const { session } = brain.createParentSession(c.id, 'consent');
-  talk(brain, session.id, ['haan', 'haan bilkul', 'haan', '5 baje', 'roz', 'nahi']);
+  talk(brain, session.id, ['haan', 'haan bilkul', 'haan', 'nahi', '5 baje', 'roz', 'nahi']);
   const r = hangUp(brain, session.id, { edit: { 'haan bilkul': 'nahi' } });
   assert.strictEqual(r.consent.status, 'needs_review');
   assert.ok(/disagree/.test(r.consent.why));
@@ -187,7 +189,7 @@ await test('consent: the relay said "haan" but the recognizer heard "nahi" → a
 await test('consent: no transcript at all → review, never given', () => {
   const c = brain.registerChild({ name: 'Zoya', age: 8, lang: 'en', parent_phone: phone(), consent: 'call' }).child;
   const { session } = brain.createParentSession(c.id, 'consent');
-  talk(brain, session.id, ['yes', 'yes', 'yes', '6 pm', 'every day', 'no']);
+  talk(brain, session.id, ['yes', 'yes', 'yes', 'yes', '6 pm', 'every day', 'no']);
   const r = hangUp(brain, session.id, { noTranscript: true });
   assert.strictEqual(r.consent.status, 'needs_review');
   assert.strictEqual(brain.getChild(c.id).consent.given, false);
@@ -221,16 +223,16 @@ await test('consent: a child picks up, or nobody gives a clear answer → nothin
 await test('consent: a time in quiet hours is asked again; "you decide" becomes 5pm and is said back', () => {
   const c = brain.registerChild({ name: 'Dev', age: 7, lang: 'en', parent_phone: phone(), consent: 'call' }).child;
   let s = brain.createParentSession(c.id, 'consent').session;
-  let says = talk(brain, s.id, ['yes', 'yes', 'no', '10 at night', '5 pm', 'every other day', 'no']);
-  assert.ok(/rest time/.test(says[3]) && /7 in the morning to 9 at night/.test(says[3]), says[3]);
-  assert.ok(/at 5 in the evening/.test(says[4]));
+  let says = talk(brain, s.id, ['yes', 'yes', 'no', 'no', '10 at night', '5 pm', 'every other day', 'no']);
+  assert.ok(/rest time/.test(says[4]) && /7 in the morning to 9 at night/.test(says[4]), says[4]);
+  assert.ok(/at 5 in the evening/.test(says[5]));
   s = brain.createParentSession(c.id, 'consent').session;
-  says = talk(brain, s.id, ['yes', 'yes', 'no', 'you decide', 'anything', 'every day', 'no']);
-  assert.ok(/Okay, at 5 in the evening/.test(says[4]), says[4]);
+  says = talk(brain, s.id, ['yes', 'yes', 'no', 'no', 'you decide', 'anything', 'every day', 'no']);
+  assert.ok(/Okay, at 5 in the evening/.test(says[5]), says[5]);
   // "no, six o'clock" while asked about the days changes the time
   s = brain.createParentSession(c.id, 'consent').session;
-  says = talk(brain, s.id, ['yes', 'yes', 'yes', '5 pm', 'no, 6 baje', 'roz', 'yes']);
-  assert.ok(/at 6 in the evening/.test(says[4]), says[4]);
+  says = talk(brain, s.id, ['yes', 'yes', 'yes', 'no', '5 pm', 'no, 6 baje', 'roz', 'yes']);
+  assert.ok(/at 6 in the evening/.test(says[5]), says[5]);
   hangUp(brain, s.id);
   assert.strictEqual(brain.getChild(c.id).schedule.time, '18:00');
   assert.strictEqual(brain.getChild(c.id).consent.recording, true);
@@ -297,7 +299,7 @@ await test('scheduler: calls at the chosen time, once; one retry 30 min later; t
     assert.strictEqual(a.length, 1); assert.strictEqual(a[0].action, 'call');
     assert.strictEqual(fb.calls.length, 1);
     assert.strictEqual(fb.calls[0].agent_id, 'child-agent');
-    assert.deepStrictEqual(Object.keys(fb.calls[0].user_data).sort(), ['allowed', 'child_name', 'greeting', 'lesson_language', 'registered', 'session_id']);
+    assert.deepStrictEqual(Object.keys(fb.calls[0].user_data).sort(), ['allowed', 'caller_kind', 'child_name', 'greeting', 'lesson_language', 'registered', 'session_id']);
     assert.deepStrictEqual(await sch.tick(IST('2027-01-04', '17:05')), [], 'called twice in a day');
     // nobody answered
     const sid = a[0].session_id;
@@ -415,7 +417,7 @@ await test('workflow: the consent workflow plans, gates and returns a written co
   assert.ok(p.go && p.call_kind === 'consent' && /माता-पिता/.test(p.greeting));
   assert.deepStrictEqual(flow.gate({ session_id: p.session_id }), { go: true });
   assert.strictEqual(flow.consentResult({ session_id: p.session_id }).ready, false);
-  talk(brain, p.session_id, ['haan', 'haan', 'haan', '5 baje', 'roz', 'haan']);
+  talk(brain, p.session_id, ['haan', 'haan', 'haan', 'nahi', '5 baje', 'roz', 'haan']);
   hangUp(brain, p.session_id);
   const r = flow.consentResult({ session_id: p.session_id });
   assert.ok(r.ready && r.given, JSON.stringify(r));

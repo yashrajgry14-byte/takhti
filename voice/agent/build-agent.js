@@ -54,6 +54,11 @@ const nodes = [
         expression: { conditions: [{ variable: 'allowed', operator: 'eq', value: false }] } },
       { to_node_id: 'not_now', condition_type: 'expression', priority: 1,
         expression: { conditions: [{ variable: '_silence_repeats', operator: 'gte', value: 2 }] } },
+      // a teacher rang the line (the inbound lookup said caller_kind =
+      // teacher): take a voice note, never a lesson
+      { to_node_id: 'teacher', priority: 2,
+        condition: 'caller_kind is "{{caller_kind}}". Take this edge only if caller_kind is exactly teacher, and the person said anything.',
+        parameters: { teacher_said: { type: 'string', description: 'The teacher\'s exact words in reply to the greeting.' } } },
       { to_node_id: 'lesson', condition: 'The person says the child is here or ready, hands the phone over, says yes / haan / okay, a child starts speaking, or (when Munni asked who is calling) the child says their name.',
         parameters: { caller_name: { type: 'string', description: 'If Munni asked who is calling: the name the child said. Otherwise empty.' } } },
       { to_node_id: 'not_now', condition: 'The person says the child is not available, busy, sleeping or at school, asks to call later, does not want the call, or says it is a wrong number.' }
@@ -78,6 +83,18 @@ const nodes = [
         condition: 'Munni has already spoken the goodbye from a tool result with done = true (it ends with "Bye bye" or "बाय-बाय"), and the child says bye or anything else.' },
       { to_node_id: 'adult',
         condition: 'An adult (not the child) is now speaking and asks a question about Takhti, the call, or the child\'s progress.' }
+    ]
+  },
+  {
+    id: 'teacher',
+    function_call: 'takhti_note',
+    prompt: 'You are now speaking with a TEACHER, not a child, who is leaving a note about a child. Call @takhti_note with teacher_said = "{{teacher_said}}" and speak its "say" exactly. Every time the teacher speaks again, call @takhti_note with their exact words, names included, and speak the new "say" exactly. Never repeat a child\'s name you did not hear. When a result has "done": true, speak its "say" and stop.',
+    repeat_after_silence_seconds: 10,
+    edges: [
+      { to_node_id: 'end_now', condition_type: 'expression', priority: 0,
+        expression: { conditions: [{ variable: '_silence_repeats', operator: 'gte', value: 3 }] } },
+      { to_node_id: 'end_now',
+        condition: 'Munni has already spoken a goodbye from a tool result with done = true, and the teacher says anything or says bye.' }
     ]
   },
   {
@@ -161,13 +178,26 @@ const tools = [
       },
       required: ['session_id', 'child_said']
     }
+  },
+  {
+    key: 'custom_task',
+    name: 'takhti_note',
+    description: 'Send what the teacher just said to Takhti and get what Munni says next. Call this EVERY time the teacher speaks.',
+    parameters: {
+      type: 'object',
+      properties: {
+        session_id: { type: 'string', description: 'The call id: always {{session_id}}.' },
+        teacher_said: { type: 'string', description: 'The teacher\'s exact words, including the child\'s name as you heard it.' }
+      },
+      required: ['session_id', 'teacher_said']
+    }
   }
 ];
 
-const toolParam = (pathname, param) => ({
+const toolParam = (pathname, param, node) => ({
   method: 'POST', url: base + pathname, api_token: 'Bearer ' + TOOL,
   headers: { 'Content-Type': 'application/json' }, param,
-  scope: 'node', nodes: ['lesson']
+  scope: 'node', nodes: [node || 'lesson']
 });
 
 const agent = {
@@ -190,7 +220,7 @@ const agent = {
             routing_instructions: 'Route on what the person on the phone just said. During the lesson, stay on the lesson node unless one of its conditions clearly applies; a wrong answer, a half-read line or "I don\'t know" is part of the lesson, not a reason to leave it.',
             current_node_id: 'start',
             // set by the server on every call (user_data) or inbound lookup
-            variable_types: { allowed: 'boolean', registered: 'boolean' },
+            variable_types: { allowed: 'boolean', registered: 'boolean', caller_kind: 'string' },
             nodes
           }
         },
@@ -198,7 +228,8 @@ const agent = {
           tools,
           tools_params: {
             takhti_next: toolParam('/voice/tools/next', { session_id: '%(session_id)s', caller_name: '%(caller_name)s' }),
-            takhti_answer: toolParam('/voice/tools/answer', { session_id: '%(session_id)s', child_said: '%(child_said)s' })
+            takhti_answer: toolParam('/voice/tools/answer', { session_id: '%(session_id)s', child_said: '%(child_said)s' }),
+            takhti_note: toolParam('/voice/tools/note', { session_id: '%(session_id)s', teacher_said: '%(teacher_said)s' }, 'teacher')
           }
         }
       },

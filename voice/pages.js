@@ -126,7 +126,8 @@ function chips(s) {
   return s.items.map(it => `<span class="chip ${OUT[it.outcome] || 'no'}" title="${esc(it.problem || it.target || it.prompt)}">${esc(it.kind)} · ${esc(it.outcome || 'open')}</span>`).join('');
 }
 
-function dashboardPage(brain, key) {
+function dashboardPage(brain, key, scope) {
+  scope = scope || { super: true };
   const q = 'key=' + encodeURIComponent(key);
   const kids = brain.listChildren().sort((a, b) => b.created_at.localeCompare(a.created_at));
   const sessions = brain.listSessions().sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 60);
@@ -172,8 +173,38 @@ function dashboardPage(brain, key) {
     <td>${esc(JSON.stringify(k.profile.levels))}</td><td>${k.profile.classCode ? esc(k.profile.classCode) : '–'}</td>
     <td><form method="post" action="/voice/admin/children/${esc(k.id)}/english?${q}"><input type="hidden" name="on" value="${k.english_practice ? 'no' : 'yes'}"><button class="btn" style="margin:0;padding:6px 10px;${k.english_practice ? '' : 'background:#6E6355'}">${k.english_practice ? 'On' : 'Off'}</button></form></td>
     <td><form method="post" action="/voice/admin/children/${esc(k.id)}/homework?${q}"><input name="code" placeholder="TKH1.… homework code" size="22"><button class="btn" style="margin:0;padding:6px 10px">Import</button></form></td></tr>`).join('');
+  const schoolBlock = scope.super ? `<h2>Schools</h2>
+  <table><tr><th>School</th><th>Contact</th><th>Bolna account</th></tr>${(brain.listSchools() || []).map(sc => `<tr><td>${esc(sc.name)}<br><span class="sub">${esc(sc.id)}</span></td><td>${esc(sc.contact || '–')}</td><td>${sc.bolna && sc.bolna.api_key ? 'own sub-account' : '<span class="sub">server default</span>'}${sc.bolna && sc.bolna.agent_id ? ' · agent ' + esc(sc.bolna.agent_id) : ''}</td></tr>`).join('') || '<tr><td colspan="3">None yet: everything is on the server default.</td></tr>'}</table>
+  <form method="post" action="/voice/admin/schools?${q}"><input name="name" placeholder="School name" required><input name="contact" placeholder="Contact for parents (phone)">
+    <input name="api_key" placeholder="Bolna sub-account API key"><input name="agent_id" placeholder="Bolna agent id"><input name="parent_agent_id" placeholder="Parent agent id">
+    <button class="btn" style="margin:0">Add school</button></form>
+  <p class="note">Each school gets its own admin key (shown once) and sees only its own children, calls and teachers. With a Bolna sub-account key, its calls run on that account.</p>` : `<p class="sub">School: <b>${esc(scope.school.name)}</b></p>`;
+
+  const teachers = (brain.listTeachers ? brain.listTeachers() : []);
+  const codes = [...new Set(kids.map(k => k.profile && k.profile.classCode).filter(Boolean).map(c => String(c).toUpperCase()))].sort();
+  const classRows = codes.map(code => {
+    const sum = brain.classSummary(code, scope.school && scope.school.id, scope.super);
+    const gaps = sum.gaps.slice(0, 3).map(g => `${esc(g.en)} (${g.children})`).join(', ') || '<span class="sub">no shared gap yet</span>';
+    const ready = sum.children.filter(c => c.consent === 'given' && c.phone).length;
+    return `<tr><td>${esc(code)}</td><td>${sum.children.length} children · ${ready} families can be called</td><td>${gaps}</td>
+      <td><form method="post" action="/voice/admin/classes/${esc(code)}/parent-calls?${q}"><input name="skill" placeholder="skill id (blank = shared gap)" size="14">
+      <input name="teacher" placeholder="Teacher's name" size="10"><input name="note" placeholder="Short note for parents" size="16"><button ${btn}>Call all parents</button></form></td></tr>`;
+  }).join('');
+  const tcalls = (brain.listTeacherCalls ? brain.listTeacherCalls() : []).sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 20);
+  const tById = Object.fromEntries(teachers.map(t => [t.id, t]));
+  const tcallRows = tcalls.map(c => `<tr><td>${esc((tById[c.teacher_id] || {}).name || '?')}<br><span class="sub">${esc(c.created_at.slice(0, 16).replace('T', ' '))}</span></td>
+    <td>${(c.notes || []).map(n => `${esc(n.child_name)}: ${esc(n.skill)} ${n.ok ? '✓' : '✗'}${n.heard_in_transcript === false ? ' <span class="flag">name not in transcript</span>' : ''}`).join('<br>') || '<span class="sub">no notes</span>'}</td>
+    <td><a href="/voice/admin/teachercalls/${esc(c.id)}?${q}">open</a></td></tr>`).join('');
+  let corpus = null;
+  try { corpus = require('./corpus').buildCorpus(brain); } catch (e) { corpus = null; }
+  const corpusBlock = corpus ? `<h2>What children misread</h2>
+  <p class="sub">${corpus.readings} readings from ${corpus.children} children whose parents said yes to improving Takhti. Heard forms appear once ${corpus.min_children}+ children produced them. <a href="/voice/admin/corpus?${q}">JSON</a> · <a href="/voice/admin/corpus.csv?${q}">CSV</a></p>
+  <table><tr><th>Word</th><th>Attempts</th><th>Read well</th><th>Heard as</th></tr>${corpus.words.slice(0, 12).map(w => `<tr><td>${esc(w.word)}</td><td>${w.attempts}</td><td>${w.ok}</td><td>${w.heard.map(h => esc(h.form) + ' (' + h.count + ')').join(', ') || '–'}</td></tr>`).join('') || '<tr><td colspan="4">Nothing yet</td></tr>'}</table>
+  ${corpus.swaps.length ? `<p>Letter swaps: ${corpus.swaps.slice(0, 8).map(x => `${esc(x.from)}→${esc(x.to)} (${x.count})`).join(' · ')}</p>` : ''}` : '';
+
   return shell('Takhti voice · dashboard', 'en', `<h1>Takhti voice</h1>
   <p class="sub">${kids.length} children · ${sessions.length} recent sessions · ${brain.storyBank.length} validated story problems</p>
+  ${schoolBlock}
   <h2>Add a child</h2>
   <form method="post" action="/voice/admin/children?${q}">
     <input name="name" placeholder="First name" required><input name="age" type="number" min="3" max="10" placeholder="Age" required>
@@ -181,6 +212,8 @@ function dashboardPage(brain, key) {
     <input name="parent_phone" placeholder="+91…" required>
     <select name="parent_lang"><option value="">Parent: same language</option><option value="hi">Parent: Hindi</option><option value="en">Parent: English</option></select>
     <select name="consent" required><option value="call">Ask on a consent call</option><option value="yes">Parent consented in person</option></select>
+    <label><input type="checkbox" name="consent_research" value="yes"> (in person) words may improve Takhti</label>
+    <label><input type="checkbox" name="placement" value="yes"> New admission: placement call first</label>
     <button class="btn" style="margin:0">Add</button></form>
   <p class="note">A consent call explains what Takhti keeps and asks the parent, yes or no, before any lesson; their answers are checked against Bolna's transcript afterwards. The time and days they choose start the daily lessons.</p>
   <h2>Children</h2>
@@ -188,12 +221,23 @@ function dashboardPage(brain, key) {
   <p class="note">A homework code from the app's teacher view links the child to that class; the next call asks the homework (personalised by the app's own diagnosis). After each call the parent report carries a progress code back to the teacher.</p>
   <h2>Plan a lesson</h2>
   <form method="post" action="/voice/admin/sessions?${q}"><select name="child_id">${kidOpts}</select>
-    <select name="kind"><option value="">Next in turn</option><option value="lesson">Reading + maths</option><option value="english">Spoken English</option></select>
+    <select name="kind"><option value="">Next in turn</option><option value="lesson">Reading + maths</option><option value="english">Spoken English</option><option value="placement">Placement (new admission)</option></select>
     <label><input type="checkbox" name="call" value="yes"> and call now</label><button class="btn" style="margin:0">Plan</button></form>
+  <h2>Teachers</h2>
+  <table><tr><th>Teacher</th><th>Phone</th><th>Classes</th></tr>${teachers.map(t => `<tr><td>${esc(t.name)}</td><td>${esc(t.phone)}</td><td>${esc(t.class_codes.join(', '))}</td></tr>`).join('') || '<tr><td colspan="3">None yet</td></tr>'}</table>
+  <form method="post" action="/voice/admin/teachers?${q}"><input name="name" placeholder="Teacher's name" required><input name="phone" placeholder="+91…" required>
+    <input name="class_codes" placeholder="Class codes, comma separated"><select name="lang"><option value="hi">Hindi</option><option value="en">English</option></select>
+    <button class="btn" style="margin:0">Add teacher</button></form>
+  <p class="note">A teacher ringing the Munni number leaves a voice note ("Riya confused ण and न today"). Munni reads it back and saves it only on a yes. It becomes evidence in the child's skill history, and for a difficulty, what the next calls practise.</p>
+  <h2>Teacher notes</h2>
+  <table><tr><th>Teacher</th><th>Notes</th><th></th></tr>${tcallRows || '<tr><td colspan="3">None yet</td></tr>'}</table>
+  <h2>Classes</h2>
+  <table><tr><th>Class</th><th>Families</th><th>Shared gaps</th><th>Class-wide parent call</th></tr>${classRows || '<tr><td colspan="4">No child is linked to a class yet (import a homework code).</td></tr>'}</table>
   <h2>Parent calls</h2>
   <table><tr><th>Child</th><th>Kind</th><th>Status</th><th>Outcome</th><th></th></tr>${parentRows || '<tr><td colspan="5">None yet</td></tr>'}</table>
   <h2>Sessions</h2>
   <table><tr><th>Child</th><th>Status</th><th>Items</th><th>Relay drift</th><th></th></tr>${rows || '<tr><td colspan="5">None yet</td></tr>'}</table>
+  ${corpusBlock}
   <p class="note">Relay drift = answers where the words the voice model passed to the tools differ from Bolna's own transcript. It should stay near zero.</p>`);
 }
 
@@ -238,4 +282,23 @@ function parentCallPage(s, child, key) {
   ${s.transcript ? `<h2>Bolna transcript</h2><pre>${esc(s.transcript)}</pre>` : ''}`);
 }
 
-module.exports = { cardPage, reportPage, dashboardPage, sessionAdminPage, parentCallPage, esc };
+function schoolCreatedPage(r, key) {
+  return shell('School added', 'en', `<p><a href="/voice/admin?key=${encodeURIComponent(key)}">← dashboard</a></p><h1>${esc(r.school.name)}</h1>
+  <p>Give the school this admin key. It is shown <b>only now</b>; Takhti keeps only a hash of it.</p><pre style="user-select:all">${esc(r.key)}</pre>
+  <p>Their dashboard: <code>/voice/admin?key=…</code> with that key. They see only their own children, calls and teachers.</p>`);
+}
+function teacherCallPage(c, teacher, key) {
+  const q = 'key=' + encodeURIComponent(key);
+  const turns = (c.live_turns || []).map(t => `<div class="turn"><b>${t.role === 'user' ? esc(teacher ? teacher.name : 'Teacher') : 'Munni'}:</b> ${esc(t.text)}</div>`).join('');
+  return shell('Teacher call', 'en', `<p><a href="/voice/admin?${q}">← dashboard</a></p><h1>${esc(teacher ? teacher.name : '?')} · note call</h1>
+  <p class="sub">${esc(c.status)} · ${c.notes.length} notes saved</p>
+  <table><tr><th>Child</th><th>Skill</th><th>How</th><th>Letters</th><th>Name in transcript</th></tr>${c.notes.map(n => `<tr><td>${esc(n.child_name)}</td><td>${esc(n.skill)}</td><td>${n.ok ? 'did well' : 'found it hard'}</td><td>${esc((n.letters || []).join(' '))}</td><td>${n.heard_in_transcript == null ? '–' : n.heard_in_transcript ? 'yes' : '<span class="flag">no: check</span>'}</td></tr>`).join('')}</table>
+  <h2>What the tool heard</h2>${turns || '<p class="sub">No turns.</p>'}${c.transcript ? `<h2>Bolna transcript</h2><pre>${esc(c.transcript)}</pre>` : ''}`);
+}
+function classCallsPage(r, code, key) {
+  return shell('Class calls', 'en', `<p><a href="/voice/admin?key=${encodeURIComponent(key)}">← dashboard</a></p><h1>Class ${esc(String(code).toUpperCase())} · ${esc(r.skill)}</h1>
+  <p>${r.placed.length} calls placed.</p><ul>${r.placed.map(x => `<li>${esc(x.child)}</li>`).join('')}</ul>
+  ${r.skipped.length ? `<h2>Not called</h2><ul>${r.skipped.map(x => `<li>${esc(x.child)}: ${esc(x.why)}</li>`).join('')}</ul>` : ''}`);
+}
+
+module.exports = { cardPage, reportPage, dashboardPage, sessionAdminPage, parentCallPage, schoolCreatedPage, teacherCallPage, classCallsPage, esc };

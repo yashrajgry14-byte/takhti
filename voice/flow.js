@@ -133,8 +133,8 @@ function createFlow(brain, envIn) {
     const n = child.name;
     // the written copy of what they agreed to, in their language
     const l1 = lang === 'hi'
-      ? `आपने ${dateSay(child.consent.at, lang)} को हाँ कहा कि मुन्नी ${C.daysSay(sch.days, lang)} ${C.clockSay(sch.time, lang)} ${n} को अभ्यास के लिए फ़ोन करे${child.consent.recording ? ', और कॉल रिकॉर्ड हों' : ', बिना रिकॉर्डिंग के'}।`
-      : `On ${dateSay(child.consent.at, lang)} you agreed that Munni may call ${n} ${C.daysSay(sch.days, lang)} at ${C.clockSay(sch.time, lang)} for practice${child.consent.recording ? ', with the calls recorded' : ', without recording'}.`;
+      ? `आपने ${dateSay(child.consent.at, lang)} को हाँ कहा कि मुन्नी ${C.daysSay(sch.days, lang)} ${C.clockSay(sch.time, lang)} ${n} को अभ्यास के लिए फ़ोन करे${child.consent.recording ? ', और कॉल रिकॉर्ड हों' : ', बिना रिकॉर्डिंग के'}${child.consent.research ? '; और तख़्ती को बेहतर बनाने के लिए पढ़े हुए शब्द (बिना नाम) इस्तेमाल हों' : ''}।`
+      : `On ${dateSay(child.consent.at, lang)} you agreed that Munni may call ${n} ${C.daysSay(sch.days, lang)} at ${C.clockSay(sch.time, lang)} for practice${child.consent.recording ? ', with the calls recorded' : ', without recording'}${child.consent.research ? ', and that the words read (without the name) may be used to improve Takhti' : ''}.`;
     const l2 = lang === 'hi'
       ? `हम ${n} का पहला नाम, उम्र, यह नंबर और जवाब रखते हैं, किसी को बेचते या देते नहीं। रोकने या सब मिटवाने के लिए ${contactHow(lang, env.TAKHTI_HELP_CONTACT)}।`
       : `We keep ${n}'s first name, age, this number and the answers, and never sell or share them. To stop or delete everything, ${contactHow(lang, env.TAKHTI_HELP_CONTACT)}.`;

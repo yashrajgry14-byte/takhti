@@ -180,7 +180,10 @@ function processCallEnd(core, child, session, payload) {
     // second reading after Munni's coaching came out clean
     const misread = [...new Set([...practiceWords(first.tokens), ...practiceWords(best.tokens)])];
     it.evidence = { source, first_verdict: first.verdict, verdict: best.verdict, score: best.score,
-                    misread, slips: best.slips };
+                    misread, slips: best.slips,
+                    // word by word, what the recognizer heard the first time:
+                    // the raw material of the misreading corpus (corpus.js)
+                    tokens: first.tokens };
     // only a first reading of a card line counts toward the reading level;
     // a line said after Munni is speaking practice, not reading
     if (it.kind === 'read' && !session.recorded_read && first.verdict !== 'unsure') {
@@ -248,6 +251,7 @@ const R = {
   enPractise:{ en: 'English words to use at home: {w}.', hi: 'घर पर इन अंग्रेज़ी शब्दों का इस्तेमाल करें: {w}।' },
   tipEnglish:{ en: 'Tip for today: ask {name} to say "{w}" in English when you see one.', hi: 'आज की सलाह: जब भी दिखे, {name} से उसका अंग्रेज़ी नाम "{w}" बुलवाएँ।' },
   homework: { en: "{name} also did a question from the teacher's homework.", hi: '{name} ने टीचर के होमवर्क का एक सवाल भी किया।' },
+  focusDone: { en: '{name} also practised something the teacher asked for.', hi: '{name} ने वह भी अभ्यास किया जो टीचर ने कहा था।' },
   teacher:  { en: 'To share this practice with the teacher, send them this code:', hi: 'यह अभ्यास टीचर तक पहुँचाने के लिए उन्हें यह कोड भेजें:' },
   footer:   { en: '— Takhti', hi: '— तख़्ती' }
 };
@@ -299,7 +303,7 @@ function buildReport(core, child, session) {
   if (eMissed.length) lines.push(t('enPractise', lang, { w: eMissed.slice(0, 3).join(', ') }));
 
   const hw = session.items.find(x => x.kind === 'homework' && x.outcome && x.outcome !== 'unsure');
-  if (hw) lines.push(t('homework', lang, { name }));
+  if (hw) lines.push(t(hw.focus ? 'focusDone' : 'homework', lang, { name }));
   if (session.ended_by === 'stop') lines.push(t('stopped', lang, { name }));
 
   if (session.kind === 'english') {

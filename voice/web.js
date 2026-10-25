@@ -106,7 +106,7 @@ function createWeb(brain, envIn) {
       body: JSON.stringify({
         agent_id: env.BOLNA_WEB_AGENT_ID || env.BOLNA_AGENT_ID,
         user_data: { session_id: session.id, child_name: child.name, lesson_language: child.lang === 'hi' ? 'Hindi' : 'English',
-                     greeting: GREET[child.lang](child.name), registered: true, allowed: true }
+                     greeting: GREET[child.lang](child.name), registered: true, allowed: true, caller_kind: 'child' }
       })
     }).catch(e => ({ ok: false, status: 502, json: async () => ({ error: String(e.message || e) }) }));
     const data = await mint.json().catch(() => ({}));

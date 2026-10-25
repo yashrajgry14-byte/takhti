@@ -13,6 +13,7 @@
    Families                GET  /voice/card/:session     unguessable link
                            GET  /voice/report/:session   unguessable link
    The team                GET  /voice/admin?key=TAKHTI_ADMIN_KEY  (+ JSON API)
+   A school                GET  /voice/admin?key=<that school's key> — its own records only
 
    Bolna has to reach this server over HTTPS. Locally, put a tunnel in
    front of it (cloudflared or ngrok) — see voice/README.md.
@@ -26,6 +27,7 @@ const { createBrain } = require('./brain');
 const { createWeb } = require('./web');
 const { createFlow } = require('./flow');
 const { createScheduler } = require('./schedule');
+const { buildCorpus, corpusCsv } = require('./corpus');
 const P = require('./pages');
 
 /* tiny .env loader so `node voice/server.js` just works */
@@ -129,6 +131,14 @@ function createServer(opts) {
         return send(res, 200, { say: out.say, expect: out.expect, done: out.done, item: out.item });
       }
 
+      /* ---- a teacher's voice note (the child agent's teacher node) ---- */
+      if (req.method === 'POST' && p === '/voice/tools/note') {
+        if (!same(bearer(req), TOOL)) return send(res, 401, { error: 'unauthorized' });
+        const b = await readBody(req, 64 * 1024);
+        const out = brain.toolNote(sid(b.session_id), b.teacher_said);
+        return send(res, 200, { say: out.say, done: out.done });
+      }
+
       /* ---- the parent agent's one tool ---- */
       if (req.method === 'POST' && p === '/voice/tools/parent') {
         if (!same(bearer(req), TOOL)) return send(res, 401, { error: 'unauthorized' });
@@ -175,16 +185,87 @@ function createServer(opts) {
       /* ---- the team: dashboard and JSON API ---- */
       if (p.startsWith('/voice/admin')) {
         const key = url.searchParams.get('key') || bearer(req);
-        if (!same(key, ADMIN)) return send(res, 401, { error: 'unauthorized' });
+        // the server's own key sees everything; a school's key sees only its school
+        let scope = null;
+        if (same(key, ADMIN)) scope = { super: true, school: null };
+        else { const sc = brain.schoolByKey(key); if (sc) scope = { super: false, school: sc }; }
+        if (!scope) return send(res, 401, { error: 'unauthorized' });
         const wantsHtml = String(req.headers.accept || '').includes('text/html');
         const q = 'key=' + encodeURIComponent(key);
+        const owns = c => !!c && (scope.super || c.school_id === scope.school.id);
+        const view = scopedView(scope);
 
-        if (req.method === 'GET' && p === '/voice/admin') return send(res, 200, P.dashboardPage(brain, key));
-        if (req.method === 'GET' && p === '/voice/admin/children') return send(res, 200, brain.listChildren());
+        // anything addressed by id must belong to this school: 404, not 403,
+        // so one school can't even learn another school's ids exist
+        const idm = p.match(/^\/voice\/admin\/(children|sessions|parentcalls|teachercalls)\/([A-Za-z0-9_-]+)/);
+        if (idm) {
+          const rec = idm[1] === 'children' ? brain.getChild(idm[2]) : idm[1] === 'sessions' ? brain.getSession(idm[2])
+            : idm[1] === 'parentcalls' ? brain.getParentCall(idm[2]) : brain.getTeacherCall(idm[2]);
+          const child = idm[1] === 'children' ? rec : rec && brain.getChild(rec.child_id);
+          const ok = idm[1] === 'teachercalls' ? rec && (scope.super || rec.school_id === scope.school.id) : owns(child);
+          if (!ok) return send(res, 404, { error: 'not found' });
+        }
+
+        if (req.method === 'GET' && p === '/voice/admin') return send(res, 200, P.dashboardPage(view, key, scope));
+        if (req.method === 'GET' && p === '/voice/admin/children') return send(res, 200, view.listChildren().map(publicChild));
+
+        /* ---- teachers, classes, the misreading corpus ---- */
+        if (req.method === 'GET' && p === '/voice/admin/teachers') return send(res, 200, view.listTeachers());
+        if (req.method === 'POST' && p === '/voice/admin/teachers') {
+          const b = await readBody(req, 16 * 1024);
+          const r = brain.registerTeacher({ name: b.name, phone: b.phone, lang: b.lang,
+            class_codes: String(b.class_codes || b.class_code || '').split(/[\s,]+/).filter(Boolean),
+            school_id: scope.super ? (b.school_id || null) : scope.school.id });
+          if (wantsHtml) return r.error ? send(res, 400, `<!doctype html><p>${P.esc(r.error.join('; '))}</p><p><a href="/voice/admin?${q}">back</a></p>`) : redirect(res, `/voice/admin?${q}`);
+          return send(res, r.error ? 400 : 201, r);
+        }
+        if (req.method === 'GET' && (mm = m(/^\/voice\/admin\/teachercalls\/([A-Za-z0-9_-]+)$/))) {
+          const c = brain.getTeacherCall(mm[1]);
+          return wantsHtml ? send(res, 200, P.teacherCallPage(c, brain.getTeacher(c.teacher_id), key)) : send(res, 200, c);
+        }
+        if ((mm = m(/^\/voice\/admin\/classes\/([A-Za-z0-9_-]{2,40})(\/parent-calls)?$/))) {
+          const sch = scope.school && scope.school.id;
+          if (req.method === 'GET' && !mm[2]) return send(res, 200, brain.classSummary(mm[1], sch, scope.super));
+          if (req.method === 'POST' && mm[2]) {
+            const b = await readBody(req, 8 * 1024);
+            const r = await brain.classParentCalls(mm[1], { skill: b.skill || null, note: b.note || '', teacher: b.teacher || '' }, env, scope);
+            if (wantsHtml) return r.error ? send(res, 400, `<!doctype html><p>${P.esc(r.error)}</p><p><a href="/voice/admin?${q}">back</a></p>`)
+              : send(res, 200, P.classCallsPage(r, mm[1], key));
+            return send(res, r.error ? 400 : 200, r);
+          }
+        }
+        if (req.method === 'GET' && (p === '/voice/admin/corpus' || p === '/voice/admin/corpus.csv')) {
+          const c = buildCorpus(view, env);
+          if (p.endsWith('.csv')) return send(res, 200, corpusCsv(c), 'text/csv; charset=utf-8');
+          return send(res, 200, c);
+        }
+
+        /* ---- schools (the server's own key only) ---- */
+        if (p === '/voice/admin/schools' || p.startsWith('/voice/admin/schools/')) {
+          if (!scope.super) return send(res, 404, { error: 'not found' });
+          if (req.method === 'GET' && p === '/voice/admin/schools') return send(res, 200, brain.listSchools().map(brain.publicSchool));
+          if (req.method === 'POST' && p === '/voice/admin/schools') {
+            const b = await readBody(req, 16 * 1024);
+            const r = brain.createSchool({ name: b.name, contact: b.contact, bolna: b.bolna || pick(b, ['api_key', 'agent_id', 'parent_agent_id', 'from_number', 'daily_workflow_id', 'consent_workflow_id']) });
+            if (r.error) return send(res, 400, { error: r.error });
+            if (wantsHtml) return send(res, 201, P.schoolCreatedPage(r, key));
+            return send(res, 201, r);
+          }
+          if (req.method === 'POST' && (mm = m(/^\/voice\/admin\/schools\/([A-Za-z0-9_-]+)$/))) {
+            const b = await readBody(req, 16 * 1024);
+            const r = brain.updateSchool(mm[1], { name: b.name, contact: b.contact, bolna: b.bolna || pick(b, ['api_key', 'agent_id', 'parent_agent_id', 'from_number', 'daily_workflow_id', 'consent_workflow_id']) });
+            return send(res, r.error ? 400 : 200, r);
+          }
+          return send(res, 404, { error: 'not found' });
+        }
 
         if (req.method === 'POST' && p === '/voice/admin/children') {
           const b = await readBody(req, 64 * 1024);
           const r = brain.registerChild({
+            school_id: scope.super ? (b.school_id || null) : scope.school.id,
+            consent_recording: b.consent_recording === false || b.consent_recording === 'no' ? false : undefined,
+            consent_research: b.consent_research === true || b.consent_research === 'yes',
+            placement: b.placement === true || b.placement === 'yes',
             name: b.name, age: Number(b.age), lang: b.lang, parent_lang: b.parent_lang, parent_phone: b.parent_phone,
             consent: b.consent === true || b.consent === 'yes' ? true : b.consent === 'call' ? 'call' : false, consent_by: b.consent_by
           });
@@ -233,7 +314,8 @@ function createServer(opts) {
         if (req.method === 'POST' && p === '/voice/admin/sessions') {
           const b = await readBody(req, 64 * 1024);
           const kid = brain.getChild(b.child_id);
-          const kind = b.kind === 'english' || b.kind === 'lesson' ? b.kind : (kid ? brain.nextKind(kid) : 'lesson');
+          if (!owns(kid)) return send(res, 404, { error: 'no such child' });
+          const kind = ['english', 'lesson', 'placement'].includes(b.kind) ? b.kind : (kid ? brain.nextKind(kid) : 'lesson');
           const r = brain.createSession(b.child_id, { seed: b.seed, kind });
           if (r.error) return send(res, 400, { error: r.error });
           const links = sessionLinks(r.session);
@@ -272,7 +354,24 @@ function createServer(opts) {
     const b = base();
     return { card: `${b}/voice/card/${s.id}`, report: `${b}/voice/report/${s.id}` };
   }
-  function publicChild(c) { const { profile, ...rest } = c; return rest; }
+  function publicChild(c) { const { profile, app_key, ...rest } = c; return rest; }
+  const pick = (o, ks) => Object.fromEntries(ks.filter(k => o[k] != null && o[k] !== '').map(k => [k, o[k]]));
+  /* what one admin key may see: everything, or one school's records */
+  function scopedView(scope) {
+    if (scope.super) return Object.assign(Object.create(brain), { listSchools: brain.listSchools, scope });
+    const id = scope.school.id;
+    const kids = () => brain.listChildren().filter(c => c.school_id === id);
+    const ids = () => new Set(kids().map(c => c.id));
+    return Object.assign(Object.create(brain), {
+      scope,
+      listChildren: kids,
+      listSessions: () => { const k = ids(); return brain.listSessions().filter(s => k.has(s.child_id)); },
+      listParentCalls: () => { const k = ids(); return brain.listParentCalls().filter(s => k.has(s.child_id)); },
+      listTeachers: () => brain.listTeachers().filter(t => t.school_id === id),
+      listTeacherCalls: () => brain.listTeacherCalls().filter(t => t.school_id === id),
+      listSchools: () => [scope.school]
+    });
+  }
 
   const server = http.createServer(handle);
   return { server, brain, scheduler, flow, tokens: { TOOL, HOOK, ADMIN } };

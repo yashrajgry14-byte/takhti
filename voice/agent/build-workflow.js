@@ -120,7 +120,7 @@ function daily() {
         when(all(ok200, eq('response.go', true)), 'n_call'),
         when(ALWAYS, 'n_missed')
       ]),
-      call('n_call', CHILD_AGENT, { registered: k(true), allowed: k(true) }, [
+      call('n_call', CHILD_AGENT, { registered: k(true), allowed: k(true), caller_kind: k('child') }, [
         when(eq('call.status', 'completed'), 'n_settle'),
         when(ALWAYS, 'n_retry')
       ]),

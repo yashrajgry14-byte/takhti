@@ -66,9 +66,10 @@ function createScheduler(brain, envIn, o) {
     brain.store.put('children', c.id, c);
 
     let out;
-    if (env.BOLNA_DAILY_WORKFLOW_ID) {
+    const cenv = brain.envFor(c, env);           // the school's own Bolna account, if it has one
+    if (cenv.BOLNA_DAILY_WORKFLOW_ID) {
       const ref = `${c.id}_${lp.day}`;
-      out = await brain.runWorkflow(env.BOLNA_DAILY_WORKFLOW_ID, c, ref, env);
+      out = await brain.runWorkflow(cenv.BOLNA_DAILY_WORKFLOW_ID, c, ref, env);
       mark(c.id, lp.day, { mode: 'workflow', reference: ref, result: out.ok ? 'started' : out.error });
       return { child: c.id, action: 'workflow', ok: !!out.ok };
     }

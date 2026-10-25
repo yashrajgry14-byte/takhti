@@ -47,6 +47,7 @@ const L = {
   divide:     { en: 'What is {a} divided by {b}?', hi: '{a} को {b} से भाग दो, तो कितना आता है?' },
   divideWhy:  { en: '{a} divided by {b} is {ans}.', hi: '{a} को {b} से भाग देने पर {ans}।' },
   homeworkLead: { en: "This one is from your teacher's homework.", hi: 'यह सवाल टीचर के होमवर्क से है।' },
+  focusLead: { en: 'Your teacher asked Munni to practise this one with you.', hi: 'यह सवाल टीचर ने मुन्नी से तुम्हारे साथ अभ्यास करने को कहा है।' },
   plusWhy:    { en: '{a} and {b} make {ans}.', hi: '{a} और {b} मिलकर {ans}।' },
   minusWhy:   { en: '{a} take away {b} leaves {ans}.', hi: '{a} में से {b} गए, {ans} बचे।' },
   timesWhy:   { en: '{a} times {b} is {ans}.', hi: '{a} गुणा {b} बराबर {ans}।' },
@@ -213,10 +214,17 @@ function planSession(core, child, opts) {
     // teacher homework this child hasn't worked through yet takes the
     // story slot — if it can be asked out loud at all
     const hw = T.personalizeContentForHomework(T.S);
-    let homework = null;
+    let homework = null, focus = null;
     if (hw && hw.storySkill && hw.assignedAt !== T.S.hwDone) {
       const sp = T.skillProblem(hw.storySkill, 1);
       if (sp && SPOKEN_OPS[sp.op]) { slots[slots.indexOf('story')] = 'homework'; homework = hw.storySkill; }
+    }
+    // no class homework: what a teacher noticed (a voice note, a class
+    // call) takes the same slot, for a week
+    const fc = child.focus;
+    if (!homework && fc && Date.parse(fc.until) > Date.now() && slots.includes('story')) {
+      const sp = T.skillProblem(fc.skill, 1);
+      if (sp && SPOKEN_OPS[sp.op]) { slots[slots.indexOf('story')] = 'homework'; homework = fc.skill; focus = fc.source; }
     }
 
     // reading lines: sentences spaced repetition says are due come first,
@@ -230,10 +238,17 @@ function planSession(core, child, opts) {
         .sort((x, y) => x.nextReview - y.nextReview);
       for (const d of due) if (lines.length < nRead && !lines.includes(d.content)) lines.push(d.content);
     }
-    const pool = T.ageSentences(lang, T.S.levels.read).filter(l => !lines.includes(l));
+    let pool = T.ageSentences(lang, T.S.levels.read).filter(l => !lines.includes(l));
     const r = T.rng(T.seedOf(seed + '|lines'));
+    // letters a teacher said the child mixes up: lines that contain them first
+    const fl = child.focus_letters;
+    if (fl && Date.parse(fl.until) > Date.now() && slots.includes('read')) {
+      const has = l => fl.letters.some(x => l.toLowerCase().includes(x));
+      const hit = pool.filter(has);
+      while (lines.length < nRead && hit.length) { const l = hit.splice(Math.floor(r() * hit.length), 1)[0]; lines.push(l); pool = pool.filter(x => x !== l); }
+    }
     while (lines.length < nRead && pool.length) lines.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
-    return { band: b.id, slots, lines, english: null, homework, levels: { ...T.S.levels } };
+    return { band: b.id, slots, lines, english: null, homework, focus, levels: { ...T.S.levels } };
   });
   return {
     id, child_id: child.id, lang, seed, kind,
@@ -243,7 +258,7 @@ function planSession(core, child, opts) {
     // keypad answers exist only on a phone line, and only where the
     // telephony provider passes keys through (not Exotel / Vobiz)
     keypad: (opts.channel || 'call') !== 'app' && opts.keypad !== false,
-    band: out.band, slots: out.slots, lines: out.lines, homework_skill: out.homework,
+    band: out.band, slots: out.slots, lines: out.lines, homework_skill: out.homework, focus_source: out.focus || null,
     levels_before: out.levels,
     status: 'planned', created_at: new Date().toISOString(),
     started_at: null, ended_at: null,
@@ -312,17 +327,19 @@ function buildItem(core, child, s, slot, storyBank) {
          question, so a child weak on tables who was given BODMAS hears a
          tables question. skillProblem() makes the numbers really exercise
          it, with the band's ceiling and real-mistake distractors. */
-      const hw = T.personalizeContentForHomework(T.S);
-      const sp = hw && hw.storySkill ? T.skillProblem(hw.storySkill, T.seedOf(s.seed + '|hw')) : null;
+      // (or what a teacher noticed: s.focus_source, planned in planSession)
+      const hw = s.focus_source ? null : T.personalizeContentForHomework(T.S);
+      const skill = s.focus_source ? s.homework_skill : hw && hw.storySkill;
+      const sp = skill ? T.skillProblem(skill, T.seedOf(s.seed + '|hw')) : null;
       if (!sp || !SPOKEN_OPS[sp.op]) return null;
       const v = { a: nw(sp.a, lang), b: nw(sp.b, lang), ans: nw(sp.ans, lang) };
       const wrongs = sp.opts.map(Number).filter(o => o !== sp.ans);
       // prefer the skill's own mistake (a dropped ten, one group too many)
       // over a plain off-by-one, when the generator offered one
       const distractor = wrongs.find(o => Math.abs(o - sp.ans) > 1) ?? wrongs[0];
-      return { kind: 'homework', skill: sp.skillId, assigned_at: hw.assignedAt, expect: 'number',
-               answer: sp.ans, distractor, problem: sp.text,
-               prompt: joinSay(L.homeworkLead[lang], fill(L[SPOKEN_OPS[sp.op]], lang, v)),
+      return { kind: 'homework', skill: sp.skillId, assigned_at: hw ? hw.assignedAt : null, expect: 'number',
+               answer: sp.ans, distractor, problem: sp.text, focus: s.focus_source || null,
+               prompt: joinSay((s.focus_source ? L.focusLead : L.homeworkLead)[lang], fill(L[SPOKEN_OPS[sp.op]], lang, v)),
                why: fill(L[SPOKEN_OPS[sp.op] + 'Why'], lang, v) };
     }
     if (slot === 'eword' || slot === 'esay' || slot === 'ephrase') {
@@ -458,7 +475,7 @@ function answer(core, child, s, storyBank, said) {
         const mv = recordOutcome(core, child, s, 'math', first, it);
         if (mv === 'up') lead = joinSay(lead, L.levelUp[lang]);
       }
-      if (it.kind === 'homework') child.profile.hwDone = it.assigned_at;
+      if (it.kind === 'homework' && it.assigned_at) child.profile.hwDone = it.assigned_at;
       return done(first ? 'correct' : 'correct_after_clue', lead);
     }
     if (it.attempts === 1) {
@@ -470,7 +487,7 @@ function answer(core, child, s, storyBank, said) {
     }
     if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework') recordOutcome(core, child, s, 'math', false, it);
     // the homework was worked through on the call; Munni stops pointing at it
-    if (it.kind === 'homework') child.profile.hwDone = it.assigned_at;
+    if (it.kind === 'homework' && it.assigned_at) child.profile.hwDone = it.assigned_at;
     const why = it.why || '';
     return done('revealed', fill(yn ? L.revealYN : L.reveal, lang, { ans: ansWord, why }).replace(/\s+/g, ' '));
   }
@@ -633,6 +650,15 @@ function gradeLine(core, child, s, target, alternatives) {
   return out;
 }
 
+/* Can a skill be asked as one spoken sum at this child's band? */
+function skillSpoken(core, child, skill) {
+  const { out } = core.withChild(child.profile, { lang: child.lang === 'en' ? 'en' : 'hi' }, T => {
+    const sp = T.skillHasProblem(skill) ? T.skillProblem(skill, 1) : null;
+    return !!(sp && SPOKEN_OPS[sp.op]);
+  });
+  return out;
+}
+
 /* For the weekly parent call: is there teacher homework, can it be asked
    out loud, and has a call already asked it? */
 function homeworkStatus(core, child, sessions) {
@@ -647,4 +673,4 @@ function homeworkStatus(core, child, sessions) {
   return out;
 }
 
-module.exports = { homeworkStatus, planSession, next, answer, finish, buildStoryBank, gradeLine, recordOutcome, L, STORY, MAX_CALL_MS, MAX_TURNS };
+module.exports = { fill, nw, joinSay, SPOKEN_OPS, skillSpoken, homeworkStatus, planSession, next, answer, finish, buildStoryBank, gradeLine, recordOutcome, L, STORY, MAX_CALL_MS, MAX_TURNS };

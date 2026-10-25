@@ -34,7 +34,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 27 test suites (see Testing)
+npm test           # all 28 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -432,6 +432,36 @@ on-device. Full setup in `voice/README.md`.
   `voice/flow.js`), or a direct call with one retry (`brain.afterMissed()`).
   Never in quiet hours, never twice a day, never without consent. A
   missed-call message names only what will really happen next.
+- **Schools** (`brain.createSchool()`): one admin key per school (hash
+  kept), which scopes every dashboard and API record to that school (404
+  for anything else); `envFor(child)` puts the school's own Bolna
+  sub-account key, agents and workflows on its calls; its inbound agent only
+  knows its own families.
+- **Placement call** (`voice/placement.js`, kind `'placement'`, ages 5+;
+  `placement_due` makes it the first call): a binary search on the
+  spoken-maths ladder (two sums a step, a miss settles a step), the boundary
+  topped up to four attempts each so `appEvidence()` can judge it, then one
+  reading line per band level re-graded from the transcript. Records only
+  `noteSkillAttempt()`s and sets the starting levels; no clue, no reveal,
+  never "wrong".
+- **Teacher voice notes** (`voice/notes.js`, the child agent's `teacher`
+  node, tool `takhti_note`): the inbound lookup recognises a teacher's
+  number (`caller_kind: 'teacher'`). Child matched by sound within that
+  teacher's classes only; skill and letters and polarity from the words;
+  read back, saved only on a yes. A note is one observed attempt; a
+  difficulty sets `child.focus` (a spoken sum in the story slot, said as the
+  teacher's request) or `child.focus_letters` (reading lines with those
+  letters) for a week.
+- **Class-wide parent calls** (`brain.classParentCalls()`, parent call kind
+  `'class'`): shared gap (two or more children under 60% over four or more
+  attempts) or the teacher's skill; each family hears where their own child
+  stands and one thing to do at home; consent only, never in quiet hours,
+  once a day.
+- **Misreading corpus** (`voice/corpus.js`): word-level states and heard
+  forms from transcript-graded readings, letter swaps (ण→न), only for
+  children with `consent.research` (its own consent-call question, notice
+  v2), no names or ids, heard forms only from `TAKHTI_CORPUS_MIN_CHILDREN`
+  children. `voice/BOLNA-QUESTIONS.md` lists what Bolna must confirm.
 - **Keypad**: a child can press the answer (`dtmf_number: …`; `*` repeats,
   1/2 = yes/no). Munni offers it after an unheard answer — only on phone
   channels, and only where the provider passes keys (not Exotel/Vobiz).
@@ -464,7 +494,7 @@ on-device. Full setup in `voice/README.md`.
 
 ## Testing
 
-`npm test` runs 27 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 28 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -494,6 +524,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `talk-munni` | jsdom | Talking Munni through real taps with a stand-in voice server and SDK: hidden and SDK-free until a parent opts in, the bilingual disclosure, offline honesty, minting with consent, the line and the clue choices on screen, a tap to the server, leaving/losing signal ends the call, answers replayed into the record once (record, skill history, SRS), erase, and a build with no voice server shows nothing |
 | `voice` | vm + HTTP | the phone channel: spoken numbers (EN/HI/Hinglish, every Hindi word Munni speaks parses back), every Munni line bilingual and never "wrong", whole calls for every band, clue/reveal/first-try rules, doubt records nothing, "bas" stops, no-card fallback, band floor/ceiling over many calls, transcript re-grading and relay drift, skill tagging, homework code → call → progress code into a real teacher phone, SRS-due lines, keypad answers, the inbound line (unregistered, siblings, daily limit, quiet hours), the sound matcher and English practice, the in-app talk server against a fake Bolna (mint, screen, tap → event injection, results, limits, erase), the HTTP surface and auth, the Bolna graph, and the `genProblem(3)` hang regression |
 | `voice-parent` | vm + HTTP | consent call (Hindi/English): notice content, nothing before it, transcript-settled consent, relay/transcript disagreement → review, no transcript → review, refusal, unclear never a yes, quiet-hour times; weekly call from real lessons, honest "behind?", a parent's changes applied; scheduler: on time, once, one retry, truthful missed message, quiet hours, no consent, already practised, Sunday weekly call; workflow endpoints idempotent; both workflow definitions and the parent agent graph checked; HTTP auth |
+| `voice-school` | vm + HTTP | school keys see only their own records (404 otherwise), calls on the school's own Bolna key, inbound scoped to the school; placement finds the boundary, tops it up to four attempts, reads, sets levels, kind to a child who knows nothing; teacher notes (recognised line, read-back, saved on yes only, evidence + focus, focus in the next call, other classes refused, same-name children asked apart, transcript check); class calls (shared gap, per-child standing, consent, quiet hours, once a day); corpus (research consent only, no names or ids, K-children threshold, letter swaps); the teacher node in the agent graph |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
