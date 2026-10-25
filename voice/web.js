@@ -64,10 +64,20 @@ function createWeb(brain, envIn) {
     if (!rateOk(ip || 'unknown')) return { status: 429, body: { error: 'too many talks from here — try later' } };
     if (!env.BOLNA_API_KEY || !(env.BOLNA_WEB_AGENT_ID || env.BOLNA_AGENT_ID)) return { status: 503, body: { error: 'Talking Munni is not set up on this server' } };
 
-    const id = 'app_' + c.id;
-    let child = store.get('children', id), key = null;
+    let id = 'app_' + c.id;
+    // a child in a synced circle may live on the school's record: the
+    // circle's own key for this phone opens it
+    const linked = brain.circle && brain.circle.findByApp(c.id);
+    let child = linked || store.get('children', id), key = null;
+    const circleOk = child && child.circle && child.circle.app && child.circle.app.id === c.id && body.circle_key &&
+      brain.circle.same(brain.circle.hash(body.circle_key), child.circle.app.key_hash);
     if (child) {
-      if (!same(body.key, child.app_key)) return { status: 403, body: { error: 'this child belongs to another phone' } };
+      id = child.id;
+      if (!circleOk && !same(body.key, child.app_key)) return { status: 403, body: { error: 'this child belongs to another phone' } };
+      if (!child.app_key) { key = crypto.randomBytes(18).toString('base64url'); child.app_key = key; }
+      // Talking Munni is the parent's own in-app choice, made behind the PIN:
+      // consent for in-app talks only — it never opens phone lessons
+      child.consent_app = { talk: true, at: new Date().toISOString(), by: 'parent (in-app opt-in)' };
     } else {
       key = crypto.randomBytes(18).toString('base64url');
       child = {
@@ -278,7 +288,7 @@ function createWeb(brain, envIn) {
     const records = [];
     for (const it of s.items) {
       if (!it.outcome || it.outcome === 'unsure' || it.outcome === 'silent') continue;
-      if (['math', 'story', 'homework'].includes(it.kind))
+      if (['math', 'story', 'homework', 'check'].includes(it.kind))
         records.push({ mod: 'math', ok: it.outcome === 'correct', skill: it.concept ? null : (it.skill || null), concept: it.concept || null });
       if (it.kind === 'read') {
         const v = it.evidence ? it.evidence.first_verdict

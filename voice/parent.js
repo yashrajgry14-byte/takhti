@@ -284,7 +284,7 @@ function weekFacts(child, sessions, now) {
   const done = wk.filter(s => s.status === 'done');
   const tried = wk.filter(s => s.status === 'missed' || s.status === 'no_lesson').length;
   const items = done.flatMap(s => s.items || []);
-  const sums = items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent');
+  const sums = items.filter(x => ['math', 'story', 'homework', 'check'].includes(x.kind) && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent');
   const reads = items.filter(x => x.kind === 'read' && x.evidence && x.evidence.verdict !== 'unsure');
   const eng = items.filter(x => (x.kind === 'eword' || x.kind === 'esay') && x.evidence && x.evidence.verdict !== 'unsure');
   const words = [];

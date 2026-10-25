@@ -361,6 +361,7 @@ function lessonListHTML(){
   <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="display" style="font-size:21px;margin:4px 0">
     ${S.lang==='hi'?'कहानी से सीखो':'Learn with a story'}</div>
+  ${typeof circleLessonsHTML === 'function' ? circleLessonsHTML() : ''}
 
   ${hwData ? `
     <div class="hw-banner-card" style="background:linear-gradient(135deg, var(--marigold), #C5603A);border-radius:14px;padding:14px;margin:10px 0;color:#fff;">

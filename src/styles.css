@@ -1258,3 +1258,8 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
   background:var(--card,#FFFDF6);border:1px solid rgba(42,33,24,.18);border-radius:999px;padding:6px 8px 6px 14px;
   box-shadow:0 6px 20px rgba(42,33,24,.18);font-size:14px;max-width:calc(100vw - 32px)}
 .talkchip .btn{margin:0;padding:6px 12px;font-size:13px}
+
+/* The learning circle: this week's step, the Friday check, the home question */
+.circlecard{border-left:4px solid var(--leaf)}
+.circleq{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(237,230,210,.2);font-size:13.5px}
+.circleq .btn{width:auto;flex:1;padding:9px 12px}

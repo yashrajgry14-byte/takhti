@@ -133,6 +133,7 @@ function jungleMapHTML(){
   return `
   ${topGamifyBar()}
   ${profileSwitcher()}
+  ${typeof circleMapHTML === 'function' ? circleMapHTML() : ''}
   <div class="jmap glass-card" id="jmap">
     <svg class="jm-canvas" viewBox="0 0 100 100" preserveAspectRatio="none">
       <path class="jm-path" d="${MAP_PATH}"/>
@@ -196,6 +197,8 @@ function mapArrive(){
     trumpet(2);
     if(typeof triggerConfetti === 'function') triggerConfetti(2200);
   }
+  // between activities, never inside one: the learning circle catches up (if a parent turned it on)
+  if(typeof circleSync === 'function') circleSync();
 }
 
 if(typeof VIEWS !== 'undefined') VIEWS.map = jungleMapHTML;

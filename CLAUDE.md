@@ -34,7 +34,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 29 test suites (see Testing)
+npm test           # all 31 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -68,11 +68,11 @@ ui/mascot.js, ui/readback.js, ui/elephant.js, ui/lesson-player.js, ui/anim-celeb
 ui/views.js, ui/opening.js
 ui/arrival.js, ui/onboarding.js, ui/jungle-map.js, ui/video-player.js, ui/teacher.js
 games/runner.js, games/pop.js, games/tower.js, games/match.js, games/sort.js, games/archer.js
-ui/self-listen.js, ui/talk-munni.js, ui/handlers.js
+ui/self-listen.js, ui/talk-munni.js, ui/circle.js, ui/handlers.js
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v30` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v31` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -132,11 +132,12 @@ src/
     teacher.js              the teacher view (VIEWS.teacher)
     self-listen.js          hear-your-own-reading
     talk-munni.js           Talking Munni at the Pond and on into the games — parent opt-in, voice leaves the phone only during a talk
+    circle.js               the learning circle's app side: the parent's sync tick, this week's step, the Friday check, the home question
     handlers.js             event handlers
   app.js                    boot: load(), S.screen='arrival', render()
 api/ask.js                  serverless proxy; keeps the API key off the client
 sw.js                       service worker — offline cache
-voice/                      Munni on a phone call (Bolna) — a separate Node server, see below
+voice/                      Munni on a phone call (Bolna), and the learning circle's server — a separate Node server, see below
 ```
 
 ## Screens and navigation
@@ -165,7 +166,8 @@ disappearing between visits:
 | Munni's Pond | `ask` | questions for Tier 2 (shows how many wait for signal); Talking Munni, if a parent turned it on (it carries on into the games) |
 | The Picture Hut | `theater` | cartoon episodes |
 
-Above the map: `topGamifyBar()` (the child's avatar and stars) and
+Above the map: `topGamifyBar()` (the child's avatar and stars),
+`circleMapHTML()` (this week's step, when a parent turned the learning circle on) and
 `profileSwitcher()` (switch child, or **Add** — the same tap-an-animal
 onboarding as the first child, via `addChild()`). Below: **For parents →**,
 which goes through the PIN gate (`parentlock`). The parent dashboard links on
@@ -499,6 +501,60 @@ on-device. Full setup in `voice/README.md`.
   recognizer writes "water" as वॉटर). Practice only: it writes nothing to the
   app's levels, SRS or skill history.
 
+## The learning circle — `ui/circle.js` + `voice/circle.js`
+
+Everyone around one child works on **one step a week**: the class teacher,
+the parents, the tuition teacher, Munni on calls, and the app. The server
+side lives in the voice server (it is the one place they can meet); the
+app is a client of it, and only when a parent says so.
+
+- **The parent's tick.** A build with a voice server (`TALK_URL`) ends
+  onboarding with a grown-ups' step (`circleOnboardHTML()`, once per child,
+  `S.circleAsked`), and the parent dashboard has the same switch
+  (`circleParentHTML()`). Both say, in Hindi and English, that only practice
+  progress goes, never a voice, a photo or a typed question. Off → nothing is
+  sent. No voice server → no step, no section.
+- **Sync** (`circleSync()` → `POST /circle/sync`): at the map (between
+  activities, at most every two minutes), when the signal comes back, after
+  the Friday check / a home answer / a dashboard action, and *Sync now*.
+  Fire-and-forget, never in a lesson's path; a sync asked for while one is
+  in flight runs right after it. Up: levels, the skill history, counts,
+  stars, card count, SRS counts, the class code, and what waits in
+  `S.circleOut` (the check, home answers, a tutor invite or decision). Down
+  (`circleApply()`): this phone's key (`S.circleKey`), `S.circle` (this
+  week, home activities, the check's questions, members, notes, parent
+  page), a level a phone lesson moved, the class homework (through the app's
+  own `importHomework()`), and `S.circleHistory` — evidence only the server
+  saw (phone lessons, tutor ticks, teachers' notes). `appEvidence()` adds
+  it to the child's own history; the server keeps the two apart
+  (`voice/evidence.js`'s ledger), so nothing counts twice.
+- **Family code.** A school's 8-letter code (from the class page or the
+  voice dashboard) typed at onboarding or on the dashboard joins this phone
+  to the school's record of the same child; a code used by another phone is
+  refused.
+- **The weekly focus** (`focusFor()`): the class homework adapted to *this*
+  child's gap underneath, else last Friday's suggestion, a teacher's note,
+  the weakest step, the placement call's next step, the ladder. The same
+  step everywhere: the map (`circleMapHTML()`), the Story Fire's lessons for
+  it (`circleLessonsHTML()`), the phone lesson's homework slot, the tutor's
+  pack, the parent's WhatsApp.
+- **Munni's Friday check** (`VIEWS.check`, Friday–Sunday by default,
+  `TAKHTI_CHECK_DAYS`): three `skillProblem()` questions seeded by child and
+  week (the same three on a call), real evidence (`noteSkillAttempt()` +
+  `record('math')`), "Almost! It's 7", never "wrong". The verdict
+  (mastered / nearly / not yet) and next week's step are the server's; the
+  teacher sees them in the Saturday digest and on the class page.
+- **The home loop.** Two activities a week for a grown-up (*do* on day 1,
+  *teach* on day 3 — "ask her to show you how 38 + 24 works"). The parent
+  marks one done (dashboard, parent page, WhatsApp link); then the child is
+  asked once — on the map or on a call — "did you teach someone at home?".
+- **Tutors**: a parent's invite is active at once; a school's link waits for
+  the parent's yes. A tutor gets the week's pack before their session, ticks
+  the pack's questions (evidence), and can leave a note — by page or phone.
+- **WhatsApp** goes to grown-ups only (AiSensy, or ready `wa.me` links),
+  never in quiet hours, capped per day, and a parent can stop it. Nothing is
+  ever sent to a child.
+
 ## Product constraints that are not negotiable
 
 - **No streaks, no reminder notifications to children.** India's DPDP Act s.9
@@ -507,6 +563,10 @@ on-device. Full setup in `voice/README.md`.
   or compared. (A "🔥 N Day" streak badge once crept into the map header; it
   was removed. `topGamifyBar()`'s comment says why — keep it that way.)
 - **Original IP only.** Gauri the sparrow and Munni the elephant are ours.
+- **Progress syncs only with a parent's tick** (the learning circle, below):
+  levels, skill history, counts, the Friday check, home answers. Never a
+  voice, a photo or a typed question — the sync body is checked for exactly
+  that in `test/circle.test.js`.
 - **Photos and voice clips never leave the device** — with one exception a
   parent chooses: Talking Munni (below), off for every child until a parent
   turns it on behind the PIN after reading, in both languages, that the
@@ -519,7 +579,7 @@ on-device. Full setup in `voice/README.md`.
 
 ## Testing
 
-`npm test` runs 29 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 31 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -551,6 +611,8 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `voice-parent` | vm + HTTP | consent call (Hindi/English): notice content, nothing before it, transcript-settled consent, relay/transcript disagreement → review, no transcript → review, refusal, unclear never a yes, quiet-hour times; weekly call from real lessons, honest "behind?", a parent's changes applied; scheduler: on time, once, one retry, truthful missed message, quiet hours, no consent, already practised, Sunday weekly call; workflow endpoints idempotent; both workflow definitions and the parent agent graph checked; HTTP auth |
 | `voice-school` | vm + HTTP | school keys see only their own records (404 otherwise), calls on the school's own Bolna key, inbound scoped to the school; placement finds the boundary, tops it up to four attempts, reads, sets levels, kind to a child who knows nothing; teacher notes (recognised line, read-back, saved on yes only, evidence + focus, focus in the next call, other classes refused, same-name children asked apart, transcript check); class calls (shared gap, per-child standing, consent, quiet hours, once a day); corpus (research consent only, no names or ids, K-children threshold, letter swaps); the teacher node in the agent graph |
 | `voice-quiet` | vm + HTTP | silence is its own intent; an easier way in, then a different item, never a wrong answer or first-try credit; transcript-detected quiet moments; the kind report line and the kept "easier start" promise (once); ended-in-silence twice → check-in signal; the weekly call's quiet lines; placement quiet steps; games: lesson paused, hint only from the server's bank (mismatch or unknown id → nothing), throttled, silence is play, back to the lesson; the hush/play nodes and the web agent's silence hang-up |
+| `voice-circle` | vm + HTTP | the circle's server: sync only with the tick, progress only, this phone's key; the family code joins the school's record; the ledger (nothing counted twice); levels a phone lesson moved go back; weekly focus (class homework adapted to the child's gap, else the weakest step); the Friday check (app, call, reading) and next week's step; the home loop; tutors (parent invite, school link waiting for the parent, pack, results, notes); the three pages; the WhatsApp outbox (fake AiSensy); the scheduler's circle week |
+| `circle` | jsdom + the real voice server | the app side through real taps: nothing without a circle server; the bilingual grown-ups' step; nothing sent before the tick, progress only after it; family code → school; class homework via `importHomework()`; this week on the map; the Friday check (real evidence, never "wrong", the verdict on the server); "We did it" and the child's home question; a phone lesson back as `circleHistory`, counted once; sync off sends nothing |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -573,9 +635,10 @@ Honest edges of what's built:
    browser's call. (The Android build uses `EXTRA_PREFER_OFFLINE`.)
 2. **The on-device model depends on the browser too.** Without one, practice
    lines come from the curated bank only — which covers most missed words.
-3. **Between phones is by code, not live sync.** A parent or teacher sends a
-   code when they choose; nothing syncs in the background (by design —
-   nothing is uploaded). A Tier 2 sync could automate it later.
+3. **Between phones is by code unless a parent ticks sync.** Without the
+   learning circle's tick, a parent or teacher sends a code when they
+   choose and nothing is uploaded. With it, progress (only) syncs through
+   the voice server — see **The learning circle**.
 4. **`planSummary()` is English-only**, so the teacher view's per-child line
    is English even in Hindi mode.
 5. **SRS replays content only for reading**; write/math review is routing only.
@@ -604,6 +667,13 @@ Honest edges of what's built:
    silence signal depends on how Bolna's `_silence_repeats` and expression
    edges behave on a silent turn (unconfirmed — `BOLNA-QUESTIONS.md` 8);
    the transcript check after the call works either way.
+9. **The learning circle is a pilot.** The sync tick is a parent's
+   checkbox in the app, not verified parental consent (same caveat as 8);
+   WhatsApp sending needs an approved AiSensy template (`takhti_circle`,
+   two parameters) or falls back to links a person taps; the Friday check
+   and the weekly focus are maths-shaped for skills with a `skillProblem()`
+   (a reading focus is checked from the week's reading instead); the
+   circle's server is the voice server's JSON store.
 
 ## Style
 

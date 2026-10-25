@@ -328,7 +328,7 @@ function buildReport(core, child, session) {
   const mins = Math.max(1, Math.round((session.call && session.call.duration_s || 0) / 60));
   if (session.call && session.call.duration_s) lines.push(mins === 1 ? t('minute', lang, {}) : t('minutes', lang, { m: mins }));
 
-  const sums = session.items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent');
+  const sums = session.items.filter(x => ['math', 'story', 'homework', 'check'].includes(x.kind) && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent');
   const firstTry = sums.filter(x => x.outcome === 'correct').length;
   if (sums.length) {
     lines.push(t('maths', lang, { n: sums.length, c: firstTry }));

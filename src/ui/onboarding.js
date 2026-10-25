@@ -128,6 +128,8 @@ function obFinishAge(){
   }
   S.ob = null;
   log(0, `Age ${S.age} · levels seeded from the ${band ? band().id : 'default'} band`);
+  // a grown-up's step: the learning circle (only in a build with a circle server)
+  if(typeof circleOnboardWanted === 'function' && circleOnboardWanted()){ S.ob = { step:'grownup' }; if(typeof saveSoon === 'function') saveSoon(); return render(); }
   if(typeof saveSoon === 'function') saveSoon();
   if(S.game) goHub(); else go('pick');
 }
@@ -135,6 +137,7 @@ function obFinishAge(){
 /* ---------------- the router ---------------- */
 function onboardHTML(){
   const st = S.ob || (S.ob = { step: S.avatar && !S._addingChild ? 'age' : 'who' });
+  if(st.step === 'grownup' && typeof circleOnboardHTML === 'function') return circleOnboardHTML();
   return st.step === 'age' ? obAgeHTML() : obWhoHTML();
 }
 

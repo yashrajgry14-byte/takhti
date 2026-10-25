@@ -97,6 +97,26 @@ and no "you missed a day" (DPDP s.9).
 Questions for the Bolna team, one per assumption we made, are in
 [`BOLNA-QUESTIONS.md`](BOLNA-QUESTIONS.md).
 
+## The learning circle
+
+Everyone around one child works on **one step a week**: the class teacher,
+the parents, the tuition teacher, Munni on calls, and the app. This server is
+where they meet (`circle.js`, `circle-pages.js`, `messages.js`, `evidence.js`).
+
+| | What happens | Where |
+|---|---|---|
+| **The parent's tick** | in the app (end of onboarding, or the dashboard) a parent ticks *Always keep in sync*. Only then the app sends **progress**: levels, skill history, counts, the Friday check, home answers. Never a voice, a photo or a typed question. A school's 8-letter **family code** joins the phone to the school's record of the same child | `POST /circle/sync`, `ui/circle.js` |
+| **One weekly focus** | the class homework adapted to *this* child's gap underneath (a child weak on skip counting who is set tables works on skip counting), else last Friday's suggestion, a teacher's note, the weakest step, the placement result. The same step on the map, in the Story Fire, in the call's homework slot, in the tutor's pack and in the parent's message | `focusFor()` |
+| **Friday check to the teacher** | Friday to Sunday, three questions on the week's step, in the app or on a call (the same three). The verdict (mastered / nearly / not yet) and next week's step go to the teacher's Saturday digest and class page. A reading focus is checked from the week's transcript-graded reading | `checkResult()`, `readingCheck()` |
+| **Home loop with the parent** | two activities a week: one to *do* (Monday) and one where the child *teaches* the grown-up (Wednesday). The parent marks it done; then Munni asks the child once, on the map or on the next call, "did you teach someone at home?" | `HOME`, `homeDone()`, `homeAsked()` |
+| **Tutor session pack** | a parent invites the tuition teacher (active at once) or the school suggests one (waits for the parent's yes). Before each session the tutor gets the week's pack: the step, why, three questions with the usual mistake for each, what the class is doing. They tick what the child got right (real evidence) and can leave a note, on their page or by ringing the Munni number | `tutorPack()`, `tutorResult()`, `/circle/t/:token` |
+| **Nothing counted twice** | the app's own history arrives as a snapshot; what only the server saw (phone lessons, tutor ticks, teachers' notes, placement) is kept apart and sent back to the app as `circleHistory` | `evidence.js` |
+| **WhatsApp to grown-ups only** | week start, the teach activity, the check result, the tutor's pack, the teacher's digest — each a pointer to that person's own page. Never in quiet hours, at most `TAKHTI_MSG_DAILY` a day, one of each kind a week, and a parent can stop them. Without an AiSensy key a message waits on the dashboard as a one-tap link | `messages.js` |
+
+Each person has a page by an unguessable link: `/circle/p/:token` (parent),
+`/circle/t/:token` (tutor), `/circle/c/:token` (class teacher: the class's
+week, focus, family codes, linking a tutor).
+
 ## The reading card
 
 A phone call can't show text. So before the call the family opens the card link
@@ -272,6 +292,13 @@ surname, and the phone number only as the number to dial.
     workflow at their time. Without a daily workflow it calls directly, retries
     once, and the WhatsApp step stays a link on the dashboard.
 
+18. **The learning circle's template.** One more AiSensy API campaign,
+    `takhti_circle` (or set `AISENSY_CAMPAIGN`), a utility template with two
+    parameters, "{{1}} {{2}} — Takhti" (Hindi: "{{1}} {{2}} — तख़्ती"), where `{{1}}` is the message and
+    `{{2}}` the person's page. Put the AiSensy key in `AISENSY_API_KEY`.
+    In the app, set `window.TAKHTI_VOICE` to this server's public URL — the
+    same setting that enables Talking Munni turns on the circle's tick.
+
 ## Endpoints
 
 | Who | Route | Auth |
@@ -284,8 +311,10 @@ surname, and the phone number only as the number to dial.
 | Bolna Workflows | `POST /voice/flow/plan`, `/gate`, `/result`, `/missed`, `/consent/plan`, `/consent/result` (see `flow.js`) | `Bearer TAKHTI_TOOL_TOKEN` |
 | Bolna, before an inbound call | `GET /voice/inbound/lookup?contact_number=…` | `Bearer TAKHTI_TOOL_TOKEN` |
 | The app (Talking Munni) | `POST /voice/web/session`, `GET /voice/web/state`, `POST /voice/web/tap`, `GET /voice/web/result`, `POST /voice/web/forget` | parent consent flag + per-child key; per-talk token; rate limits |
+| The app (learning circle) | `POST /circle/sync` (CORS) | the parent's tick (`consent.sync`), this phone's key after the first sync, rate limits |
+| Parents, tutors, teachers | `GET`/`POST /circle/p/:token`, `/circle/t/:token`, `/circle/c/:token` | the unguessable link |
 | Families | `GET /voice/card/:session`, `GET /voice/report/:session` | the unguessable link |
-| Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `POST /voice/admin/children/:id/homework` `{code}`, `GET /voice/admin/children/:id/progress-code`, `POST /voice/admin/children/:id/consent-call`, `/consent-confirm`, `/weekly-call`, `/schedule` `{time, days: daily\|alternate, enabled, weekly}`, `GET /voice/admin/parentcalls/:id`, `POST`/`GET /voice/admin/teachers`, `GET /voice/admin/teachercalls/:id`, `GET /voice/admin/classes/:code`, `POST /voice/admin/classes/:code/parent-calls` `{skill, teacher, note}`, `GET /voice/admin/corpus(.csv)`, `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` (everything), or a school's key (its own records; 404 for anything else) |
+| Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `POST /voice/admin/children/:id/homework` `{code}`, `GET /voice/admin/children/:id/progress-code`, `POST /voice/admin/children/:id/consent-call`, `/consent-confirm`, `/weekly-call`, `/schedule` `{time, days: daily\|alternate, enabled, weekly}`, `GET /voice/admin/parentcalls/:id`, `POST`/`GET /voice/admin/teachers`, `GET /voice/admin/teachercalls/:id`, `GET /voice/admin/classes/:code`, `POST /voice/admin/classes/:code/parent-calls` `{skill, teacher, note}`, `GET /voice/admin/outbox`, `POST /voice/admin/children/:id/family-code`, `GET /voice/admin/corpus(.csv)`, `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` (everything), or a school's key (its own records; 404 for anything else) |
 | Server key only | `GET`/`POST /voice/admin/schools`, `POST /voice/admin/schools/:id` `{name, contact, api_key, agent_id, parent_agent_id, from_number, daily_workflow_id, consent_workflow_id}` | `TAKHTI_ADMIN_KEY` |
 
 The tools always return `200` with `{say, expect, done, item}`. An unknown

@@ -17,6 +17,7 @@ const { intentOf } = require('./understand');
 const PC = require('./parent');
 const NT = require('./notes');
 const PLC = require('./placement');
+const EV = require('./evidence');
 const R = require('./report');
 const C = require('./clock');
 
@@ -139,7 +140,7 @@ function createBrain(opts) {
     if (!/^\+\d{10,15}$/.test(phone)) errs.push('phone must be in international format');
     if (input.school_id && !store.get('schools', String(input.school_id))) errs.push('no such school');
     if (errs.length) return { error: errs };
-    const t = { id: 'tch_' + newId(), name, phone, lang: input.lang === 'en' ? 'en' : 'hi', class_codes: codes,
+    const t = { id: 'tch_' + newId(), name, phone, lang: input.lang === 'en' ? 'en' : 'hi', class_codes: codes, token: crypto.randomBytes(18).toString('base64url'),
                 school_id: input.school_id ? String(input.school_id) : null,
       placement_due: input.placement === true || input.placement === 'yes', created_at: new Date().toISOString() };
     store.put('teachers', t.id, t);
@@ -147,6 +148,8 @@ function createBrain(opts) {
   }
   /* the children a teacher may talk about: their classes, their school */
   function classChildren(teacherOrCodes, schoolId) {
+    // a tuition teacher: exactly the children whose parents let them in
+    if (teacherOrCodes && teacherOrCodes.tutor) return api.circle.tutorChildren(teacherOrCodes.tutor);
     const codes = Array.isArray(teacherOrCodes) ? teacherOrCodes : teacherOrCodes.class_codes;
     const sch = Array.isArray(teacherOrCodes) ? schoolId : teacherOrCodes.school_id;
     return store.list('children').filter(c => c.kind !== 'app' && c.profile && codes.includes(String(c.profile.classCode || '').toUpperCase()) &&
@@ -195,11 +198,22 @@ function createBrain(opts) {
   function createSession(childId, o) {
     const child = store.get('children', childId);
     if (!child) return { error: ['no such child'] };
-    if (!child.consent || !child.consent.given) return { error: ['waiting for a parent\'s consent (' + ((child.consent && child.consent.status) || 'none') + ')'] };
     o = o || {};
+    const talkOk = o.channel === 'app' && child.consent_app && child.consent_app.talk;
+    if (!talkOk && (!child.consent || !child.consent.given)) return { error: ['waiting for a parent\'s consent (' + ((child.consent && child.consent.status) || 'none') + ')'] };
     if (o.kind === 'placement' && child.age < 5) return { error: ['the placement call is for ages 5 and up'] };
+    // the learning circle: this week's focus (made if needed), the Friday
+    // check when it's due, and the home question when there's one to ask
+    let checkDue = false, homeAsk = null;
+    if (api.circle && api.circle.active(child) && o.kind !== 'placement' && o.kind !== 'english') {
+      api.circle.focusFor(child);
+      const fresh = store.get('children', child.id); Object.assign(child, fresh);
+      checkDue = api.circle.checkDue();
+      const h = api.circle.homeToAsk(child);
+      if (h) homeAsk = { id: h.id, topic: h.topic };
+    }
     const s = o.kind === 'placement' ? PLC.planPlacement(core, child, { seed: o.seed, channel: o.channel,
-      keypad: o.keypad != null ? o.keypad : process.env.TAKHTI_KEYPAD !== '0' }) : S.planSession(core, child, {
+      keypad: o.keypad != null ? o.keypad : process.env.TAKHTI_KEYPAD !== '0' }) : S.planSession(core, child, { checkDue, homeAsk,
       seed: o.seed, channel: o.channel, kind: o.kind,
       keypad: o.keypad != null ? o.keypad : process.env.TAKHTI_KEYPAD !== '0'
     });
@@ -251,6 +265,14 @@ function createBrain(opts) {
     }
     log(x.s, 'user', said);
     const r = x.s.kind === 'placement' ? PLC.answer(core, x.child, x.s, said) : S.answer(core, x.child, x.s, storyBank, said);
+    // the home question was answered: the circle hears it at once
+    const hq = x.s.items.find(i => i.kind === 'home' && i.home_answer && !i.reported);
+    if (hq && api.circle) {
+      hq.reported = true;
+      save(x.s, x.child);
+      if (hq.home_answer !== 'unclear') api.circle.homeAsked(x.child, hq.home_id, hq.home_answer, x.s.channel);
+      Object.assign(x.child, store.get('children', x.child.id));
+    }
     log(x.s, 'assistant', r.say);
     save(x.s, x.child);
     return r;
@@ -296,6 +318,15 @@ function createBrain(opts) {
     const inSchool = c => !school || c.school_id === school.id;
     // a teacher ringing in leaves a voice note (notes.js), whatever the hour
     const teacher = num.length === 10 ? store.list('teachers').find(t => inSchool(t) && lastTen(t.phone) === num) : null;
+    const tutor = !teacher && num.length === 10 ? store.list('tutors').find(t => lastTen(t.phone) === num && api.circle.tutorChildren(t).length) : null;
+    if (tutor) {
+      const ns = NT.planNoteCall({ id: tutor.id, name: tutor.name, lang: tutor.lang, school_id: null });
+      ns.tutor_id = tutor.id;
+      ns.call = { execution_id: q.execution_id || null, inbound: true };
+      store.put('teachercalls', ns.id, ns);
+      return { registered: true, allowed: true, caller_kind: 'teacher', session_id: ns.id, child_name: '',
+               lesson_language: ns.lang === 'hi' ? 'Hindi' : 'English', greeting: ns.greeting };
+    }
     if (teacher) {
       const ns = NT.planNoteCall(teacher);
       ns.call = { execution_id: q.execution_id || null, inbound: true };
@@ -406,6 +437,11 @@ function createBrain(opts) {
     const r = x.s.kind === 'placement' ? PLC.processPlacementEnd(core, x.child, x.s, payload, R) : processCallEnd(core, x.child, x.s, payload);
     if (r.changed && (x.s.status === 'missed' || x.s.status === 'no_lesson')) afterMissed(x.child, x.s, env, nowIn);
     save(x.s, x.child);
+    // the Friday check, done on a call: first tries count, as everywhere
+    const checks = x.s.items.filter(i => i.kind === 'check' && i.outcome && i.outcome !== 'unsure' && i.outcome !== 'silent');
+    if (r.changed && api.circle && checks.length) {
+      api.circle.checkResult(x.child, { week: checks[0].week, right: checks.filter(i => i.outcome === 'correct').length, of: checks.length, source: 'call' });
+    }
     return Object.assign({ ok: true, session_id: x.s.id }, r);
   }
 
@@ -487,7 +523,8 @@ function createBrain(opts) {
   /* ---------- teacher voice notes ---------- */
   function toolNote(sessionId, said) {
     const s = sessionId && store.get('teachercalls', String(sessionId));
-    const t = s && store.get('teachers', s.teacher_id);
+    const tt = s && s.tutor_id && store.get('tutors', s.tutor_id);
+    const t = s && (store.get('teachers', s.teacher_id) || (tt && { id: tt.id, name: tt.name, lang: tt.lang, tutor: tt }));
     if (!s || !t) return { say: SORRY_PARENT, done: true, error: 'unknown session' };
     log(s, 'user', said);
     const r = NT.noteTurn(s, said, {
@@ -507,10 +544,10 @@ function createBrain(opts) {
     const child = store.get('children', note.child_id);
     if (!child) return {};
     const id = 'note_' + newId();
-    core.withChild(child.profile, { lang: child.lang }, T => {
+    EV.ledger(child, () => core.withChild(child.profile, { lang: child.lang }, T => {
       if (T.skillById(note.skill)) T.noteSkillAttempt(note.skill, note.ok, T.S);
       T.mirrorToClassNow(T.S);
-    });
+    }));
     const at = new Date();
     child.teacher_notes = (child.teacher_notes || []).concat({ id, by: teacher.name, teacher_id: teacher.id, call: call.id,
       skill: note.skill, ok: note.ok, letters: note.letters, text: note.text, at: at.toISOString() }).slice(-100);
@@ -557,7 +594,7 @@ function createBrain(opts) {
      do at home. Never in quiet hours, never twice a day per family. */
   const sameCode = (a, b) => String(a || '').toUpperCase() === String(b || '').toUpperCase();
   function classRoster(code, schoolId, superScope) {
-    return store.list('children').filter(c => c.kind !== 'app' && c.profile && sameCode(c.profile.classCode, code) &&
+    return store.list('children').filter(c => (c.kind !== 'app' || (c.circle && c.circle.sync && c.circle.sync.on)) && c.profile && sameCode(c.profile.classCode, code) &&
       (superScope || c.school_id === schoolId));
   }
   function standingOn(child, skill) {
@@ -778,7 +815,7 @@ function createBrain(opts) {
       : `Namaste! I'm Munni from Takhti, calling for ${n}'s lesson today.${rec ? ` This call is recorded to help ${n} learn.` : ''} Is ${n} ready?`;
   }
 
-  return {
+  const api = {
     core, store, storyBank, greeting,
     registerChild, deleteChild, createSession, toolNext, toolAnswer, onCallEvent, placeCall,
     importHomeworkCode, progressCode, inboundLookup, nextKind, setEnglishPractice,
@@ -796,6 +833,11 @@ function createBrain(opts) {
     listChildren: () => store.list('children'),
     listSessions: () => store.list('sessions')
   };
+  // the learning circle around each child, and its messages to the grown-ups
+  api.circle = require('./circle').createCircle(api, opts.env);
+  api.messages = require('./messages').createMessages(api, api.circle, opts.env);
+  api.circle.attachMessages(api.messages);
+  return api;
 }
 
 module.exports = { createBrain };

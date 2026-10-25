@@ -10,6 +10,8 @@
                            POST /voice/tools/parent      (parent calls)
    Bolna Workflows         POST /voice/flow/*            Bearer TAKHTI_TOOL_TOKEN
    Bolna (after a call)    POST /voice/webhook?key=TAKHTI_WEBHOOK_KEY
+   The app (synced)        POST /circle/sync             parent's tick + this phone's key
+   The circle's grown-ups  GET  /circle/p|t|c/:token     unguessable link (parent, tutor, class teacher)
    Families                GET  /voice/card/:session     unguessable link
                            GET  /voice/report/:session   unguessable link
    The team                GET  /voice/admin?key=TAKHTI_ADMIN_KEY  (+ JSON API)
@@ -28,6 +30,7 @@ const { createWeb } = require('./web');
 const { createFlow } = require('./flow');
 const { createScheduler } = require('./schedule');
 const { buildCorpus, corpusCsv } = require('./corpus');
+const CP = require('./circle-pages');
 const P = require('./pages');
 
 /* tiny .env loader so `node voice/server.js` just works */
@@ -175,6 +178,94 @@ function createServer(opts) {
         return send(res, 200, r);
       }
 
+      /* ---- the learning circle ---- */
+      if (p === '/circle/sync') {
+        res.setHeader('Access-Control-Allow-Origin', env.TAKHTI_APP_ORIGIN || '*');
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+        if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
+        const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+        const r = await brain.circle.sync(await readBody(req, 128 * 1024), ip);
+        return send(res, r.status, r.body);
+      }
+      let cm;
+      if ((cm = m(/^\/circle\/(p|t|c)\/([A-Za-z0-9_-]{16,80})(?:\/([a-z-]+))?$/))) {
+        const [, who, tk, action] = cm;
+        const C = brain.circle;
+        const back = (msg) => redirect(res, `/circle/${who}/${tk}${msg ? '?m=' + encodeURIComponent(msg) : ''}`);
+        const flash = url.searchParams.get('m') || '';
+        if (who === 'p') {
+          const child = C.childByParentToken(tk);
+          if (!child) return send(res, 404, '<!doctype html><p>Not found</p>');
+          const lang = child.parent_lang || child.lang;
+          const hi = lang === 'hi';
+          if (req.method === 'GET' && !action) {
+            // the family saw this week's activities: Munni may ask about them
+            const w = C.focusFor(child), wd = require('./clock').localParts(new Date(), env).weekday;
+            const fresh = brain.getChild(child.id);
+            for (const h of fresh.circle.week.home) if (h.day <= wd && !h.seen_at) h.seen_at = new Date().toISOString();
+            brain.store.put('children', fresh.id, fresh);
+            return send(res, 200, CP.parentPage(C, fresh, tk, flash));
+          }
+          if (req.method === 'POST') {
+            const b = await readBody(req, 8 * 1024);
+            if (action === 'home') { C.homeDone(child, String(b.id || ''), 'parent (page)'); return back(hi ? 'बहुत अच्छा! दर्ज हो गया।' : 'Lovely! Noted.'); }
+            if (action === 'tutor') { C.tutorDecision(child.id, String(b.id || ''), String(b.action || '')); return back(hi ? 'हो गया।' : 'Done.'); }
+            if (action === 'invite') {
+              const r = await C.inviteTutor(child.id, { name: b.name, phone: b.phone, lang: b.lang }, 'parent');
+              return back(r.error ? r.error : (hi ? `${r.tutor.name} जुड़ गए।` : `${r.tutor.name} is in the circle.`));
+            }
+            if (action === 'messages') {
+              const fresh = brain.getChild(child.id); C.ensure(fresh).messages_off = b.on !== 'yes'; brain.store.put('children', fresh.id, fresh);
+              return back(b.on === 'yes' ? (hi ? 'संदेश चालू।' : 'Messages on.') : (hi ? 'संदेश बंद।' : 'Messages stopped.'));
+            }
+          }
+        }
+        if (who === 't') {
+          const t = C.tutorByToken(tk);
+          if (!t) return send(res, 404, '<!doctype html><p>Not found</p>');
+          const hi = t.lang !== 'en';
+          if (req.method === 'GET' && !action) return send(res, 200, CP.tutorPage(C, t, flash));
+          if (req.method === 'POST') {
+            const b = await readBody(req, 8 * 1024);
+            if (action === 'result') {
+              const ch = brain.getChild(String(b.child || ''));
+              // an unticked box is simply absent: one mark per question on the pack
+              const n = ch ? C.tutorPack(t, ch).questions.length : 0;
+              const r = ch && n ? C.tutorResult(t, ch.id, Array.from({ length: n }, (_, i) => b['q' + i] === 'right')) : { error: 'no such student' };
+              return back(r.error || (hi ? `सेव हुआ: ${r.of} में से ${r.right}।` : `Saved: ${r.right} of ${r.of}.`));
+            }
+            if (action === 'note') { const r = C.tutorNote(t, String(b.child || ''), b.text); return back(r.error || (hi ? 'नोट सेव हुआ।' : 'Note saved.')); }
+            if (action === 'schedule') {
+              const r = C.setTutorSchedule(t, [1, 2, 3, 4, 5, 6, 7].filter(d => b['d' + d]), b.time);
+              return back(r.error || (hi ? 'दिन सेव हुए।' : 'Days saved.'));
+            }
+          }
+        }
+        if (who === 'c') {
+          const t = brain.listTeachers().find(x => x.token && same(x.token, tk));
+          if (!t) return send(res, 404, '<!doctype html><p>Not found</p>');
+          if (req.method === 'GET' && !action) return send(res, 200, CP.classPage(C, brain, t, flash));
+          if (req.method === 'POST') {
+            const b = await readBody(req, 8 * 1024);
+            const mine = id => { const ch = brain.getChild(String(id || '')); return ch && ch.profile && (t.class_codes || []).includes(String(ch.profile.classCode || '').toUpperCase()) ? ch : null; };
+            if (action === 'focus') {
+              if (!(t.class_codes || []).includes(String(b.code || '').toUpperCase())) return back('Not your class.');
+              const r = C.setClassFocus(b.code, String(b.skill || ''), b.note, t.name);
+              return back(r.error || `This week's focus is set for ${r.children} children.`);
+            }
+            if (action === 'family-code') { const ch = mine(b.child); return back(ch ? `Family code for ${ch.name}: ${C.familyCode(ch.id)}` : 'Not your student.'); }
+            if (action === 'link-tutor') {
+              const ch = mine(b.child); if (!ch) return back('Not your student.');
+              const r = await C.inviteTutor(ch.id, { name: b.name, phone: b.phone, school_id: t.school_id }, 'school');
+              return back(r.error || `${r.tutor.name} is linked; waiting for the parent's yes.`);
+            }
+          }
+        }
+        return send(res, 404, '<!doctype html><p>Not found</p>');
+      }
+
       /* ---- family pages: the link is the key ---- */
       let mm;
       if (req.method === 'GET' && (mm = m(/^\/voice\/(card|report)\/([A-Za-z0-9_-]{8,80})$/))) {
@@ -210,6 +301,16 @@ function createServer(opts) {
 
         if (req.method === 'GET' && p === '/voice/admin') return send(res, 200, P.dashboardPage(view, key, scope));
         if (req.method === 'GET' && p === '/voice/admin/children') return send(res, 200, view.listChildren().map(publicChild));
+
+        /* ---- the circle, for the team ---- */
+        if (req.method === 'GET' && p === '/voice/admin/outbox') {
+          const kids = new Set(view.listChildren().map(c => c.id));
+          return send(res, 200, brain.messages.list().filter(mg => scope.super || kids.has(mg.child_id)).slice(0, 200));
+        }
+        if (req.method === 'POST' && (mm = m(/^\/voice\/admin\/children\/([A-Za-z0-9_-]+)\/family-code$/))) {
+          const code = brain.circle.familyCode(mm[1]);
+          return wantsHtml ? redirect(res, `/voice/admin?${q}`) : send(res, 200, { code });
+        }
 
         /* ---- teachers, classes, the misreading corpus ---- */
         if (req.method === 'GET' && p === '/voice/admin/teachers') return send(res, 200, view.listTeachers());

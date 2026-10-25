@@ -129,7 +129,7 @@ function talkBegin(){
 async function talkMint(){
   const res = await fetch(TALK_URL + '/voice/web/session', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ consent: true, key: S.talkKey || undefined,
+    body: JSON.stringify({ consent: true, key: S.talkKey || undefined, circle_key: S.circleKey || undefined,
       child: { id: S.id, name: S.name, age: S.age || 6, lang: S.lang, levels: S.levels } })
   });
   const d = await res.json().catch(() => ({}));

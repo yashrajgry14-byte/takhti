@@ -109,6 +109,8 @@ server.listen(0, '127.0.0.1', () => {
       tap($$('.ob-av').find(b => b.getAttribute('onclick').includes("'tiger'")));
       tap($$('.ob-cakebtn')[4]);
       tap($('.ob-go'));
+      // a build with a voice server also has the learning circle: its grown-ups' step, skipped here (test/circle.test.js covers it)
+      tap($$('button').find(b => (b.getAttribute('onclick') || '') === 'circleOnboardDone(false)'));
       tap($$('.gcard').find(b => b.getAttribute('onclick').includes("'cricket'")));
 
       /* ---- off until a parent turns it on ---- */

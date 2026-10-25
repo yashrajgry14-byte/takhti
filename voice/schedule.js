@@ -45,9 +45,53 @@ function createScheduler(brain, envIn, o) {
         const r = await retry(child, now, lp); if (r) done.push(r);
         const w = await weekly(child, now, lp); if (w) done.push(w);
       }
+      for (const a of await circleTick(now, lp)) done.push(a);
     } finally { running = false; }
     return done;
   }
+
+  /* ---------- the learning circle's week ----------
+     Monday evening: this week's focus and a thing to do together, to the
+     parent. Wednesday evening: a thing for the child to teach them. Before
+     each tuition session (or Monday morning, for a tutor with no days
+     set): the tutor's pack. Saturday morning: the class's Friday checks,
+     to the teacher. Weekend: a reading focus is checked from the week's
+     reading. All of it to grown-ups only, through the outbox's own limits. */
+  async function circleTick(now, lp) {
+    const C = brain.circle, M = brain.messages;
+    if (!C || !M) return [];
+    const done = [];
+    const evening = lp.minutes >= Number(env.TAKHTI_CIRCLE_EVENING_MIN || 17 * 60);
+    for (const child of brain.listChildren()) {
+      if (!C.active(child)) continue;
+      const w = C.focusFor(child, now);
+      const ch = brain.getChild(child.id);
+      if (lp.weekday <= 2 && (lp.weekday === 2 || evening) && M.weekStart(ch, w, now)) done.push({ child: ch.id, action: 'week_start' });
+      if (lp.weekday >= 3 && lp.weekday <= 4 && (lp.weekday === 4 || evening) && M.homeTeach(ch, w, now)) done.push({ child: ch.id, action: 'home_teach' });
+      if (lp.weekday >= 6 && C.readingCheck(ch)) done.push({ child: ch.id, action: 'reading_check' });
+    }
+    for (const t of brain.store.list('tutors')) {
+      const kids = C.tutorChildren(t);
+      if (!kids.length) continue;
+      const sch = t.schedule;
+      const before = sch && sch.days.includes(lp.weekday) && lp.minutes >= C_toMin(sch.time) - 60 && lp.minutes < C_toMin(sch.time);
+      const monday = !sch && lp.weekday === 1 && lp.minutes >= 8 * 60;
+      if (!before && !monday) continue;
+      for (const ch of kids) if (M.tutorPack(t, ch, C.tutorPack(t, ch), lp.day, now)) done.push({ tutor: t.id, child: ch.id, action: 'tutor_pack' });
+    }
+    if (lp.weekday === 6 && lp.minutes >= 10 * 60) {
+      for (const teacher of brain.listTeachers()) {
+        if (!teacher.token) continue;
+        for (const code of teacher.class_codes || []) {
+          const rows = C.classView(code);
+          if (rows.length && M.teacherDigest(teacher, code, rows, C.isoWeek(lp.day), now)) done.push({ teacher: teacher.id, code, action: 'teacher_digest' });
+        }
+      }
+    }
+    for (const x of await M.flush(now)) done.push({ message: x.id, action: 'message_' + x.status });
+    return done;
+  }
+  const C_toMin = hhmm => C.toMinutes(hhmm);
 
   const due = (time, lp) => { const t = C.toMinutes(time); return t != null && lp.minutes >= t && lp.minutes < t + WINDOW; };
 

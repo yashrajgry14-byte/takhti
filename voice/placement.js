@@ -209,7 +209,7 @@ function answer(core, child, s, said) {
     const rec = P.tested[it.skill] || { counted: 0, right: 0 };
     rec.counted++; if (ok) rec.right++;
     P.tested[it.skill] = rec;
-    core.withChild(child.profile, { lang: s.lang }, T => { T.noteSkillAttempt(it.skill, ok, T.S); });
+    require('./evidence').ledger(child, () => core.withChild(child.profile, { lang: s.lang }, T => { T.noteSkillAttempt(it.skill, ok, T.S); }));
     // a miss on this step settles it: no need for the second sum
     if (!ok && P.queue[0] === it.skill && !P.topped) { P.queue.shift(); rec.counted = Math.max(rec.counted, 2); }
     const lead = ok ? T2(pick(PL.right, it.n), s.lang) : intent === 'dontKnow' ? T2(PL.fine, s.lang) : T2(pick(PL.thanks, it.n), s.lang);
@@ -270,7 +270,7 @@ function processPlacementEnd(core, child, s, payload, R) {
   const P = s.place;
   const passed = P.lo >= 0 ? P.ladder[P.lo] : null, nextStep = P.hi < P.ladder.length ? P.ladder[P.hi] : null;
   const readOk = reads.filter(r => r.verdict === 'pass').map(r => r.level);
-  const { out: lv } = core.withChild(child.profile, { lang: s.lang }, T => {
+  const { out: lv } = require('./evidence').ledger(child, () => core.withChild(child.profile, { lang: s.lang }, T => {
     for (const r of reads) if (r.verdict !== 'unsure') T.noteSkillAttempt('read' + r.level, r.verdict === 'pass', T.S);
     const b = T.band();
     const math = T.clampLevel('math', passed ? LEVEL_OF[passed] : b.levels.math[0]);
@@ -279,7 +279,7 @@ function processPlacementEnd(core, child, s, payload, R) {
     if (reads.length) T.S.levels.read = read;
     T.mirrorToClassNow(T.S);
     return { math: T.S.levels.math, read: T.S.levels.read, comp: { math: T.COMPETENCY.math[T.S.levels.math], read: T.COMPETENCY.read[T.S.levels.read] } };
-  });
+  }));
   child.placement = {
     at: new Date().toISOString(), session: s.id,
     math: { level: lv.math, passed, next: nextStep, tested: Object.entries(P.tested).map(([skill, r]) => ({ skill, n: r.counted, right: r.right })) },

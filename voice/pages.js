@@ -153,7 +153,9 @@ function dashboardPage(brain, key, scope) {
     const act = c.given ? '' : c.status === 'needs_review'
       ? `<form method="post" action="/voice/admin/children/${esc(k.id)}/consent-confirm?${q}"><a href="/voice/admin/parentcalls/${esc(c.call && c.call.session_id)}?${q}">listen</a> <button ${btn}>I heard a clear yes</button></form>`
       : c.status === 'refused' ? '' : `<form method="post" action="/voice/admin/children/${esc(k.id)}/consent-call?${q}"><button ${btn}>Consent call</button></form>`;
-    return `<span class="chip ${c.given ? 'ok' : c.status === 'needs_review' ? 'mid' : 'no'}">${esc(label)}</span><br><span class="sub">${how}</span>${act}`;
+    const cc = k.circle || {};
+    const circleBits = `<br><span class="sub">${cc.sync && cc.sync.on ? 'app in sync' : cc.link_code ? 'family code <code>' + esc(cc.link_code) + '</code>' : `<form method="post" action="/voice/admin/children/${esc(k.id)}/family-code?${q}" style="display:inline"><button class="btn" style="margin:0;padding:3px 8px;font-size:12px">family code</button></form>`}${cc.parent_token ? ` · <a href="/circle/p/${esc(cc.parent_token)}">parent page</a>` : ''}</span>`;
+    return `<span class="chip ${c.given ? 'ok' : c.status === 'needs_review' ? 'mid' : 'no'}">${esc(label)}</span><br><span class="sub">${how}</span>${act}${circleBits}`;
   };
   const scheduleCell = k => {
     if (!k.consent || !k.consent.given) return '<span class="sub">after consent</span>';
@@ -229,7 +231,7 @@ function dashboardPage(brain, key, scope) {
     <select name="kind"><option value="">Next in turn</option><option value="lesson">Reading + maths</option><option value="english">Spoken English</option><option value="placement">Placement (new admission)</option></select>
     <label><input type="checkbox" name="call" value="yes"> and call now</label><button class="btn" style="margin:0">Plan</button></form>
   <h2>Teachers</h2>
-  <table><tr><th>Teacher</th><th>Phone</th><th>Classes</th></tr>${teachers.map(t => `<tr><td>${esc(t.name)}</td><td>${esc(t.phone)}</td><td>${esc(t.class_codes.join(', '))}</td></tr>`).join('') || '<tr><td colspan="3">None yet</td></tr>'}</table>
+  <table><tr><th>Teacher</th><th>Phone</th><th>Classes</th><th>Class circle page</th></tr>${teachers.map(t => `<tr><td>${esc(t.name)}</td><td>${esc(t.phone)}</td><td>${esc(t.class_codes.join(', '))}</td><td>${t.token ? `<a href="/circle/c/${esc(t.token)}">open</a> <span class="sub">(send this link to the teacher)</span>` : '–'}</td></tr>`).join('') || '<tr><td colspan="4">None yet</td></tr>'}</table>
   <form method="post" action="/voice/admin/teachers?${q}"><input name="name" placeholder="Teacher's name" required><input name="phone" placeholder="+91…" required>
     <input name="class_codes" placeholder="Class codes, comma separated"><select name="lang"><option value="hi">Hindi</option><option value="en">English</option></select>
     <button class="btn" style="margin:0">Add teacher</button></form>
@@ -238,6 +240,9 @@ function dashboardPage(brain, key, scope) {
   <table><tr><th>Teacher</th><th>Notes</th><th></th></tr>${tcallRows || '<tr><td colspan="3">None yet</td></tr>'}</table>
   <h2>Classes</h2>
   <table><tr><th>Class</th><th>Families</th><th>Shared gaps</th><th>Class-wide parent call</th></tr>${classRows || '<tr><td colspan="4">No child is linked to a class yet (import a homework code).</td></tr>'}</table>
+  <h2>Circle messages</h2>
+  <p class="sub">WhatsApp updates to parents, tutors and teachers. With AiSensy set up they go out by themselves; otherwise tap to send.</p>
+  <table><tr><th>When</th><th>To</th><th>What</th><th>Status</th></tr>${(brain.messages ? brain.messages.list() : []).filter(mg => scope.super || kids.some(k => k.id === mg.child_id) || mg.role === 'teacher').slice(0, 25).map(mg => `<tr><td>${esc(String(mg.send_after).slice(0, 16).replace('T', ' '))}</td><td>${esc(mg.role)} ${esc(mg.to.name || mg.to.phone)}</td><td>${esc(mg.text.slice(0, 120))}</td><td>${esc(mg.status)}${mg.status === 'ready' || mg.status === 'queued' ? ` · <a href="${esc(mg.wa)}">send on WhatsApp</a>` : ''}</td></tr>`).join('') || '<tr><td colspan="4">None yet</td></tr>'}</table>
   <h2>Parent calls</h2>
   <table><tr><th>Child</th><th>Kind</th><th>Status</th><th>Outcome</th><th></th></tr>${parentRows || '<tr><td colspan="5">None yet</td></tr>'}</table>
   <h2>Sessions</h2>
@@ -306,4 +311,4 @@ function classCallsPage(r, code, key) {
   ${r.skipped.length ? `<h2>Not called</h2><ul>${r.skipped.map(x => `<li>${esc(x.child)}: ${esc(x.why)}</li>`).join('')}</ul>` : ''}`);
 }
 
-module.exports = { cardPage, reportPage, dashboardPage, sessionAdminPage, parentCallPage, schoolCreatedPage, teacherCallPage, classCallsPage, esc };
+module.exports = { shell, MUNNI, cardPage, reportPage, dashboardPage, sessionAdminPage, parentCallPage, schoolCreatedPage, teacherCallPage, classCallsPage, esc };

@@ -54,7 +54,11 @@ function noteSkillFromConcept(concept, ok, child){
    different from "weak", and must not be treated as weak. */
 function appEvidence(skillId, child){
   const c = child || S;
-  const hist = (c.skillHistory || {})[skillId];
+  // the app's own attempts, plus what only the learning circle saw (a
+  // phone lesson, the tuition teacher's ticks, a teacher's note — see
+  // ui/circle.js). The server keeps those apart, so nothing counts twice.
+  const own = (c.skillHistory || {})[skillId], far = (c.circleHistory || {})[skillId];
+  const hist = far && far.n ? { n: (own ? own.n : 0) + far.n, right: (own ? own.right : 0) + far.right } : own;
   if(!hist || hist.n < 4) return null;
   return { acc: hist.right / hist.n, n: hist.n };
 }

@@ -632,6 +632,7 @@ function setOnline(v){
   log(null, v? 'Signal detected' : 'Signal lost — nothing in the lesson changes');
   if(!v) talkLeave();   // a Talking Munni call needs the signal; everything else carries on
   if(v && S.queue.length) flushQueue();
+  if(v && typeof circleSync === 'function') circleSync(true);   // the learning circle, if a parent turned it on
 }
 async function flushQueue(){
   log(2,`Sync · ${S.queue.length} saved question(s) being answered in the background`);

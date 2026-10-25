@@ -54,6 +54,10 @@ const L = {
   divide:     { en: 'What is {a} divided by {b}?', hi: '{a} को {b} से भाग दो, तो कितना आता है?' },
   divideWhy:  { en: '{a} divided by {b} is {ans}.', hi: '{a} को {b} से भाग देने पर {ans}।' },
   homeworkLead: { en: "This one is from your teacher's homework.", hi: 'यह सवाल टीचर के होमवर्क से है।' },
+  checkLead: { en: "Now Munni's Friday check: three questions on {skill}. Ready?", hi: 'अब मुन्नी का शुक्रवार वाला छोटा टेस्ट: {skill} पर तीन सवाल। तैयार?' },
+  homeAsk:   { en: 'First, a question: did you teach someone at home about {topic}?', hi: 'पहले एक सवाल: क्या तुमने घर पर किसी को {topic} के बारे में सिखाया?' },
+  homeYes:   { en: 'Wonderful! Teaching someone is the best way to learn.', hi: 'वाह! किसी को सिखाना सीखने का सबसे अच्छा तरीका है।' },
+  homeNo:    { en: "That's okay!", hi: 'कोई बात नहीं!' },
   focusLead: { en: 'Your teacher asked Munni to practise this one with you.', hi: 'यह सवाल टीचर ने मुन्नी से तुम्हारे साथ अभ्यास करने को कहा है।' },
   plusWhy:    { en: '{a} and {b} make {ans}.', hi: '{a} और {b} मिलकर {ans}।' },
   minusWhy:   { en: '{a} take away {b} leaves {ans}.', hi: '{a} में से {b} गए, {ans} बचे।' },
@@ -239,6 +243,23 @@ function planSession(core, child, opts) {
       if (sp && SPOKEN_OPS[sp.op]) { slots[slots.indexOf('story')] = 'homework'; homework = fc.skill; focus = fc.source; }
     }
 
+    // the learning circle (circle.js): Friday to Sunday, the week's check
+    // takes the free sums after the first (three questions on the focus);
+    // the story or homework slot stays. And "did you teach someone at
+    // home?" comes first when there's one to ask.
+    const cw = child.circle && child.circle.week;
+    let check = null, home = null;
+    if (opts.checkDue && cw && !cw.check && cw.skill) {
+      const sp = T.skillHasProblem(cw.skill) ? T.skillProblem(cw.skill, 1) : null;
+      if (sp && SPOKEN_OPS[sp.op]) {
+        const maths = slots.map((x, i) => x === 'math' ? i : -1).filter(i => i >= 0).slice(1);
+        for (const i of maths) slots[i] = 'check';
+        let n = slots.filter(x => x === 'check').length;
+        while (n > 0 && n < 3) { slots.splice(slots.lastIndexOf('check') + 1, 0, 'check'); n++; }
+        if (n) check = { skill: cw.skill, week: cw.key };
+      }
+    }
+    if (opts.homeAsk) { slots.unshift('home'); home = opts.homeAsk; }
     // reading lines: sentences spaced repetition says are due come first,
     // most overdue first (core/srs.js) — the same review the app's Reading
     // Tree runs — then fresh lines at the child's level
@@ -260,7 +281,7 @@ function planSession(core, child, opts) {
       while (lines.length < nRead && hit.length) { const l = hit.splice(Math.floor(r() * hit.length), 1)[0]; lines.push(l); pool = pool.filter(x => x !== l); }
     }
     while (lines.length < nRead && pool.length) lines.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
-    return { band: b.id, slots, lines, english: null, homework, focus, ease, levels: { ...T.S.levels } };
+    return { band: b.id, slots, lines, english: null, homework, focus, ease, check, home, levels: { ...T.S.levels } };
   });
   return {
     id, child_id: child.id, lang, seed, kind,
@@ -272,6 +293,7 @@ function planSession(core, child, opts) {
     keypad: (opts.channel || 'call') !== 'app' && opts.keypad !== false,
     band: out.band, slots: out.slots, lines: out.lines, homework_skill: out.homework, focus_source: out.focus || null,
     ease: out.ease ? 'after a quiet call' : null,
+    circle_check: out.check || null, circle_home: out.home || null,
     levels_before: out.levels,
     status: 'planned', created_at: new Date().toISOString(),
     started_at: null, ended_at: null,
@@ -333,6 +355,22 @@ function buildItem(core, child, s, slot, storyBank) {
       }
       return { kind: 'story', concept: st.concept, lesson_id: st.id, expect: 'number',
                answer: st.answer, distractor: st.distractor, prompt: fill(tpl.q, lang, v), why };
+    }
+    if (slot === 'check') {
+      const k = s.items.filter(x => x.kind === 'check').length;
+      const sp = T.skillProblem(s.circle_check.skill, T.seedOf(`${s.child_id}|check|${s.circle_check.week}|${k}`));
+      if (!sp || !SPOKEN_OPS[sp.op]) return null;
+      const v = { a: nw(sp.a, lang), b: nw(sp.b, lang), ans: nw(sp.ans, lang) };
+      const wrongs = sp.opts.map(Number).filter(o => o !== sp.ans);
+      const sk = T.skillById(sp.skillId);
+      return { kind: 'check', skill: sp.skillId, expect: 'number', answer: sp.ans, distractor: wrongs.find(o => Math.abs(o - sp.ans) > 1) ?? wrongs[0],
+               problem: sp.text, week: s.circle_check.week,
+               prompt: joinSay(k === 0 ? fill(L.checkLead, lang, { skill: sk ? (lang === 'hi' ? sk.hi : sk.en.toLowerCase()) : '' }) : '', fill(L[SPOKEN_OPS[sp.op]], lang, v)),
+               why: fill(L[SPOKEN_OPS[sp.op] + 'Why'], lang, v) };
+    }
+    if (slot === 'home') {
+      const h = s.circle_home;
+      return { kind: 'home', expect: 'yesno', home_id: h.id, answer: true, prompt: fill(L.homeAsk, lang, { topic: h.topic[lang] || h.topic.en }) };
     }
     if (slot === 'homework') {
       /* The teacher's homework, personalised by the app's own diagnose():
@@ -409,7 +447,7 @@ function finish(s, lead, why) {
     const p = s.items.filter(x => x.kind === 'ephrase' && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent').length;
     line = w + p ? E.fill(E.EL.finish, lang, { w: nw(w, lang), p: nw(p, lang) }) : L.finishBare[lang];
   } else {
-    const m = s.items.filter(x => ['math', 'story', 'homework'].includes(x.kind) && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent').length;
+    const m = s.items.filter(x => ['math', 'story', 'homework', 'check'].includes(x.kind) && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent').length;
     const rd = s.items.filter(x => (x.kind === 'read' || x.kind === 'repeat') && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent').length;
     if (!m && !rd) line = L.finishBare[lang];
     else {
@@ -486,6 +524,15 @@ function answer(core, child, s, storyBank, said) {
   const stopNow = () => { it.outcome = 'unsure'; return finish(s, '', 'stop'); };
   const again = () => { it.said.pop(); return reply(s, it.prompts[it.prompts.length - 1], it); };
 
+  /* ---- "did you teach someone at home?" — a question, not a test ---- */
+  if (it.kind === 'home') {
+    if (intent === 'stop') return stopNow();
+    if (intent === 'repeat') return again();
+    const yn = parseYesNo(said);
+    it.home_answer = yn === true ? 'yes' : yn === false ? 'no' : 'unclear';
+    return done('answered', yn === true ? L.homeYes[lang] : L.homeNo[lang]);
+  }
+
   /* ---- numbers and yes/no ---- */
   if (it.expect === 'number' || it.expect === 'yesno') {
     if (intent === 'stop') return stopNow();
@@ -507,7 +554,7 @@ function answer(core, child, s, storyBank, said) {
     if (right) {
       const first = it.attempts === 1 && !it.eased;
       let lead = pick(L.praise, rngFor(s, it))[lang];
-      if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework') {
+      if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework' || it.kind === 'check') {
         const mv = recordOutcome(core, child, s, 'math', first, it);
         if (mv === 'up') lead = joinSay(lead, L.levelUp[lang]);
       }
@@ -521,7 +568,7 @@ function answer(core, child, s, storyBank, said) {
       const tpl = intent === 'dontKnow' ? L.clueDK : L.clue;
       return ask(fill(tpl, lang, { x: nw(pair[0], lang), y: nw(pair[1], lang) }));
     }
-    if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework') recordOutcome(core, child, s, 'math', false, it);
+    if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework' || it.kind === 'check') recordOutcome(core, child, s, 'math', false, it);
     // the homework was worked through on the call; Munni stops pointing at it
     if (it.kind === 'homework' && it.assigned_at) child.profile.hwDone = it.assigned_at;
     const why = it.why || '';
@@ -643,6 +690,13 @@ function rngFor(s, it) {
    exercised, exactly as a lesson checkpoint or cartoon answer does, so a
    teacher's diagnosis sees phone practice as real evidence. */
 function recordOutcome(core, child, s, mod, ok, it) {
+  // a phone lesson is evidence the app can't see: keep it in the circle's
+  // server ledger too (evidence.js). A Talking Munni talk is replayed into
+  // the app itself, so it isn't.
+  if (s.channel !== 'app') return require('./evidence').ledger(child, () => recordOutcomeNow(core, child, s, mod, ok, it));
+  return recordOutcomeNow(core, child, s, mod, ok, it);
+}
+function recordOutcomeNow(core, child, s, mod, ok, it) {
   const ctx = it && it.target ? { sentence: it.target } : {};
   const { out, trace } = core.withChild(child.profile, { lang: s.lang, ctx }, T => {
     if (mod === 'math' && it) {

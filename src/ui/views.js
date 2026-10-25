@@ -427,6 +427,7 @@ parent(){
     </div>
 
     ${talkSetUp() ? talkParentHTML() : ''}
+    ${typeof circleParentHTML === 'function' ? circleParentHTML() : ''}
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'बिना इंटरनेट':'WITHOUT INTERNET'}</div>
     ${(() => {

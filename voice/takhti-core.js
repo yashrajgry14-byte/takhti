@@ -87,7 +87,7 @@ function createCore(opts) {
     S, AGE_BANDS, bandForAge, band, clampLevel, ageSentences, readability, rdBand,
     gradeReading, gradeBest, gradeVerdict, getGradeThresholds, GRADE, genProblem, record,
     skillProblem, skillHasProblem, skillById, noteSkillAttempt, noteSkillFromConcept,
-    personalizeContentForHomework, getAssignedHomework, importHomework, classReportCode,
+    personalizeContentForHomework, getAssignedHomework, importHomework, classReportCode, SKILLS, diagnose, assignHomework, homeworkCode, prereqChain,
     mirrorToClassNow, getDueSrsItems,
     CONCEPTS, validateLesson, lessonBank, newProfile, PROFILE_FIELDS,
     syncProfileIn, syncProfileOut, COMPETENCY, seedOf, rng, SENTENCES

@@ -45,7 +45,20 @@ function newProfile(name){
     srs: {},               // Spaced Repetition Memory Engine records (itemId -> SRS item)
     talkMunni: false,      // a parent turned on Talking Munni (voice goes to the voice service while talking) — see ui/talk-munni.js
     talkKey: null,         // this child's key on the voice server, so only this phone can use or erase that record
-    talkApplied: []        // talk sessions already replayed into this record, so a talk never counts twice
+    talkApplied: [],       // talk sessions already replayed into this record, so a talk never counts twice
+    // the learning circle — see ui/circle.js. Progress only; never a voice, a photo or a typed question.
+    circleSync: false,     // a parent ticked "always keep in sync"
+    circleSyncAt: null,    // when they did
+    circleAsked: false,    // the grown-ups' step at the end of onboarding has been shown
+    circleKey: null,       // this child's key on the circle server
+    circleCode: '',        // a school's family code waiting to be sent
+    circlePhone: '',       // the parent's WhatsApp number, if they gave it
+    circle: null,          // what the circle sent back: this week's step, home activities, check, members, notes
+    circleAt: null,        // last sync
+    circleHistory: {},     // skill evidence only the circle saw (phone lessons, tutor's ticks, teachers' notes) — appEvidence() adds it
+    circleChecks: {},      // week -> this child's Friday check
+    circleHomeAns: {},     // home activity id -> the child's answer
+    circleOut: {}          // waiting to be sent: check, home answers, a tutor invite or decision
   };
 }
 const PROFILE_FIELDS = Object.keys(newProfile());
