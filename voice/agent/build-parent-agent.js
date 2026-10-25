@@ -16,6 +16,7 @@
    format); voice, transcriber and telephony are set in the dashboard.
    ================================================================== */
 'use strict';
+require('./env');   // reads voice/.env
 
 const LANG = process.env.TAKHTI_AGENT_LANG || 'hi';
 const base = (process.env.TAKHTI_PUBLIC_URL || 'https://YOUR-TUNNEL.example').replace(/\/$/, '');

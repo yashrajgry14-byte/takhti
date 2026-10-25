@@ -183,7 +183,8 @@ read the item-by-item record, what the tools heard, and the engine trace.
    node voice/agent/build-agent.js > voice/agent/munni.agent.json
    ```
    This reads `TAKHTI_PUBLIC_URL`, `TAKHTI_TOOL_TOKEN` and `TAKHTI_WEBHOOK_KEY`
-   from your environment. The output contains your token, so it is git-ignored.
+   from `voice/.env` (or your shell). The output contains your token, so every
+   `voice/agent/*.agent.json` is git-ignored.
 3. **Create a graph agent** in the dashboard and use **Import** in the graph
    editor with that file. If the import complains about a field, the graph is
    small enough to build by hand. These are the seven nodes:

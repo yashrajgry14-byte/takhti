@@ -33,6 +33,7 @@
    and be approved first — their text is in voice/README.md.
    ================================================================== */
 'use strict';
+require('./env');   // reads voice/.env
 
 const base = (process.env.TAKHTI_PUBLIC_URL || 'https://YOUR-TUNNEL.example').replace(/\/$/, '');
 const TOOL = process.env.TAKHTI_TOOL_TOKEN || 'REPLACE_WITH_TAKHTI_TOOL_TOKEN';

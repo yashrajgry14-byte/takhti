@@ -19,6 +19,7 @@
    the dashboard, where Bolna validates them — see voice/README.md.
    ================================================================== */
 'use strict';
+require('./env');   // reads voice/.env
 
 const LANG = process.env.TAKHTI_AGENT_LANG || 'hi';     // 'hi', 'en' or 'multi'
 const base = (process.env.TAKHTI_PUBLIC_URL || 'https://YOUR-TUNNEL.example').replace(/\/$/, '');
