@@ -542,6 +542,21 @@ await test('graph: a closed line hangs up on the next thing anyone says', () => 
   assert.ok(e && e.condition_type === 'expression' && e.priority === 0);
 });
 
+await test('praise rotates: no line twice running, every pool bilingual, the answer named where a line says so', () => {
+  const S = require('../voice/session');
+  const s = { lang: 'hi', seed: 'x', items: [] };
+  let last = null; const seen = new Set();
+  for (let k = 0; k < 30; k++) {
+    let t = k * 7919; const r = () => { t = (t * 16807 + 1) % 2147483647; return t / 2147483647; };
+    const line = S.praiseFor(s, 'praise', r, 'hi', { ans: 'सात' });
+    assert.notStrictEqual(line, last, 'same praise twice running'); last = line; seen.add(line);
+    assert.ok(!/\{ans\}/.test(line) && !/wrong|ग़लत|गलत/i.test(line), line);
+  }
+  assert.ok(seen.size >= 10, 'only ' + seen.size + ' different praise lines in 30 answers');
+  for (const pool of ['praise', 'readPraise', 'repeatPraise']) for (const x of S.L[pool]) assert.ok(x.en && x.hi && /[ऀ-ॿ]/.test(x.hi), pool);
+  // a level-up on the last answer never promises a "next question"
+  assert.ok(S.L.levelUpEnd.hi && !/अगला सवाल/.test(S.L.levelUpEnd.hi));
+});
 await test('graph: the safety edge can only be taken on the child\'s own worrying words (first live call: "8" went to it)', () => {
   const A = require('../voice/agent/build-agent.js').agent;
   const t = A.agent_config.tasks[0];
@@ -552,7 +567,12 @@ await test('graph: the safety edge can only be taken on the child\'s own worryin
   }
   assert.ok(/stay_on_current_node/.test(t.tools_config.llm_agent.llm_config.routing_instructions));
   // Bolna's English fillers never reach a Hindi child
-  for (const tool of t.tools_config.api_tools.tools) assert.ok(tool.pre_call_message && !/moment/i.test(tool.pre_call_message), tool.name);
+  for (const tool of t.tools_config.api_tools.tools) assert.ok(tool.pre_call_message && !/[a-zऀ-ॿ]/i.test(tool.pre_call_message), tool.name + ': no spoken word before every answer');
+  // the closing line is said before the call ends (second live call: it was cut)
+  for (const n of nodes) assert.ok(!n.edges.some(e => e.to_node_id === 'end_now' && /already spoken/.test(e.condition || '')), n.id);
+  const gb = nodes.find(n => n.id === 'goodbye');
+  assert.ok(gb && /\{\{goodbye_say\}\}/.test(gb.prompt) && gb.edges[0].to_node_id === 'end_now');
+  for (const id of ['lesson', 'play', 'teacher']) assert.ok(nodes.find(n => n.id === id).edges.some(e => e.to_node_id === 'goodbye' && e.parameters.goodbye_say), id);
   assert.strictEqual(t.task_config.check_if_user_online, false);
   // the create API's required parts are there, and no word list is ever boosted
   for (const k of ['transcriber', 'synthesizer', 'input', 'output']) assert.ok(t.tools_config[k], k);

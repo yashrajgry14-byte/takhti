@@ -62,18 +62,42 @@ const L = {
   plusWhy:    { en: '{a} and {b} make {ans}.', hi: '{a} और {b} मिलकर {ans}।' },
   minusWhy:   { en: '{a} take away {b} leaves {ans}.', hi: '{a} में से {b} गए, {ans} बचे।' },
   timesWhy:   { en: '{a} times {b} is {ans}.', hi: '{a} गुणा {b} बराबर {ans}।' },
+  // Praise rotates through the whole list before any line comes back
+  // (praiseFor()), and some lines name the child's own answer, so a lesson
+  // never sounds like one phrase on repeat. {ans} is the right answer.
   praise: [
     { en: "Yes! That's right.", hi: 'हाँ! बिल्कुल सही।' },
     { en: 'Well done!', hi: 'शाबाश!' },
     { en: 'Perfect!', hi: 'बहुत बढ़िया!' },
-    { en: 'Correct! Shabaash!', hi: 'सही जवाब! शाबाश!' }
+    { en: 'Correct! Shabaash!', hi: 'सही जवाब! शाबाश!' },
+    { en: '{ans}! Spot on!', hi: '{ans}! एकदम सही!' },
+    { en: 'Wah! You got it.', hi: 'वाह! तुमने कर दिखाया।' },
+    { en: 'Super! {ans} it is.', hi: 'शानदार! {ans} ही है।' },
+    { en: 'You worked that out so well!', hi: 'तुमने कितनी अच्छी तरह सोचा!' },
+    { en: 'Yes, {ans}! Munni is so happy.', hi: 'हाँ, {ans}! मुन्नी बहुत ख़ुश है।' },
+    { en: 'Brilliant thinking!', hi: 'क्या बात है, बहुत बढ़िया सोचा!' },
+    { en: 'Right again! Clever you.', hi: 'फिर से सही! तुम तो बहुत होशियार हो।' },
+    { en: 'That is it! {ans}.', hi: 'बिल्कुल! {ans}।' }
   ],
   readPraise: [
     { en: 'Lovely reading!', hi: 'बहुत अच्छा पढ़ा!' },
     { en: 'Beautifully read!', hi: 'वाह, सुंदर पढ़ा!' },
-    { en: 'Well read! Shabaash!', hi: 'शाबाश, बढ़िया पढ़ा!' }
+    { en: 'Well read! Shabaash!', hi: 'शाबाश, बढ़िया पढ़ा!' },
+    { en: 'Every word, so clearly!', hi: 'हर शब्द, कितना साफ़ पढ़ा!' },
+    { en: 'You read that like a big reader!', hi: 'तुमने तो बड़े बच्चों की तरह पढ़ा!' },
+    { en: 'Wah! Smooth reading.', hi: 'वाह! कितना अच्छे से पढ़ा।' },
+    { en: 'That sounded lovely!', hi: 'यह सुनकर बहुत अच्छा लगा!' }
   ],
-  levelUp:    { en: 'Wow! The next one is a little harder.', hi: 'वाह! अगला सवाल थोड़ा मुश्किल है।' },
+  repeatPraise: [
+    { en: 'Lovely! You said it beautifully.', hi: 'बहुत प्यारा! तुमने बहुत अच्छे से बोला।' },
+    { en: 'Just like Munni said it!', hi: 'बिल्कुल मुन्नी की तरह बोला!' },
+    { en: 'Wah! So clear.', hi: 'वाह! कितना साफ़ बोला।' },
+    { en: 'Well said!', hi: 'बहुत बढ़िया बोला!' },
+    { en: 'You said every word!', hi: 'तुमने हर शब्द बोला!' }
+  ],
+  levelUp:    { en: 'Now the next one is a little harder.', hi: 'अब अगला सवाल थोड़ा मुश्किल है।' },
+  // a level-up on the very last answer: there is no next question to point at
+  levelUpEnd: { en: "You're getting really good at this! Next time we'll try some harder ones.", hi: 'तुम इसमें बहुत अच्छे हो गए हो! अगली बार थोड़े मुश्किल सवाल करेंगे।' },
   clue:       { en: "Let's think again. Is it {x} or {y}?", hi: 'एक बार फिर सोचो। {x} या {y}?' },
   clueDK:     { en: "That's okay! Here's a clue. Is it {x} or {y}?", hi: 'कोई बात नहीं! एक इशारा: {x} या {y}?' },
   clueYN:     { en: "Let's think again. Say yes or no.", hi: 'एक बार फिर सोचो। हाँ या नहीं बोलो।' },
@@ -99,7 +123,6 @@ const L = {
   readModel:  { en: 'Well tried! It says: {line} We will read it again another day.', hi: 'बढ़िया कोशिश! इसमें लिखा है: {line} इसे फिर किसी दिन पढ़ेंगे।' },
   noCard:     { en: 'No problem! Say it after me: {line}', hi: 'कोई बात नहीं! मेरे बाद बोलो: {line}' },
   repeatMe:   { en: 'Say it after me: {line}', hi: 'मेरे बाद बोलो: {line}' },
-  repeatGood: { en: 'Lovely! You said it beautifully.', hi: 'बहुत प्यारा! तुमने बहुत अच्छे से बोला।' },
   repeatTry:  { en: 'Good try! Listen once more: {line}', hi: 'अच्छी कोशिश! एक बार फिर सुनो: {line}' },
   repeatDone: { en: "Good try! Let's go on.", hi: 'अच्छी कोशिश! चलो आगे बढ़ें।' },
   readSlip:   { en: 'Lovely reading! Just one small thing: {w}.', hi: 'बहुत अच्छा पढ़ा! बस एक छोटी बात: {w}।' },
@@ -419,6 +442,7 @@ function buildItem(core, child, s, slot, storyBank) {
 
 /* Advance to the next item and return its prompt, or finish. */
 function advance(core, child, s, storyBank, lead) {
+  const up = s._levelUp; delete s._levelUp;
   while (s.cursor < s.slots.length) {
     if (Date.now() - Date.parse(s.started_at) > MAX_CALL_MS) break;
     const slot = s.slots[s.cursor++];
@@ -426,9 +450,24 @@ function advance(core, child, s, storyBank, lead) {
     if (!it) continue;
     s.items.push(it);
     it.prompts.push(it.prompt);
-    return reply(s, joinSay(lead, it.prompt), it);
+    return reply(s, joinSay(lead, up ? L.levelUp[s.lang] : '', it.prompt), it);
   }
-  return finish(s, lead, 'plan');
+  return finish(s, joinSay(lead, up ? L.levelUpEnd[s.lang] : ''), 'plan');
+}
+
+/* A praise line not yet used in this call (the list goes round once before
+   any line repeats), with the child's answer filled in where a line names it. */
+function praiseFor(s, pool, r, lang, vars) {
+  const list = L[pool];
+  s.praise_used = s.praise_used || {};
+  let used = s.praise_used[pool] || [];
+  if (used.length >= list.length) used = used.slice(-1);       // round again, but never the same line twice running
+  const free = list.map((_, i) => i).filter(i => !used.includes(i));
+  const i = free[Math.floor(r() * free.length) % free.length];
+  s.praise_used[pool] = used.concat(i);
+  const line = list[i];
+  if (/\{ans\}/.test(line[lang]) && (vars.ans == null || vars.ans === '')) return list.find(x => !/\{ans\}/.test(x[lang]))[lang];
+  return fill(line, lang, vars);
 }
 
 function joinSay(...parts) { return parts.filter(Boolean).join(' '); }
@@ -553,10 +592,10 @@ function answer(core, child, s, storyBank, said) {
     const right = got === it.answer;
     if (right) {
       const first = it.attempts === 1 && !it.eased;
-      let lead = pick(L.praise, rngFor(s, it))[lang];
+      const lead = praiseFor(s, 'praise', rngFor(s, it), lang, { ans: ansWord });
       if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework' || it.kind === 'check') {
         const mv = recordOutcome(core, child, s, 'math', first, it);
-        if (mv === 'up') lead = joinSay(lead, L.levelUp[lang]);
+        if (mv === 'up') s._levelUp = true;          // advance() says it: "next one is harder", or at the end, "next time"
       }
       if (it.kind === 'homework' && it.assigned_at) child.profile.hwDone = it.assigned_at;
       return done(first ? 'correct' : 'correct_after_clue', lead);
@@ -587,7 +626,7 @@ function answer(core, child, s, storyBank, said) {
     }
     it.attempts++;
     if (intent !== 'dontKnow' && E.gradeWord(it, said)) {
-      return done(it.attempts === 1 ? 'correct' : 'correct_after_clue', pick(L.praise, rngFor(s, it))[lang]);
+      return done(it.attempts === 1 ? 'correct' : 'correct_after_clue', praiseFor(s, 'praise', rngFor(s, it), lang, { ans: it.word }));
     }
     if (it.attempts === 1) {
       const pair = rngFor(s, it)() < 0.5 ? [it.word, it.distractor] : [it.distractor, it.word];
@@ -654,7 +693,7 @@ function answer(core, child, s, storyBank, said) {
     }
     it.attempts++;
     if (verdict === 'pass') {
-      let lead = it.kind === 'repeat' ? L.repeatGood[lang] : pick(L.readPraise, rngFor(s, it))[lang];
+      let lead = praiseFor(s, it.kind === 'repeat' ? 'repeatPraise' : 'readPraise', rngFor(s, it), lang, {});
       // a pass can still skip or slip on one word: name it, gently, once
       const w = (g.misread || [])[0] || (g.slips || [])[0];
       if (it.kind === 'read' && w) lead = fill(L.readSlip, lang, { w: w.replace(/[.,!?।]/g, '') });
@@ -763,4 +802,4 @@ function homeworkStatus(core, child, sessions) {
   return out;
 }
 
-module.exports = { fill, nw, joinSay, SPOKEN_OPS, skillSpoken, homeworkStatus, planSession, next, answer, finish, buildStoryBank, gradeLine, recordOutcome, L, STORY, MAX_CALL_MS, MAX_TURNS };
+module.exports = { praiseFor, fill, nw, joinSay, SPOKEN_OPS, skillSpoken, homeworkStatus, planSession, next, answer, finish, buildStoryBank, gradeLine, recordOutcome, L, STORY, MAX_CALL_MS, MAX_TURNS };

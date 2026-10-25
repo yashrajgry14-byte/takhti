@@ -781,6 +781,11 @@ function createBrain(opts) {
     const x = load(sessionId);
     if (!x) return { error: 'no such session' };
     if (!x.child.consent || !x.child.consent.given) return { error: 'no parent consent' };
+    // a second tap (or "and call now" then "Call now") must not ring the family twice:
+    // the first live test did exactly that, six seconds apart
+    const q = x.s.call && x.s.call.queued_at && Date.parse(x.s.call.queued_at);
+    if ((x.s.status === 'calling' || x.s.status === 'live') && q && Date.now() - q < 3 * 60e3) return { error: 'this lesson is already being called' };
+    if (x.s.status === 'done' || x.s.status === 'ended') return { error: 'this lesson already happened: plan a new one' };
     env = envFor(x.child, env);
     if (!env.BOLNA_API_KEY || !env.BOLNA_AGENT_ID) return { error: 'set BOLNA_API_KEY and BOLNA_AGENT_ID' };
     const body = {

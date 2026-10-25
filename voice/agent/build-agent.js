@@ -58,6 +58,19 @@ const SAFE_EDGE = {
   parameters: { worrying_words: { type: 'string', description: 'The child\'s exact words that show they are being hurt, are afraid of someone, are in danger or want to hurt themselves. If the child said no such words, do not take this edge.' } }
 };
 
+/* The lesson is over when a tool result says done: true, and its "say" is
+   Munni's closing line ("today you did four sums…"). Bolna's router runs
+   again right after a tool result, so an edge that waited for "Munni has
+   already said goodbye" fired before she had — the first full call ended on
+   a bare "बाय-बाय!" with the closing line unsaid. So the router now takes
+   this edge at that moment on purpose, carrying the line (without its
+   final bye) into the goodbye node, which says it; end_now adds the bye. */
+const DONE_EDGE = {
+  to_node_id: 'goodbye',
+  condition: 'The most recent takhti tool result has "done": true. Its "say" is the closing line of the call.',
+  parameters: { goodbye_say: { type: 'string', description: 'That tool result\'s "say" text, word for word, without the final "Bye bye!" or "बाय-बाय!".' } }
+};
+
 const nodes = [
   {
     id: 'start',
@@ -100,8 +113,7 @@ const nodes = [
       { to_node_id: 'hush', condition_type: 'expression', priority: 2,
         expression: { conditions: [{ variable: '_silence_repeats', operator: 'gte', value: 1 }] } },
       SAFE_EDGE,
-      { to_node_id: 'end_now',
-        condition: 'Munni has already spoken the goodbye from a tool result with done = true (it ends with "Bye bye" or "बाय-बाय"), and the child says bye or anything else.' },
+      DONE_EDGE,
       { to_node_id: 'adult',
         condition: 'An adult (not the child) is now speaking and asks a question about Takhti, the call, or the child\'s progress.' }
     ]
@@ -115,8 +127,14 @@ const nodes = [
       { to_node_id: 'play_say', condition_type: 'event', event_name: 'game_say' },
       { to_node_id: 'screen', condition_type: 'event', event_name: 'lesson_mode' },
       SAFE_EDGE,
-      { to_node_id: 'end_now', condition: 'Munni has already spoken a goodbye from a tool result with done = true, and the child says anything.' }
+      DONE_EDGE
     ]
+  },
+  {
+    // the closing line the last tool result carried, then the bye
+    id: 'goodbye',
+    prompt: 'Say exactly this, word for word, and nothing else: {{goodbye_say}}',
+    edges: [{ to_node_id: 'end_now', condition_type: 'unconditional' }]
   },
   {
     id: 'play_say',
@@ -137,8 +155,7 @@ const nodes = [
     edges: [
       { to_node_id: 'end_now', condition_type: 'expression', priority: 0,
         expression: { conditions: [{ variable: '_silence_repeats', operator: 'gte', value: 3 }] } },
-      { to_node_id: 'end_now',
-        condition: 'Munni has already spoken a goodbye from a tool result with done = true, and the teacher says anything or says bye.' }
+      DONE_EDGE
     ]
   },
   {
@@ -197,9 +214,10 @@ const nodes = [
 ];
 
 /* Bolna speaks a pre-call message while a tool runs, and fills in an
-   English "Just give me a moment…" when it is left empty (first live call).
-   Our tools answer in milliseconds, so the shortest natural sound will do. */
-const PRE = LANG === 'en' ? 'Hmm…' : 'हम्म…';
+   English "Just give me a moment…" when it is left empty (first live call);
+   "हम्म…" after every answer sounded odd (second call). Our tools answer in
+   milliseconds, so the message is a pause: an ellipsis, no word at all. */
+const PRE = '…';
 
 const tools = [
   {
