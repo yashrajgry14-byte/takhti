@@ -675,9 +675,16 @@ Honest edges of what's built:
    and offline reading. The jsdom suites also fail their "no uncaught errors"
    check on a machine that can't reach Google Fonts (a sandbox with no open
    internet), which is the network, not the app.
-8. **The phone channel is not yet proven on a live Bolna call.**
-   `voice/agent/build-agent.js` follows Bolna's documented graph-agent
-   structure but hasn't been imported into an account yet; children's speech
+8. **The phone channel has had its first live call, nothing more.** On 26
+   Oct 2026 `build-agent.js`'s output was created in a real Bolna account
+   (through Bolna's API) and called a real phone: the greeting, Sarvam
+   hearing "yes" and "8", and the first tool call worked. It also found two
+   faults, both fixed in the builder: the router sent the answer "8" to the
+   safety message (a priority on that edge; now none, a stricter condition
+   and the child's own words required as a parameter), and Bolna spoke an
+   English filler before every tool call (now "हम्म…"); and Bolna's own
+   English "are you still there?" is now off. See `BOLNA-QUESTIONS.md`
+   33–36. Children's speech
    through a phone recognizer is untested; voice storage is one JSON file
    per record (a pilot, not a serverless host); WhatsApp is a share link,
    not automatic sending; consent is a checkbox and timestamp, not the

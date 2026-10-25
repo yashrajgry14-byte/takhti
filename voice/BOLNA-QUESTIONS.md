@@ -159,3 +159,22 @@ says where in the code it matters.
     `lesson_mode` (and `screen_answer`) with `properties.screen_say`. Does an
     `event` edge fire from whichever node the call is on? Does the
     `play_say` node speak `{{screen_say}}` from the latest event's properties?
+
+## From the first live call (26 Oct 2026)
+
+33. **No pre-call message.** Our tools answer in milliseconds. With
+    `pre_call_message` empty, Bolna spoke its default English "Just give me a
+    moment, I'll be back with you." before every tool call, so we now send
+    "हम्म…" / "Hmm…". Is there a way to have no message at all?
+34. **The router and priorities.** On the first call the child answered "8"
+    and the routing LLM took the safety edge (it had `priority: 10`, ahead of
+    the default 100 for LLM edges). We removed the priority, made the
+    condition say what is never a safety concern, and require the child's
+    worrying words as an edge parameter. Is a required edge parameter a
+    reliable guard? Does `priority` on LLM edges change how the router
+    weighs them, or only the order of deterministic edges?
+35. **Saving in the dashboard.** Editing a tool in the dashboard reset every
+    tool's `scope`/`nodes` to null (tools on every node). Expected?
+36. **PATCH and tasks.** `PATCH /v2/agent/{id}` with `tasks` reported success
+    but changed nothing in the graph or tools. Is a full `PUT` the way to
+    change a graph agent's nodes and tools?

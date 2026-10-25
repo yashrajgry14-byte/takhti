@@ -317,7 +317,9 @@ await test('child agent graph: a teacher node with its own tool; caller_kind dec
   const teacher = llm.nodes.find(x => x.id === 'teacher');
   assert.ok(teacher && teacher.function_call === 'takhti_note');
   assert.strictEqual(llm.variable_types.caller_kind, 'string');
-  assert.ok(llm.nodes.find(x => x.id === 'start').edges.some(e => e.to_node_id === 'teacher' && e.parameters && e.parameters.teacher_said));
+  // deterministic on the caller kind the server set, never left to the router
+  assert.ok(llm.nodes.find(x => x.id === 'start').edges.some(e => e.to_node_id === 'teacher' && e.condition_type === 'expression' &&
+    e.expression.conditions[0].variable === 'caller_kind' && e.expression.conditions[0].value === 'teacher'));
   assert.ok(PLC.LADDER.length > 10 && Object.values(PLC.PL).every(v => Array.isArray(v) ? v.every(x => x.hi && x.en) : v.hi && v.en));
 });
 

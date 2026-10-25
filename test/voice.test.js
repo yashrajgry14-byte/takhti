@@ -542,6 +542,24 @@ await test('graph: a closed line hangs up on the next thing anyone says', () => 
   assert.ok(e && e.condition_type === 'expression' && e.priority === 0);
 });
 
+await test('graph: the safety edge can only be taken on the child\'s own worrying words (first live call: "8" went to it)', () => {
+  const A = require('../voice/agent/build-agent.js').agent;
+  const t = A.agent_config.tasks[0];
+  for (const n of nodes) for (const e of n.edges.filter(x => x.to_node_id === 'safe')) {
+    assert.ok(e.priority == null, n.id + ': a priority puts the safety edge ahead of every other LLM edge');
+    assert.ok(/NEVER for a number/.test(e.condition), n.id);
+    assert.ok(e.parameters && e.parameters.worrying_words, n.id + ': no quote required');
+  }
+  assert.ok(/stay_on_current_node/.test(t.tools_config.llm_agent.llm_config.routing_instructions));
+  // Bolna's English fillers never reach a Hindi child
+  for (const tool of t.tools_config.api_tools.tools) assert.ok(tool.pre_call_message && !/moment/i.test(tool.pre_call_message), tool.name);
+  assert.strictEqual(t.task_config.check_if_user_online, false);
+  // the create API's required parts are there, and no word list is ever boosted
+  for (const k of ['transcriber', 'synthesizer', 'input', 'output']) assert.ok(t.tools_config[k], k);
+  assert.ok(!t.tools_config.transcriber.keywords);
+  assert.ok(t.toolchain && A.agent_prompts.task_1.system_prompt);
+});
+
 /* ---------------- HTTP ---------------- */
 await test('HTTP: tools need the token, webhook needs the key, family links work, unknown sessions end gracefully', async () => {
   const { server } = createServer({ brain, toolToken: 'tt', webhookKey: 'hk', adminKey: 'ak', env: {} });

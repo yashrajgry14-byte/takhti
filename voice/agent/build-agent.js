@@ -47,6 +47,17 @@ How you work:
 7. If you receive "dtmf_number: ..." the child pressed keys on the phone. Pass that text unchanged as child_said.
 8. If the child says nothing at all after you have repeated the question, call takhti_answer with child_said = "(silence)". Never treat silence as an answer.`;
 
+/* The safety edge. Bolna's router checks lower priorities first, and a
+   priority on this edge once sent a child who answered "8" to the safety
+   message (first live call, 26 Oct 2026). So: no priority, a condition that
+   says plainly what is NOT this, and the child's own worrying words as a
+   required quote — a router that can't quote them can't take the edge. */
+const SAFE_EDGE = {
+  to_node_id: 'safe',
+  condition: 'ONLY when the child says in clear words that a person is hurting them, that they are afraid of a person, that they are in danger, or that they want to hurt themselves. NEVER for a number, a single word, yes or no, a reading attempt, a wrong or half answer, laughing, silence, background noise or anything about the lesson.',
+  parameters: { worrying_words: { type: 'string', description: 'The child\'s exact words that show they are being hurt, are afraid of someone, are in danger or want to hurt themselves. If the child said no such words, do not take this edge.' } }
+};
+
 const nodes = [
   {
     id: 'start',
@@ -62,9 +73,8 @@ const nodes = [
         expression: { conditions: [{ variable: '_silence_repeats', operator: 'gte', value: 2 }] } },
       // a teacher rang the line (the inbound lookup said caller_kind =
       // teacher): take a voice note, never a lesson
-      { to_node_id: 'teacher', priority: 2,
-        condition: 'caller_kind is "{{caller_kind}}". Take this edge only if caller_kind is exactly teacher, and the person said anything.',
-        parameters: { teacher_said: { type: 'string', description: 'The teacher\'s exact words in reply to the greeting.' } } },
+      { to_node_id: 'teacher', condition_type: 'expression', priority: 2,
+        expression: { conditions: [{ variable: 'caller_kind', operator: 'eq', value: 'teacher' }] } },
       { to_node_id: 'lesson', condition: 'The person says the child is here or ready, hands the phone over, says yes / haan / okay, a child starts speaking, or (when Munni asked who is calling) the child says their name.',
         parameters: { caller_name: { type: 'string', description: 'If Munni asked who is calling: the name the child said. Otherwise empty.' } } },
       { to_node_id: 'not_now', condition: 'The person says the child is not available, busy, sleeping or at school, asks to call later, does not want the call, or says it is a wrong number.' }
@@ -89,8 +99,7 @@ const nodes = [
       // the next line is an easier way in — and the quiet moment is kept
       { to_node_id: 'hush', condition_type: 'expression', priority: 2,
         expression: { conditions: [{ variable: '_silence_repeats', operator: 'gte', value: 1 }] } },
-      { to_node_id: 'safe', priority: 10,
-        condition: 'The child says someone is hurting them, that they are scared of someone, that they are in danger, or that they want to hurt themselves.' },
+      SAFE_EDGE,
       { to_node_id: 'end_now',
         condition: 'Munni has already spoken the goodbye from a tool result with done = true (it ends with "Bye bye" or "बाय-बाय"), and the child says bye or anything else.' },
       { to_node_id: 'adult',
@@ -105,8 +114,7 @@ const nodes = [
     edges: [
       { to_node_id: 'play_say', condition_type: 'event', event_name: 'game_say' },
       { to_node_id: 'screen', condition_type: 'event', event_name: 'lesson_mode' },
-      { to_node_id: 'safe', priority: 10,
-        condition: 'The child says someone is hurting them, that they are scared of someone, that they are in danger, or that they want to hurt themselves.' },
+      SAFE_EDGE,
       { to_node_id: 'end_now', condition: 'Munni has already spoken a goodbye from a tool result with done = true, and the child says anything.' }
     ]
   },
@@ -124,7 +132,7 @@ const nodes = [
   {
     id: 'teacher',
     function_call: 'takhti_note',
-    prompt: 'You are now speaking with a TEACHER, not a child, who is leaving a note about a child. Call @takhti_note with teacher_said = "{{teacher_said}}" and speak its "say" exactly. Every time the teacher speaks again, call @takhti_note with their exact words, names included, and speak the new "say" exactly. Never repeat a child\'s name you did not hear. When a result has "done": true, speak its "say" and stop.',
+    prompt: 'You are now speaking with a TEACHER, not a child, who is leaving a note about a child. Call @takhti_note with teacher_said = the teacher\'s exact last words and speak its "say" exactly. Every time the teacher speaks again, call @takhti_note with their exact words, names included, and speak the new "say" exactly. Never repeat a child\'s name you did not hear. When a result has "done": true, speak its "say" and stop.',
     repeat_after_silence_seconds: 10,
     edges: [
       { to_node_id: 'end_now', condition_type: 'expression', priority: 0,
@@ -188,10 +196,16 @@ const nodes = [
   }
 ];
 
+/* Bolna speaks a pre-call message while a tool runs, and fills in an
+   English "Just give me a moment…" when it is left empty (first live call).
+   Our tools answer in milliseconds, so the shortest natural sound will do. */
+const PRE = LANG === 'en' ? 'Hmm…' : 'हम्म…';
+
 const tools = [
   {
     key: 'custom_task',
     name: 'takhti_next',
+    pre_call_message: PRE,
     description: 'Get the next thing Munni should say in today\'s lesson. Call it when the lesson starts, and again only if you have lost track of what to say.',
     parameters: {
       type: 'object',
@@ -205,6 +219,7 @@ const tools = [
   {
     key: 'custom_task',
     name: 'takhti_answer',
+    pre_call_message: PRE,
     description: 'Send the child\'s reply to the Takhti tutor and get what Munni says next. Call this EVERY time the child speaks during the lesson.',
     parameters: {
       type: 'object',
@@ -218,6 +233,7 @@ const tools = [
   {
     key: 'custom_task',
     name: 'takhti_note',
+    pre_call_message: PRE,
     description: 'Send what the teacher just said to Takhti and get what Munni says next. Call this EVERY time the teacher speaks.',
     parameters: {
       type: 'object',
@@ -253,7 +269,7 @@ const agent = {
             provider: 'openai', model: MODEL, max_tokens: 250, temperature: 0.2,
             routing_provider: 'openai', routing_model: MODEL, routing_max_tokens: 250,
             agent_information: PERSONA,
-            routing_instructions: 'Route on what the person on the phone just said. During the lesson, stay on the lesson node unless one of its conditions clearly applies; a wrong answer, a half-read line or "I don\'t know" is part of the lesson, not a reason to leave it.',
+            routing_instructions: 'Route on what the person on the phone just said. During the lesson, stay_on_current_node unless one condition clearly and literally applies. A number, a single word, yes or no, a wrong or half answer, a half-read line, "I don\'t know", laughter or noise is part of the lesson: stay_on_current_node. Take the safety edge only when you can quote the child\'s own words about being hurt, afraid of someone or in danger.',
             current_node_id: 'start',
             // set by the server on every call (user_data) or inbound lookup
             variable_types: { allowed: 'boolean', registered: 'boolean', caller_kind: 'string' },
@@ -274,11 +290,29 @@ const agent = {
         dtmf_enabled: true,                // keypad answers (Plivo / Twilio / SIP trunk only)
         call_terminate: WEB ? 1200 : 540,  // hard stop: 9 minutes on the phone, 20 with games on screen
         hangup_after_silence: WEB ? 600 : 25,
-        optimize_latency: true
-      }
+        optimize_latency: true,
+        // Bolna's own "are you still there?" is English; the graph's hush node handles a quiet child
+        check_if_user_online: false
+      },
+      toolchain: { execution: 'parallel', pipelines: [['transcriber', 'llm', 'synthesizer']] }
     }]
-  }
+  },
+  // the create API needs a system prompt per task as well as the graph's own
+  agent_prompts: { task_1: { system_prompt: PERSONA } }
 };
+/* Hearing and voice, so the output can be created through Bolna's API as it
+   stands. Sarvam hears Hindi and Hinglish; never set keywords (a boosted
+   word would make a misreading pass). Override the voice with
+   TAKHTI_VOICE_PROVIDER / TAKHTI_VOICE_ID / TAKHTI_VOICE_NAME / TAKHTI_VOICE_MODEL. */
+Object.assign(agent.agent_config.tasks[0].tools_config, {
+  transcriber: { provider: 'sarvam', model: 'saaras:v4', language: LANG === 'en' ? 'en' : 'hi', stream: true, endpointing: 500 },
+  synthesizer: { provider: process.env.TAKHTI_VOICE_PROVIDER || 'sarvam',
+    provider_config: { voice: process.env.TAKHTI_VOICE_NAME || 'Suhani', voice_id: process.env.TAKHTI_VOICE_ID || 'suhani',
+                       model: process.env.TAKHTI_VOICE_MODEL || 'bulbul:v3', language: LANG === 'en' ? 'en' : 'hi', speed: 0.95 },
+    stream: true, buffer_size: 150 },
+  input: { provider: 'plivo', format: 'wav' },
+  output: { provider: 'plivo', format: 'wav' }
+});
 
 if (require.main === module) process.stdout.write(JSON.stringify(agent, null, 2) + '\n');
 module.exports = { agent, nodes, tools, PERSONA };
