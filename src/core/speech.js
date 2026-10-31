@@ -188,6 +188,9 @@ function micReason(err){
       ? 'इस फ़ोन पर बोलकर पहचान के लिए इंटरनेट चाहिए — नीचे लिखकर देखो, बाकी सब कुछ ऑफ़लाइन काम करता है।'
       : 'Speech recognition needs a connection on this phone — type it below, everything else works offline.';
   }
+  if(err==='no-terms') return hi
+    ? 'इस फ़ोन पर बोलकर जाँच के लिए माता-पिता की सहमति चाहिए — अभी नीचे लिखकर देखो।'
+    : 'Reading aloud here needs a grown-up to agree to the terms first — type it below for now.';
   if(err==='cloud-limit') return hi
     ? 'आज के लिए इतना ही साफ़ जाँच — नीचे लिखकर देखो।'
     : "That's enough of the clearer check for now — type it below.";

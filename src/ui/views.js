@@ -181,6 +181,8 @@ read(){
   ${S.ctx.score!=null? `<div class="scorebar"><i style="width:${S.ctx.score}%"></i></div>
      <div class="feedback">${S.ctx.msg}</div>
      ${twinSlipHTML()}
+     ${sayHTML()}
+     ${S.ctx.sayWord && !(SAY && SAY.line === S.ctx.sentence) ? `<button class="btn leaf" style="margin-top:8px" onclick="sayStart(S.ctx.sayWord, S.ctx.slip)">🐘 ${S.lang==='hi'?'मुन्नी के साथ बोलो':'Say it with Munni'}: <b>${attr(S.ctx.sayWord)}</b></button>` : ''}
      ${S.ctx.practice ? `<button class="btn ghost practise" onclick="practiseLine()">🔁 ${S.lang==='hi'?'इन शब्दों के साथ एक और':'One more with these words'}: <b>${S.ctx.practice.line}</b></button>` : ''}
      ${typeof selfListenHTML === 'function' ? selfListenHTML() : ''}`:''}
   ${S.ctx.unsure? `<div class="retry">${S.lang==='hi'?'साफ़ सुनाई नहीं दिया — थोड़ा पास आकर फिर बोलो।':'I could not hear that clearly — come a little closer and try again.'}</div>`:''}

@@ -9,7 +9,7 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v37';
+const CACHE = 'takhti-v38';
 // Recorded audio clips are content-hashed (see core/voice.js) — a given
 // filename can never change, so they live in a cache of their own that
 // the version cleanup below never touches. Bumping CACHE on a normal
@@ -37,7 +37,7 @@ const SHELL = [
   './src/ui/jungle-map.js', './src/ui/video-player.js', './src/ui/teacher.js',
   './src/games/runner.js', './src/games/pop.js', './src/games/tower.js',
   './src/games/match.js', './src/games/sort.js', './src/games/archer.js',
-  './src/ui/self-listen.js', './src/ui/talk-munni.js', './src/ui/cloud-read.js', './src/ui/circle.js', './src/ui/ask-munni.js', './src/ui/mind-ui.js', './src/ui/handlers.js', './src/app.js',
+  './src/ui/self-listen.js', './src/ui/talk-munni.js', './src/ui/cloud-read.js', './src/ui/say-it.js', './src/ui/circle.js', './src/ui/ask-munni.js', './src/ui/mind-ui.js', './src/ui/handlers.js', './src/app.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png'
 ];
 

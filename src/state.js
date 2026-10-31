@@ -46,7 +46,7 @@ function newProfile(name){
     talkMunni: false,      // a parent turned on Talking Munni (voice goes to the voice service while talking) — see ui/talk-munni.js
     talkKey: null,         // this child's key on the voice server, so only this phone can use or erase that record
     talkApplied: [],       // talk sessions already replayed into this record, so a talk never counts twice
-    cloudRead: false,      // a parent turned on the clearer reading check (one line to the speech service when the phone has no recognizer) — see ui/cloud-read.js
+    voiceTerms: null,      // {v, at, by}: a grown-up accepted the reading terms (reading checked with Sarvam online, nothing kept) — see ui/cloud-read.js
     // the learning circle — see ui/circle.js. Progress only; never a voice, a photo or a typed question.
     circleSync: false,     // a parent ticked "always keep in sync"
     circleSyncAt: null,    // when they did

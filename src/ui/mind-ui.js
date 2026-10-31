@@ -183,6 +183,7 @@ function twinTipHTML(p){
    to hear side by side (core/lang-mistakes.js). */
 function twinSlipHTML(){
   const m = S.ctx.slip; if(!m) return '';
+  if(S.screen === 'read' && typeof SAY !== 'undefined' && SAY && SAY.line === S.ctx.sentence) return '';   // "say it with Munni" shows the help itself
   const hi = S.lang === 'hi', h = twinHabit(S.screen === 'read' ? readSkill() : 'write' + S.levels.write);
   const line = langTip(m, S.lang, m.glyph);
   if(!line) return '';

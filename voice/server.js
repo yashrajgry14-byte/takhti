@@ -11,7 +11,8 @@
    Bolna Workflows         POST /voice/flow/*            Bearer TAKHTI_TOOL_TOKEN
    Bolna (after a call)    POST /voice/webhook?key=TAKHTI_WEBHOOK_KEY
    The app (synced)        POST /circle/sync             parent's tick + this phone's key
-   The app (reading)       POST /reading/asr             parent's switch; one line written down, nothing kept
+   The app (reading)       POST /reading/asr             the reading terms; one line written down, nothing kept
+                           POST /reading/tts             Munni says a short teaching line (Sarvam / ElevenLabs)
    The circle's grown-ups  GET  /circle/p|t|c/:token     unguessable link (parent, tutor, class teacher)
    Families                GET  /voice/card/:session     unguessable link
                            GET  /voice/report/:session   unguessable link
@@ -182,14 +183,14 @@ function createServer(opts) {
       }
 
       /* ---- a clearer reading check: one line written down by a speech service, nothing kept (voice/asr.js) ---- */
-      if (p === '/reading/asr') {
+      if (p === '/reading/asr' || p === '/reading/tts') {
         res.setHeader('Access-Control-Allow-Origin', env.TAKHTI_APP_ORIGIN || '*');
         res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
         if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
         if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
         const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
-        const r = await asr.handle(await readBody(req, 2.2 * 1024 * 1024), ip);
+        const r = p === '/reading/tts' ? await asr.speak(await readBody(req, 4 * 1024), ip) : await asr.handle(await readBody(req, 2.2 * 1024 * 1024), ip);
         return send(res, r.status, r.body);
       }
 

@@ -753,7 +753,8 @@ function answer(core, child, s, storyBank, said) {
       if (it.kind === 'repeat' || it.kind === 'helpsay') return ask(fill(L.repeatTry, lang, { line: it.target }));
       // HOW it slipped (src/core/lang-mistakes.js): one line of help aimed at it
       const tip = readTip(core, child, s, g);
-      if (g.misread.length === 1) return ask(joinSay(tip, fill(L.readCoachW, lang, { w: g.misread[0] })));
+      // the word the way "say it with Munni" teaches it in the app: in pieces, slowly, then whole
+      if (g.misread.length === 1) return ask(joinSay(tip, fill(L.readCoachW, lang, { w: wordPieces(core, child, s, g.misread[0]) })));
       return ask(fill(L.readCoach, lang, { line: it.target }));
     }
     return done('revealed', (it.kind === 'repeat' || it.kind === 'helpsay') ? L.repeatDone[lang] : fill(L.readModel, lang, { line: it.target }));
@@ -848,6 +849,16 @@ function gradeLine(core, child, s, target, alternatives) {
              tokens: best.tokens.map(x => ({ text: x.text, state: x.state, heard: x.heard })) };
   });
   return out;
+}
+
+/* A word said in pieces, then whole: "भा… ई… भाई". */
+function wordPieces(core, child, s, w) {
+  const word = String(w).replace(/[.,!?।"“”]/g, '');
+  const { out } = core.withChild(child.profile, { lang: s.lang }, T => {
+    const p = T.wordChunks(word, /[ऀ-ॿ]/.test(word) ? 'hi' : 'en');
+    return p.length > 1 ? `${p.join('… ')}… ${word}` : word;
+  });
+  return out || word;
 }
 
 /* A read line's first slip, as one spoken line of help (or ''). */

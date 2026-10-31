@@ -58,17 +58,25 @@ function loadBank(){
   vm.createContext(ctx);
   for(const f of ['src/core/matcher.js','src/core/readability.js','src/content/sentences.js',
                   'src/content/games.js','src/content/facts.js','src/content/ages.js',
-                  'src/core/daily-engine.js','src/content/lessons.js','src/core/lesson-gen.js'])
+                  'src/core/daily-engine.js','src/content/lessons.js','src/core/lesson-gen.js','src/core/explain.js'])
     vm.runInContext(fs.readFileSync(path.join(ROOT,f),'utf8'), ctx);
-  vm.runInContext('globalThis.__bank = LESSONS.concat(generateLessons()); globalThis.__lines = SENTENCES; globalThis.__glyphs = GLYPHS;', ctx);
-  return { bank: ctx.__bank, sentences: ctx.__lines, glyphs: ctx.__glyphs };
+  vm.runInContext('globalThis.__bank = LESSONS.concat(generateLessons()); globalThis.__lines = SENTENCES; globalThis.__glyphs = GLYPHS; globalThis.__chunks = wordChunks;', ctx);
+  return { bank: ctx.__bank, sentences: ctx.__lines, glyphs: ctx.__glyphs, chunks: ctx.__chunks };
 }
 
 /* Same hash the runtime uses to find a file — keep these in step. */
 export const lineKey = (text, lang) =>
   crypto.createHash('sha1').update(lang + '|' + text.trim()).digest('hex').slice(0, 16);
 
-function collect({ bank, sentences, glyphs }, lang){
+/* "Say it with Munni" (src/ui/say-it.js): her fixed lines, and for every
+   word of every reading line, the word, its pieces and "let's say it". */
+const SAY_LINES = {
+  en: ["Piece by piece:", "Slowly:", "Now you say it!", "Almost! Listen once more, slowly.", "Yes! That is exactly it!", "Now read the whole line again.", "That's okay — we'll say it again next time."],
+  hi: ['टुकड़ों में:', 'धीरे से:', 'अब तुम बोलो!', 'लगभग! एक बार और सुनो, धीरे से।', 'हाँ! बिलकुल ऐसे ही!', 'अब पूरी पंक्ति फिर से पढ़ो।', 'कोई बात नहीं — अगली बार फिर बोलेंगे।']
+};
+const SAY_INTRO = { en: w => `Let's say ${w} together.`, hi: w => `चलो, ${w} साथ में बोलें।` };
+
+function collect({ bank, sentences, glyphs, chunks }, lang){
   const lines = new Map();          // key -> text
   const add = t => { if(t && String(t).trim()) lines.set(lineKey(String(t), lang), String(t).trim()); };
   for(const l of bank){
@@ -79,7 +87,15 @@ function collect({ bank, sentences, glyphs }, lang){
     }
   }
   // every reading line (Munni reads it first, for a child taught that way)
-  for(const lv of Object.values((sentences || {})[lang] || {})) for(const s of lv) add(s);
+  for(const lv of Object.values((sentences || {})[lang] || {})) for(const s of lv){
+    add(s);
+    // "say it with Munni": every word, its pieces, and her line for it
+    for(const w of s.replace(/[.,!?।"“”]/g, ' ').split(/\s+/).filter(Boolean)){
+      add(w); add(SAY_INTRO[lang](w));
+      if(chunks) for(const p of chunks(w, lang)) add(p);
+    }
+  }
+  for(const l of SAY_LINES[lang] || []) add(l);
   // every letter heard on its own: the Sand Patch, and "hear them side by side"
   for(const lv of Object.values((glyphs || {})[lang] || {})) for(const g of lv) add(g);
   return lines;

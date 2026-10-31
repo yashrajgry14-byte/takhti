@@ -73,8 +73,10 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     fs.readFile(full, (err, data) => { if(err){ res.statusCode = 404; return res.end(); } res.setHeader('Content-Type', MIME[path.extname(full)] || 'application/octet-stream'); res.end(data); });
   });
   await new Promise(r => appServer.listen(0, '127.0.0.1', r));
-  const boot = async (voice, answer) => {
-    const vc = new VirtualConsole(), jsErrors = [], sent = [];
+  // answers: a list the stand-in Sarvam gives in turn ('none' = no signal)
+  const boot = async (voice, answers, opts) => {
+    opts = opts || {};
+    const vc = new VirtualConsole(), jsErrors = [], sent = [], queue = [].concat(answers || []);
     vc.on('jsdomError', e => { if(!/Not implemented|Could not load link/.test(e.message)) jsErrors.push(e.message); });
     const dom = new JSDOM(html, { virtualConsole: vc, url: `http://127.0.0.1:${appServer.address().port}/index.html`, runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true,
       beforeParse(win){
@@ -82,17 +84,24 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
         win.speechSynthesis = { getVoices: () => [], cancel: () => {}, addEventListener: () => {}, speak: u => setTimeout(() => u.onend && u.onend(), 0) };
         win.navigator.vibrate = () => {};
         win.URL.createObjectURL = () => 'blob:test'; win.URL.revokeObjectURL = () => {};
-        // a stand-in microphone: the recorder gives one chunk and stops when asked
+        win.HTMLMediaElement.prototype.play = function(){ setTimeout(() => this.onended && this.onended(), 0); return Promise.resolve(); };
+        win.HTMLMediaElement.prototype.pause = function(){};
+        // a stand-in microphone: the recorder gives one chunk and stops by itself
         win.navigator.mediaDevices = { getUserMedia: async () => ({ getTracks: () => [{ stop(){} }] }) };
         win.MediaRecorder = class { constructor(){ this.state = 'inactive'; this.mimeType = 'audio/webm'; } start(){ this.state = 'recording'; setTimeout(() => this.stop(), 30); }
           stop(){ if(this.state !== 'recording') return; this.state = 'inactive'; this.ondataavailable({ data: new win.Blob([new Uint8Array(5000)], { type: 'audio/webm' }) }); setTimeout(() => this.onstop(), 0); } };
+        // the phone's own recognizer, when a test asks for one
+        if(opts.device) win.webkitSpeechRecognition = class { start(){ win.__deviceHeard = (win.__deviceHeard || 0) + 1; setTimeout(() => { this.onresult({ results: [[{ transcript: opts.device, confidence: 0.9 }]] }); this.onend(); }, 10); } stop(){} };
         if(voice){
           win.TAKHTI_VOICE = 'http://voice.test';
-          win.fetch = (url, opts) => {
+          win.fetch = (url, o) => {
             if(!String(url).startsWith('http://voice.test')) return Promise.reject(new Error('offline'));
-            const body = JSON.parse(opts.body); sent.push({ url: String(url).replace('http://voice.test', ''), body });
-            if(answer === 'none') return Promise.reject(new Error('no signal'));
-            return Promise.resolve({ ok: true, status: 200, json: async () => ({ transcript: answer, provider: 'sarvam' }) });
+            const body = JSON.parse(o.body), path = String(url).replace('http://voice.test', '');
+            sent.push({ url: path, body });
+            if(path === '/reading/tts') return Promise.resolve({ ok: true, status: 200, json: async () => ({ audio: 'SUQz', mime: 'audio/mpeg', provider: 'sarvam' }) });
+            const a = queue.length > 1 ? queue.shift() : queue[0];
+            if(a === 'none') return Promise.reject(new Error('no signal'));
+            return Promise.resolve({ ok: true, status: 200, json: async () => ({ transcript: a, provider: 'sarvam' }) });
           };
         }
       } });
@@ -100,35 +109,88 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     await new Promise(r => win.addEventListener('load', r));
     win.eval(`arrSkip(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance();`);
     [...win.document.querySelectorAll('.ob-av')][0].click(); [...win.document.querySelectorAll('.ob-cakebtn')][5].click(); win.document.querySelector('.ob-go').click();
-    win.eval(`S.game = S.game || 'cricket'; S.name = 'Jai'; if(typeof circleOnboardDone === 'function' && S.ob) circleOnboardDone(false); go('map')`);
-    return { win, E: c => win.eval(c), screen: () => win.document.querySelector('#screen').textContent, sent, jsErrors };
+    const terms = win.document.querySelector('#screen').textContent;
+    if(voice && !opts.skipTerms) win.eval(`voiceTermsAccept()`);
+    win.eval(`S.game = S.game || 'cricket'; S.name = 'Jai'; if(typeof circleOnboardDone === 'function' && S.ob && S.ob.step === 'grownup') circleOnboardDone(false); go('map')`);
+    return { win, E: c => win.eval(c), screen: () => win.document.querySelector('#screen').textContent, sent, jsErrors, terms };
+  };
+  const readLine = async (app, line) => {
+    app.E(`S.lang = 'hi'; S.online = true; go('read'); S.ctx = { sentence: ${JSON.stringify(line)} }; render(); startListening()`);
+    for(let i = 0; i < 150 && !app.E(`!!S.ctx.tokens || !S.ctx.live`); i++) await wait(20);
   };
   try{
     const plain = await boot(false);
     plain.E(`S.parentPin = '1234'; go('parent')`);
-    check('a build with no voice server: no switch, nothing goes anywhere', !/clearer reading check/i.test(plain.screen()) && plain.E(`cloudReadReady()`) === false, '');
+    check('a build with no voice server: no terms step, no reading-check section, nothing goes anywhere', !/TERMS|How Munni listens/i.test(plain.terms + plain.screen()) && plain.E(`cloudReadReady()`) === false, '');
 
-    const app = await boot(true, 'मेरा बाई घर गया');
-    app.E(`S.parentPin = '1234'; go('parent')`);
-    const en = app.screen();
-    app.E(`S.lang = 'hi'; render()`);
-    const hi = app.screen();
-    check('the parent\'s switch, off to begin with, says plainly in both languages that one line goes to the speech service, is checked on the phone, and is not kept', /A clearer reading check/.test(en) && /recording is not kept/.test(en) && /Sarvam/.test(en) &&
-      /पढ़ने की और साफ़ जाँच/.test(hi) && /रिकॉर्डिंग कहीं नहीं रखी जाती/.test(hi) && app.E(`S.cloudRead`) === false, en.slice(en.indexOf('A clearer'), en.indexOf('A clearer') + 300));
-    app.E(`toggleCloudRead(); S.online = true; STT_LOCAL.hi = 'available'`);
-    check('the phone\'s own on-device recognizer always wins (the voice stays on the phone)', app.E(`cloudReadReady()`) === false, '');
-    app.E(`STT_LOCAL.hi = 'unavailable'; go('read'); S.ctx = { sentence: 'मेरा भाई घर गया।' }; render(); startListening()`);
-    for(let i = 0; i < 100 && !app.E(`!!S.ctx.tokens`); i++) await wait(20);
-    check('switch on, no recognizer: the line is recorded, written down by the service, and graded HERE — the slip named like any reading', app.sent.length === 1 && app.sent[0].url === '/reading/asr' && app.sent[0].body.consent === true && app.sent[0].body.lang === 'hi' &&
-      app.E(`!!S.ctx.tokens`) && /हवा/.test(app.screen()), JSON.stringify(app.sent.map(x => x.url)) + ' ' + app.screen().slice(-200));
-    check('…the recording itself goes nowhere else: no name or id in what is sent', !/Jai|"id"/.test(JSON.stringify(app.sent[0].body).replace(app.sent[0].body.audio, '')), '');
-
-    const off = await boot(true, 'none');
-    off.E(`S.cloudRead = true; S.online = true; STT_LOCAL.hi = 'unavailable'; S.lang = 'hi'; go('read'); S.ctx = { sentence: 'मेरा भाई घर गया।' }; render(); startListening()`);
-    for(let i = 0; i < 100 && off.E(`S.ctx.live`); i++) await wait(20);
-    check('no answer from the service: the honest message, the typed fallback, the lesson goes on', !off.E(`S.ctx.live`) && /इंटरनेट|लिखकर/.test(off.E(`S.ctx.msg || ''`)) && !!off.win.document.querySelector('#typed'), off.E(`S.ctx.msg`));
-    check('no uncaught script errors', [plain, app, off].every(x => !x.jsErrors.length), [plain, app, off].map(x => x.jsErrors.join(' | ')).join(' || '));
+    // 1. the terms, once, at onboarding — not a switch
+    const app = await boot(true, ['मेरा बाई घर गया', 'भाई']);
+    check('onboarding ends with the grown-ups\' reading terms: Sarvam, what is checked, nothing kept, how to withdraw — in Hindi and English, one "I agree", no switch',
+      /How Munni listens to reading|मुन्नी पढ़ना कैसे सुनती है/.test(app.terms) && /Sarvam/.test(app.terms) && /recording is not kept/.test(app.terms) && /रिकॉर्डिंग रखी नहीं जाती/.test(app.terms) && /withdraw/.test(app.terms) && /I agree|सहमत हूँ/.test(app.terms),
+      app.terms.slice(0, 400));
+    check('…and the agreement is kept with its version and time', app.E(`S.voiceTerms && S.voiceTerms.v`) === 1 && !!app.E(`S.voiceTerms.at`), app.E(`JSON.stringify(S.voiceTerms)`));
+    // 2. online: Sarvam hears it, even when the phone has its own recognizer
+    app.E(`STT_LOCAL.hi = 'available'`);
+    await readLine(app, 'मेरा भाई घर गया।');
+    check('online: the line goes to Sarvam (verbatim) even where the phone has its own recognizer, and is graded HERE — the slip named', app.sent[0] && app.sent[0].url === '/reading/asr' && app.sent[0].body.lang === 'hi' && app.E(`S.ctx.heardBy`) === 'sarvam' && /हवा/.test(app.screen()),
+      JSON.stringify(app.sent.map(x => x.url)) + ' ' + app.screen().slice(-200));
+    check('…nothing about the child is sent with the recording — no name, no id', !/Jai|"id"/.test(JSON.stringify(app.sent[0].body).replace(app.sent[0].body.audio, '')), '');
+    // 3. say it with Munni
+    for(let i = 0; i < 300 && !app.E(`SAY && SAY.step === 'done'`); i++) await wait(20);
+    const coach = app.screen();
+    check('a slip: Munni teaches the word straight away — the word in pieces (भा · ई), the help for HOW it slipped, in Sarvam\'s voice', app.E(`SAY && SAY.word`) === 'भाई' && app.E(`SAY.pieces.join('|')`) === 'भा|ई' &&
+      /मुन्नी के साथ बोलो/.test(coach) && app.sent.some(x => x.url === '/reading/tts' && x.body.text === 'भा' && x.body.pace < 0.9), JSON.stringify(app.sent.filter(x => x.url === '/reading/tts').map(x => x.body.text)).slice(0, 300));
+    check('…the child says it, Sarvam writes it down, it is checked here: "Yes! That is exactly it!" and "read the whole line again"', app.E(`SAY.right`) === true && app.sent.filter(x => x.url === '/reading/asr').length === 2 && /शाबाश/.test(coach), coach.slice(-300));
+    check('…and saying it after Munni is help, not evidence (no attempt recorded), but a teaching moment by pieces', app.E(`S.attempts.read`) === 1 && app.E(`S.mind.pending[readSkill()] && S.mind.pending[readSkill()].way`) === 'chunks', app.E(`JSON.stringify([S.attempts, S.mind && S.mind.pending])`));
+    // a second try when it is not yet right, then kindly let go
+    const two = await boot(true, ['मेरा बाई घर गया', 'बाई', 'बाई']);
+    await readLine(two, 'मेरा भाई घर गया।');
+    for(let i = 0; i < 400 && !two.E(`SAY && SAY.step === 'done'`); i++) await wait(20);
+    check('not yet: the pieces once more, slower, another try — after two, "we\'ll say it again next time", never "wrong"', two.E(`SAY.tries`) === 2 && two.E(`SAY.right`) === false && /अगली बार फिर बोलेंगे/.test(two.screen()) && !/ग़लत|गलत है|wrong/i.test(two.screen().replace(/गलत<\/span>|misread/g, '')),
+      two.screen().slice(-300));
+    // 4. offline: the phone's own recognizer
+    const offline = await boot(true, ['should not be used'], { device: 'मेरा भाई घर गया' });
+    offline.E(`STT_LOCAL.hi = 'available'`);
+    offline.E(`S.lang = 'hi'; S.online = false; go('read'); S.ctx = { sentence: 'मेरा भाई घर गया।' }; render(); startListening()`);
+    for(let i = 0; i < 100 && !offline.E(`!!S.ctx.tokens`); i++) await wait(20);
+    check('offline: the phone\'s own on-device recognizer hears it (nothing sent), and the lesson goes on', offline.sent.length === 0 && offline.E(`window.__deviceHeard`) === 1 && offline.E(`!!S.ctx.tokens`), JSON.stringify(offline.sent));
+    // 5. withdrawn: nothing leaves the phone
+    offline.E(`S.parentPin = '1234'; go('parent')`);
+    const page = offline.screen();
+    offline.E(`S.ctx.termsAsk = true; voiceTermsWithdraw()`);
+    offline.E(`STT_LOCAL.hi = 'unavailable'; S.online = true; go('read'); S.ctx = { sentence: 'मेरा भाई घर गया।' }; render(); startListening()`);
+    await wait(50);
+    check('the parent page shows what was agreed and can withdraw it (the law\'s right); withdrawn, online and no recognizer of its own: nothing is sent, the child types', /Agreed on|सहमति दी/.test(page) && /Withdraw consent|सहमति वापस लें/.test(page) &&
+      offline.sent.length === 0 && /सहमति|agree/i.test(offline.E(`S.ctx.msg || ''`)), offline.E(`S.ctx.msg`));
+    // 6. no answer: the honest message
+    const off = await boot(true, ['none']);
+    await readLine(off, 'मेरा भाई घर गया।');
+    check('no answer from Sarvam: the honest message, the typed fallback, the lesson goes on', !off.E(`S.ctx.live`) && /इंटरनेट|लिखकर/.test(off.E(`S.ctx.msg || ''`)) && !!off.win.document.querySelector('#typed'), off.E(`S.ctx.msg`));
+    check('no uncaught script errors', [plain, app, two, offline, off].every(x => !x.jsErrors.length), [plain, app, two, offline, off].map(x => x.jsErrors.join(' | ')).join(' || '));
   }catch(e){ check('the app run finished', false, e.stack); }
+
+  /* ---------- 2b. Munni's live voice and the call's coaching ---------- */
+  {
+    const seenT = [];
+    const tsvc = http.createServer((req, res) => { const ch = []; req.on('data', c => ch.push(c)); req.on('end', () => { const b = JSON.parse(Buffer.concat(ch).toString()); seenT.push(b); res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ audios: ['SUQzBAAAAA=='] })); }); });
+    await new Promise(r => tsvc.listen(0, '127.0.0.1', r));
+    const tts = createAsr({ SARVAM_API_KEY: 'k', SARVAM_API_BASE: `http://127.0.0.1:${tsvc.address().port}` });
+    const a1 = await tts.speak({ text: 'भा', lang: 'hi', pace: 0.7 }, '3.3.3.3');
+    const a2 = await tts.speak({ text: 'भा', lang: 'hi', pace: 0.7 }, '3.3.3.3');
+    check('Munni\'s live voice: Sarvam Bulbul, slow when asked, the same line served from memory the second time', a1.status === 200 && a1.body.audio && seenT.length === 1 && seenT[0].model && seenT[0].pace === 0.7 && seenT[0].language_code === 'hi-IN' && a2.body.audio === a1.body.audio, JSON.stringify(seenT));
+    check('…only short teaching lines (no markup, nothing long)', (await tts.speak({ text: '<script>x</script>', lang: 'hi' }, '3.3.3.3')).status === 400 && (await tts.speak({ text: 'क'.repeat(200) }, '3.3.3.3')).status === 400, '');
+    tsvc.close();
+    const { createBrain } = require('../voice/brain');
+    const brain = createBrain({ dataDir: fs.mkdtempSync(path.join(os.tmpdir(), 'takhti-say-')), env: { TAKHTI_QUIET_HOURS: '0-0' } });
+    const kid = brain.registerChild({ name: 'Jai', age: 7, lang: 'hi', parent_phone: '+919500000099', consent: true }).child;
+    const s = brain.createSession(kid.id, { channel: 'app', kind: 'lesson', seed: 'say-1' }).session;
+    brain.toolNext(s.id);
+    const live = brain.store.get('sessions', s.id), it = live.items[live.items.length - 1];
+    Object.assign(it, { kind: 'read', expect: 'reading', target: 'भालू आया।', attempts: 0, said: [], prompts: ['पढ़ो'] });
+    brain.store.put('sessions', s.id, live);
+    const say = brain.toolAnswer(s.id, 'बालू आया').say;
+    check('on a phone call, the same teaching: the word in pieces, slowly, then whole (भा… लू… भालू)', /भा… लू… भालू/.test(say), say);
+  }
 
   /* ---------- 3. narration ---------- */
   const out = execFileSync(process.execPath, [path.join(root, 'tools/build-audio.mjs'), '--lang', 'hi', '--dry-run', '--provider', 'sarvam'], { env: { PATH: process.env.PATH } }).toString();

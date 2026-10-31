@@ -141,14 +141,21 @@ reviews the rest at `GET /voice/admin/mistakes` — where the next named
 mistake gets written into `src/core/mathgen.js`. Erasing a child takes them
 out of every count.
 
-## A clearer reading check (Sarvam / Whisper)
+## The reading check and "say it with Munni" (Sarvam)
 
-`POST /reading/asr` (`asr.js`): only when a parent turned it on in the app
-and the phone has no recognizer of its own. One line of the child's
-reading is written down by Sarvam (`saaras:v3`, **verbatim** mode — what
-was said, not a tidied sentence) or any OpenAI-compatible transcription
-service, and the text goes back to be graded on the phone. The audio is
-never written down or logged. Keys: `SARVAM_API_KEY` or `WHISPER_API_KEY`.
+Under the reading terms a parent accepts at onboarding, whenever there is a
+signal, the app sends one line the child read (or one word said after Munni)
+to `POST /reading/asr` (`asr.js`): Sarvam `saaras:v3` in **verbatim** mode
+writes down what was said — not a tidied sentence — and the text goes back
+to be graded on the phone. The audio is never written down or logged. Any
+OpenAI-compatible transcription service works too (`WHISPER_API_KEY`).
+
+After a slip, the app's "say it with Munni" teaches the word in pieces in
+Munni's voice: pre-rendered by `tools/build-audio.mjs`, or live from
+`POST /reading/tts` (Sarvam Bulbul, short teaching lines only, cached;
+`SARVAM_TTS_MODEL` / `SARVAM_SPEAKER` — use the same voice as the pack and,
+ideally, as the Bolna agent's synthesizer, so Munni sounds the same
+everywhere). On a call, a misread word is said the same way ("भा… लू… भालू").
 
 ## Narration (ElevenLabs / Sarvam)
 
@@ -352,7 +359,7 @@ surname, and the phone number only as the number to dial.
 | Bolna, before an inbound call | `GET /voice/inbound/lookup?contact_number=…` | `Bearer TAKHTI_TOOL_TOKEN` |
 | The app (Talking Munni, and Ask Munni's help call: the same mint with `help: {kind: math\|read\|lesson, …}`, see `help.js`) | `POST /voice/web/session`, `GET /voice/web/state`, `POST /voice/web/tap`, `GET /voice/web/result`, `POST /voice/web/forget` | parent consent flag + per-child key; per-talk token; rate limits |
 | The app (learning circle) | `POST /circle/sync` (progress + the twin's checked `profile`; returns `mistake_rules`), `POST /circle/leave` `{child, key, erase}` (sync off, or delete the circle's data) (CORS) | the parent's tick (`consent.sync`), this phone's key after the first sync, rate limits |
-| The app (clearer reading check) | `POST /reading/asr` `{consent, lang, mime, audio}` (CORS) | the parent's switch; per-address limit; nothing kept |
+| The app (reading check) | `POST /reading/asr` `{consent, lang, mime, audio}`, `POST /reading/tts` `{text, lang, pace}` (CORS) | the reading terms; per-address limits; nothing kept |
 | Parents, tutors, teachers | `GET`/`POST /circle/p/:token`, `/circle/t/:token`, `/circle/c/:token` | the unguessable link |
 | Families | `GET /voice/card/:session`, `GET /voice/report/:session` | the unguessable link |
 | Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `POST /voice/admin/children/:id/homework` `{code}`, `GET /voice/admin/children/:id/progress-code`, `POST /voice/admin/children/:id/consent-call`, `/consent-confirm`, `/weekly-call`, `/schedule` `{time, days: daily\|alternate, enabled, weekly}`, `GET /voice/admin/parentcalls/:id`, `POST`/`GET /voice/admin/teachers`, `GET /voice/admin/teachercalls/:id`, `GET /voice/admin/classes/:code`, `POST /voice/admin/classes/:code/parent-calls` `{skill, teacher, note}`, `GET /voice/admin/outbox`, `POST /voice/admin/children/:id/family-code`, `GET /voice/admin/corpus(.csv)`, `GET /voice/admin/mistakes` (server key), `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` (everything), or a school's key (its own records; 404 for anything else) |

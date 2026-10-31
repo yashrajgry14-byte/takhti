@@ -14,6 +14,7 @@ function nextSentence(){
   // going back to the normal random pool — same invisible spaced
   // repetition, carried across "Next" the way it carries across the
   // session's first sentence.
+  SAY = null;                                                     // "say it with Munni" belongs to the line being left
   const queue = S.ctx._srsQueue || [];
   if(queue.length){
     S.ctx = { sentence: queue[0], _srsQueue: queue.slice(1) };
@@ -40,8 +41,10 @@ function startListening(){
   // cannot attach to it; the two start together and stop on the same
   // two signals (a result, or a recognizer error).
   if(typeof selfListenStart === 'function') selfListenStart();
-  // a parent's clearer reading check, where the phone has no recognizer of its own (ui/cloud-read.js)
-  const hear = cloudReadReady() ? cloudListen : listen;
+  // online, under the reading terms: Sarvam hears it (ui/cloud-read.js); otherwise the
+  // phone's own on-device recognizer — never a general cloud one without the terms
+  S.ctx.heardBy = null;
+  const hear = cloudReadReady() ? cloudListen : deviceListenAllowed() ? listen : (ok, end) => { end('no-terms'); return null; };
   ACTIVE_LISTEN = hear(alts=>{
     ACTIVE_LISTEN = null;
     if(typeof selfListenStop === 'function') selfListenStop();
@@ -117,11 +120,15 @@ function checkRead(input){
   const moved = S.ctx.helped ? null : record('read', ok);
   if(!S.ctx.helped) mindAttempt(readSkill(), ok);
   if(moved==='up') S.ctx.msg += S.lang==='hi' ? ' · नया स्तर! 🎉' : ' · New level! 🎉';
+  S.ctx.passed = ok;
   render();
 
-  // a missed line, the child's way: Munni reads the whole line again ('model'), or the missed words
-  if(!ok && S.ctx.readWay === 'model') setTimeout(()=>speak(S.ctx.sentence), 420);
-  else if(!ok && r.misread.length) setTimeout(()=>speak(r.misread.slice(0,3).join(', ')), 420);
+  // a slip: Munni teaches the right way to say the word, the child says it (ui/say-it.js) —
+  // straight away when the line didn't pass, as a button when it did
+  const teach = !S.ctx.helped && ((S.ctx.slip && S.ctx.slip.word) || r.misread[0] || (ok ? r.slips[0] : null));
+  if(teach) sayOffer(r, S.ctx.slip);
+  // no word to teach (the line was cut short): the child's way — Munni reads the whole line again
+  else if(!ok && S.ctx.readWay === 'model') setTimeout(()=>speak(S.ctx.sentence), 420);
   if(!ok && r.misread.length) tier1Offer(r.misread.slice(0,2));
 }
 

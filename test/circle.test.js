@@ -118,6 +118,8 @@ appServer.listen(0, '127.0.0.1', () => voiceServer.listen(0, '127.0.0.1', async 
     $$('.ob-av').find(b => b.getAttribute('onclick').includes("'tiger'")).click();
     $$('.ob-cakebtn')[4].click();
     $('.ob-go').click();
+    // the reading terms come first (test/speech.test.js covers them)
+    $$('button').find(b => (b.getAttribute('onclick') || '') === 'voiceTermsAccept()').click();
 
     /* ---- the grown-ups' step ---- */
     check('onboarding ends with the grown-ups\' step', E('S.ob && S.ob.step') === 'grownup' && !!$('#circleTick'), E('JSON.stringify(S.ob)'));

@@ -90,7 +90,7 @@ function createCore(opts) {
     personalizeContentForHomework, getAssignedHomework, importHomework, classReportCode, SKILLS, diagnose, assignHomework, clearHomework, homeworkCode, prereqChain,
     mirrorToClassNow, getDueSrsItems, explainMath, explainRead, explainLessonBeat, explainLines, xfill, parseProblem,
     MISTAKES, mistakeAnswers, whichMistake, mistakeTip, mistakeExplain, mistakeLabel, procValid, procMatches, twinAnswer, twinHabit, twinMastery, twinNote, twinProfile, twinCleanProfile, twinPrompt,
-    LMISTAKES, lineMistakes, wordMistake, langTip, WAYS, mindChoose,
+    LMISTAKES, lineMistakes, wordMistake, langTip, wordChunks, WAYS, mindChoose,
     CONCEPTS, validateLesson, lessonBank, newProfile, PROFILE_FIELDS,
     syncProfileIn, syncProfileOut, COMPETENCY, seedOf, rng, SENTENCES
   };`, sandbox);
