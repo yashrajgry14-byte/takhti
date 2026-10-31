@@ -795,9 +795,9 @@ Honest edges of what's built:
    it covers maths skills with a `skillProblem()` and reading levels, not
    writing yet; voice calls don't use it yet. Children's data law: DPDP s.9(3)
    bars "tracking or behavioural monitoring" of children, with an exemption
-   for educational institutions' educational activities — keeping the
-   model on the phone, never on our server, is the design answer, but it
-   needs a lawyer's confirmation before launch.
+   for educational institutions' educational activities; the team's lawyer
+   advised (31 Oct 2026) that edtech use like this is exempt too. The model
+   still stays on the phone, which is the safest design either way.
 
 ## Style
 
