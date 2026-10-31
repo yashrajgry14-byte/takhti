@@ -79,13 +79,18 @@ function askMunni(){
   if(!tg) return;
   const lines = tg.lines || explainLines(tg.x, tg.lang || S.lang);
   if(!lines.length) return;
-  // a mistake this child keeps making on this skill: Munni warns about it
-  // just before she asks (core/twin.js), and a call goes at it too
-  const habit = tg.p && tg.skill && twinHabit(tg.skill);
-  if(habit && mistakeAnswers(tg.p).some(m => m.id === habit.id)){
-    const tip = mistakeTip(habit.id, tg.p, S.lang);
-    if(tip) lines.splice(lines.length - 1, 0, (S.lang === 'hi' ? 'ध्यान रहे: ' : 'Watch out: ') + tip);
+  // a mistake this child keeps making decides the explanation (core/twin.js):
+  // straight at that mistake, then the question — and a call goes at it too
+  const habit = tg.skill && twinHabit(tg.skill);
+  const canSum = habit && tg.p && (mistakeAnswers(tg.p).some(m => m.id === habit.id) || procAnswers(tg.p).some(x => x.code === habit.id));
+  if(canSum){
+    const why = mistakeExplain(habit.id, tg.p, S.lang);
+    if(why.length) lines.splice(0, lines.length - 1, (S.lang === 'hi' ? 'ध्यान रहे: ' : 'Watch out: ') + why[0], ...why.slice(1));
     if(tg.call) tg.call.mistake = habit.id;
+  } else if(habit && habit.pair && S.screen === 'read' && S.ctx.sentence && S.ctx.sentence.includes(habit.pair[0])){
+    const word = S.ctx.sentence.split(/\s+/).find(w => w.includes(habit.pair[0])) || '';
+    const tip = langTip({ id: habit.id, word: word.replace(/[.,!?।]/g, ''), pair: habit.pair }, tg.lang || S.lang);
+    if(tip) lines.unshift(tip);
   }
   // whatever the child answers next on this question was helped
   if(S.screen === 'lessons' && S.lesson) S.lesson.helpedAt = S.lesson.i;
@@ -108,9 +113,11 @@ function askTeach(p){
   if(S.screen !== 'math' || S.ctx.p !== p) return;
   const x = explainMath(p);
   if(!x) return playMath();
-  // the mistake the child just made comes first (core/twin.js)
-  const tip = S.ctx.tip ? mistakeTip(S.ctx.tip.id, p, S.lang) : '';
-  const lines = (tip ? [tip] : []).concat(explainLines(x, S.lang).slice(0, -1), S.lang === 'hi' ? `${x.text} = ${x.ans}।` : `${x.text} = ${x.ans}.`);
+  // the mistake the child just made comes first (core/twin.js); one they
+  // keep making decides the whole explanation — straight at it
+  const tp = S.ctx.tip;
+  const body = tp && tp.habit ? mistakeExplain(tp.id, p, S.lang) : (tp ? [mistakeTip(tp.id, p, S.lang)] : []).concat(explainLines(x, S.lang).slice(0, -1));
+  const lines = body.filter(Boolean).concat(S.lang === 'hi' ? `${x.text} = ${x.ans}।` : `${x.text} = ${x.ans}.`);
   ASK = { lines, i: 0, call: null, where: 'math', teach: true, p };
   askFab(); askPanel(); askPlay(0);
 }

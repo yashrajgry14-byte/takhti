@@ -111,7 +111,8 @@ function createWeb(brain, envIn) {
     }
     store.put('children', id, child);
 
-    const made = brain.createSession(id, { channel: 'app', kind: help ? 'help' : 'lesson', help, keypad: false });
+    // the app's picture of how this child learns (ids only; checked again in planSession)
+    const made = brain.createSession(id, { channel: 'app', kind: help ? 'help' : 'lesson', help, keypad: false, profile: body.profile || null });
     if (made.error) return { status: 422, body: { error: made.error.join('; '), help: false } };
     const { session } = made;
     const token = crypto.randomBytes(18).toString('base64url');

@@ -60,6 +60,15 @@ function appEvidence(skillId, child){
   const own = (c.skillHistory || {})[skillId], far = (c.circleHistory || {})[skillId];
   const hist = far && far.n ? { n: (own ? own.n : 0) + far.n, right: (own ? own.right : 0) + far.right } : own;
   if(!hist || hist.n < 4) return null;
+  // the twin's live number (core/twin.js) — what the child knows TODAY,
+  // weighing recent answers and time away — stands in for this phone's
+  // own share of the evidence; the raw counts still travel in codes and
+  // the circle's sync, where another phone has no twin to read
+  const m = typeof twinMastery === 'function' && own && own.n ? twinMastery(skillId, c) : null;
+  if(m && m.n >= Math.min(own.n, 4)){
+    const farN = far && far.n ? far.n : 0, farR = far && far.n ? far.right : 0;
+    return { acc: (m.now * own.n + farR) / (own.n + farN), n: hist.n, mastery: m.now };
+  }
   return { acc: hist.right / hist.n, n: hist.n };
 }
 

@@ -191,6 +191,7 @@ function createBrain(opts) {
     for (const sid of child.sessions || []) store.remove('sessions', sid);
     for (const pid of child.parent_calls || []) store.remove('parentcalls', pid);
     store.remove('children', id);
+    if (api.mistakes) api.mistakes.forget(id);
     return true;
   }
 
@@ -214,7 +215,7 @@ function createBrain(opts) {
     }
     const s = o.kind === 'placement' ? PLC.planPlacement(core, child, { seed: o.seed, channel: o.channel,
       keypad: o.keypad != null ? o.keypad : process.env.TAKHTI_KEYPAD !== '0' }) : S.planSession(core, child, { checkDue, homeAsk,
-      seed: o.seed, channel: o.channel, kind: o.kind, help: o.help,
+      seed: o.seed, channel: o.channel, kind: o.kind, help: o.help, profile: o.profile,
       keypad: o.keypad != null ? o.keypad : process.env.TAKHTI_KEYPAD !== '0'
     });
     if (!s) return { error: ['nothing Munni can help with on that question'] };
@@ -840,6 +841,8 @@ function createBrain(opts) {
     listSessions: () => store.list('sessions')
   };
   // the learning circle around each child, and its messages to the grown-ups
+  // the shared database of mistakes children make (voice/mistakes.js)
+  api.mistakes = require('./mistakes').createMistakes(store, core, opts.env || {});
   api.circle = require('./circle').createCircle(api, opts.env);
   api.messages = require('./messages').createMessages(api, api.circle, opts.env);
   api.circle.attachMessages(api.messages);

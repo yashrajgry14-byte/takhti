@@ -117,6 +117,45 @@ Each person has a page by an unguessable link: `/circle/p/:token` (parent),
 `/circle/t/:token` (tutor), `/circle/c/:token` (class teacher: the class's
 week, setting or withdrawing the class focus, family codes, linking a tutor).
 
+## How the child thinks — the same on a call as in the app
+
+The app's twin (`src/core/twin.js`) keeps a picture of how a child thinks:
+what they know and how it fades, the mistakes they keep making (in sums,
+reading and writing), the way of teaching that works. With the circle's
+tick, its **profile** (checked ids only — no name, no raw answers) comes up
+with every sync (`twinCleanProfile()` checks it again here) and Munni's
+phone lessons use it: the first free sum goes at a habit or a fading skill
+("here's one we're practising together"), a slip that is the known habit
+gets "I know this tricky bit!" and the help aimed at it, a child taught
+step by step hears the reveal step by step, and reading lines carry the
+letters they keep slipping on. A child with no app gets the same from the
+server's own twin of their phone lessons. Reading coaching on a call names
+how a word slipped (`src/core/lang-mistakes.js`), but what is *recorded* is
+still graded from Bolna's transcript after the call.
+
+**The shared mistakes database** (`mistakes.js`): combinations of mistakes
+the twins worked out, and sums nothing explains yet, counted by children
+(a keyed hash, never names). One seen in `TAKHTI_MISTAKE_MIN_CHILDREN`
+children is promoted and goes down every sync as `mistake_rules`; the team
+reviews the rest at `GET /voice/admin/mistakes` — where the next named
+mistake gets written into `src/core/mathgen.js`. Erasing a child takes them
+out of every count.
+
+## A clearer reading check (Sarvam / Whisper)
+
+`POST /reading/asr` (`asr.js`): only when a parent turned it on in the app
+and the phone has no recognizer of its own. One line of the child's
+reading is written down by Sarvam (`saaras:v3`, **verbatim** mode — what
+was said, not a tidied sentence) or any OpenAI-compatible transcription
+service, and the text goes back to be graded on the phone. The audio is
+never written down or logged. Keys: `SARVAM_API_KEY` or `WHISPER_API_KEY`.
+
+## Narration (ElevenLabs / Sarvam)
+
+`node tools/build-audio.mjs --lang hi --provider sarvam` (or ElevenLabs)
+renders every lesson line, reading line and letter once, at build time, into
+`audio/`; the phone plays the files offline (`src/core/voice.js`).
+
 ## The reading card
 
 A phone call can't show text. So before the call the family opens the card link
@@ -312,10 +351,11 @@ surname, and the phone number only as the number to dial.
 | Bolna Workflows | `POST /voice/flow/plan`, `/gate`, `/result`, `/missed`, `/consent/plan`, `/consent/result` (see `flow.js`) | `Bearer TAKHTI_TOOL_TOKEN` |
 | Bolna, before an inbound call | `GET /voice/inbound/lookup?contact_number=…` | `Bearer TAKHTI_TOOL_TOKEN` |
 | The app (Talking Munni, and Ask Munni's help call: the same mint with `help: {kind: math\|read\|lesson, …}`, see `help.js`) | `POST /voice/web/session`, `GET /voice/web/state`, `POST /voice/web/tap`, `GET /voice/web/result`, `POST /voice/web/forget` | parent consent flag + per-child key; per-talk token; rate limits |
-| The app (learning circle) | `POST /circle/sync`, `POST /circle/leave` `{child, key, erase}` (sync off, or delete the circle's data) (CORS) | the parent's tick (`consent.sync`), this phone's key after the first sync, rate limits |
+| The app (learning circle) | `POST /circle/sync` (progress + the twin's checked `profile`; returns `mistake_rules`), `POST /circle/leave` `{child, key, erase}` (sync off, or delete the circle's data) (CORS) | the parent's tick (`consent.sync`), this phone's key after the first sync, rate limits |
+| The app (clearer reading check) | `POST /reading/asr` `{consent, lang, mime, audio}` (CORS) | the parent's switch; per-address limit; nothing kept |
 | Parents, tutors, teachers | `GET`/`POST /circle/p/:token`, `/circle/t/:token`, `/circle/c/:token` | the unguessable link |
 | Families | `GET /voice/card/:session`, `GET /voice/report/:session` | the unguessable link |
-| Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `POST /voice/admin/children/:id/homework` `{code}`, `GET /voice/admin/children/:id/progress-code`, `POST /voice/admin/children/:id/consent-call`, `/consent-confirm`, `/weekly-call`, `/schedule` `{time, days: daily\|alternate, enabled, weekly}`, `GET /voice/admin/parentcalls/:id`, `POST`/`GET /voice/admin/teachers`, `GET /voice/admin/teachercalls/:id`, `GET /voice/admin/classes/:code`, `POST /voice/admin/classes/:code/parent-calls` `{skill, teacher, note}`, `GET /voice/admin/outbox`, `POST /voice/admin/children/:id/family-code`, `GET /voice/admin/corpus(.csv)`, `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` (everything), or a school's key (its own records; 404 for anything else) |
+| Team | `GET /voice/admin`, `POST /voice/admin/children`, `POST /voice/admin/sessions` (`call: true` to dial), `POST /voice/admin/sessions/:id/call`, `POST /voice/admin/children/:id/homework` `{code}`, `GET /voice/admin/children/:id/progress-code`, `POST /voice/admin/children/:id/consent-call`, `/consent-confirm`, `/weekly-call`, `/schedule` `{time, days: daily\|alternate, enabled, weekly}`, `GET /voice/admin/parentcalls/:id`, `POST`/`GET /voice/admin/teachers`, `GET /voice/admin/teachercalls/:id`, `GET /voice/admin/classes/:code`, `POST /voice/admin/classes/:code/parent-calls` `{skill, teacher, note}`, `GET /voice/admin/outbox`, `POST /voice/admin/children/:id/family-code`, `GET /voice/admin/corpus(.csv)`, `GET /voice/admin/mistakes` (server key), `DELETE /voice/admin/children/:id` | `TAKHTI_ADMIN_KEY` (everything), or a school's key (its own records; 404 for anything else) |
 | Server key only | `GET`/`POST /voice/admin/schools`, `POST /voice/admin/schools/:id` `{name, contact, api_key, agent_id, parent_agent_id, from_number, daily_workflow_id, consent_workflow_id}` | `TAKHTI_ADMIN_KEY` |
 
 The tools always return `200` with `{say, expect, done, item}`. An unknown

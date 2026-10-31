@@ -188,6 +188,9 @@ function micReason(err){
       ? 'इस फ़ोन पर बोलकर पहचान के लिए इंटरनेट चाहिए — नीचे लिखकर देखो, बाकी सब कुछ ऑफ़लाइन काम करता है।'
       : 'Speech recognition needs a connection on this phone — type it below, everything else works offline.';
   }
+  if(err==='cloud-limit') return hi
+    ? 'आज के लिए इतना ही साफ़ जाँच — नीचे लिखकर देखो।'
+    : "That's enough of the clearer check for now — type it below.";
   if(err==='not-allowed' || err==='service-not-allowed') return hi
     ? 'माइक की अनुमति नहीं मिली — नीचे लिखकर देखो।'
     : 'Microphone permission denied — type what you read below.';

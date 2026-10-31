@@ -266,6 +266,7 @@ function lesAnswer(k){
   // a homework story names its skill directly; a bank lesson names a concept
   const les = S.lesson.data;
   const helped = S.lesson.helpedAt === S.lesson.i;      // Ask Munni explained this one: help, not evidence
+  if(typeof twinAnswerLesson === 'function') twinAnswerLesson(les, S.lesson.i, k, ok, helped);
   if(!helped && les.skillId) noteSkillAttempt(les.skillId, ok);
   else if(!helped && les.concept) noteSkillFromConcept(les.concept, ok);
   render();
@@ -302,6 +303,7 @@ function lessonHTML(){
 
   const asking = b.t === 'ask';
   const opts = asking ? (S.lang==='hi' ? (b.hiOpts || b.opts) : b.opts) : [];
+  if(asking && S.lesson.picked == null && S.lesson.helpedAt !== S.lesson.i && typeof twinExpectLesson === 'function') twinExpectLesson(les, S.lesson.i);
 
   // one shared match: the friend sets it up, the child answers, both win
   const coopBanner = les.coop ? `

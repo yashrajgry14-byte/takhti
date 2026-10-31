@@ -208,10 +208,13 @@ function dashboardPage(brain, key, scope) {
   <p class="sub">${corpus.readings} readings from ${corpus.children} children whose parents said yes to improving Takhti. Heard forms appear once ${corpus.min_children}+ children produced them. <a href="/voice/admin/corpus?${q}">JSON</a> · <a href="/voice/admin/corpus.csv?${q}">CSV</a></p>
   <table><tr><th>Word</th><th>Attempts</th><th>Read well</th><th>Heard as</th></tr>${corpus.words.slice(0, 12).map(w => `<tr><td>${esc(w.word)}</td><td>${w.attempts}</td><td>${w.ok}</td><td>${w.heard.map(h => esc(h.form) + ' (' + h.count + ')').join(', ') || '–'}</td></tr>`).join('') || '<tr><td colspan="4">Nothing yet</td></tr>'}</table>
   ${corpus.swaps.length ? `<p>Letter swaps: ${corpus.swaps.slice(0, 8).map(x => `${esc(x.from)}→${esc(x.to)} (${x.count})`).join(' · ')}</p>` : ''}` : '';
+  const mistakesBlock = scope && scope.super && brain.mistakes ? `<h2>Mistakes children make</h2>
+  <p class="sub">${brain.mistakes.review().codes.length} combinations worked out by the twins · ${brain.mistakes.review().unexplained.length} sums nothing explains yet · <a href="/voice/admin/mistakes?${q}">review</a></p>` : '';
 
   return shell('Takhti voice · dashboard', 'en', `<h1>Takhti voice</h1>
   <p class="sub">${kids.length} children · ${sessions.length} recent sessions · ${brain.storyBank.length} validated story problems</p>
   ${schoolBlock}
+  ${mistakesBlock}
   <h2>Add a child</h2>
   <form method="post" action="/voice/admin/children?${q}">
     <input name="name" placeholder="First name" required><input name="age" type="number" min="3" max="10" placeholder="Age" required>
@@ -311,4 +314,18 @@ function classCallsPage(r, code, key) {
   ${r.skipped.length ? `<h2>Not called</h2><ul>${r.skipped.map(x => `<li>${esc(x.child)}: ${esc(x.why)}</li>`).join('')}</ul>` : ''}`);
 }
 
-module.exports = { shell, MUNNI, cardPage, reportPage, dashboardPage, sessionAdminPage, parentCallPage, schoolCreatedPage, teacherCallPage, classCallsPage, esc };
+/* The shared mistakes database (voice/mistakes.js), for the team: the
+   combinations children's twins worked out, and the sums nothing explains
+   yet — where the next named mistake comes from. */
+function mistakesPage(r, key) {
+  return shell('Mistakes children make', 'en', `<p><a href="/voice/admin?key=${encodeURIComponent(key)}">← dashboard</a></p>
+  <h1>Mistakes children make</h1>
+  <p>Counted by children (never names). A combination seen in ${r.min_children} or more children is promoted: every app treats it as known.</p>
+  <h2>Combinations the twins worked out</h2>
+  ${r.codes.length ? `<table><tr><th>Mistake</th><th>Children</th><th></th></tr>${r.codes.map(c => `<tr><td>${esc(c.en)}<br><small>${esc(c.hi)} · <code>${esc(c.code)}</code></small></td><td>${c.children}</td><td>${c.promoted ? 'promoted' : ''}</td></tr>`).join('')}</table>` : '<p>None yet.</p>'}
+  <h2>Sums nothing explains yet</h2>
+  <p>The most common first. A pattern here is a new kind of mistake: write it into <code>src/core/mathgen.js</code> with its help and explanation.</p>
+  ${r.unexplained.length ? `<table><tr><th>Question = answer</th><th>Children</th><th>Last seen</th></tr>${r.unexplained.map(u => `<tr><td>${esc(u.sum)}</td><td>${u.children}</td><td>${esc(String(u.last).slice(0, 10))}</td></tr>`).join('')}</table>` : '<p>None yet.</p>'}`);
+}
+
+module.exports = { shell, MUNNI, cardPage, reportPage, dashboardPage, sessionAdminPage, parentCallPage, schoolCreatedPage, teacherCallPage, classCallsPage, mistakesPage, esc };

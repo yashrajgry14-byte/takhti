@@ -52,7 +52,11 @@ function circleSync(force){
     check: S.circleOut && S.circleOut.check || undefined,
     home: S.circleOut && S.circleOut.home && S.circleOut.home.length ? S.circleOut.home : undefined,
     invite: S.circleOut && S.circleOut.invite || undefined,
-    tutor: S.circleOut && S.circleOut.tutor || undefined
+    tutor: S.circleOut && S.circleOut.tutor || undefined,
+    // how this child thinks, as checked ids only (core/twin.js) — so Munni
+    // on a phone lesson teaches the way the app does; the parent's notice
+    // says so. The raw records of the mind and the twin never leave the phone.
+    profile: twinProfile()
   };
   const sent = JSON.parse(JSON.stringify(S.circleOut || {}));
   fetch(TALK_URL + '/circle/sync', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) })
@@ -75,6 +79,8 @@ function circleApply(ok, status, d, sent){
   S.circle = d.circle || null;
   S.circleHistory = (d.circle && d.circle.circleHistory) || {};
   S.circleAt = new Date().toISOString();
+  // combinations of mistakes many children share: the shared database's (codes only, checked)
+  if(Array.isArray(d.mistake_rules)) S.mistakeRules = d.mistake_rules.filter(procValid).slice(0, 60);
   // a level a phone lesson moved since the last sync
   if(d.levels) for(const m of ['read','write','math']) if(d.levels[m]) S.levels[m] = clampLevel(m, d.levels[m]);
   // a class test the teacher entered: the strongest evidence of how a way of teaching is working
@@ -120,8 +126,8 @@ function circleOnboardHTML(){
     <div class="kicker2">${hi ? 'बड़ों के लिए' : 'FOR A GROWN-UP'}</div>
     <h3 style="margin:6px 0">${hi ? `${n} का सीखने का घेरा` : `${n}'s learning circle`}</h3>
     <div style="font-size:13.5px;line-height:1.55">${hi
-      ? `स्कूल, ट्यूशन टीचर और परिवार एक ही कदम पर साथ काम करें: इस हफ़्ते क्या सीखना है, अभ्यास कैसा चल रहा है, शुक्रवार का छोटा टेस्ट। सिर्फ़ अभ्यास की जानकारी जाती है, आवाज़, फ़ोटो या लिखे सवाल कभी नहीं। कभी भी बंद कर सकते हैं।`
-      : `The school, the tuition teacher and the family work on the same step together: what to learn this week, how practice is going, the Friday check. Only practice progress goes, never a voice, a photo or a typed question. Turn it off any time.`}</div>
+      ? `स्कूल, ट्यूशन टीचर और परिवार एक ही कदम पर साथ काम करें: इस हफ़्ते क्या सीखना है, अभ्यास कैसा चल रहा है, शुक्रवार का छोटा टेस्ट। सिर्फ़ अभ्यास की जानकारी जाती है — और मुन्नी की बनाई छोटी तस्वीर कि बच्चा कैसे सीखता है (कौन-सी ग़लती बार-बार होती है, कौन-सा तरीक़ा काम करता है), ताकि फ़ोन वाली मुन्नी भी वैसे ही सिखाए। आवाज़, फ़ोटो या लिखे सवाल कभी नहीं। कभी भी बंद कर सकते हैं।`
+      : `The school, the tuition teacher and the family work on the same step together: what to learn this week, how practice is going, the Friday check. Only practice progress goes — and Munni's short picture of how your child learns (the mistakes that keep coming up, the way of teaching that works), so Munni on a phone lesson teaches the same way. Never a voice, a photo or a typed question. Turn it off any time.`}</div>
     <label style="display:flex;gap:8px;align-items:center;margin:12px 0"><input type="checkbox" id="circleTick"> <b>${hi ? 'हमेशा साथ जोड़े रखें (sync)' : 'Always keep in sync'}</b></label>
     <input id="circleCodeIn" placeholder="${hi ? 'स्कूल का फ़ैमिली कोड (अगर है)' : "The school's family code (if you have one)"}" style="width:100%">
     <div class="row" style="gap:8px;margin-top:12px">
@@ -152,8 +158,8 @@ function circleParentHTML(){
   const head = `<div class="kicker2" style="margin-top:14px">${hi ? 'सीखने का घेरा' : 'LEARNING CIRCLE'}</div>
   <div class="metric"><div><b>${hi ? 'हमेशा साथ जोड़े रखें' : 'Always keep in sync'}</b>
     <div style="font-size:12.5px;opacity:.75;line-height:1.5">${hi
-      ? `${n} का स्कूल, ट्यूशन टीचर और परिवार एक ही कदम पर साथ रहें। सिर्फ़ अभ्यास की जानकारी जाती है, आवाज़, फ़ोटो या लिखे सवाल कभी नहीं।`
-      : `${n}'s school, tuition teacher and family stay on the same step. Only practice progress goes, never a voice, a photo or a typed question.`}</div></div>
+      ? `${n} का स्कूल, ट्यूशन टीचर और परिवार एक ही कदम पर साथ रहें। सिर्फ़ अभ्यास की जानकारी जाती है, और मुन्नी की छोटी तस्वीर कि ${n} कैसे सीखते हैं (ताकि फ़ोन वाली मुन्नी भी वैसे ही सिखाए)। आवाज़, फ़ोटो या लिखे सवाल कभी नहीं।`
+      : `${n}'s school, tuition teacher and family stay on the same step. Only practice progress goes, and Munni's short picture of how ${n} learns (so Munni on a phone lesson teaches the same way). Never a voice, a photo or a typed question.`}</div></div>
     <button class="toggle ${S.circleSync ? 'on' : ''}" onclick="toggleCircle()" aria-label="sync"><span></span></button></div>
   ${S.ctx.circleMsg ? `<div class="muted" style="font-size:12.5px">${attr(S.ctx.circleMsg)}</div>` : ''}`;
   if(!S.circleSync) return head + (S.circleLeave && !S.circleLeave.erase ? `<div class="muted" style="font-size:12.5px">${hi ? 'घेरे को बताना बाकी है: इंटरनेट मिलते ही।' : 'The circle will be told when there is a signal.'}</div>` : '') + circleEraseHTML();

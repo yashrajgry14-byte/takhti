@@ -158,6 +158,7 @@ read(){
     }
   }
   const s = S.ctx.sentence;
+  if(!S.ctx.tokens && !S.ctx.helped) twinExpect('read:' + s, readSkill(), null, 0.05);   // the twin's guess: will this line go well?
   const shown = S.ctx.tokens
     ? S.ctx.tokens.map(tk=>`<span class="w ${tk.state}" title="${tk.heard? 'heard: '+attr(tk.heard) : 'not heard'}" data-say="${attr(tk.text)}" onclick="sayEl(this)">${tk.text}</span>`).join(' ')
     : s.split(/\s+/).map(w=>`<span class="w" data-say="${attr(w)}" onclick="sayEl(this)">${w}</span>`).join(' ');
@@ -169,6 +170,7 @@ read(){
     <button class="${S.lang==='hi'?'sel':''}" onclick="setReadLang('hi')">हिंदी</button>
   </div>
   <div class="sentence">${shown}</div>
+  ${S.ctx.tokens ? '' : twinHeadsUpHTML(s)}
   ${mindChunksHTML()}
   ${S.ctx.tokens? `<div class="legend">
       <span><i style="background:rgba(63,187,120,.7)"></i>${S.lang==='hi'?'सही':'correct'}</span>
@@ -178,6 +180,7 @@ read(){
     </div>`:`<div class="muted" style="font-size:12px">${S.lang==='hi'?'किसी शब्द को दबाकर सुनो':'Tap any word to hear it'}</div>`}
   ${S.ctx.score!=null? `<div class="scorebar"><i style="width:${S.ctx.score}%"></i></div>
      <div class="feedback">${S.ctx.msg}</div>
+     ${twinSlipHTML()}
      ${S.ctx.practice ? `<button class="btn ghost practise" onclick="practiseLine()">🔁 ${S.lang==='hi'?'इन शब्दों के साथ एक और':'One more with these words'}: <b>${S.ctx.practice.line}</b></button>` : ''}
      ${typeof selfListenHTML === 'function' ? selfListenHTML() : ''}`:''}
   ${S.ctx.unsure? `<div class="retry">${S.lang==='hi'?'साफ़ सुनाई नहीं दिया — थोड़ा पास आकर फिर बोलो।':'I could not hear that clearly — come a little closer and try again.'}</div>`:''}
@@ -249,12 +252,14 @@ write(){
         S.ctx.tokens.map(tk=>`<span class="w ${tk.state}">${tk.text}</span>`).join(' ')}</div>
       <div class="scorebar"><i style="width:${S.ctx.score}%"></i></div>
       <div class="feedback">${S.ctx.msg}</div>
+      ${twinSlipHTML()}
       <button class="btn" style="margin-top:10px" onclick="nextLine()">${t('next')} →</button>`:''}`;
   }
 
   /* ---------- TRACE MODE ---------- */
   const pool = GLYPHS[S.lang][S.levels.write];
   if(!S.ctx.glyph) S.ctx.glyph = pool[Math.floor(Math.random()*pool.length)];
+  if(S.ctx.score == null) twinExpect('write:' + S.ctx.glyph, 'write' + S.levels.write, null, 0.1);   // the twin's guess for this letter
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
   ${tabs}
@@ -264,7 +269,7 @@ write(){
     <canvas id="guide"></canvas>
     <canvas id="ink"></canvas>
   </div>
-  ${S.ctx.score!=null? `<div class="scorebar"><i style="width:${S.ctx.score}%"></i></div><div class="feedback">${S.ctx.msg}</div>`:''}
+  ${S.ctx.score!=null? `<div class="scorebar"><i style="width:${S.ctx.score}%"></i></div><div class="feedback">${S.ctx.msg}</div>${twinSlipHTML()}`:''}
   <div class="row" style="margin-top:10px">
     <button class="btn ghost" onclick="clearInk()">${t('clear')}</button>
     <button class="btn leaf" onclick="checkInk()">${t('check')}</button>
@@ -437,9 +442,9 @@ parent(){
     </div>
 
     ${talkSetUp() ? talkParentHTML() : ''}
+    ${cloudReadParentHTML()}
     ${typeof circleParentHTML === 'function' ? circleParentHTML() : ''}
     ${mindParentHTML()}
-    ${twinParentHTML()}
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'बिना इंटरनेट':'WITHOUT INTERNET'}</div>
     ${(() => {

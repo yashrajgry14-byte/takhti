@@ -118,6 +118,8 @@ const L = {
   // Talking Munni in the app: the line is on the screen, no card needed
   readScreen: { en: 'Now read the line on the screen to me.', hi: 'अब स्क्रीन पर लिखी लाइन पढ़कर सुनाओ।' },
   readScreenNext: { en: 'Now read the next line on the screen.', hi: 'अब स्क्रीन पर अगली लाइन पढ़ो।' },
+  twinLead:   { en: "Here's one we're practising together.", hi: 'यह वाला हम साथ में अभ्यास कर रहे हैं।' },
+  habitLead:  { en: 'I know this tricky bit!', hi: 'यह मुश्किल हिस्सा मुझे पता है!' },
   readCoachW: { en: 'Almost! Listen to this word: {w}. Now read the whole line again.', hi: 'लगभग! यह शब्द सुनो: {w}। अब पूरी लाइन फिर से पढ़ो।' },
   readCoach:  { en: 'Nice try! Listen: {line} Now you read it once more.', hi: 'अच्छी कोशिश! सुनो: {line} अब एक बार फिर पढ़ो।' },
   readModel:  { en: 'Well tried! It says: {line} We will read it again another day.', hi: 'बढ़िया कोशिश! इसमें लिखा है: {line} इसे फिर किसी दिन पढ़ेंगे।' },
@@ -306,7 +308,24 @@ function planSession(core, child, opts) {
       while (lines.length < nRead && hit.length) { const l = hit.splice(Math.floor(r() * hit.length), 1)[0]; lines.push(l); pool = pool.filter(x => x !== l); }
     }
     while (lines.length < nRead && pool.length) lines.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
-    return { band: b.id, slots, lines, english: null, homework, focus, ease, check, home, levels: { ...T.S.levels } };
+    // how this child learns (src/core/twin.js): the app's picture when the
+    // parent shared it (checked again here), else the server's own twin of
+    // this child from its phone lessons — the same way of teaching either way
+    const appP = opts.profile || (child.circle && child.circle.app_profile);
+    const prof = appP && (!appP.at || Date.now() - Date.parse(appP.at) < 30 * 864e5) ? T.twinCleanProfile(appP) : T.twinProfile();
+    // letters the child keeps slipping on, when no teacher named any
+    if (!(fl && Date.parse(fl.until) > Date.now()) && prof && prof.letters.length && slots.includes('read')) {
+      const has = l => prof.letters.some(x => l.includes(x));
+      const hit = T.ageSentences(lang, T.S.levels.read).filter(l => has(l) && !lines.includes(l));
+      if (hit.length && lines.length && !lines.some(has)) lines[lines.length - 1] = hit[Math.floor(r() * hit.length)];
+    }
+    // a mistake this child keeps making, or a skill fading: the first free sum goes at it
+    let twin = null;
+    if (prof) for (const sk of prof.habits.map(h => h.skill).concat(prof.fading)) {
+      const sp = T.skillHasProblem(sk) ? T.skillProblem(sk, 1) : null;
+      if (sp && SPOKEN_OPS[sp.op] && sp.c == null && slots.includes('math') && sk !== homework) { slots[slots.indexOf('math')] = 'twin'; twin = sk; break; }
+    }
+    return { band: b.id, slots, lines, english: null, homework, focus, ease, check, home, levels: { ...T.S.levels }, profile: prof, twin };
   });
   return {
     id, child_id: child.id, lang, seed, kind,
@@ -317,6 +336,7 @@ function planSession(core, child, opts) {
     // telephony provider passes keys through (not Exotel / Vobiz)
     keypad: (opts.channel || 'call') !== 'app' && opts.keypad !== false,
     band: out.band, slots: out.slots, lines: out.lines, homework_skill: out.homework, focus_source: out.focus || null,
+    profile: out.profile || null, twin_skill: out.twin || null,
     ease: out.ease ? 'after a quiet call' : null,
     circle_check: out.check || null, circle_home: out.home || null,
     levels_before: out.levels,
@@ -353,7 +373,17 @@ function buildItem(core, child, s, slot, storyBank) {
       return { kind: 'warm', expect: 'number', answer: step * (n + 1), distractor: step * n + 1,
                prompt: fill(L.warmSkip, lang, { s: nw(step, lang), seq: seq(step, step * n, step, lang) }) };
     }
-    if (slot === 'math') {
+    if (slot === 'twin' && s.twin_skill) {
+      // the skill the child's twin says to work on (a habit, or fading)
+      const sp = T.skillProblem(s.twin_skill, T.seedOf(s.seed + '|twin'));
+      if (sp && SPOKEN_OPS[sp.op]) {
+        const v = { a: nw(sp.a, lang), b: nw(sp.b, lang), ans: nw(sp.ans, lang) };
+        const wrongs = sp.opts.map(Number).filter(o => o !== sp.ans);
+        return { kind: 'math', skill: sp.skillId, expect: 'number', answer: sp.ans, distractor: wrongs.find(o => Math.abs(o - sp.ans) > 1) ?? wrongs[0],
+                 problem: sp.text, twin: true, prompt: joinSay(L.twinLead[lang], fill(L[SPOKEN_OPS[sp.op]], lang, v)), why: fill(L[SPOKEN_OPS[sp.op] + 'Why'], lang, v) };
+      }
+    }
+    if (slot === 'math' || slot === 'twin') {
       const lvl = T.S.levels.math;
       const g = T.genProblem(lvl);
       const op = g.op === '+' ? 'plus' : g.op === '×' ? 'times' : 'minus';
@@ -618,6 +648,8 @@ function answer(core, child, s, storyBank, said) {
       // it, and offers the child's own answer against the right one
       const m = got != null ? mistakeOf(core, child, s, it, got) : null;
       if (m) { it.mistake = m.id; it.distractor = got; }
+      // the child's known habit (the profile): Munni says she knows this bit
+      if (m && s.profile && s.profile.habits.some(h => h.id === m.id)) m.tip = joinSay(L.habitLead[lang], m.tip);
       const pair = rngFor(s, it)() < 0.5 ? [it.answer, it.distractor] : [it.distractor, it.answer];
       it.choices = pair;                       // Talking Munni shows these two as buttons
       const tpl = intent === 'dontKnow' ? L.clueDK : L.clue;
@@ -626,7 +658,9 @@ function answer(core, child, s, storyBank, said) {
     if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework' || it.kind === 'check') recordOutcome(core, child, s, 'math', false, it);
     // the homework was worked through on the call; Munni stops pointing at it
     if (it.kind === 'homework' && it.assigned_at) child.profile.hwDone = it.assigned_at;
-    const why = it.why || '';
+    // the way that works for this child (the profile): step by step, when it's theirs
+    const way = s.profile && it.skill ? (s.profile.plans[it.skill] || s.profile.ways.math) : null;
+    const why = (way === 'steps' && it.problem && stepsWhy(core, child, s, it)) || it.why || '';
     return done('revealed', fill(yn ? L.revealYN : L.reveal, lang, { ans: ansWord, why }).replace(/\s+/g, ' '));
   }
 
@@ -712,12 +746,14 @@ function answer(core, child, s, storyBank, said) {
       let lead = praiseFor(s, (it.kind === 'repeat' || it.kind === 'helpsay') ? 'repeatPraise' : 'readPraise', rngFor(s, it), lang, {});
       // a pass can still skip or slip on one word: name it, gently, once
       const w = (g.misread || [])[0] || (g.slips || [])[0];
-      if (it.kind === 'read' && w) lead = fill(L.readSlip, lang, { w: w.replace(/[.,!?।]/g, '') });
+      if (it.kind === 'read' && w) lead = joinSay(fill(L.readSlip, lang, { w: w.replace(/[.,!?।]/g, '') }), readTip(core, child, s, g));
       return done(it.attempts === 1 ? 'correct' : 'correct_after_clue', lead);
     }
     if (it.attempts === 1) {
       if (it.kind === 'repeat' || it.kind === 'helpsay') return ask(fill(L.repeatTry, lang, { line: it.target }));
-      if (g.misread.length === 1) return ask(fill(L.readCoachW, lang, { w: g.misread[0] }));
+      // HOW it slipped (src/core/lang-mistakes.js): one line of help aimed at it
+      const tip = readTip(core, child, s, g);
+      if (g.misread.length === 1) return ask(joinSay(tip, fill(L.readCoachW, lang, { w: g.misread[0] })));
       return ask(fill(L.readCoach, lang, { line: it.target }));
     }
     return done('revealed', (it.kind === 'repeat' || it.kind === 'helpsay') ? L.repeatDone[lang] : fill(L.readModel, lang, { line: it.target }));
@@ -807,11 +843,33 @@ function gradeLine(core, child, s, target, alternatives) {
     const best = T.gradeBest(target, alternatives.map(t => ({ transcript: t, confidence: 0 })), s.lang);
     // the band's own thresholds (content/ages.js) — nothing hardcoded here
     const th = T.getGradeThresholds();
-    return { score: best.score, verdict: T.gradeVerdict(best), gate: th.gateScore, pass: th.pass,
+    return { score: best.score, verdict: T.gradeVerdict(best), gate: th.gateScore, pass: th.pass, extra: best.extra,
              misread: best.misread, slips: best.slips,
              tokens: best.tokens.map(x => ({ text: x.text, state: x.state, heard: x.heard })) };
   });
   return out;
+}
+
+/* A read line's first slip, as one spoken line of help (or ''). */
+function readTip(core, child, s, g) {
+  const { out } = core.withChild(child.profile, { lang: s.lang }, T => {
+    const ms = T.lineMistakes(g.tokens, g.extra || 0, s.lang).filter(m => m.id !== 'stopped' && m.id !== 'added');
+    return ms.length ? T.langTip(ms[0], s.lang) : '';
+  });
+  return out || '';
+}
+
+/* A missed sum's reveal, step by step (src/core/explain.js), for a child
+   whose way is steps: the steps Munni tells, said with number words. */
+function stepsWhy(core, child, s, it) {
+  const lang = s.lang;
+  const { out } = core.withChild(child.profile, { lang }, T => {
+    const p = T.parseProblem(it.problem);
+    const x = p && T.explainMath(p);
+    if (!x) return '';
+    return x.steps.slice(0, 3).map(st => T.xfill(st.tell, Object.assign({}, st.vals), lang, n => nw(n, lang))).join(' ');
+  });
+  return out || '';
 }
 
 /* Can a skill be asked as one spoken sum at this child's band? */

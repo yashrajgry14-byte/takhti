@@ -191,7 +191,7 @@ appServer.listen(0, '127.0.0.1', async () => {
     // nothing of the mind leaves the phone
     const src = fs.readFileSync(path.join(root, 'src/ui/circle.js'), 'utf8');
     const body = src.slice(src.indexOf('const body = {'), src.indexOf('const sent ='));
-    check("the mind and the marks are not in the circle's sync", !/mind|assessments/.test(body), '');
+    check("the mind and the marks are not in the circle's sync (only the twin's checked profile)", !/S\.mind|assessments/.test(body) && /profile: twinProfile\(\)/.test(body), '');
     check('no uncaught script errors', jsErrors.length === 0, jsErrors.join(' | '));
   }catch(e){ check('the run finished', false, e.stack); }
   console.log('\n' + '-'.repeat(70));

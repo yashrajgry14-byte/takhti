@@ -222,6 +222,7 @@ function gameStart(kind, len){
     started: Date.now(), over:false
   };
   log(0, `Game "${kind}" · ${S.game_.items.length} items drawn from the validated bank`);
+  gameExpect();
   return S.game_;
 }
 function gameCurrent(){ const g = S.game_; return g && g.items[g.i]; }
@@ -233,6 +234,7 @@ function gameAnswer(ok){
   const g = S.game_, it = gameCurrent();
   if(!g || !it || g.over) return;
   if(ok) g.right++; else g.wrong++;
+  if(typeof twinCheck === 'function') twinCheck(`game:${g.kind}:${g.i}`, null, ok, false);
   if(typeof noteSkillAttempt === 'function')
     for(const sid of it.skills) noteSkillAttempt(sid, ok);
   if(typeof record === 'function' && it.strand === 'num') record('math', ok);
@@ -240,7 +242,14 @@ function gameAnswer(ok){
   if(!ok && typeof talkGame === 'function') talkGame('miss', it);
   g.i++;
   if(g.i >= g.items.length) gameEnd();
+  else gameExpect();
   return ok;
+}
+/* The twin's guess for the item now in play (core/twin.js): right or not. */
+function gameExpect(){
+  const g = S.game_, it = gameCurrent();
+  if(typeof twinExpect !== 'function' || !g || !it || !it.skills || !it.skills.length) return;
+  twinExpect(`game:${g.kind}:${g.i}`, it.skills[0], null, 0.5);
 }
 function gameEnd(){
   const g = S.game_; if(!g || g.over) return;

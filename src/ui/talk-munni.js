@@ -144,6 +144,7 @@ async function talkMint(){
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ consent: true, key: S.talkKey || undefined, circle_key: S.circleKey || undefined,
       help: TALK && TALK.help || undefined,
+      profile: twinProfile(),          // how this child learns, ids only: the talk teaches the app's way (core/twin.js)
       child: { id: S.id, name: S.name, age: S.age || 6, lang: S.lang, levels: S.levels } })
   });
   const d = await res.json().catch(() => ({}));
@@ -294,8 +295,8 @@ function talkParentHTML(){
   <div class="metric">
     <div><b>${hi?'मुन्नी से बोलकर बात':'Talk out loud with Munni'}</b>
       <div style="font-size:12.5px;opacity:.75;line-height:1.5">${hi
-        ? `चालू होने पर ${n} मुन्नी के तालाब पर मुन्नी से बोलकर अभ्यास कर सकते हैं, और बात चलते-चलते खेल भी खेल सकते हैं (मुन्नी साथ रहती है)। किसी सवाल पर अटकें तो "मुन्नी से पूछो" के बाद मुन्नी ऐप में कॉल करके भी समझा सकती है (ऐप वॉइस सेवा को सवाल बताता है, और उस पर ${n} की जो ग़लती मुन्नी ने देखी हो, वह भी)। बात करते समय बच्चे की आवाज़ इंटरनेट से तख़्ती की आवाज़-सेवा (Bolna) तक जाती है, फ़ोन कॉल की तरह, और पाठ जाँचने के लिए बातचीत के शब्द रखे जाते हैं। तख़्ती का बाकी सब इसी फ़ोन पर रहता है। शुरू में बंद; कभी भी बंद कर सकते हैं।`
-        : `When on, ${n} can practise out loud with Munni at Munni's Pond, and carry the talk into a game (Munni stays with them). If they are stuck on a question, after "Ask Munni" Munni can also call them in the app and explain (the app tells the voice service the question, and the mistake Munni has seen ${n} make on it, if any). While they talk, their voice goes over the internet to Takhti's voice service (Bolna), like a phone call, and the words of the talk are kept to check the lesson. Everything else in Takhti stays on this phone. Off to begin with; turn it off any time.`}</div>
+        ? `चालू होने पर ${n} मुन्नी के तालाब पर मुन्नी से बोलकर अभ्यास कर सकते हैं, और बात चलते-चलते खेल भी खेल सकते हैं (मुन्नी साथ रहती है)। किसी सवाल पर अटकें तो "मुन्नी से पूछो" के बाद मुन्नी ऐप में कॉल करके भी समझा सकती है (ऐप वॉइस सेवा को सवाल बताता है, और मुन्नी की छोटी तस्वीर कि ${n} कैसे सीखते हैं — कौन-सी ग़लती बार-बार होती है, कौन-सा तरीक़ा काम करता है)। बात करते समय बच्चे की आवाज़ इंटरनेट से तख़्ती की आवाज़-सेवा (Bolna) तक जाती है, फ़ोन कॉल की तरह, और पाठ जाँचने के लिए बातचीत के शब्द रखे जाते हैं। तख़्ती का बाकी सब इसी फ़ोन पर रहता है। शुरू में बंद; कभी भी बंद कर सकते हैं।`
+        : `When on, ${n} can practise out loud with Munni at Munni's Pond, and carry the talk into a game (Munni stays with them). If they are stuck on a question, after "Ask Munni" Munni can also call them in the app and explain (the app tells the voice service the question, and Munni's short picture of how ${n} learns — the mistakes that keep coming up, the way that works — never a name or a voice recording). While they talk, their voice goes over the internet to Takhti's voice service (Bolna), like a phone call, and the words of the talk are kept to check the lesson. Everything else in Takhti stays on this phone. Off to begin with; turn it off any time.`}</div>
     </div>
     <button class="toggle ${S.talkMunni?'on':''}" onclick="toggleTalkMunni()" aria-label="${S.talkMunni?'turn off Talking Munni':'turn on Talking Munni'}"><span></span></button>
   </div>

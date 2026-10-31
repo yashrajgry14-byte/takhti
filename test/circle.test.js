@@ -121,7 +121,7 @@ appServer.listen(0, '127.0.0.1', () => voiceServer.listen(0, '127.0.0.1', async 
 
     /* ---- the grown-ups' step ---- */
     check('onboarding ends with the grown-ups\' step', E('S.ob && S.ob.step') === 'grownup' && !!$('#circleTick'), E('JSON.stringify(S.ob)'));
-    check('it says plainly that only progress goes, never a voice, a photo or a typed question', /never a voice, a photo or a typed question/.test(screen()), screen().slice(0, 300));
+    check('it says plainly that only progress goes, never a voice, a photo or a typed question', /never a voice, a photo or a typed question/i.test(screen()), screen().slice(0, 300));
     E(`S.lang='hi'; render()`);
     check('…and says it in Hindi too', /आवाज़, फ़ोटो या लिखे सवाल कभी नहीं/.test(screen()), screen().slice(0, 300));
     E(`S.lang='en'; render()`);
@@ -137,10 +137,13 @@ appServer.listen(0, '127.0.0.1', () => voiceServer.listen(0, '127.0.0.1', async 
       `${brain.getChild(kid.id).name} / app: ${E('S.name')}`);
     check('the phone got its own key, and the code is spent', !!E('S.circleKey') && E('S.circleCode') === '', E('S.circleKey'));
 
-    const ALLOWED = ['child', 'key', 'consent', 'link', 'parent_phone', 'progress', 'check', 'home', 'invite', 'tutor'];
+    const ALLOWED = ['child', 'key', 'consent', 'link', 'parent_phone', 'progress', 'check', 'home', 'invite', 'tutor', 'profile'];
     const PROG = ['seq', 'levels', 'skillHistory', 'attempts', 'correct', 'stars', 'cards', 'classCode', 'srs'];
+    // the twin's profile (core/twin.js): ids only, exactly these keys
+    const PROF = ['v', 'band', 'lang', 'ways', 'plans', 'habits', 'fading', 'working', 'knows', 'found', 'letters', 'unexplained', 'at'];
     const leaks = () => A.sent.filter(x => x.url === '/circle/sync').filter(x => Object.keys(x.body).some(k => !ALLOWED.includes(k)) ||
-      Object.keys(x.body.progress || {}).some(k => !PROG.includes(k)) || /data:image|blob:|"queue"|"q":/.test(JSON.stringify(x.body)));
+      Object.keys(x.body.progress || {}).some(k => !PROG.includes(k)) || Object.keys(x.body.profile || {}).some(k => !PROF.includes(k)) ||
+      /data:image|blob:|"queue"|"q":|"mind"|"twin"|"preds"|"recent"/.test(JSON.stringify(x.body)));
     check('every sync carries progress only — no photo, voice or question', A.sent.length && leaks().length === 0, JSON.stringify(leaks()).slice(0, 300));
 
     /* ---- the class homework, through the app's own import ---- */

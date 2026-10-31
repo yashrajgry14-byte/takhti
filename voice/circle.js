@@ -245,6 +245,11 @@ function createCircle(brain, envIn) {
       const t = store.list('teachers').find(x => (x.class_codes || []).includes(String(child.profile.classCode).toUpperCase()));
       if (t && t.school_id) child.school_id = t.school_id;
     }
+    // how this child thinks, as checked ids (src/core/twin.js): Munni's phone
+    // lessons teach the app's way; found mistakes and unexplained sums go to
+    // the shared database (voice/mistakes.js), counted without names
+    const prof = body.profile ? core.T.twinCleanProfile(body.profile) : null;
+    if (prof) { cc.app_profile = prof; if (brain.mistakes) brain.mistakes.record(child.id, prof); }
     put(child);
 
     // ---- what the app tells us happened in the circle ----
@@ -264,6 +269,7 @@ function createCircle(brain, envIn) {
     // ---- down: the circle ----
     const fresh = brain.getChild(child.id);
     const out = Object.assign({ child_id: fresh.id, circle: view(fresh, 'app') }, key ? { key } : {});
+    if (brain.mistakes) out.mistake_rules = brain.mistakes.promoted();
     if (Object.keys(levelsBack).length) out.levels = levelsBack;
     return { status: 200, body: out };
   }
@@ -288,6 +294,7 @@ function createCircle(brain, envIn) {
       const cc = ensure(child);
       cc.sync = Object.assign({}, cc.sync, { on: false, off_at: at });
       cc.stopped = { at, by: 'parent (app)' };
+      delete cc.app_profile;                        // off: the app's picture of the child is not used any more
       put(child);
       dropQueued(child.id);
       return { status: 200, body: { ok: true, off: true } };
@@ -298,6 +305,7 @@ function createCircle(brain, envIn) {
     if (child.kind === 'app') { brain.deleteChild(child.id); return { status: 200, body: { ok: true, erased: 'all' } }; }
     // the school's record: the circle goes, and it stays off
     child.circle = { stopped: { at, by: 'parent (app)', erased: true } };
+    if (brain.mistakes) brain.mistakes.forget(child.id);
     put(child);
     return { status: 200, body: { ok: true, erased: 'circle' } };
   }
