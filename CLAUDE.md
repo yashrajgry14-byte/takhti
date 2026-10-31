@@ -35,7 +35,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 32 test suites (see Testing)
+npm test           # all 33 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -64,16 +64,16 @@ core/srs.js, core/sfx.js, games/game-core.js
 content/anim.js, content/copy.js, content/competencies.js
 core/log.js, core/store.js, core/profiles.js
 core/voice.js, core/speech.js, core/matcher.js
-core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js, core/tier1.js, core/explain.js
+core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js, core/tier1.js, core/explain.js, core/mind.js
 ui/mascot.js, ui/readback.js, ui/elephant.js, ui/lesson-player.js, ui/anim-celebrate.js, ui/cards.js
 ui/views.js, ui/opening.js
 ui/arrival.js, ui/onboarding.js, ui/jungle-map.js, ui/video-player.js, ui/teacher.js
 games/runner.js, games/pop.js, games/tower.js, games/match.js, games/sort.js, games/archer.js
-ui/self-listen.js, ui/talk-munni.js, ui/circle.js, ui/ask-munni.js, ui/handlers.js
+ui/self-listen.js, ui/talk-munni.js, ui/circle.js, ui/ask-munni.js, ui/mind-ui.js, ui/handlers.js
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v34` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v35` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -117,6 +117,7 @@ src/
     lesson-gen.js           generates the lesson bank; genHomeworkStory(), genGameSvg()
     readability.js          a measurable difficulty score for a line
     tier1.js                practice lines for missed words (bank + on-device model)
+    mind.js                 how THIS child learns: which way of teaching works, topic by topic, measured; switches when one doesn't (stays on the phone)
     explain.js              one question step by step (make ten, tens/ones, borrow, multiply first, a word in pieces) — Ask Munni and the help call
   games/
     game-core.js            shared round lifecycle + GAME_SHELLS registry
@@ -135,6 +136,7 @@ src/
     self-listen.js          hear-your-own-reading
     talk-munni.js           Talking Munni at the Pond and on into the games — parent opt-in, voice leaves the phone only during a talk
     circle.js               the learning circle's app side: the parent's sync tick, this week's step, the Friday check, the home question
+    mind-ui.js              the mind on screen: missed sums and reading lines taught the child's way, "Munni's idea" on the map, the parent's "How … learns" and school marks
     ask-munni.js            "Ask Munni": instant step-by-step help on the question on screen; "still stuck?" → Munni calls (in the app)
     handlers.js             event handlers
   app.js                    boot: load(), S.screen='arrival', render()
@@ -352,6 +354,45 @@ its own `getUserMedia`/`MediaRecorder`; the clip never touches `fetch`,
 `localStorage` or IndexedDB (the test scans the source for exactly that), and
 `URL.revokeObjectURL` runs at the same three reset points as
 `stopListening()`.
+
+## How this child learns — `core/mind.js`, `ui/mind-ui.js`
+
+A class teaches thirty children one way; Takhti keeps, for each child, which
+way of teaching actually works for *them*, topic by topic, and changes it
+when it stops working.
+
+- **Measured, not guessed.** No "learning style" label (matching lessons to
+  VARK-style types hasn't held up in research). The ways are the ones the
+  app really has (`WAYS`): maths — *show* (the objects animation), *steps*
+  (`explain.js`), *story* (a lesson), *cartoon*; reading — *model* (Munni
+  reads first), *chunks* (hard words in pieces), *solo*.
+- **Every teaching moment is labelled** (`mindTaught()`): "Show me", Ask
+  Munni, a story lesson, a cartoon, the Reading Tree's way for the line.
+  The next answers the child gives **on their own** on that skill settle
+  the round — it stuck (2 right) or didn't (2 missed) (`mindAttempt()`,
+  called from `noteSkillAttempt()`, Counting Stones and `checkRead()`).
+  Helped answers never count.
+- **A plan per topic** (`mindChoose()`, Thompson sampling over Beta
+  counts): it holds while it works; two rounds that don't stick switch it
+  and cool the old way for a week; the change and its reason are kept
+  (`m.changes`). A topic never taught starts from what has worked across
+  the subject at half weight — it grows with the child.
+- **School marks** (`mindAssessment()`): a parent types them on the
+  dashboard; a class teacher enters a class test on the class page
+  (`recordMarks()`, `voice/circle.js`) and it arrives with the circle sync.
+  Under half marks: the way switches at once, the topic becomes "Munni's
+  idea" (`mindNext()`) and, on the server, next week's step (`chooseFocus()`
+  source `'school test'`).
+- **Where it shows**: a missed sum in Counting Stones is taught the plan's
+  way (animation, Ask Munni's steps with the answer — `askTeach()` — or
+  "Munni's idea: let's learn this with a story/cartoon"); practice leans
+  half the time to the focus topic (`mindPracticeProblem()`); the Reading
+  Tree reads the line first or shows hard words in pieces
+  (`mindReadWay()`, `AFTER.read`); a "Munni's idea" card on the map; the
+  parent dashboard's **How … learns** (what works, how each topic is taught
+  now, what changed and why, school marks), in Hindi and English.
+- **Stays on this phone**: `S.mind` and `S.assessments` are never in the
+  circle's sync body (the test checks).
 
 ## Ask Munni — `ui/ask-munni.js`, `core/explain.js`, `voice/help.js`
 
@@ -644,7 +685,7 @@ app is a client of it, and only when a parent says so.
 
 ## Testing
 
-`npm test` runs 32 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 33 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -679,6 +720,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `voice-circle` | vm + HTTP | the circle's server: sync only with the tick, progress only, this phone's key; the family code joins the school's record; the ledger (nothing counted twice); levels a phone lesson moved go back; weekly focus (class homework adapted to the child's gap, else the weakest step); the Friday check (app, call, reading) and next week's step; the home loop; tutors (parent invite, school link waiting for the parent, pack, results, notes); the three pages; the WhatsApp outbox (fake AiSensy); the scheduler's circle week |
 | `circle` | jsdom + the real voice server | the app side through real taps: nothing without a circle server; the bilingual grown-ups' step; nothing sent before the tick, progress only after it; family code → school, keeping the school's name; class homework via `importHomework()`, and withdrawn from the class page (the week remade, the app drops exactly that assignment, other homework left alone); this week on the map; the Friday check (real evidence, never "wrong", the verdict on the server); "We did it" and the child's home question; a phone lesson back as `circleHistory`, counted once; sync off reaches the server (also after a spell offline) and stops calls' circle items and messages; on again; erase (school record keeps its own, app-only record goes whole, another phone refused) |
 | `ask-munni` | jsdom + the real voice server + a stand-in Bolna | the steps for hundreds of sums of every kind never say the final answer and ask only true sub-answers; 38 + 24 and 52 − 27 broken down as a teacher would; Hindi words split into whole letters; the server refuses a made-up line, non-numbers, unknown signs or lessons, asks the steps one by one with a clue, records nothing; in the app: the button only where something is asked, instant help out loud with no server, "I get it", a helped answer not counted, reading help from the stumbled word, help leaves with the screen; with a voice server: no call until the parent's switch, then the call about this question, the step and the two choices on the panel, leaving ends it |
+| `mind` | vm + HTTP + jsdom | rounds settle on the child's own answers; two misses switch and cool a way, with the reason; a plan holds while it works; two simulated children who learn differently end up taught differently; a new topic leans on the subject; a low school mark switches at once and becomes the focus; teacher class-test marks reach records and next week's step; in the app: a missed sum taught by steps or with a story invitation, helped answers never count, the Reading Tree's pieces and read-first, the parent's marks and "What Munni changed" (EN/HI), "Munni's idea" on the map, a class test applied once, nothing of the mind in the sync |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -740,6 +782,15 @@ Honest edges of what's built:
    silence signal depends on how Bolna's `_silence_repeats` and expression
    edges behave on a silent turn (unconfirmed — `BOLNA-QUESTIONS.md` 8);
    the transcript check after the call works either way.
+10. **How-this-child-learns is new and uncalibrated.** The settle rule
+   (2 of up to 3 answers), the switch rule (two misses) and the half-weight
+   subject prior are reasonable first choices, not tuned on real children;
+   it covers maths skills with a `skillProblem()` and reading levels, not
+   writing yet; voice calls don't use it yet. Children's data law: DPDP s.9(3)
+   bars "tracking or behavioural monitoring" of children, with an exemption
+   for educational institutions' educational activities — keeping the
+   model on the phone, never on our server, is the design answer, but it
+   needs a lawyer's confirmation before launch.
 9. **The learning circle is a pilot.** The sync tick is a parent's
    checkbox in the app, not verified parental consent (same caveat as 8);
    WhatsApp sending needs an approved AiSensy template (`takhti_circle`,

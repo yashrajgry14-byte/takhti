@@ -154,7 +154,12 @@ function classPage(circle, brain, teacher, msg) {
       <table><tr><th>Child</th><th>This week</th><th>Tries · right</th><th>Friday</th><th>Next</th><th>Home</th><th>Tutor</th><th>Family code</th></tr>${tr || '<tr><td colspan="8">No children linked to this class yet.</td></tr>'}</table>
       <form method="post" action="/circle/c/${esc(teacher.token)}/link-tutor" style="margin-top:10px"><select name="child">${rows.map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join('')}</select>
         <input name="name" placeholder="Tutor's name" required><input name="phone" placeholder="+91…" required><button ${btn}>Link a tuition teacher</button></form>
-      <p ${small}>A tutor you link waits for the parent's yes before seeing anything.</p></div>`;
+      <p ${small}>A tutor you link waits for the parent's yes before seeing anything.</p>
+      <form method="post" action="/circle/c/${esc(teacher.token)}/marks" style="margin-top:12px"><input type="hidden" name="code" value="${esc(code)}">
+        <b>Class test marks</b> <select name="skill">${skillOpts}</select> out of <input name="of" type="number" min="1" value="10" style="width:60px">
+        <table>${rows.map(r => `<tr><td>${esc(r.name)}</td><td><input name="m_${esc(r.id)}" type="number" min="0" style="width:70px"></td></tr>`).join('')}</table>
+        <button ${btn}>Save marks</button></form>
+      <p ${small}>A child under half marks gets that topic as next week's step, and their app tries a different way of teaching it.</p></div>`;
   }).join('');
   return shell(`Takhti · ${teacher.name}`, 'en', `<div class="sheet"><div class="head">${MUNNI}<div><h1>Namaste ${esc(teacher.name)}</h1><div class="sub">Your classes' learning circles</div></div></div>
     ${msg ? `<p style="color:var(--leaf);font-weight:600">${esc(msg)}</p>` : ''}

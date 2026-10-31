@@ -251,6 +251,13 @@ function createServer(opts) {
           if (req.method === 'POST') {
             const b = await readBody(req, 8 * 1024);
             const mine = id => { const ch = brain.getChild(String(id || '')); return ch && ch.profile && (t.class_codes || []).includes(String(ch.profile.classCode || '').toUpperCase()) ? ch : null; };
+            if (action === 'marks') {
+              if (!(t.class_codes || []).includes(String(b.code || '').toUpperCase())) return back('Not your class.');
+              const marks = {};
+              for (const [k, v] of Object.entries(b)) if (k.startsWith('m_')) marks[k.slice(2)] = v;
+              const r = C.recordMarks(b.code, String(b.skill || ''), b.of, marks, t.name);
+              return back(r.error || `Marks saved for ${r.children} children. Each child's app now changes how it teaches this, where needed.`);
+            }
             if (action === 'clear-focus') {
               if (!(t.class_codes || []).includes(String(b.code || '').toUpperCase())) return back('Not your class.');
               const r = C.clearClassFocus(b.code, t.name);

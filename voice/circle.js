@@ -358,7 +358,14 @@ function createCircle(brain, envIn) {
                         hi: `कक्षा ${skillName(hw.assigned, 'hi')} पर काम कर रही है। ${child.name} के लिए तख़्ती को उसके नीचे का कदम मिला: ${skillName(hw.skill, 'hi')}${h && h.n ? ` (अब तक ${h.n} में से ${h.right} सही)` : ''}।` }
                       : { en: `The class is working on ${skillName(hw.skill, 'en').toLowerCase()} this week.`, hi: `इस हफ़्ते कक्षा ${skillName(hw.skill, 'hi')} पर काम कर रही है।` } };
     }
-    // 2. what last Friday's check suggested
+    // 2. a class test the teacher entered, under half marks in the last month:
+    //    the school's own measure, so it comes before Takhti's guesses
+    const test = (child.assessments || []).filter(a => a.got / a.of < 0.5 && Date.now() - Date.parse(a.at) < 30 * 864e5 && T.skillById(a.skill))
+      .sort((x, y) => x.got / x.of - y.got / y.of)[0];
+    if (test) return { skill: test.skill, source: 'school test',
+      why: { en: `In the class test on ${skillName(test.skill, 'en').toLowerCase()}, ${child.name} got ${test.got} of ${test.of}. This week we teach it a new way.`,
+             hi: `${skillName(test.skill, 'hi')} के कक्षा टेस्ट में ${child.name} के ${test.of} में से ${test.got} आए। इस हफ़्ते इसे नए तरीक़े से सिखाएँगे।` } };
+    // 3. what last Friday's check suggested
     const last = c.history[c.history.length - 1];
     if (last && last.next && last.next.skill && T.skillById(last.next.skill)) return { skill: last.next.skill, source: 'last check', why: last.next.why };
     // 3. something a teacher or tutor noticed
@@ -452,6 +459,29 @@ function createCircle(brain, envIn) {
       const before = child.circle && child.circle.week;
       focusFor(child);                                           // remakes a week that was built on the homework
       if (before && before.source === 'homework') { n++; const fresh = brain.getChild(child.id); fresh.circle.week.withdrawn_by = by || 'teacher'; put(fresh); }
+    }
+    return { ok: true, children: n };
+  }
+  /* A class test: the teacher enters each child's marks on one topic. They
+     are the school's own record (child.assessments); each synced app gets
+     them (view → assessments) and changes how it teaches that topic. */
+  function recordMarks(code, skill, of, marks, by) {
+    if (!T.skillById(skill)) return { error: 'no such topic' };
+    of = Number(of);
+    if (!(of > 0 && of <= 1000)) return { error: 'out of what?' };
+    const up = String(code).toUpperCase(), at = now().toISOString();
+    let n = 0;
+    for (const child of classRoster(up)) {
+      const v = marks[child.id];
+      if (v === '' || v == null) continue;
+      const got = Number(v);
+      if (!(got >= 0 && got <= of)) continue;
+      child.assessments = (child.assessments || []).filter(a => !(a.skill === skill && a.at.slice(0, 10) === at.slice(0, 10)));
+      child.assessments.unshift({ id: `t-${up}-${skill}-${at.slice(0, 10)}-${child.id}`, skill, got, of, by: by || 'teacher', at });
+      child.assessments = child.assessments.slice(0, 60);
+      // a low mark this week remakes the week around it
+      if (got / of < 0.5) { const c = ensure(child); if (c.week && c.week.source !== 'homework') { c.history.push(summaryOf(c.week)); c.history = c.history.slice(-12); c.week = null; } }
+      put(child); n++;
     }
     return { ok: true, children: n };
   }
@@ -697,7 +727,7 @@ function createCircle(brain, envIn) {
               home: (w.home || []).map(h => ({ id: h.id, kind: h.kind, text: h.text, topic: h.topic, done: !!h.done_at, ask: !!(ask && ask.id === h.id) })) },
       members: members(child),
       notes: (child.teacher_notes || []).slice(-5).reverse().map(n => ({ by: n.by, skill: n.skill, skill_name: { en: skillName(n.skill, 'en'), hi: skillName(n.skill, 'hi') }, ok: n.ok, at: n.at })),
-      homework_code: hwCode, circleHistory: child.server_evidence || {}, parent_page: `${base()}/circle/p/${ensure(child).parent_token}`,
+      homework_code: hwCode, circleHistory: child.server_evidence || {}, assessments: (child.assessments || []).slice(0, 20), parent_page: `${base()}/circle/p/${ensure(child).parent_token}`,
       synced_at: now().toISOString(), lang
     };
   }
@@ -720,7 +750,7 @@ function createCircle(brain, envIn) {
 
   function attachMessages(m) { messages = m; }
 
-  return { active, sync, leave, familyCode, focusFor, setClassFocus, clearClassFocus, classHomework, classRoster, classView, checkResult, readingCheck, checkQuestions, checkDue,
+  return { active, sync, leave, familyCode, focusFor, setClassFocus, clearClassFocus, classHomework, recordMarks, classRoster, classView, checkResult, readingCheck, checkQuestions, checkDue,
            homeDone, homeAsked, homeToAsk, inviteTutor, tutorDecision, tutorChildren, tutorPack, tutorResult, tutorNote, setTutorSchedule,
            members, view, attachMessages, isoWeek, ensure, skillName, HOME, SYNC_NOTICE,
            findByApp, hash, same,

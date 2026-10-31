@@ -21,6 +21,7 @@ function startCartoonVideo(skillId, themeId, gameId){
   const vid = generateCartoonBlueprint(S, skillId, { themeId, gameId, teacherNote });
   if(!vid) return;
   S.activeVideo = { data: vid, sceneIdx: 0, picked: null, right: false };
+  if(typeof mindTaught === 'function') mindTaught(vid.skillId, 'cartoon');          // a cartoon is a way of being taught (core/mind.js)
   if(typeof sfxCard === 'function') sfxCard();
   log(0, `Cartoon · ${vid.skillId} in ${vid.theme.en} with ${vid.game.en}`);
   render();

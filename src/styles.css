@@ -1277,3 +1277,9 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 .askline{font-size:16px;line-height:1.5;padding:4px 0;opacity:.75}
 .askline.now{opacity:1;font-weight:700}
 .askpanel .btn{width:auto;flex:1;margin:0}
+
+/* How this child learns (core/mind.js): hard words in pieces, and Munni's idea */
+.mindchunks{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:6px 0 2px}
+.mindchunks .chip{font-size:18px;padding:6px 12px;border-radius:999px;border:1px dashed rgba(237,230,210,.35);background:transparent;color:inherit;cursor:pointer}
+.mindchunks .chip i{opacity:.5;font-style:normal;margin:0 3px}
+.mindcard{border-left:4px solid var(--marigold)}

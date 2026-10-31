@@ -134,6 +134,7 @@ function jungleMapHTML(){
   ${topGamifyBar()}
   ${profileSwitcher()}
   ${typeof circleMapHTML === 'function' ? circleMapHTML() : ''}
+  ${mindMapHTML()}
   <div class="jmap glass-card" id="jmap">
     <svg class="jm-canvas" viewBox="0 0 100 100" preserveAspectRatio="none">
       <path class="jm-path" d="${MAP_PATH}"/>

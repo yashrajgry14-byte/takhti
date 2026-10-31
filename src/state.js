@@ -60,6 +60,8 @@ function newProfile(name){
     circleHomeAns: {},     // home activity id -> the child's answer
     circleOut: {},         // waiting to be sent: check, home answers, a tutor invite or decision
     circleHw: null,        // assignedAt of class homework that came through the circle, so a withdrawal removes exactly it
+    mind: null,            // how this child learns: which ways of teaching work, topic by topic — see core/mind.js (stays on this phone)
+    assessments: [],       // school marks a parent typed or a class teacher sent: {skill, got, of, by, at}
     circleLeave: null      // {erase} — a parent's "off" or "delete" waiting for a signal to reach the server
   };
 }

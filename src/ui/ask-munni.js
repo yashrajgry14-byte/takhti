@@ -29,11 +29,11 @@ function askTarget(){
   const hi = S.lang === 'hi';
   if(S.screen === 'math' && S.ctx.p && S.ctx.picked == null){
     const p = S.ctx.p;
-    return { key: `math:${p.a}${p.op}${p.b}`, x: explainMath(p), call: { kind: 'math', a: p.a, b: p.b, op: p.op } };
+    return { key: `math:${p.a}${p.op}${p.b}`, skill: skillOfProblem(p), x: explainMath(p), call: { kind: 'math', a: p.a, b: p.b, op: p.op } };
   }
   if(S.screen === 'read' && S.ctx.sentence){
     const lang = /[ऀ-ॿ]/.test(S.ctx.sentence) ? 'hi' : 'en';      // Munni explains a line in its own language
-    return { key: 'read:' + S.ctx.sentence, lang, x: explainRead(S.ctx.sentence, S.ctx.missed || [], lang), call: { kind: 'read', line: S.ctx.sentence, missed: S.ctx.missed || [] } };
+    return { key: 'read:' + S.ctx.sentence, lang, skill: readSkill(), x: explainRead(S.ctx.sentence, S.ctx.missed || [], lang), call: { kind: 'read', line: S.ctx.sentence, missed: S.ctx.missed || [] } };
   }
   if(S.screen === 'lessons' && S.lesson && S.lesson.data){
     const les = S.lesson.data, i = S.lesson.i, b = les.beats[i];
@@ -42,7 +42,8 @@ function askTarget(){
     // a bank lesson the server also has can go to a call; a homework story can't
     const inBank = !les.isHomeworkStory && !les.coop;
     const key = `lesson:${les.id}:${i}`;
-    if(x) return { key, x, call: inBank ? { kind: 'lesson', id: les.id + ':' + i } : null, q: b };
+    const skill = les.skillId || ((CONCEPT_SKILLS[les.concept] || []).find(id => mindDomain(id)) || null);
+    if(x) return { key, skill, x, call: inBank ? { kind: 'lesson', id: les.id + ':' + i } : null, q: b };
     // no sum underneath: Munni retells the lesson, then asks the two choices
     const told = [];
     for(let k = i - 1; k >= 0 && les.beats[k].t !== 'ask'; k--) told.unshift(lesSay(les.beats[k]));
@@ -54,7 +55,7 @@ function askTarget(){
     const av = S.activeVideo, sc = av.data.scenes[av.sceneIdx];
     if(!sc || !sc.isCheckpoint || av.picked != null) return null;
     const x = explainMath({ text: sc.question.en });
-    return x ? { key: `video:${sc.question.en}`, x, call: { kind: 'math', a: x.a, b: x.b, c: x.c, op: x.op } } : null;
+    return x ? { key: `video:${sc.question.en}`, skill: av.data.skillId, x, call: { kind: 'math', a: x.a, b: x.b, c: x.c, op: x.op } } : null;
   }
   return null;
 }
@@ -64,7 +65,8 @@ function askFab(){
   let el = document.getElementById('askfab');
   const tg = askTarget();
   // the question moved on (answered, next one) while help was open: help goes with it
-  if(ASK && !(talkLive() && TALK.help) && (!tg || tg.key !== ASK.key)) { ASK = null; askPanel(); }
+  const moved = ASK && (ASK.teach ? S.ctx.p !== ASK.p : (!tg || tg.key !== ASK.key));
+  if(moved && !(talkLive() && TALK.help)) { ASK = null; askPanel(); }
   const show = !ASK && tg;
   if(!show){ if(el) el.remove(); return; }
   if(!el){ el = document.createElement('button'); el.id = 'askfab'; el.className = 'askfab'; el.onclick = askMunni; document.body.appendChild(el); }
@@ -81,12 +83,26 @@ function askMunni(){
   if(S.screen === 'lessons' && S.lesson) S.lesson.helpedAt = S.lesson.i;
   else if(S.screen === 'theater' && S.activeVideo) S.activeVideo.helpedAt = S.activeVideo.sceneIdx;
   else S.ctx.helped = true;
+  // asking is a teaching moment, step by step (core/mind.js learns whether it sticks)
+  const sk = tg.skill || null;
+  if(sk) mindTaught(sk, mindDomain(sk) === 'read' ? 'chunks' : 'steps');
   ASK = { lines, i: 0, call: tg.call || null, where: S.screen, key: tg.key };
   if(tg.call && TALK_URL && S.talkMunni && S.online) talkPreload();   // ready if the call is needed: audio may only start from a tap
   log(0, `Ask Munni · ${lines.length} step(s) for this question, on the phone`);
   askFab();
   askPanel();
   askPlay(0);
+}
+
+/* Munni's plan for this child says "step by step": after a missed sum,
+   the same steps, then the answer (the question is already answered). */
+function askTeach(p){
+  if(S.screen !== 'math' || S.ctx.p !== p) return;
+  const x = explainMath(p);
+  if(!x) return playMath();
+  const lines = explainLines(x, S.lang).slice(0, -1).concat(S.lang === 'hi' ? `${x.text} = ${x.ans}।` : `${x.text} = ${x.ans}.`);
+  ASK = { lines, i: 0, call: null, where: 'math', teach: true, p };
+  askFab(); askPanel(); askPlay(0);
 }
 
 function askPlay(i){

@@ -77,6 +77,8 @@ function circleApply(ok, status, d, sent){
   S.circleAt = new Date().toISOString();
   // a level a phone lesson moved since the last sync
   if(d.levels) for(const m of ['read','write','math']) if(d.levels[m]) S.levels[m] = clampLevel(m, d.levels[m]);
+  // a class test the teacher entered: the strongest evidence of how a way of teaching is working
+  for(const a of (d.circle && d.circle.assessments) || []) mindAssessment({ id: a.id, skill: a.skill, got: a.got, of: a.of, at: a.at, by: a.by || 'teacher' });
   // the class homework, through the app's own import (it checks the code).
   // S.circleHw remembers which assignment came this way, so that when the
   // teacher withdraws it (no code any more) the app drops exactly that one —

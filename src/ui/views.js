@@ -169,6 +169,7 @@ read(){
     <button class="${S.lang==='hi'?'sel':''}" onclick="setReadLang('hi')">हिंदी</button>
   </div>
   <div class="sentence">${shown}</div>
+  ${mindChunksHTML()}
   ${S.ctx.tokens? `<div class="legend">
       <span><i style="background:rgba(63,187,120,.7)"></i>${S.lang==='hi'?'सही':'correct'}</span>
       <span><i style="background:rgba(240,160,42,.8)"></i>${S.lang==='hi'?'लगभग':'almost'}</span>
@@ -273,7 +274,12 @@ write(){
 
 /* ---------- MATH ---------- */
 math(){
-  if(!S.ctx.p) S.ctx.p = genProblem(S.levels.math);
+  if(!S.ctx.p){
+    // from Munni's idea on the map: the first sum is that topic
+    const f = S.mindFocus && skillHasProblem(S.mindFocus) ? skillProblem(S.mindFocus, Math.floor(Math.random() * 1e9)) : null;
+    S.mindFocus = null;
+    S.ctx.p = f && f.c == null ? { a: f.a, b: f.b, op: f.op, ans: f.ans, opts: f.opts.map(Number) } : mindPracticeProblem();
+  }
   const p = S.ctx.p;
   const g = gameById(S.game);
   return `
@@ -288,6 +294,7 @@ math(){
     ${p.opts.map(o=>`<button class="opt ${S.ctx.picked!=null&&o===p.ans?'right':''} ${S.ctx.picked===o&&o!==p.ans?'wrong':''}" onclick="answerMath(${o})">${o}</button>`).join('')}
   </div>
   ${S.ctx.msg? `<div class="feedback" style="text-align:center;margin-top:14px">${S.ctx.msg}</div>`:''}
+  ${mindIdeaHTML()}
   ${S.ctx.picked!=null? `<button class="btn" style="margin-top:12px" onclick="nextProblem()">${t('next')} →</button>`:''}`;
 },
 
@@ -429,6 +436,7 @@ parent(){
 
     ${talkSetUp() ? talkParentHTML() : ''}
     ${typeof circleParentHTML === 'function' ? circleParentHTML() : ''}
+    ${mindParentHTML()}
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'बिना इंटरनेट':'WITHOUT INTERNET'}</div>
     ${(() => {

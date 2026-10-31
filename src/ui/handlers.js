@@ -108,10 +108,13 @@ function checkRead(input){
 
   S.ctx.missed = r.misread || [];             // Ask Munni starts from the word that tripped the child up
   const moved = S.ctx.helped ? null : record('read', ok);
+  if(!S.ctx.helped) mindAttempt(readSkill(), ok);
   if(moved==='up') S.ctx.msg += S.lang==='hi' ? ' · नया स्तर! 🎉' : ' · New level! 🎉';
   render();
 
-  if(!ok && r.misread.length) setTimeout(()=>speak(r.misread.slice(0,3).join(', ')), 420);
+  // a missed line, the child's way: Munni reads the whole line again ('model'), or the missed words
+  if(!ok && S.ctx.readWay === 'model') setTimeout(()=>speak(S.ctx.sentence), 420);
+  else if(!ok && r.misread.length) setTimeout(()=>speak(r.misread.slice(0,3).join(', ')), 420);
   if(!ok && r.misread.length) tier1Offer(r.misread.slice(0,2));
 }
 
@@ -289,6 +292,7 @@ function submitPaper(typed){
 function playMath(){
   if(S._mathBusy) return;
   const p=S.ctx.p, g=gameById(S.game), st=$('mstage'); if(!st) return;
+  const sk = skillOfProblem(p); if(sk && !S.ctx.helped) mindTaught(sk, 'show');   // watching it happen is a way of being taught
   S._mathBusy = true;
   clearTimeout(S._mathBusyTimer);
   S._mathBusyTimer = setTimeout(()=>{ S._mathBusy=false; }, 6000);
@@ -400,12 +404,17 @@ function answerMath(o){
   const ok = o===S.ctx.p.ans;
   S.ctx.msg = ok ? (S.lang==='hi'?'सही! ⭐':'Correct! ⭐')
                  : (S.lang==='hi'?`जवाब है ${S.ctx.p.ans} — देखो कैसे`:`The answer is ${S.ctx.p.ans} — watch why`);
-  if(!S.ctx.helped) record('math', ok);       // after Ask Munni explained it, the answer isn't counted as the child's own
+  if(!S.ctx.helped){
+    record('math', ok);                       // after Ask Munni explained it, the answer isn't counted as the child's own
+    const sk = skillOfProblem(S.ctx.p);
+    if(sk) mindAttempt(sk, ok);               // the child's own answer settles a teaching round (core/mind.js)
+  }
   render();
   if(ok) speak(S.lang==='hi'?'सही':'Correct');
-  else setTimeout(playMath, 500);      // a wrong answer always earns the animation
+  else if(S.ctx.helped) setTimeout(playMath, 500);
+  else mindTeachMath(S.ctx.p);         // a missed sum is taught the way that works for this child
 }
-function nextProblem(){ S.ctx={p:genProblem(S.levels.math)}; render(); }
+function nextProblem(){ S.ctx={p:mindPracticeProblem()}; render(); }
 
 /* ---- ask / the bridge ---- */
 function findOffline(q){

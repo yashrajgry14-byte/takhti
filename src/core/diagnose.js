@@ -71,6 +71,9 @@ function noteSkillAttempt(skillId, ok, child){
   const h = c.skillHistory[skillId] || { n:0, right:0 };
   h.n++; if(ok) h.right++;
   c.skillHistory[skillId] = h;
+  // the child's own answer settles a teaching round (core/mind.js) — callers
+  // never note a helped answer, so this is always the child's own
+  if(typeof mindAttempt === 'function' && c === S) mindAttempt(skillId, ok, c);
   mirrorToClass(c);   // if this child is linked to a class, the teacher side should eventually see this
 }
 

@@ -187,6 +187,8 @@ async function startLesson(id){
   const les = S.online ? await enrichLesson(found) : found;   // already falls back to `found` on any failure
   S._lessonBusy = false;
   S.lesson = { id, data: les, i:0, right:0, asked:0, picked:null };
+  // a story is a way of being taught (core/mind.js): the answers that follow tell whether it stuck
+  if(typeof mindTaught === 'function') for(const sk of [les.skillId].concat(CONCEPT_SKILLS[les.concept] || []).filter(x => x && mindDomain(x))) mindTaught(sk, 'story');
   log(0, `Lesson "${id}" · ${les.beats.length} beats · rendered in ${gameById(S.game).en}`);
   render();
   lesNarrate();
@@ -282,6 +284,7 @@ function startHomeworkStory(coop){
   const les = genHomeworkStory(hw.storySkill, S.game, S, { coop: !!coop, teacherNote: hw.note });
   if(!les) return;
   S.lesson = { id: les.id, data: les, i: 0, right: 0, asked: 0, picked: null, hwAt: hw.assignedAt };
+  if(typeof mindTaught === 'function' && les.skillId && mindDomain(les.skillId)) mindTaught(les.skillId, 'story');
   if(typeof sfxCard === 'function') sfxCard();
   log(0, `Homework story · ${hw.storySkill}${hw.assignedSkills.includes(hw.storySkill) ? '' : ` (diagnosed under ${hw.assignedSkills.join(', ')})`} · in ${gameById(S.game).en}`);
   render();
