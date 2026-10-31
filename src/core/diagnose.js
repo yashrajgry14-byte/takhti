@@ -74,6 +74,8 @@ function noteSkillAttempt(skillId, ok, child){
   // the child's own answer settles a teaching round (core/mind.js) — callers
   // never note a helped answer, so this is always the child's own
   if(typeof mindAttempt === 'function' && c === S) mindAttempt(skillId, ok, c);
+  // …and updates what the child knows, and how it fades (core/twin.js)
+  if(typeof twinObserve === 'function') twinObserve(skillId, ok, c);
   mirrorToClass(c);   // if this child is linked to a class, the teacher side should eventually see this
 }
 

@@ -334,6 +334,8 @@ function checkHTML(){
       <button class="btn" style="margin-top:14px" onclick="go('map')">${hi ? 'जंगल में वापस' : 'Back to the jungle'}</button></div>`;
   }
   const q = qs[st.i];
+  const tq = parseProblem(q.text);
+  if(tq) twinExpect(`check:${w.key}:${st.i}`, q.skill, tq, q.opts);    // the twin's guess, before the answer
   return `<button class="back" onclick="go('map')">← ${t('back')}</button>
     <div class="kicker2">${hi ? 'मुन्नी का शुक्रवार वाला खेल' : "MUNNI'S FRIDAY CHECK"} · ${st.i + 1}/${qs.length}</div>
     <div class="display" style="font-size:34px;margin:14px 0">${attr(q.text)} = ?</div>
@@ -345,7 +347,8 @@ function checkAnswer(v){
   if(!q || st.i >= qs.length) return;
   const ok = Number(v) === Number(q.answer);
   // real evidence, the same as any question in the app
-  if(skillById(q.skill)) noteSkillAttempt(q.skill, ok);
+  twinCheck(`check:${w.key}:${st.i}`, Number(v), ok, false);
+  if(skillById(q.skill)){ noteSkillAttempt(q.skill, ok); const tq = parseProblem(q.text); if(tq) twinAnswer(q.skill, tq, Number(v)); }
   record('math', ok);
   if(ok) st.right++;
   const hi = hiL();

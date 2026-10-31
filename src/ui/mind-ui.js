@@ -157,3 +157,41 @@ function mindSaveMark(){
   saveSoon();
   render();
 }
+
+/* ==================================================================
+   THE TWIN ON SCREEN (core/twin.js)
+   ================================================================== */
+const twinKeyMath = p => `math:${p.a}${p.op}${p.b}`;
+
+/* After a wrong answer a known mistake explains: one line aimed at it. */
+function twinTipHTML(p){
+  const tp = S.ctx.tip; if(!tp || !p) return '';
+  const hi = S.lang === 'hi', line = mistakeTip(tp.id, p, S.lang);
+  if(!line) return '';
+  const lead = tp.habit ? (hi ? 'मुन्नी ने देखा, यह पहले भी हुआ है: ' : 'Munni noticed this happened before: ') : '';
+  return `<div class="twintip" data-say="${attr(line)}" onclick="sayEl(this)">💡 ${attr(lead + line)}</div>`;
+}
+
+/* The parent dashboard: what Munni knows about how this child thinks. */
+function twinParentHTML(){
+  const hi = S.lang === 'hi', n = attr(S.name || '');
+  const sm = twinSummary();
+  const nm = sk => attr(mindSkillName(sk));
+  const sc = sm.score;
+  const row = (title, body) => body ? `<div style="font-size:12.5px;margin-top:6px"><b>${title}</b> ${body}</div>` : '';
+  const empty = !sm.knows.length && !sm.working.length && !sm.fading.length && !sm.habits.length;
+  return `<div class="kicker2" style="margin-top:14px">${hi ? `मुन्नी ${n} की सोच को कितना जानती है` : `HOW WELL MUNNI KNOWS HOW ${n.toUpperCase()} THINKS`}</div>
+  <div style="font-size:12.5px;opacity:.75;line-height:1.5">${hi
+    ? `सिर्फ़ ${n} के अपने जवाबों से, इसी फ़ोन पर। हर सवाल से पहले मुन्नी अंदाज़ा लगाती है कि ${n} क्या जवाब देंगे — ग़लत हो तो कौन-सा ग़लत। जितना सही अंदाज़ा, उतना अच्छा वह ${n} को समझती है।`
+    : `Built only from ${n}'s own answers, on this phone. Before each question Munni guesses what ${n} will answer — and if it's a wrong one, which. The more often she's right, the better she understands how ${n} thinks.`}</div>
+  ${sc ? `<div class="metric"><div><b>${hi ? 'मुन्नी का अंदाज़ा' : "Munni's guesses"}</b><div style="font-size:12.5px;opacity:.75">${hi ? 'हाल में, ठीक वही जवाब' : 'lately, the exact answer'}</div></div>
+     <div style="text-align:right"><b>${hi ? `${sc.late.of} में से ${sc.late.hit}` : `${sc.late.hit} of ${sc.late.of}`}</b>${sc.early ? `<div style="font-size:12px;opacity:.65">${hi ? `शुरू में ${sc.early.of} में से ${sc.early.hit}` : `at the start: ${sc.early.hit} of ${sc.early.of}`}</div>` : ''}</div></div>`
+   : `<div class="muted" style="font-size:12.5px">${hi ? `कुछ सवालों के बाद मुन्नी ${n} के जवाबों का अंदाज़ा लगाना शुरू करेगी।` : `After a few questions Munni starts guessing ${n}'s answers.`}</div>`}
+  ${row(hi ? 'अच्छे से आता है:' : 'Knows well:', sm.knows.slice(0, 5).map(nm).join(', '))}
+  ${row(hi ? 'सीख रहे हैं:' : 'Getting there:', sm.working.slice(0, 4).map(w => `${nm(w.skill)} (${w.p}%)`).join(', '))}
+  ${row(hi ? 'भूल रहे हैं — जल्दी दोहराएँ:' : 'Fading — practise soon:', sm.fading.slice(0, 3).map(f => `${nm(f.skill)} (${f.was}% → ${f.now}%)`).join(', '))}
+  ${sm.habits.length ? `<div style="font-size:12.5px;font-weight:600;margin-top:8px">${hi ? 'मुन्नी ने जो ग़लती बार-बार देखी' : 'A mistake Munni keeps seeing'}</div>
+    ${sm.habits.slice(0, 3).map(h => `<div style="font-size:12.5px">${attr(MW(MISTAKES[h.id]).replace(/^./, x => x.toUpperCase()))} — ${nm(h.skill)} <span style="opacity:.7">(${hi ? `हाल में ${h.n} बार` : `${h.n} times lately`})</span></div>`).join('')}
+    <div style="font-size:12px;opacity:.7">${hi ? 'अगली बार मुन्नी ठीक इसी ग़लती पर मदद करेगी।' : 'Next time, Munni helps with exactly this mistake.'}</div>` : ''}
+  ${empty ? `<div class="muted" style="font-size:12.5px">${hi ? `${n} जितना अभ्यास करेंगे, यह तस्वीर उतनी साफ़ होगी।` : `The more ${n} practises, the clearer this picture gets.`}</div>` : ''}`;
+}

@@ -35,7 +35,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 33 test suites (see Testing)
+npm test           # all 34 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -64,7 +64,7 @@ core/srs.js, core/sfx.js, games/game-core.js
 content/anim.js, content/copy.js, content/competencies.js
 core/log.js, core/store.js, core/profiles.js
 core/voice.js, core/speech.js, core/matcher.js
-core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js, core/tier1.js, core/explain.js, core/mind.js
+core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js, core/tier1.js, core/explain.js, core/mind.js, core/twin.js
 ui/mascot.js, ui/readback.js, ui/elephant.js, ui/lesson-player.js, ui/anim-celebrate.js, ui/cards.js
 ui/views.js, ui/opening.js
 ui/arrival.js, ui/onboarding.js, ui/jungle-map.js, ui/video-player.js, ui/teacher.js
@@ -73,7 +73,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/circle.js, ui/ask-munni.js, ui/mind-ui.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v35` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v36` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -113,11 +113,12 @@ src/
     matcher.js              the reading matcher + getGradeThresholds()/gradeVerdict()
     adaptive.js             rolling-window levelling, daily goals; record() feeds SRS
     daily-engine.js         the week plan; dayIndex()/dayKey() (calendar-driven)
-    mathgen.js              genProblem(level) for free practice; skillProblem(skill) for one named skill
+    mathgen.js              genProblem(level) for free practice; skillProblem(skill) for one named skill; MISTAKES, whichMistake(), mistakeTip()
     lesson-gen.js           generates the lesson bank; genHomeworkStory(), genGameSvg()
     readability.js          a measurable difficulty score for a line
     tier1.js                practice lines for missed words (bank + on-device model)
     mind.js                 how THIS child learns: which way of teaching works, topic by topic, measured; switches when one doesn't (stays on the phone)
+    twin.js                 how THIS child thinks: what they know and how it fades, the mistakes they repeat, a guess before each answer (stays on the phone)
     explain.js              one question step by step (make ten, tens/ones, borrow, multiply first, a word in pieces) — Ask Munni and the help call
   games/
     game-core.js            shared round lifecycle + GAME_SHELLS registry
@@ -136,7 +137,7 @@ src/
     self-listen.js          hear-your-own-reading
     talk-munni.js           Talking Munni at the Pond and on into the games — parent opt-in, voice leaves the phone only during a talk
     circle.js               the learning circle's app side: the parent's sync tick, this week's step, the Friday check, the home question
-    mind-ui.js              the mind on screen: missed sums and reading lines taught the child's way, "Munni's idea" on the map, the parent's "How … learns" and school marks
+    mind-ui.js              the mind on screen: missed sums and reading lines taught the child's way, "Munni's idea" on the map, the parent's "How … learns" and school marks; the twin's tip after a mistake and the parent's "How well Munni knows how … thinks"
     ask-munni.js            "Ask Munni": instant step-by-step help on the question on screen; "still stuck?" → Munni calls (in the app)
     handlers.js             event handlers
   app.js                    boot: load(), S.screen='arrival', render()
@@ -394,6 +395,53 @@ when it stops working.
 - **Stays on this phone**: `S.mind` and `S.assessments` are never in the
   circle's sync body (the test checks).
 
+## How this child thinks — `core/twin.js` (the mistakes in `core/mathgen.js`)
+
+The mind learns *how to teach* a child; the twin keeps a picture of *how
+the child thinks*, from their own answers only.
+
+- **Mistakes, named.** `mistakeAnswers(p)` lists the answer each known
+  mistake gives for one question (`MISTAKES`: forgot to carry the ten,
+  wrote each column's total side by side, took the smaller digit from the
+  bigger, borrowed but kept the ten, multiplied only the ones, left to
+  right instead of multiplying first, one group off, the wrong sign, a ten
+  or a one away); `whichMistake(p, given)` names the one behind an answer
+  (specific before generic); `mistakeTip()` is one line aimed at it with
+  this question's numbers — **never the final answer** (the test checks
+  thousands), spoken form for calls. `genProblem()` now puts real mistakes
+  among its options, so a wrong tap says which.
+- **A habit** (`twinHabit()`): the same named mistake twice in the last
+  eight answers on a skill, within two weeks, not followed by three right
+  in a row. One-away slips are never habits.
+- **What they know, and how it fades** (`twinObserve()`, `twinMastery()`):
+  Bayesian knowledge tracing per skill (slip 0.1, learn 0.15, guess = one
+  over the options), fed by every own answer (`noteSkillAttempt()` and
+  Counting Stones). Time away fades it — half-life 4 days doubling for each
+  different day it was got right, never below half its value. A skill with
+  history from before starts from that history.
+- **A guess before each answer** (`twinExpect()` at render, `twinCheck()`
+  after): Counting Stones, a cartoon's checkpoint, the Friday check. The
+  right answer if p(right) ≥ ½, else the child's habit, a mistake seen
+  before, or the question's most telling mistake. Written to the judge
+  trace before the answer, never shown to the child; a helped answer keeps
+  nothing. `twinScore()`: exact guesses lately, and at the start.
+- **Where it shows**: after a wrong answer, the tip for its mistake (and
+  "Munni noticed this happened before" for a habit, `twinTipHTML()`); Ask
+  Munni's steps warn about the habit just before the question, and the
+  plan's step-by-step teaching starts with the tip (`askTeach()`);
+  `mindNext()` goes at a habit, then a fading skill ("Munni's idea", half
+  the practice); the parent dashboard's **How well Munni knows how …
+  thinks** (`twinParentHTML()`: the guess score, knows well, getting there,
+  fading, the mistake she keeps seeing), in Hindi and English.
+- **On calls**: the voice server loads `twin.js` too. A first-try wrong sum
+  gets its tip and the clue offers the child's own answer against the right
+  one (`mistakeOf()` in `session.js`), kept in the server's own record of
+  that child. A help call carries the app's habit (`mistake`) only if it is
+  a known mistake this question can produce (`cleanHelp()`); the tip is the
+  server's own words. The parent's Talking Munni notice says so.
+- **Stays on this phone**: `S.twin` is never in the circle's sync body (the
+  test checks). `twinSummary()` has no name or id.
+
 ## Ask Munni — `ui/ask-munni.js`, `core/explain.js`, `voice/help.js`
 
 Help with the question in front of the child, like a voice assistant that
@@ -420,7 +468,8 @@ only knows this one question.
   twenty?"), with the usual clue and kind reveal, then the question itself,
   then "now tap it on the screen too". The panel shows the step and, after
   a slip, the two choices as buttons. The phone only sends what the
-  question is: the server recomputes every number, a reading line must be
+  question is (and the id of a mistake the child keeps making on it, one
+  of `MISTAKES`, if any — see **How this child thinks**): the server recomputes every number, a reading line must be
   one of the app's own `SENTENCES`, a lesson beat comes from its own lesson
   bank — anything else is refused (`cleanHelp()`), so nothing the phone
   makes up can be put in Munni's mouth. Its own daily limit
@@ -685,7 +734,7 @@ app is a client of it, and only when a parent says so.
 
 ## Testing
 
-`npm test` runs 33 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 34 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -721,6 +770,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `circle` | jsdom + the real voice server | the app side through real taps: nothing without a circle server; the bilingual grown-ups' step; nothing sent before the tick, progress only after it; family code → school, keeping the school's name; class homework via `importHomework()`, and withdrawn from the class page (the week remade, the app drops exactly that assignment, other homework left alone); this week on the map; the Friday check (real evidence, never "wrong", the verdict on the server); "We did it" and the child's home question; a phone lesson back as `circleHistory`, counted once; sync off reaches the server (also after a spell offline) and stops calls' circle items and messages; on again; erase (school record keeps its own, app-only record goes whole, another phone refused) |
 | `ask-munni` | jsdom + the real voice server + a stand-in Bolna | the steps for hundreds of sums of every kind never say the final answer and ask only true sub-answers; 38 + 24 and 52 − 27 broken down as a teacher would; Hindi words split into whole letters; the server refuses a made-up line, non-numbers, unknown signs or lessons, asks the steps one by one with a clue, records nothing; in the app: the button only where something is asked, instant help out loud with no server, "I get it", a helped answer not counted, reading help from the stumbled word, help leaves with the screen; with a voice server: no call until the parent's switch, then the call about this question, the step and the two choices on the panel, leaving ends it |
 | `mind` | vm + HTTP + jsdom | rounds settle on the child's own answers; two misses switch and cool a way, with the reason; a plan holds while it works; two simulated children who learn differently end up taught differently; a new topic leans on the subject; a low school mark switches at once and becomes the focus; teacher class-test marks reach records and next week's step; in the app: a missed sum taught by steps or with a story invitation, helped answers never count, the Reading Tree's pieces and read-first, the parent's marks and "What Munni changed" (EN/HI), "Munni's idea" on the map, a class test applied once, nothing of the mind in the sync |
+| `twin` | vm + HTTP + jsdom | each wrong answer named as its real mistake; tips for thousands of mistakes never say the answer; knowledge tracing up, down, fading (slower with spaced practice, never below half), seeded from old history; habits (twice; slips never; three right ends it); the guess (a mistake knowing nothing, the habit, the right answer when known), checked after, nothing kept for help; a simulated child with a habit of thought guessed exactly ≥ 90%; summary without name or id; `mindNext()` goes at a habit; on a call: the clue aimed at the mistake with the child's own answer, kept on the server; a help call's habit only if valid; in the app: the guess before the answer, the tip, "Munni noticed", Ask Munni's warning and the call's `mistake`, help teaches the twin nothing, the parent section EN/HI, nothing in the sync |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -798,6 +848,13 @@ Honest edges of what's built:
    for educational institutions' educational activities; the team's lawyer
    advised (31 Oct 2026) that edtech use like this is exempt too. The model
    still stays on the phone, which is the safest design either way.
+11. **The twin is new and uncalibrated too.** Its knowledge-tracing numbers
+   (start 0.3, slip 0.1, learn 0.15, the fading half-life) are textbook
+   defaults, not fitted to real children; named mistakes exist for
+   arithmetic only (reading and writing get mastery, not mistakes); the
+   guess runs on Counting Stones, cartoons and the Friday check, not story
+   lessons or games. The guess score is honest but its "at the start"
+   comparison needs 25 guesses before it shows.
 
 ## Style
 

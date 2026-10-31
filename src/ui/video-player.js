@@ -61,7 +61,10 @@ function videoAnswer(k){
   av.picked = k;
   const ok = k === scene.correct;
   av.right = ok;
-  if(av.helpedAt !== av.sceneIdx){ noteSkillAttempt(av.data.skillId, ok); record('math', ok); }   // after Ask Munni: help, not evidence
+  const helped = av.helpedAt === av.sceneIdx;
+  const twin = typeof twinCheck === 'function', tp = twin ? parseProblem(scene.question.en) : null;
+  if(twin) twinCheck('video:' + scene.question.en, Number(scene.opts[k]), ok, helped);
+  if(!helped){ noteSkillAttempt(av.data.skillId, ok); record('math', ok); if(tp) twinAnswer(av.data.skillId, tp, Number(scene.opts[k])); }   // after Ask Munni: help, not evidence
   log(0, `Cartoon checkpoint · ${av.data.skillId} · ${ok ? 'correct' : 'incorrect'}`);
   if(ok){
     if(typeof sfxChime === 'function') sfxChime();
@@ -97,6 +100,10 @@ function videoPlayerHTML(){
   const accent = v.theme.accent;
   const isLast = av.sceneIdx >= v.scenes.length - 1;
   const isCheck = !!scene.isCheckpoint;
+  if(isCheck && av.picked == null && av.helpedAt !== av.sceneIdx && typeof twinExpect === 'function'){
+    const tp = parseProblem(scene.question.en);
+    if(tp) twinExpect('video:' + scene.question.en, v.skillId, tp, scene.opts);   // the twin's guess, before the answer
+  }
   const earned = scene.badge && S.cards.some(c => c.id === scene.badge.id);
 
   return `

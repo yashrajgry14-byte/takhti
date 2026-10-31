@@ -24,6 +24,7 @@ const HL = {
   start:  { en: "Let's work this one out together.", hi: 'चलो इस सवाल को साथ में समझते हैं।' },
   done:   { en: 'Shabaash! Now tap the answer on the screen too. Bye bye!', hi: 'शाबाश! अब स्क्रीन पर भी सही जवाब चुनकर दिखाओ। बाय-बाय!' },
   doneRead: { en: 'Lovely! Now read it on the screen once more. Bye bye!', hi: 'बहुत बढ़िया! अब स्क्रीन पर एक बार फिर पढ़कर दिखाओ। बाय-बाय!' },
+  watch:  { en: 'Watch out for one thing:', hi: 'एक बात का ध्यान रखना:' },
   bare:   { en: 'Try it on the screen whenever you are ready. Bye bye!', hi: 'जब तैयार हो, स्क्रीन पर कोशिश करना। बाय-बाय!' },
   greet:  { en: n => `Hello ${n}! It's Munni. I heard this one is tricky. Shall we do it together?`,
             hi: n => `नमस्ते ${n}! मैं मुन्नी हूँ। यह सवाल थोड़ा मुश्किल लग रहा है? चलो साथ में करें, तैयार हो?` }
@@ -40,7 +41,10 @@ function cleanHelp(T, h) {
     if (p.c != null && !(Number.isInteger(p.c) && p.c >= 0 && p.c <= 99)) return null;
     if (!['+', '−', '-', '×', 'x', '*', '÷', '/'].includes(p.op)) return null;
     const x = T.explainMath(p);
-    return x ? { kind: 'math', x } : null;
+    // a mistake the child keeps making (src/core/twin.js): only a known one
+    // that this very question can produce — the tip is the server's own words
+    const mistake = T.MISTAKES[h.mistake] && T.mistakeAnswers(p).some(m => m.id === h.mistake) ? h.mistake : null;
+    return x ? { kind: 'math', x, p, mistake } : null;
   }
   if (h.kind === 'read') {
     const line = String(h.line || '').trim().slice(0, 160);
@@ -73,6 +77,7 @@ function itemsFor(S, T, help, lang) {
   const near = a => (a >= 10 ? a + 10 : a + 1);
   if (help.kind === 'math') {
     const x = help.x;
+    if (help.mistake) carry = S.joinSay(HL.watch[lang], T.mistakeTip(help.mistake, help.p, lang, n => S.nw(n, lang), true));
     for (const st of x.steps) {
       const told = say(st.tell, st.vals);
       if (st.ask && st.ans != null) {

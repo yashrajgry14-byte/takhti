@@ -29,7 +29,7 @@ function askTarget(){
   const hi = S.lang === 'hi';
   if(S.screen === 'math' && S.ctx.p && S.ctx.picked == null){
     const p = S.ctx.p;
-    return { key: `math:${p.a}${p.op}${p.b}`, skill: skillOfProblem(p), x: explainMath(p), call: { kind: 'math', a: p.a, b: p.b, op: p.op } };
+    return { key: `math:${p.a}${p.op}${p.b}`, skill: skillOfProblem(p), p, x: explainMath(p), call: { kind: 'math', a: p.a, b: p.b, op: p.op } };
   }
   if(S.screen === 'read' && S.ctx.sentence){
     const lang = /[ऀ-ॿ]/.test(S.ctx.sentence) ? 'hi' : 'en';      // Munni explains a line in its own language
@@ -55,7 +55,7 @@ function askTarget(){
     const av = S.activeVideo, sc = av.data.scenes[av.sceneIdx];
     if(!sc || !sc.isCheckpoint || av.picked != null) return null;
     const x = explainMath({ text: sc.question.en });
-    return x ? { key: `video:${sc.question.en}`, skill: av.data.skillId, x, call: { kind: 'math', a: x.a, b: x.b, c: x.c, op: x.op } } : null;
+    return x ? { key: `video:${sc.question.en}`, skill: av.data.skillId, p: { a: x.a, b: x.b, c: x.c, op: x.op }, x, call: { kind: 'math', a: x.a, b: x.b, c: x.c, op: x.op } } : null;
   }
   return null;
 }
@@ -79,6 +79,14 @@ function askMunni(){
   if(!tg) return;
   const lines = tg.lines || explainLines(tg.x, tg.lang || S.lang);
   if(!lines.length) return;
+  // a mistake this child keeps making on this skill: Munni warns about it
+  // just before she asks (core/twin.js), and a call goes at it too
+  const habit = tg.p && tg.skill && twinHabit(tg.skill);
+  if(habit && mistakeAnswers(tg.p).some(m => m.id === habit.id)){
+    const tip = mistakeTip(habit.id, tg.p, S.lang);
+    if(tip) lines.splice(lines.length - 1, 0, (S.lang === 'hi' ? 'ध्यान रहे: ' : 'Watch out: ') + tip);
+    if(tg.call) tg.call.mistake = habit.id;
+  }
   // whatever the child answers next on this question was helped
   if(S.screen === 'lessons' && S.lesson) S.lesson.helpedAt = S.lesson.i;
   else if(S.screen === 'theater' && S.activeVideo) S.activeVideo.helpedAt = S.activeVideo.sceneIdx;
@@ -100,7 +108,9 @@ function askTeach(p){
   if(S.screen !== 'math' || S.ctx.p !== p) return;
   const x = explainMath(p);
   if(!x) return playMath();
-  const lines = explainLines(x, S.lang).slice(0, -1).concat(S.lang === 'hi' ? `${x.text} = ${x.ans}।` : `${x.text} = ${x.ans}.`);
+  // the mistake the child just made comes first (core/twin.js)
+  const tip = S.ctx.tip ? mistakeTip(S.ctx.tip.id, p, S.lang) : '';
+  const lines = (tip ? [tip] : []).concat(explainLines(x, S.lang).slice(0, -1), S.lang === 'hi' ? `${x.text} = ${x.ans}।` : `${x.text} = ${x.ans}.`);
   ASK = { lines, i: 0, call: null, where: 'math', teach: true, p };
   askFab(); askPanel(); askPlay(0);
 }

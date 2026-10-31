@@ -204,7 +204,8 @@ function mindAssessment(a, c){
 }
 
 /* The topic Munni would teach next, and how: a recent low school mark
-   first, then a topic whose plan has just changed, then none. */
+   first, then a topic whose plan has just changed, then a mistake the
+   child keeps making, then a skill that is fading, then none. */
 function mindNext(c){
   const m = mindOf(c), now = Date.now();
   const low = Object.entries(m.school).filter(([, s]) => s.r < 0.6 && now - Date.parse(s.at) < 30 * MIND_DAY)
@@ -212,6 +213,14 @@ function mindNext(c){
   if(low) return { skill: low[0], why: 'school' };
   const ch = m.changes[0];
   if(ch && now - Date.parse(ch.at) < 7 * MIND_DAY) return { skill: ch.skill, why: 'changed' };
+  // what the twin (core/twin.js) sees: a mistake the child keeps making, then a skill fading
+  if(typeof twinOf === 'function'){
+    const tw = twinOf(c);
+    const habit = Object.keys(tw.recent).filter(sk => mindDomain(sk) && twinHabit(sk, c))[0];
+    if(habit) return { skill: habit, why: 'habit' };
+    const fade = twinFading(c).find(f => mindDomain(f.skill));
+    if(fade) return { skill: fade.skill, why: 'fading' };
+  }
   return null;
 }
 

@@ -34,7 +34,7 @@ const FILES = [
   'core/diagnose.js', 'core/class-share.js', 'core/srs.js',
   'content/competencies.js',
   'core/profiles.js', 'core/matcher.js', 'core/adaptive.js',
-  'core/daily-engine.js', 'core/mathgen.js', 'core/readability.js', 'core/explain.js'
+  'core/daily-engine.js', 'core/mathgen.js', 'core/readability.js', 'core/explain.js', 'core/twin.js'
 ];
 
 /* The class mirror (core/diagnose.js) and homework (class-share.js) live
@@ -89,6 +89,7 @@ function createCore(opts) {
     skillProblem, skillHasProblem, skillById, noteSkillAttempt, noteSkillFromConcept,
     personalizeContentForHomework, getAssignedHomework, importHomework, classReportCode, SKILLS, diagnose, assignHomework, clearHomework, homeworkCode, prereqChain,
     mirrorToClassNow, getDueSrsItems, explainMath, explainRead, explainLessonBeat, explainLines, xfill, parseProblem,
+    MISTAKES, mistakeAnswers, whichMistake, mistakeTip, twinAnswer, twinHabit, twinMastery,
     CONCEPTS, validateLesson, lessonBank, newProfile, PROFILE_FIELDS,
     syncProfileIn, syncProfileOut, COMPETENCY, seedOf, rng, SENTENCES
   };`, sandbox);

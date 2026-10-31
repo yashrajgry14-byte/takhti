@@ -604,6 +604,7 @@ function answer(core, child, s, storyBank, said) {
     if (right) {
       const first = it.attempts === 1 && !it.eased;
       const lead = praiseFor(s, 'praise', rngFor(s, it), lang, { ans: ansWord });
+      if (first) mistakeOf(core, child, s, it, got);
       if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework' || it.kind === 'check') {
         const mv = recordOutcome(core, child, s, 'math', first, it);
         if (mv === 'up') s._levelUp = true;          // advance() says it: "next one is harder", or at the end, "next time"
@@ -613,10 +614,14 @@ function answer(core, child, s, storyBank, said) {
     }
     if (it.attempts === 1) {
       if (yn) return ask(L.clueYN[lang]);
+      // which mistake was it? (the app's own core/twin.js) — the clue goes at
+      // it, and offers the child's own answer against the right one
+      const m = got != null ? mistakeOf(core, child, s, it, got) : null;
+      if (m) { it.mistake = m.id; it.distractor = got; }
       const pair = rngFor(s, it)() < 0.5 ? [it.answer, it.distractor] : [it.distractor, it.answer];
       it.choices = pair;                       // Talking Munni shows these two as buttons
       const tpl = intent === 'dontKnow' ? L.clueDK : L.clue;
-      return ask(fill(tpl, lang, { x: nw(pair[0], lang), y: nw(pair[1], lang) }));
+      return ask(joinSay(m ? m.tip : '', fill(tpl, lang, { x: nw(pair[0], lang), y: nw(pair[1], lang) })));
     }
     if (it.kind === 'math' || it.kind === 'story' || it.kind === 'homework' || it.kind === 'check') recordOutcome(core, child, s, 'math', false, it);
     // the homework was worked through on the call; Munni stops pointing at it
@@ -758,6 +763,25 @@ function recordOutcomeNow(core, child, s, mod, ok, it) {
     return mv;
   });
   for (const t of trace) s.trace.push(t.msg);
+  return out;
+}
+
+/* A first-try answer to a sum: for a wrong one, the named mistake behind it and one
+   spoken line of help aimed at it (src/core/mathgen.js), kept in the
+   child's twin (src/core/twin.js) when it is the child's own lesson
+   answer — a help call's steps are help, not evidence. */
+function mistakeOf(core, child, s, it, got) {
+  if (!it.problem || it.eased) return null;
+  const lang = s.lang;
+  const { out } = core.withChild(child.profile, { lang }, T => {
+    const p = T.parseProblem(it.problem);
+    if (!p) return null;
+    if (it.kind !== 'helpstep' && it.skill) T.twinAnswer(it.skill, p, got);   // right answers too: a habit is judged over the latest answers
+    const id = T.whichMistake(p, got);
+    if (!T.MISTAKES[id]) return null;
+    const tip = T.mistakeTip(id, p, lang, n => nw(n, lang), true);
+    return tip ? { id, tip } : null;
+  });
   return out;
 }
 

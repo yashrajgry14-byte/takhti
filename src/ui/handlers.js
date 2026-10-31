@@ -404,10 +404,17 @@ function answerMath(o){
   const ok = o===S.ctx.p.ans;
   S.ctx.msg = ok ? (S.lang==='hi'?'सही! ⭐':'Correct! ⭐')
                  : (S.lang==='hi'?`जवाब है ${S.ctx.p.ans} — देखो कैसे`:`The answer is ${S.ctx.p.ans} — watch why`);
+  const sk = skillOfProblem(S.ctx.p);
+  twinCheck(twinKeyMath(S.ctx.p), o, ok, S.ctx.helped);   // was the twin's guess right? (core/twin.js)
   if(!S.ctx.helped){
     record('math', ok);                       // after Ask Munni explained it, the answer isn't counted as the child's own
-    const sk = skillOfProblem(S.ctx.p);
-    if(sk) mindAttempt(sk, ok);               // the child's own answer settles a teaching round (core/mind.js)
+    if(sk){
+      mindAttempt(sk, ok);                    // the child's own answer settles a teaching round (core/mind.js)
+      twinObserve(sk, ok, S, 1 / S.ctx.p.opts.length);
+      const bug = twinAnswer(sk, S.ctx.p, o);
+      // a wrong answer a known mistake explains gets help aimed at that mistake
+      if(!ok && MISTAKES[bug]) S.ctx.tip = { id: bug, habit: !!(twinHabit(sk) && twinHabit(sk).id === bug) };
+    }
   }
   render();
   if(ok) speak(S.lang==='hi'?'सही':'Correct');

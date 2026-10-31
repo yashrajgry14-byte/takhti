@@ -62,6 +62,7 @@ function newProfile(name){
     circleHw: null,        // assignedAt of class homework that came through the circle, so a withdrawal removes exactly it
     mind: null,            // how this child learns: which ways of teaching work, topic by topic — see core/mind.js (stays on this phone)
     assessments: [],       // school marks a parent typed or a class teacher sent: {skill, got, of, by, at}
+    twin: null,            // how this child thinks: what they know and how it fades, the mistakes they repeat, the twin's guesses — see core/twin.js (stays on this phone)
     circleLeave: null      // {erase} — a parent's "off" or "delete" waiting for a signal to reach the server
   };
 }

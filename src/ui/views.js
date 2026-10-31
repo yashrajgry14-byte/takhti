@@ -282,6 +282,7 @@ math(){
   }
   const p = S.ctx.p;
   const g = gameById(S.game);
+  if(S.ctx.picked == null && !S.ctx.helped) twinExpect(twinKeyMath(p), skillOfProblem(p), p, p.opts);   // the twin's guess, before the answer
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="muted">${t('level')} ${S.levels.math} · ${t('count')} · ${competencyName('math',S.levels.math)}</div>
@@ -294,6 +295,7 @@ math(){
     ${p.opts.map(o=>`<button class="opt ${S.ctx.picked!=null&&o===p.ans?'right':''} ${S.ctx.picked===o&&o!==p.ans?'wrong':''}" onclick="answerMath(${o})">${o}</button>`).join('')}
   </div>
   ${S.ctx.msg? `<div class="feedback" style="text-align:center;margin-top:14px">${S.ctx.msg}</div>`:''}
+  ${twinTipHTML(p)}
   ${mindIdeaHTML()}
   ${S.ctx.picked!=null? `<button class="btn" style="margin-top:12px" onclick="nextProblem()">${t('next')} →</button>`:''}`;
 },
@@ -437,6 +439,7 @@ parent(){
     ${talkSetUp() ? talkParentHTML() : ''}
     ${typeof circleParentHTML === 'function' ? circleParentHTML() : ''}
     ${mindParentHTML()}
+    ${twinParentHTML()}
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'बिना इंटरनेट':'WITHOUT INTERNET'}</div>
     ${(() => {
