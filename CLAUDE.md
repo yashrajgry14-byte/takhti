@@ -81,7 +81,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v38` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v39` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -440,7 +440,10 @@ the child thinks*, from their own answers only, in all three subjects.
   left out and where, the शिरोरेखा missing, much too small, off the guide,
   wandering), typed-back paper writing (the word checks, as spelling).
   `langTip()` is the help, `langLetters()` the letters to hear side by side.
-  `twinNote()` keeps them.
+  `twinNote()` keeps them. **Games** name a picked answer too, when the
+  item has a sum under it (`twinGameAnswer()`, from runner and tower).
+  **Calls** name mistakes on the server's twin; they come back to the app
+  with a talk's results and the circle's sync (`twinFar()`, deduped).
 - **A habit** (`twinHabit()`): the same mistake twice in the last eight
   answers on a skill, within two weeks, not followed by three right in a
   row (one-away slips never). **A habit decides the explanation**: a missed
@@ -455,15 +458,22 @@ the child thinks*, from their own answers only, in all three subjects.
   each different day it was got right, never below half. **It is the number
   decisions use**: `appEvidence()` (so the diagnostic, homework, the teacher
   view) reads it for this phone's own evidence once the twin has seen the
-  skill as often as the counts; the raw counts still travel in codes and the
-  circle's sync, where another phone has no twin.
+  skill as often as the counts — and the games' choice of items; the raw
+  counts still travel in codes and the circle's sync, where another phone
+  has no twin. One deliberate exception: the **level ladder** (which rung
+  of lines and sums to serve, `record()`'s last-five window) still moves on
+  recent answers, so a child who is improving moves up the same day; the
+  twin's number is per skill and slower by design.
 - **A guess before every answer** (`twinExpect()` at render, `twinCheck()`
   after): sums in Counting Stones, cartoons, the Friday check and story
   lessons (the exact answer: right, the habit, a found combination, a seen
   mistake or the most telling one); story questions without a sum, games,
   reading lines and traced letters (right or not). In the judge trace before
   the answer, never shown to the child; a helped answer keeps nothing.
-  `twinScore()`: exact guesses lately and at the start, and right-or-not.
+  **Calls guess too** (`guessFor()`/`guessCheck()` in `session.js`: the
+  call's trace and the server twin's record; with the circle's tick they
+  join the app's score, `twinFarGuesses()`). `twinScore()`: exact guesses
+  lately and at the start, and right-or-not.
 - **The profile** (`twinProfile()`, `twinCleanProfile()`, `twinPrompt()`):
   ids only (band, language, ways, plans, habits, fading, working, knows,
   found combinations, letters to practise, up to ten unexplained sums) — no
@@ -943,7 +953,8 @@ Honest edges of what's built:
    (2 of up to 3 answers), the switch rule (two misses) and the half-weight
    subject prior are reasonable first choices, not tuned on real children;
    it covers maths skills with a `skillProblem()` and reading levels, not
-   writing yet; voice calls don't use it yet. Children's data law: DPDP s.9(3)
+   writing yet; on calls only "step by step" can be used (a phone can't show
+   or play a cartoon), through the twin's profile. Children's data law: DPDP s.9(3)
    bars "tracking or behavioural monitoring" of children, with an exemption
    for educational institutions' educational activities; the team's lawyer
    advised (31 Oct 2026) that edtech use like this is exempt too. The model

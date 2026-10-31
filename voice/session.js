@@ -486,6 +486,7 @@ function advance(core, child, s, storyBank, lead) {
     if (!it) continue;
     s.items.push(it);
     it.prompts.push(it.prompt);
+    guessFor(core, child, s, it);
     return reply(s, joinSay(lead, up ? L.levelUp[s.lang] : '', it.prompt), it);
   }
   return finish(s, joinSay(lead, up ? L.levelUpEnd[s.lang] : ''), 'plan');
@@ -631,6 +632,7 @@ function answer(core, child, s, storyBank, said) {
 
     it.attempts++;
     const right = got === it.answer;
+    if (it.attempts === 1 && !it.eased) guessCheck(core, child, s, it, got, right);
     if (right) {
       const first = it.attempts === 1 && !it.eased;
       const lead = praiseFor(s, 'praise', rngFor(s, it), lang, { ans: ansWord });
@@ -849,6 +851,29 @@ function gradeLine(core, child, s, target, alternatives) {
              tokens: best.tokens.map(x => ({ text: x.text, state: x.state, heard: x.heard })) };
   });
   return out;
+}
+
+/* The twin's guess before a sum on a call (src/core/twin.js), checked on
+   the first answer — the same measure as in the app, written to the
+   call's trace and kept in the child's record. */
+function guessFor(core, child, s, it) {
+  if (it.expect !== 'number' || !it.problem || !it.skill || it.kind === 'helpstep') return;
+  const { out } = core.withChild(child.profile, { lang: s.lang }, T => {
+    const p = T.parseProblem(it.problem);
+    return p ? T.twinPredict(it.skill, p, null) : null;
+  });
+  if (!out) return;
+  it.guess = { answer: out.answer, pRight: Math.round(out.pRight * 100) / 100 };
+  s.trace.push(`Twin · expects ${out.answer} for ${it.problem} (p(right) ${Math.round(out.pRight * 100)}%${out.why !== 'right' ? ', ' + out.why : ''})`);
+}
+function guessCheck(core, child, s, it, got, right) {
+  if (!it.guess) return;
+  const hit = Number(got) === Number(it.guess.answer), rw = right === (it.guess.pRight >= 0.5);
+  core.withChild(child.profile, { lang: s.lang }, T => {
+    const tw = T.twinOf();
+    tw.preds = (tw.preds || []).concat({ at: Date.now(), skill: it.skill, hit, rw, call: true }).slice(-100);
+  });
+  s.trace.push(`Twin · guessed ${it.guess.answer}, heard ${got}: ${hit ? 'exactly right' : rw ? 'right/wrong right, not the exact answer' : 'missed'}`);
 }
 
 /* A word said in pieces, then whole: "भा… ई… भाई". */

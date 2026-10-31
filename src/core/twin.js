@@ -144,6 +144,43 @@ function twinNote(skill, mistakes, c){
   return ids;
 }
 
+/* Mistakes the twin couldn't see itself: named by the voice server's own
+   copy of this file during a Talking Munni talk or a phone lesson (they
+   come back with the talk's results and the circle's sync). Checked, and
+   not counted twice: the same mistake on the same sum within half an hour
+   is the same answer. */
+function twinFar(list, c){
+  const tw = twinOf(c), now = Date.now();
+  let n = 0;
+  for(const x of (list || []).slice(0, 40)){
+    if(!x || typeof x.skill !== 'string' || !/^[a-z0-9]{2,16}$/.test(x.skill)) continue;
+    if(x.id !== 'right' && !twinKnown(x.id)) continue;
+    const at = Number(x.at) || now, q = String(x.q || '').slice(0, 20);
+    const rec = tw.recent[x.skill] = tw.recent[x.skill] || [];
+    if(rec.some(r => r.id === x.id && r.q === q && Math.abs((r.at || 0) - at) < 30 * 60e3)) continue;
+    rec.push({ id: x.id, at, q, far: true });
+    rec.sort((p, r) => p.at - r.at);
+    tw.recent[x.skill] = rec.slice(-8);
+    if(x.id !== 'right') twinKeep(tw, x.skill, x.id);
+    n++;
+  }
+  if(n && typeof log === 'function') log(2, `Twin · ${n} answer(s) from Munni's calls added to what Munni knows about how this child thinks`);
+  return n;
+}
+
+/* Munni's guesses on phone lessons, checked there: they count in the same score. */
+function twinFarGuesses(list, c){
+  const tw = twinOf(c);
+  const seen = new Set(tw.preds.map(p => p.at + '|' + p.skill));
+  for(const g of (list || []).slice(0, 40)){
+    if(!g || typeof g.skill !== 'string' || !(Number(g.at) > 0) || seen.has(g.at + '|' + g.skill)) continue;
+    seen.add(g.at + '|' + g.skill);
+    tw.preds.push({ at: Number(g.at), skill: g.skill.slice(0, 16), hit: !!g.hit, rw: !!g.rw, call: true });
+  }
+  tw.preds.sort((p, q) => p.at - q.at);
+  tw.preds = tw.preds.slice(-100);
+}
+
 /* A mistake this child keeps making on this skill: twice in their last
    eight answers on it, the latest within two weeks — and not yet put
    behind them (three right in a row since ends it). */

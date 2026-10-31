@@ -270,6 +270,18 @@ function createCircle(brain, envIn) {
     const fresh = brain.getChild(child.id);
     const out = Object.assign({ child_id: fresh.id, circle: view(fresh, 'app') }, key ? { key } : {});
     if (brain.mistakes) out.mistake_rules = brain.mistakes.promoted();
+    // what Munni's phone lessons saw of how this child thinks (the server's
+    // twin), since the last sync — the app's twin adds it (twinFar)
+    const ftw = fresh.profile && fresh.profile.twin, since = (fresh.circle && fresh.circle.twin_sent_at) || 0;
+    if (ftw && ftw.recent) {
+      const far = [];
+      for (const [skill, rec] of Object.entries(ftw.recent)) for (const r of rec) if (r.at > since && !r.far && r.q) far.push({ skill, id: r.id, q: r.q, at: r.at });
+      const guesses = (ftw.preds || []).filter(g => g.call && g.at > since).map(g => ({ skill: g.skill, hit: !!g.hit, rw: !!g.rw, at: g.at }));
+      if (guesses.length) out.twin_guesses = guesses.slice(-40);
+      const all = far.map(f => f.at).concat(guesses.map(g => g.at));
+      if (far.length) out.twin_far = far.slice(-40);
+      if (all.length) { const x = brain.getChild(child.id); x.circle.twin_sent_at = Math.max(...all); put(x); }
+    }
     if (Object.keys(levelsBack).length) out.levels = levelsBack;
     return { status: 200, body: out };
   }

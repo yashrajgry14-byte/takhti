@@ -93,9 +93,11 @@ function gameItems(n, opts){
   const weightOf = it => {
     let w = 1;
     for(const sid of it.skills){
+      // what the child knows today (core/twin.js), else the raw counts
+      const m = typeof twinMastery === 'function' ? twinMastery(sid) : null;
       const h = (S.skillHistory || {})[sid];
-      if(!h || h.n < 4) { w += 0.35; continue; }        // unseen: mild pull
-      const acc = h.right / h.n;
+      if(!(m && m.n >= 4) && (!h || h.n < 4)) { w += 0.35; continue; }        // unseen: mild pull
+      const acc = m && m.n >= 4 ? m.now : h.right / h.n;
       if(acc < 0.6) w += 1.4;                            // weak: strong pull
       else if(acc < 0.8) w += 0.6;
       else w -= 0.35;                                    // solid: back off
@@ -230,7 +232,7 @@ function gameCurrent(){ const g = S.game_; return g && g.items[g.i]; }
 /* Every answer is evidence. This is the whole reason games are worth
    building rather than buying: a child playing produces exactly the
    data the teacher's diagnostic needs. */
-function gameAnswer(ok){
+function gameAnswer(ok, picked){
   const g = S.game_, it = gameCurrent();
   if(!g || !it || g.over) return;
   if(ok) g.right++; else g.wrong++;
@@ -238,6 +240,8 @@ function gameAnswer(ok){
   if(typeof noteSkillAttempt === 'function')
     for(const sid of it.skills) noteSkillAttempt(sid, ok);
   if(typeof record === 'function' && it.strand === 'num') record('math', ok);
+  // the answer picked, when there's a sum under the item: which mistake it was (core/twin.js)
+  if(typeof twinGameAnswer === 'function') twinGameAnswer(it, ok, picked);
   // a live Talking Munni call: a miss gets a kind hint (ui/talk-munni.js)
   if(!ok && typeof talkGame === 'function') talkGame('miss', it);
   g.i++;

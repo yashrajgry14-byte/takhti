@@ -43,10 +43,10 @@ function towerBegin(){
   TW = { height: 0, everBuilt: false, attached: false, correctIdx: -1, options: [] };
   return g;
 }
-function towerRecordAnswer(ok){
+function towerRecordAnswer(ok, picked){
   const g = S.game_;
   if(!g || g.kind !== 'tower' || g.over) return ok;
-  gameAnswer(ok);   // one call per question, in order — the pool runs out and ends the round on its own, unmodified
+  gameAnswer(ok, picked);   // one call per question, in order — the pool runs out and ends the round on its own, unmodified
   if(TW){
     if(ok){ TW.height++; if(TW.height > 0) TW.everBuilt = true; }
     else   TW.height = Math.max(0, TW.height - 1);
@@ -77,7 +77,7 @@ function towerPick(idx){
   const it = (typeof gameCurrent === 'function') ? gameCurrent() : null;
   if(!it) return;
   const ok = idx === TW.correctIdx;
-  towerRecordAnswer(ok);
+  towerRecordAnswer(ok, TW.options[idx] && TW.options[idx].text ? TW.options[idx].text.en : null);
 
   const stage = typeof $ === 'function' ? $('twTower') : null;
   if(ok){

@@ -233,6 +233,18 @@ function twinAnswerLesson(les, i, k, ok, helped){
   if(!helped && q.skill && q.p && Number.isFinite(given)) twinAnswer(q.skill, q.p, given);
 }
 
+/* A game item answered: the sum underneath (from its lesson beat), and the
+   answer picked — so a mistake made in a game is named like any other. */
+function twinGameAnswer(it, ok, picked){
+  if(!it || !it.id || picked == null || !Number.isFinite(Number(picked))) return;
+  const [lid, bi] = String(it.id).split(':');
+  const les = (typeof lessonBank === 'function' ? lessonBank() : []).find(l => l.id === lid);
+  if(!les) return;
+  const q = twinLessonQ(les, Number(bi));
+  if(!q.p) return;
+  twinAnswer((it.skills || []).find(id => mindDomain(id) === 'math') || q.skill, q.p, Number(picked));
+}
+
 /* The parent dashboard, inside "How … learns": how well Munni knows how
    this child thinks — her guesses, what they know, what's fading, the
    mistakes she keeps seeing, in all three subjects. */

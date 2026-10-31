@@ -275,6 +275,7 @@ function talkApply(session, childId, records){
       if(r.concept) noteSkillFromConcept(r.concept, !!r.ok);
       else if(r.skill && skillById(r.skill)) noteSkillAttempt(r.skill, !!r.ok);
       record('math', !!r.ok); n++;
+      if(r.skill && r.mistake && typeof twinFar === 'function') twinFar([{ skill: r.skill, id: r.mistake, q: String(r.problem || '').replace(/\s+/g, '') }]);
     } else if(r.mod === 'read' && r.sentence){
       S.ctx = { sentence: String(r.sentence) };   // record() keys the SRS item on the sentence
       record('read', !!r.ok); n++;

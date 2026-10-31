@@ -268,6 +268,13 @@ function twinBox(){
   check('…a slip that is the known habit: "I know this tricky bit!" and the help for it', /मुश्किल हिस्सा मुझे पता है/.test(c1) && /दहाई/.test(c1), c1);
   const c2 = brain.toolAnswer(ps.id, String(wrongA)).say;
   check('…and the reveal, for a child taught step by step, goes step by step', /दहाई|इकाई/.test(c2) && /जवाब है/.test(c2), c2);
+  const afterCall = brain.store.get('sessions', ps.id);
+  check('a call guesses too: before each sum, the twin\'s guess in the call\'s trace, checked on the first answer and kept in the child\'s record', afterCall.trace.some(t => /^Twin · expects/.test(t)) && afterCall.trace.some(t => /^Twin · guessed/.test(t)) &&
+    (brain.getChild(kid.id).profile.twin.preds || []).some(p => p.call), afterCall.trace.filter(t => /Twin/.test(t)).join(' | '));
+  const res = require('../voice/web').createWeb(brain, {}).result;
+  afterCall.processed = true; afterCall.web_token = 'tk'; brain.store.put('sessions', ps.id, afterCall);
+  const recs = res(ps.id, 'tk').body.records;
+  check('a talk\'s results carry which mistake each first answer was, for the app\'s twin', recs.some(r => r.mistake === 'nocarry' && r.problem), JSON.stringify(recs).slice(0, 300));
   // reading on a call: the slip named
   const rs = brain.createSession(kid.id, { channel: 'app', kind: 'lesson', seed: 'twin-2' }).session;
   brain.toolNext(rs.id);
@@ -292,6 +299,14 @@ const sharedDb = (async () => {
   check('…counted by children, never names; the unexplained sums are there for the team to look at', rev.codes[0].children === 3 && rev.unexplained[0].sum === '38+24=99' && rev.unexplained[0].children === 3 && !/kid0|Tiger/.test(JSON.stringify(rev)), JSON.stringify(rev).slice(0, 300));
   const sv = brain.getChild('app_kid0xyz');
   check('the app\'s profile is kept, checked, for that child\'s phone lessons', sv.circle.app_profile && sv.circle.app_profile.found.includes(code), JSON.stringify(sv.circle.app_profile));
+  // a phone lesson's mistakes and guesses come back to the app with the next sync
+  const svp = brain.getChild(sv.id);
+  brain.core.withChild(svp.profile, { lang: 'hi' }, TT => { TT.twinAnswer('carry', { a: 38, b: 24, op: '+' }, 52); TT.twinOf().preds.push({ at: Date.now(), skill: 'carry', hit: true, rw: true, call: true }); });
+  brain.store.put('children', svp.id, svp);
+  const syncAgain = seq => brain.circle.sync({ child: { id: 'kid0xyz', name: 'Tiger', age: 7, lang: 'hi' }, key: out[0].body.key, consent: { sync: true }, progress: { seq } }, '10.0.0.9');
+  const back = (await syncAgain(2)).body, back2 = (await syncAgain(3)).body;
+  check('mistakes and guesses from phone lessons come down with the sync — once', (back.twin_far || []).some(f => f.skill === 'carry' && f.id === 'nocarry' && f.q === '38+24') && (back.twin_guesses || []).length === 1 && !back2.twin_far && !back2.twin_guesses,
+    JSON.stringify([back.twin_far, back.twin_guesses, back2.twin_far]));
   const key0 = out[0].body.key;
   brain.circle.leave({ child: { id: 'kid0xyz' }, key: key0, erase: true });
   check('an erased child leaves every count', brain.mistakes.review().codes[0].children === 2 && !brain.mistakes.promoted().includes(code), JSON.stringify(brain.mistakes.review().codes));
@@ -367,6 +382,19 @@ appServer.listen(0, '127.0.0.1', async () => {
     check('a game\'s item is guessed (right or not)', /^game:pop:/.test(E(`TWIN_EXP && TWIN_EXP.key`) || ''), E(`JSON.stringify(TWIN_EXP)`));
     E(`gameAnswer(true)`);
     check('…and checked when it is answered', E(`S.twin.preds.slice(-1)[0].skill`) != null && /^game:pop:1/.test(E(`TWIN_EXP && TWIN_EXP.key`) || ''), E(`JSON.stringify(S.twin.preds.slice(-1))`));
+    // a game with a sum underneath: the picked answer is named like any other
+    E(`go('map'); playGame('tower'); const it = gameCurrent(); const lid = it.id.split(':'); const les = lessonBank().find(l => l.id === lid[0]); window.__gq = twinLessonQ(les, Number(lid[1]))`);
+    const gq = E(`JSON.stringify(window.__gq)`);
+    if(E(`!!(window.__gq && window.__gq.p)`)){
+      E(`const p = window.__gq.p; const ms = mistakeAnswers(p); const before = (S.twin.recent[window.__gq.skill] || []).length; window.__gm = ms[0]; gameAnswer(false, String(ms[0].v)); window.__gafter = (S.twin.recent[window.__gq.skill] || []).slice(-1)[0]`);
+      check('a game\'s picked answer is named as its mistake too (the sum under the item)', E(`window.__gafter && window.__gafter.id`) === E(`window.__gm.id`), gq + ' ' + E(`JSON.stringify(window.__gafter)`));
+    } else {
+      E(`const les = lessonBank().find(l => l.beats.some((b, i) => b.t === 'ask' && (explainLessonBeat(l, i) || {}).op)); const i = les.beats.findIndex((b, k) => b.t === 'ask' && (explainLessonBeat(les, k) || {}).op); window.__gm = mistakeAnswers(twinLessonQ(les, i).p)[0]; twinGameAnswer({ id: les.id + ':' + i, skills: [] }, false, String(window.__gm.v))`);
+      check('a game\'s picked answer is named as its mistake too (the sum under the item)', E(`JSON.stringify(S.twin.recent)`).includes(E(`window.__gm.id`)), E(`JSON.stringify(window.__gm)`));
+    }
+    // mistakes and guesses from Munni's calls join the app's twin, never twice
+    E(`twinFar([{ skill: 'sub2', id: 'smallbig', q: '61−27', at: Date.now() }, { skill: 'sub2', id: 'smallbig', q: '61−27', at: Date.now() + 1000 }, { skill: 'sub2', id: '<evil>', q: 'x' }]); twinFarGuesses([{ skill: 'sub2', hit: true, rw: true, at: 12345 }, { skill: 'sub2', hit: true, rw: true, at: 12345 }])`);
+    check('mistakes and guesses from Munni\'s calls join the app\'s twin — checked, and never counted twice', E(`S.twin.recent.sub2.filter(r => r.far && r.id === 'smallbig').length`) === 1 && !E(`JSON.stringify(S.twin.recent)`).includes('evil') && E(`S.twin.preds.filter(p => p.at === 12345).length`) === 1, E(`JSON.stringify([S.twin.recent.sub2, S.twin.preds.length, S.twin.preds.filter(p => p.at === 12345)])`));
     E(`go('map')`);
     // the live number stands in for the counts in decisions
     E(`for(let i = 0; i < 5; i++) noteSkillAttempt('tables', i % 2 === 0)`);

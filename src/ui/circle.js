@@ -81,6 +81,9 @@ function circleApply(ok, status, d, sent){
   S.circleAt = new Date().toISOString();
   // combinations of mistakes many children share: the shared database's (codes only, checked)
   if(Array.isArray(d.mistake_rules)) S.mistakeRules = d.mistake_rules.filter(procValid).slice(0, 60);
+  // mistakes Munni's phone lessons named, for this child's twin
+  if(Array.isArray(d.twin_far)) twinFar(d.twin_far);
+  if(Array.isArray(d.twin_guesses)) twinFarGuesses(d.twin_guesses);
   // a level a phone lesson moved since the last sync
   if(d.levels) for(const m of ['read','write','math']) if(d.levels[m]) S.levels[m] = clampLevel(m, d.levels[m]);
   // a class test the teacher entered: the strongest evidence of how a way of teaching is working

@@ -294,7 +294,9 @@ function createWeb(brain, envIn) {
     for (const it of s.items) {
       if (!it.outcome || it.outcome === 'unsure' || it.outcome === 'silent') continue;
       if (['math', 'story', 'homework', 'check'].includes(it.kind))
-        records.push({ mod: 'math', ok: it.outcome === 'correct', skill: it.concept ? null : (it.skill || null), concept: it.concept || null });
+        records.push({ mod: 'math', ok: it.outcome === 'correct', skill: it.concept ? null : (it.skill || null), concept: it.concept || null,
+                       // which mistake the first answer was (src/core/twin.js), so the app's twin knows it too
+                       problem: it.problem || null, mistake: it.outcome === 'correct' ? 'right' : (it.mistake || null) });
       if (it.kind === 'read') {
         const v = it.evidence ? it.evidence.first_verdict
           : (it.live && it.live[0] ? (it.live[0].verdict === 'pass' ? 'pass' : it.live[0].verdict === 'unsure' ? 'unsure' : 'coach') : 'unsure');
