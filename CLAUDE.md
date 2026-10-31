@@ -782,6 +782,13 @@ Honest edges of what's built:
    silence signal depends on how Bolna's `_silence_repeats` and expression
    edges behave on a silent turn (unconfirmed — `BOLNA-QUESTIONS.md` 8);
    the transcript check after the call works either way.
+9. **The learning circle is a pilot.** The sync tick is a parent's
+   checkbox in the app, not verified parental consent (same caveat as 8);
+   WhatsApp sending needs an approved AiSensy template (`takhti_circle`,
+   two parameters) or falls back to links a person taps; the Friday check
+   and the weekly focus are maths-shaped for skills with a `skillProblem()`
+   (a reading focus is checked from the week's reading instead); the
+   circle's server is the voice server's JSON store.
 10. **How-this-child-learns is new and uncalibrated.** The settle rule
    (2 of up to 3 answers), the switch rule (two misses) and the half-weight
    subject prior are reasonable first choices, not tuned on real children;
@@ -791,13 +798,6 @@ Honest edges of what's built:
    for educational institutions' educational activities — keeping the
    model on the phone, never on our server, is the design answer, but it
    needs a lawyer's confirmation before launch.
-9. **The learning circle is a pilot.** The sync tick is a parent's
-   checkbox in the app, not verified parental consent (same caveat as 8);
-   WhatsApp sending needs an approved AiSensy template (`takhti_circle`,
-   two parameters) or falls back to links a person taps; the Friday check
-   and the weekly focus are maths-shaped for skills with a `skillProblem()`
-   (a reading focus is checked from the week's reading instead); the
-   circle's server is the voice server's JSON store.
 
 ## Style
 
