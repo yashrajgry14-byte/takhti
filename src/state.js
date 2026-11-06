@@ -43,7 +43,29 @@ function newProfile(name){
     muted: false,          // per child, not per device — see core/speech.js's speak()/ui/elephant.js's trumpet()
     avatar: null,          // the animal a child taps to say who they are, see ui/onboarding.js
     ob: null,              // in-progress onboarding step ('who'|'age'), see ui/onboarding.js's onboardHTML()
-    srs: {}                // Spaced Repetition Memory Engine records (itemId -> SRS item)
+    srs: {},               // Spaced Repetition Memory Engine records (itemId -> SRS item)
+    talkMunni: false,      // a parent turned on Talking Munni (voice goes to the voice service while talking) — see ui/talk-munni.js
+    talkKey: null,         // this child's key on the voice server, so only this phone can use or erase that record
+    talkApplied: [],       // talk sessions already replayed into this record, so a talk never counts twice
+    voiceTerms: null,      // {v, at, by}: a grown-up accepted the reading terms (reading checked with Sarvam online, nothing kept) — see ui/cloud-read.js
+    // the learning circle — see ui/circle.js. Progress only; never a voice, a photo or a typed question.
+    circleSync: false,     // a parent ticked "always keep in sync"
+    circleSyncAt: null,    // when they did
+    circleAsked: false,    // the grown-ups' step at the end of onboarding has been shown
+    circleKey: null,       // this child's key on the circle server
+    circleCode: '',        // a school's family code waiting to be sent
+    circlePhone: '',       // the parent's WhatsApp number, if they gave it
+    circle: null,          // what the circle sent back: this week's step, home activities, check, members, notes
+    circleAt: null,        // last sync
+    circleHistory: {},     // skill evidence only the circle saw (phone lessons, tutor's ticks, teachers' notes) — appEvidence() adds it
+    circleChecks: {},      // week -> this child's Friday check
+    circleHomeAns: {},     // home activity id -> the child's answer
+    circleOut: {},         // waiting to be sent: check, home answers, a tutor invite or decision
+    circleHw: null,        // assignedAt of class homework that came through the circle, so a withdrawal removes exactly it
+    mind: null,            // how this child learns: which ways of teaching work, topic by topic — see core/mind.js (stays on this phone)
+    assessments: [],       // school marks a parent typed or a class teacher sent: {skill, got, of, by, at}
+    twin: null,            // how this child thinks: what they know and how it fades, the mistakes they repeat, the twin's guesses — see core/twin.js (stays on this phone)
+    circleLeave: null      // {erase} — a parent's "off" or "delete" waiting for a signal to reach the server
   };
 }
 const PROFILE_FIELDS = Object.keys(newProfile());
@@ -70,5 +92,6 @@ const S = {
   _addingChild: false,       // onboarding is creating a sibling's new profile, see ui/onboarding.js's addChild()
   rb: null,             // read-back session, see ui/readback.js
   ctx: {},               // per-screen scratch
+  mistakeRules: [],      // combinations of mistakes many children share, from the shared database (core/mathgen.js) — device-level, codes only
   ...newProfile()
 };

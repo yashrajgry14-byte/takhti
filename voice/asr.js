@@ -1,0 +1,136 @@
+/* ==================================================================
+   THE READING CHECK — the speech service behind it (server half)
+
+   Under the reading terms a parent accepts at onboarding, whenever there
+   is a signal (src/ui/cloud-read.js): the child's reading of ONE line (or
+   one word said after Munni) arrives here, is written down as text by a
+   speech service built for Indian children's speech, and the text goes
+   back. The app grades it with its own matcher, exactly as it grades the
+   phone's own recognizer — nothing here grades, nothing here is kept: the
+   audio is never written to disk or logged, only passed on and dropped.
+
+   Providers (the first with a key wins; TAKHTI_ASR_PROVIDER picks one):
+   · Sarvam (SARVAM_API_KEY): saaras:v3 in "verbatim" mode — it writes
+     down what was SAID, not a tidied sentence, which is the whole point of
+     checking a child's reading (a tidying recognizer turns "बाई" into
+     "भाई" and hides the slip). hi-IN / en-IN.
+   · Any OpenAI-compatible transcription endpoint (WHISPER_API_KEY, and
+     WHISPER_URL / WHISPER_MODEL to point it at another host).
+   ================================================================== */
+'use strict';
+
+const LANGS = { hi: 'hi-IN', en: 'en-IN' };
+
+function provider(env) {
+  const want = String(env.TAKHTI_ASR_PROVIDER || '').toLowerCase();
+  if (want === 'sarvam' && env.SARVAM_API_KEY) return 'sarvam';
+  if (want === 'whisper' && env.WHISPER_API_KEY) return 'whisper';
+  if (env.SARVAM_API_KEY) return 'sarvam';
+  if (env.WHISPER_API_KEY) return 'whisper';
+  return null;
+}
+
+/* One line of a child's reading → { transcript, provider } or { error }. */
+async function transcribe(buf, mime, lang, env) {
+  const who = provider(env);
+  if (!who) return { error: 'no speech service is set up on this server', status: 503 };
+  const type = /^audio\/[a-z0-9.+-]+(;.*)?$/i.test(String(mime || '')) ? String(mime).split(';')[0] : 'audio/webm';
+  const ext = { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/mpeg': 'mp3', 'audio/wav': 'wav', 'audio/x-wav': 'wav' }[type] || 'webm';
+  const form = new FormData();
+  form.append('file', new Blob([buf], { type }), 'line.' + ext);
+  let url, headers;
+  if (who === 'sarvam') {
+    url = (env.SARVAM_API_BASE || 'https://api.sarvam.ai') + '/speech-to-text';
+    headers = { 'api-subscription-key': env.SARVAM_API_KEY };
+    form.append('model', env.SARVAM_STT_MODEL || 'saaras:v3');
+    form.append('mode', 'verbatim');                       // what was said, not what was meant
+    form.append('language_code', LANGS[lang] || 'hi-IN');
+  } else {
+    url = env.WHISPER_URL || 'https://api.openai.com/v1/audio/transcriptions';
+    headers = { Authorization: 'Bearer ' + env.WHISPER_API_KEY };
+    form.append('model', env.WHISPER_MODEL || 'whisper-1');
+    form.append('language', lang === 'en' ? 'en' : 'hi');
+  }
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), Number(env.TAKHTI_ASR_TIMEOUT_MS || 8000));
+  try {
+    const res = await fetch(url, { method: 'POST', headers, body: form, signal: ctl.signal });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) return { error: `the speech service said ${res.status}`, status: 502 };
+    const transcript = String(d.transcript != null ? d.transcript : d.text || '').trim().slice(0, 400);
+    return { transcript, provider: who };
+  } catch (e) {
+    return { error: 'the speech service did not answer in time', status: 504 };
+  } finally { clearTimeout(to); }
+}
+
+/* Munni's voice, live, for a line the phone's pre-rendered pack doesn't
+   have ("say it with Munni": a word, its pieces, a tip). Sarvam Bulbul —
+   the same voice as the pack (SARVAM_TTS_MODEL / SARVAM_SPEAKER) — or
+   ElevenLabs. Only short plain text: this is a teaching voice, not a
+   general text-to-speech service anyone can use. */
+async function synthesize(text, lang, pace, env) {
+  if (env.SARVAM_API_KEY) {
+    const res = await fetch((env.SARVAM_API_BASE || 'https://api.sarvam.ai') + '/text-to-speech', {
+      method: 'POST', headers: { 'api-subscription-key': env.SARVAM_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, language_code: LANGS[lang] || 'hi-IN', model: env.SARVAM_TTS_MODEL || 'bulbul:v2', speaker: env.SARVAM_SPEAKER || 'anushka',
+                             pace, speech_sample_rate: 22050, output_audio_codec: 'mp3' })
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok || !d.audios || !d.audios[0]) return { error: `the voice service said ${res.status}`, status: 502 };
+    return { audio: d.audios[0], mime: 'audio/mpeg', provider: 'sarvam' };
+  }
+  const voice = lang === 'en' ? env.ELEVEN_VOICE_EN : env.ELEVEN_VOICE_HI;
+  if (env.ELEVEN_API_KEY && voice) {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voice)}?output_format=mp3_22050_32`, {
+      method: 'POST', headers: { 'xi-api-key': env.ELEVEN_API_KEY, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
+      body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.55, similarity_boost: 0.75, speed: Math.max(0.7, Math.min(1.2, pace)) } })
+    });
+    if (!res.ok) return { error: `the voice service said ${res.status}`, status: 502 };
+    return { audio: Buffer.from(await res.arrayBuffer()).toString('base64'), mime: 'audio/mpeg', provider: 'elevenlabs' };
+  }
+  return { error: 'no voice service is set up on this server', status: 503 };
+}
+
+/* POST /reading/asr — { consent: true, lang, mime, audio: base64 }. */
+function createAsr(env) {
+  const hits = new Map();
+  const rateOk = ip => {
+    const now = Date.now(), per = Number(env.TAKHTI_ASR_PER_HOUR || 120);
+    const xs = (hits.get(ip) || []).filter(t => now - t < 36e5);
+    if (xs.length >= per) { hits.set(ip, xs); return false; }
+    xs.push(now); hits.set(ip, xs); return true;
+  };
+  async function handle(body, ip) {
+    body = body || {};
+    if (body.consent !== true) return { status: 403, body: { error: 'a parent has not turned on the clearer reading check' } };
+    if (!provider(env)) return { status: 503, body: { error: 'no speech service is set up on this server' } };
+    if (!rateOk(ip || '?')) return { status: 429, body: { error: 'enough for now — try later' } };
+    const b64 = String(body.audio || '');
+    if (!/^[A-Za-z0-9+/=]{200,}$/.test(b64)) return { status: 400, body: { error: 'no recording' } };
+    const buf = Buffer.from(b64, 'base64');
+    if (buf.length > 1.5 * 1024 * 1024) return { status: 413, body: { error: 'that recording is too long for one line' } };
+    const r = await transcribe(buf, body.mime, body.lang === 'en' ? 'en' : 'hi', env);
+    if (r.error) return { status: r.status || 502, body: { error: r.error } };
+    return { status: 200, body: { transcript: r.transcript, provider: r.provider } };
+  }
+  /* POST /reading/tts — { text, lang, pace }: Munni says a short teaching line. */
+  const cache = new Map();
+  async function speak(body, ip) {
+    body = body || {};
+    const text = String(body.text || '').trim(), lang = body.lang === 'en' ? 'en' : 'hi';
+    const pace = Math.max(0.5, Math.min(1.5, Number(body.pace) || 0.95));
+    if (!text || text.length > 160 || !/^[\u0900-\u097F A-Za-z0-9.,!?'"“”‘’—–…:;()\-]+$/.test(text)) return { status: 400, body: { error: 'only a short teaching line' } };
+    const k = `${lang}|${pace}|${text}`;
+    if (cache.has(k)) return { status: 200, body: cache.get(k) };
+    if (!rateOk('tts:' + (ip || '?'))) return { status: 429, body: { error: 'enough for now — try later' } };
+    const r = await synthesize(text, lang, pace, env).catch(() => ({ error: 'the voice service did not answer', status: 504 }));
+    if (r.error) return { status: r.status || 502, body: { error: r.error } };
+    const out = { audio: r.audio, mime: r.mime, provider: r.provider };
+    cache.set(k, out);
+    if (cache.size > 500) cache.delete(cache.keys().next().value);
+    return { status: 200, body: out };
+  }
+  return { handle, speak, provider: () => provider(env) };
+}
+
+module.exports = { createAsr, transcribe, synthesize, provider };

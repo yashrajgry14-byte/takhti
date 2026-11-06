@@ -54,8 +54,21 @@ function noteSkillFromConcept(concept, ok, child){
    different from "weak", and must not be treated as weak. */
 function appEvidence(skillId, child){
   const c = child || S;
-  const hist = (c.skillHistory || {})[skillId];
+  // the app's own attempts, plus what only the learning circle saw (a
+  // phone lesson, the tuition teacher's ticks, a teacher's note — see
+  // ui/circle.js). The server keeps those apart, so nothing counts twice.
+  const own = (c.skillHistory || {})[skillId], far = (c.circleHistory || {})[skillId];
+  const hist = far && far.n ? { n: (own ? own.n : 0) + far.n, right: (own ? own.right : 0) + far.right } : own;
   if(!hist || hist.n < 4) return null;
+  // the twin's live number (core/twin.js) — what the child knows TODAY,
+  // weighing recent answers and time away — stands in for this phone's
+  // own share of the evidence; the raw counts still travel in codes and
+  // the circle's sync, where another phone has no twin to read
+  const m = typeof twinMastery === 'function' && own && own.n ? twinMastery(skillId, c) : null;
+  if(m && m.n >= Math.min(own.n, 4)){
+    const farN = far && far.n ? far.n : 0, farR = far && far.n ? far.right : 0;
+    return { acc: (m.now * own.n + farR) / (own.n + farN), n: hist.n, mastery: m.now };
+  }
   return { acc: hist.right / hist.n, n: hist.n };
 }
 
@@ -67,6 +80,11 @@ function noteSkillAttempt(skillId, ok, child){
   const h = c.skillHistory[skillId] || { n:0, right:0 };
   h.n++; if(ok) h.right++;
   c.skillHistory[skillId] = h;
+  // the child's own answer settles a teaching round (core/mind.js) — callers
+  // never note a helped answer, so this is always the child's own
+  if(typeof mindAttempt === 'function' && c === S) mindAttempt(skillId, ok, c);
+  // …and updates what the child knows, and how it fades (core/twin.js)
+  if(typeof twinObserve === 'function') twinObserve(skillId, ok, c);
   mirrorToClass(c);   // if this child is linked to a class, the teacher side should eventually see this
 }
 

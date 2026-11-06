@@ -3,5 +3,11 @@ node_modules/
 .env.local
 .vercel
 .DS_Store
+voice/data/
+voice/.env
+voice/agent/munni.agent.json
 
 .vercel
+voice/agent/munni-parent.agent.json
+voice/agent/*.workflow.json
+voice/agent/*.agent.json

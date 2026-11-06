@@ -88,11 +88,11 @@ function runnerBegin(){
    round-state in, round-state out — a headless test can call this in a
    loop with no browser, no requestAnimationFrame, no DOM, exactly like
    game-core.js's own gameAnswer(). */
-function runnerRecordAnswer(ok){
+function runnerRecordAnswer(ok, picked){
   const g = S.game_;
   if(!g || g.kind !== 'runner' || g.over) return ok;
 
-  gameAnswer(ok);   // right/wrong, noteSkillAttempt() per tagged skill, may itself end the round (pool exhausted)
+  gameAnswer(ok, picked);   // right/wrong, noteSkillAttempt() per tagged skill, the mistake it was; may itself end the round (pool exhausted)
 
   if(RN){
     RN.duration = ok
@@ -189,7 +189,7 @@ function runnerTick(ts){
 function runnerResolve(){
   if(!RN || !S.game_ || S.game_.over) return;
   const ok = RN.lane === RN.rightLane;
-  runnerRecordAnswer(ok);
+  runnerRecordAnswer(ok, RN.text && RN.text[RN.lane] ? RN.text[RN.lane].en : null);
 
   if(ok){
     runnerFlash('go');

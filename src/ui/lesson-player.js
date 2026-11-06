@@ -187,6 +187,8 @@ async function startLesson(id){
   const les = S.online ? await enrichLesson(found) : found;   // already falls back to `found` on any failure
   S._lessonBusy = false;
   S.lesson = { id, data: les, i:0, right:0, asked:0, picked:null };
+  // a story is a way of being taught (core/mind.js): the answers that follow tell whether it stuck
+  if(typeof mindTaught === 'function') for(const sk of [les.skillId].concat(CONCEPT_SKILLS[les.concept] || []).filter(x => x && mindDomain(x))) mindTaught(sk, 'story');
   log(0, `Lesson "${id}" · ${les.beats.length} beats · rendered in ${gameById(S.game).en}`);
   render();
   lesNarrate();
@@ -263,8 +265,10 @@ function lesAnswer(k){
   log(0, `Lesson checkpoint · ${ok ? 'correct' : 'incorrect'}`);
   // a homework story names its skill directly; a bank lesson names a concept
   const les = S.lesson.data;
-  if(les.skillId) noteSkillAttempt(les.skillId, ok);
-  else if(les.concept) noteSkillFromConcept(les.concept, ok);
+  const helped = S.lesson.helpedAt === S.lesson.i;      // Ask Munni explained this one: help, not evidence
+  if(typeof twinAnswerLesson === 'function') twinAnswerLesson(les, S.lesson.i, k, ok, helped);
+  if(!helped && les.skillId) noteSkillAttempt(les.skillId, ok);
+  else if(!helped && les.concept) noteSkillFromConcept(les.concept, ok);
   render();
   speak(ok ? (S.lang==='hi'?'बिलकुल सही!':'Exactly right!')
            : (S.lang==='hi'?`देखो — जवाब है ${b.opts[b.correct]}`:`Look — the answer is ${b.opts[b.correct]}`),
@@ -281,6 +285,7 @@ function startHomeworkStory(coop){
   const les = genHomeworkStory(hw.storySkill, S.game, S, { coop: !!coop, teacherNote: hw.note });
   if(!les) return;
   S.lesson = { id: les.id, data: les, i: 0, right: 0, asked: 0, picked: null, hwAt: hw.assignedAt };
+  if(typeof mindTaught === 'function' && les.skillId && mindDomain(les.skillId)) mindTaught(les.skillId, 'story');
   if(typeof sfxCard === 'function') sfxCard();
   log(0, `Homework story · ${hw.storySkill}${hw.assignedSkills.includes(hw.storySkill) ? '' : ` (diagnosed under ${hw.assignedSkills.join(', ')})`} · in ${gameById(S.game).en}`);
   render();
@@ -298,6 +303,7 @@ function lessonHTML(){
 
   const asking = b.t === 'ask';
   const opts = asking ? (S.lang==='hi' ? (b.hiOpts || b.opts) : b.opts) : [];
+  if(asking && S.lesson.picked == null && S.lesson.helpedAt !== S.lesson.i && typeof twinExpectLesson === 'function') twinExpectLesson(les, S.lesson.i);
 
   // one shared match: the friend sets it up, the child answers, both win
   const coopBanner = les.coop ? `
@@ -361,6 +367,7 @@ function lessonListHTML(){
   <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="display" style="font-size:21px;margin:4px 0">
     ${S.lang==='hi'?'कहानी से सीखो':'Learn with a story'}</div>
+  ${typeof circleLessonsHTML === 'function' ? circleLessonsHTML() : ''}
 
   ${hwData ? `
     <div class="hw-banner-card" style="background:linear-gradient(135deg, var(--marigold), #C5603A);border-radius:14px;padding:14px;margin:10px 0;color:#fff;">

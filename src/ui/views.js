@@ -1,6 +1,6 @@
 /* ================= SCREENS ================= */
 const $ = id => document.getElementById(id);
-function render(){ $('screen').innerHTML = VIEWS[S.screen](); if(AFTER[S.screen]) AFTER[S.screen](); }
+function render(){ $('screen').innerHTML = VIEWS[S.screen](); if(AFTER[S.screen]) AFTER[S.screen](); if(typeof askFab === 'function') askFab(); }
 /* Stops everything that belongs to the screen being left — the arrival
    scene, a live recognizer, a self-listen clip, a cartoon in progress,
    the map's ambient sound — and every OTHER game shell's loop, never the
@@ -23,7 +23,9 @@ function go(s){
   if(s!=='match')  matchStop();
   if(s!=='sort')   sortStop();
   if(s!=='archer') archerStop();
-  S.screen=s; S.ctx={}; render();
+  askFollow(s);    // Ask Munni's help belongs to the screen it was asked on
+  talkFollow(s);   // a Talking Munni call lives at the Pond and in the games, nowhere else
+  S.screen=s; S.ctx={}; render(); talkChip();
 }
 
 /* ---------- profile switcher: one phone, up to MAX_PROFILES siblings.
@@ -156,6 +158,7 @@ read(){
     }
   }
   const s = S.ctx.sentence;
+  if(!S.ctx.tokens && !S.ctx.helped) twinExpect('read:' + s, readSkill(), null, 0.05);   // the twin's guess: will this line go well?
   const shown = S.ctx.tokens
     ? S.ctx.tokens.map(tk=>`<span class="w ${tk.state}" title="${tk.heard? 'heard: '+attr(tk.heard) : 'not heard'}" data-say="${attr(tk.text)}" onclick="sayEl(this)">${tk.text}</span>`).join(' ')
     : s.split(/\s+/).map(w=>`<span class="w" data-say="${attr(w)}" onclick="sayEl(this)">${w}</span>`).join(' ');
@@ -167,6 +170,8 @@ read(){
     <button class="${S.lang==='hi'?'sel':''}" onclick="setReadLang('hi')">हिंदी</button>
   </div>
   <div class="sentence">${shown}</div>
+  ${S.ctx.tokens ? '' : twinHeadsUpHTML(s)}
+  ${mindChunksHTML()}
   ${S.ctx.tokens? `<div class="legend">
       <span><i style="background:rgba(63,187,120,.7)"></i>${S.lang==='hi'?'सही':'correct'}</span>
       <span><i style="background:rgba(240,160,42,.8)"></i>${S.lang==='hi'?'लगभग':'almost'}</span>
@@ -175,6 +180,9 @@ read(){
     </div>`:`<div class="muted" style="font-size:12px">${S.lang==='hi'?'किसी शब्द को दबाकर सुनो':'Tap any word to hear it'}</div>`}
   ${S.ctx.score!=null? `<div class="scorebar"><i style="width:${S.ctx.score}%"></i></div>
      <div class="feedback">${S.ctx.msg}</div>
+     ${twinSlipHTML()}
+     ${sayHTML()}
+     ${S.ctx.sayWord && !(SAY && SAY.line === S.ctx.sentence) ? `<button class="btn leaf" style="margin-top:8px" onclick="sayStart(S.ctx.sayWord, S.ctx.slip)">🐘 ${S.lang==='hi'?'मुन्नी के साथ बोलो':'Say it with Munni'}: <b>${attr(S.ctx.sayWord)}</b></button>` : ''}
      ${S.ctx.practice ? `<button class="btn ghost practise" onclick="practiseLine()">🔁 ${S.lang==='hi'?'इन शब्दों के साथ एक और':'One more with these words'}: <b>${S.ctx.practice.line}</b></button>` : ''}
      ${typeof selfListenHTML === 'function' ? selfListenHTML() : ''}`:''}
   ${S.ctx.unsure? `<div class="retry">${S.lang==='hi'?'साफ़ सुनाई नहीं दिया — थोड़ा पास आकर फिर बोलो।':'I could not hear that clearly — come a little closer and try again.'}</div>`:''}
@@ -246,12 +254,14 @@ write(){
         S.ctx.tokens.map(tk=>`<span class="w ${tk.state}">${tk.text}</span>`).join(' ')}</div>
       <div class="scorebar"><i style="width:${S.ctx.score}%"></i></div>
       <div class="feedback">${S.ctx.msg}</div>
+      ${twinSlipHTML()}
       <button class="btn" style="margin-top:10px" onclick="nextLine()">${t('next')} →</button>`:''}`;
   }
 
   /* ---------- TRACE MODE ---------- */
   const pool = GLYPHS[S.lang][S.levels.write];
   if(!S.ctx.glyph) S.ctx.glyph = pool[Math.floor(Math.random()*pool.length)];
+  if(S.ctx.score == null) twinExpect('write:' + S.ctx.glyph, 'write' + S.levels.write, null, 0.1);   // the twin's guess for this letter
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
   ${tabs}
@@ -261,7 +271,7 @@ write(){
     <canvas id="guide"></canvas>
     <canvas id="ink"></canvas>
   </div>
-  ${S.ctx.score!=null? `<div class="scorebar"><i style="width:${S.ctx.score}%"></i></div><div class="feedback">${S.ctx.msg}</div>`:''}
+  ${S.ctx.score!=null? `<div class="scorebar"><i style="width:${S.ctx.score}%"></i></div><div class="feedback">${S.ctx.msg}</div>${twinSlipHTML()}`:''}
   <div class="row" style="margin-top:10px">
     <button class="btn ghost" onclick="clearInk()">${t('clear')}</button>
     <button class="btn leaf" onclick="checkInk()">${t('check')}</button>
@@ -271,9 +281,15 @@ write(){
 
 /* ---------- MATH ---------- */
 math(){
-  if(!S.ctx.p) S.ctx.p = genProblem(S.levels.math);
+  if(!S.ctx.p){
+    // from Munni's idea on the map: the first sum is that topic
+    const f = S.mindFocus && skillHasProblem(S.mindFocus) ? skillProblem(S.mindFocus, Math.floor(Math.random() * 1e9)) : null;
+    S.mindFocus = null;
+    S.ctx.p = f && f.c == null ? { a: f.a, b: f.b, op: f.op, ans: f.ans, opts: f.opts.map(Number) } : mindPracticeProblem();
+  }
   const p = S.ctx.p;
   const g = gameById(S.game);
+  if(S.ctx.picked == null && !S.ctx.helped) twinExpect(twinKeyMath(p), skillOfProblem(p), p, p.opts);   // the twin's guess, before the answer
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="muted">${t('level')} ${S.levels.math} · ${t('count')} · ${competencyName('math',S.levels.math)}</div>
@@ -286,6 +302,8 @@ math(){
     ${p.opts.map(o=>`<button class="opt ${S.ctx.picked!=null&&o===p.ans?'right':''} ${S.ctx.picked===o&&o!==p.ans?'wrong':''}" onclick="answerMath(${o})">${o}</button>`).join('')}
   </div>
   ${S.ctx.msg? `<div class="feedback" style="text-align:center;margin-top:14px">${S.ctx.msg}</div>`:''}
+  ${twinTipHTML(p)}
+  ${mindIdeaHTML()}
   ${S.ctx.picked!=null? `<button class="btn" style="margin-top:12px" onclick="nextProblem()">${t('next')} →</button>`:''}`;
 },
 
@@ -356,6 +374,7 @@ ask(){
   <div class="display" style="font-size:21px;margin:4px 0">${t('ask')}</div>
   <div class="muted">${t('askSub')}</div>
   ${elephantHTML()}
+  ${talkPanelHTML()}
   <input class="input" id="q" style="margin-top:12px" placeholder="${t('typeQ')}">
   <button class="btn" style="margin-top:10px" onclick="submitQuestion($('q').value)">${t('sendQ')}</button>
   <div style="margin-top:8px" class="row">
@@ -423,6 +442,11 @@ parent(){
       </div>
       <button class="toggle ${S.muted?'':'on'}" onclick="toggleMuted()" aria-label="${S.muted?'unmute':'mute'}"><span></span></button>
     </div>
+
+    ${talkSetUp() ? talkParentHTML() : ''}
+    ${cloudReadParentHTML()}
+    ${typeof circleParentHTML === 'function' ? circleParentHTML() : ''}
+    ${mindParentHTML()}
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'बिना इंटरनेट':'WITHOUT INTERNET'}</div>
     ${(() => {

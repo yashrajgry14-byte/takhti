@@ -14,12 +14,13 @@ function nextSentence(){
   // going back to the normal random pool — same invisible spaced
   // repetition, carried across "Next" the way it carries across the
   // session's first sentence.
+  SAY = null;                                                     // "say it with Munni" belongs to the line being left
   const queue = S.ctx._srsQueue || [];
   if(queue.length){
     S.ctx = { sentence: queue[0], _srsQueue: queue.slice(1) };
   } else {
     const pool = ageSentences(S.lang, S.levels.read);
-    S.ctx = { sentence: pool[Math.floor(Math.random()*pool.length)] };
+    S.ctx = { sentence: twinPickLine(pool) };
   }
   render();
 }
@@ -40,7 +41,11 @@ function startListening(){
   // cannot attach to it; the two start together and stop on the same
   // two signals (a result, or a recognizer error).
   if(typeof selfListenStart === 'function') selfListenStart();
-  ACTIVE_LISTEN = listen(alts=>{
+  // online, under the reading terms: Sarvam hears it (ui/cloud-read.js); otherwise the
+  // phone's own on-device recognizer — never a general cloud one without the terms
+  S.ctx.heardBy = null;
+  const hear = cloudReadReady() ? cloudListen : deviceListenAllowed() ? listen : (ok, end) => { end('no-terms'); return null; };
+  ACTIVE_LISTEN = hear(alts=>{
     ACTIVE_LISTEN = null;
     if(typeof selfListenStop === 'function') selfListenStop();
     checkRead(alts);
@@ -106,11 +111,24 @@ function checkRead(input){
     S.ctx.msg = S.lang==='hi' ? 'थोड़ा धीरे, पूरा वाक्य पढ़ो' : 'Slow down a little and read the whole line';
   }
 
-  const moved = record('read', ok);
+  S.ctx.missed = r.misread || [];             // Ask Munni starts from the word that tripped the child up
+  // HOW it went wrong, not only which words (core/lang-mistakes.js) — into the twin
+  const slips = lineMistakes(r.tokens, r.extra, S.lang);
+  twinCheck('read:' + S.ctx.sentence, null, ok, S.ctx.helped);
+  if(!S.ctx.helped) twinNote(readSkill(), slips);
+  S.ctx.slip = slips.find(m => langTip(m, S.lang)) || null;
+  const moved = S.ctx.helped ? null : record('read', ok);
+  if(!S.ctx.helped) mindAttempt(readSkill(), ok);
   if(moved==='up') S.ctx.msg += S.lang==='hi' ? ' · नया स्तर! 🎉' : ' · New level! 🎉';
+  S.ctx.passed = ok;
   render();
 
-  if(!ok && r.misread.length) setTimeout(()=>speak(r.misread.slice(0,3).join(', ')), 420);
+  // a slip: Munni teaches the right way to say the word, the child says it (ui/say-it.js) —
+  // straight away when the line didn't pass, as a button when it did
+  const teach = !S.ctx.helped && ((S.ctx.slip && S.ctx.slip.word) || r.misread[0] || (ok ? r.slips[0] : null));
+  if(teach) sayOffer(r, S.ctx.slip);
+  // no word to teach (the line was cut short): the child's way — Munni reads the whole line again
+  else if(!ok && S.ctx.readWay === 'model') setTimeout(()=>speak(S.ctx.sentence), 420);
   if(!ok && r.misread.length) tier1Offer(r.misread.slice(0,2));
 }
 
@@ -185,6 +203,11 @@ function checkInk(){
   S.ctx.msg = ok ? (S.lang==='hi'?'शाबाश! अक्षर सही बना ⭐':'Nicely shaped! ⭐')
     : coverage<0.5 ? (S.lang==='hi'?'कुछ हिस्सा छूट गया — पूरी लकीर पर चलो':'Some of the letter is missing — trace the whole shape')
     : (S.lang==='hi'?'लकीर से बाहर चले गए — धीरे-धीरे बनाओ':'Your line wandered outside — go slower');
+  // HOW the letter went (mirrored, top line missing, a part left out…) — core/lang-mistakes.js
+  const slips = ok ? [] : inkMistakes(G, C, w, h, S.lang);
+  twinCheck('write:' + S.ctx.glyph, null, ok, false);
+  twinNote('write' + S.levels.write, slips);
+  S.ctx.slip = slips[0] ? Object.assign({ glyph: S.ctx.glyph }, slips[0]) : null;
   record('write', ok);
   render();
 }
@@ -272,6 +295,10 @@ function submitPaper(typed){
   log(0,`Paper writing graded · ${r.score}% match against the target line`);
   S.ctx.tokens = r.tokens; S.ctx.score = r.score;
   const ok = r.score >= 75;
+  // spelling: the same word checks as reading (a vowel sign left out, a half letter dropped…)
+  const slips = lineMistakes(r.tokens, r.extra, S.lang).filter(m => m.id !== 'stopped' && m.id !== 'added');
+  twinNote('write' + S.levels.write, slips);
+  S.ctx.slip = slips.find(m => langTip(m, S.lang)) || null;
   S.ctx.msg = ok
     ? (S.lang==='hi'?'बहुत सुंदर लिखा! ⭐':'Beautifully written! ⭐')
     : (S.lang==='hi'?`इन शब्दों को फिर देखो: ${r.misread.slice(0,3).join(', ')}`:`Check these again: ${r.misread.slice(0,3).join(', ')}`);
@@ -288,6 +315,7 @@ function submitPaper(typed){
 function playMath(){
   if(S._mathBusy) return;
   const p=S.ctx.p, g=gameById(S.game), st=$('mstage'); if(!st) return;
+  const sk = skillOfProblem(p); if(sk && !S.ctx.helped) mindTaught(sk, 'show');   // watching it happen is a way of being taught
   S._mathBusy = true;
   clearTimeout(S._mathBusyTimer);
   S._mathBusyTimer = setTimeout(()=>{ S._mathBusy=false; }, 6000);
@@ -399,12 +427,24 @@ function answerMath(o){
   const ok = o===S.ctx.p.ans;
   S.ctx.msg = ok ? (S.lang==='hi'?'सही! ⭐':'Correct! ⭐')
                  : (S.lang==='hi'?`जवाब है ${S.ctx.p.ans} — देखो कैसे`:`The answer is ${S.ctx.p.ans} — watch why`);
-  record('math', ok);
+  const sk = skillOfProblem(S.ctx.p);
+  twinCheck(twinKeyMath(S.ctx.p), o, ok, S.ctx.helped);   // was the twin's guess right? (core/twin.js)
+  if(!S.ctx.helped){
+    record('math', ok);                       // after Ask Munni explained it, the answer isn't counted as the child's own
+    if(sk){
+      mindAttempt(sk, ok);                    // the child's own answer settles a teaching round (core/mind.js)
+      twinObserve(sk, ok, S, 1 / S.ctx.p.opts.length);
+      const bug = twinAnswer(sk, S.ctx.p, o);
+      // a wrong answer a known mistake explains gets help aimed at that mistake
+      if(!ok && MISTAKES[bug]) S.ctx.tip = { id: bug, habit: !!(twinHabit(sk) && twinHabit(sk).id === bug) };
+    }
+  }
   render();
   if(ok) speak(S.lang==='hi'?'सही':'Correct');
-  else setTimeout(playMath, 500);      // a wrong answer always earns the animation
+  else if(S.ctx.helped) setTimeout(playMath, 500);
+  else mindTeachMath(S.ctx.p);         // a missed sum is taught the way that works for this child
 }
-function nextProblem(){ S.ctx={p:genProblem(S.levels.math)}; render(); }
+function nextProblem(){ S.ctx={p:mindPracticeProblem()}; render(); }
 
 /* ---- ask / the bridge ---- */
 function findOffline(q){
@@ -435,7 +475,10 @@ function submitQuestion(q){
 }
 async function askCloud(q){
   log(2,'Signal available · generating answer + storyboard');
-  const prompt = `A child aged 6-9 in India asked: "${q}".
+  // pitched for THIS child (core/twin.js) — only if a parent agreed to share
+  // progress (the learning circle or Talking Munni); ids made into sentences, no name
+  const about = (S.circleSync || S.talkMunni) && typeof twinPrompt === 'function' ? `\nAbout this child: ${twinPrompt(twinProfile())}` : '';
+  const prompt = `A child aged 6-9 in India asked: "${q}".${about}
 Reply ONLY with JSON, no markdown fences:
 {"title":"the question restated simply","panels":[{"art":"ONE emoji","en":"one short simple sentence","hi":"same sentence in simple Hindi"},{...},{...}],"quiz":{"en":"one simple check question","hi":"same in Hindi","opts":["right","wrong"],"hiOpts":["right in Hindi","wrong in Hindi"],"correct":0}}
 Exactly 3 panels. Each sentence under 18 words, warm, concrete, no jargon. Keep it factual and age-appropriate.`;
@@ -645,7 +688,9 @@ function setOnline(v){
   pill.textContent = v ? 'ONLINE · EXTRAS ON' : 'AIRPLANE MODE';
   $('netlabel').textContent = v? 'Signal' : 'No signal';
   log(null, v? 'Signal detected' : 'Signal lost — nothing in the lesson changes');
+  if(!v) talkLeave();   // a Talking Munni call needs the signal; everything else carries on
   if(v && S.queue.length) flushQueue();
+  if(v && typeof circleSync === 'function') circleSync(true);   // the learning circle, if a parent turned it on
 }
 async function flushQueue(){
   log(2,`Sync · ${S.queue.length} saved question(s) being answered in the background`);

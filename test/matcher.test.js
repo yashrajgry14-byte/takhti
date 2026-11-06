@@ -76,6 +76,9 @@ const TESTS = [
   ['hi', 'सूरज गरम है।', 'सूरज है', [40, 70], 'skipped word in a short line'],
   ['hi', 'बड़ा कुत्ता तेज़ दौड़ता है।', 'बड़ा कुत्ता दौड़ता है', [70, 90], 'skipped word in a longer line, smaller penalty'],
 
+  // ---- partial reading: stopping early must not let a later word steal an alignment ----
+  ['hi', 'नदी में नाव चलती है।', 'नदी में', [36, 44], 'stopped after two correct words (was 27: में was aligned onto है)'],
+
   // ---- extra Hindi cases: extra (inserted) words ----
   ['hi', 'सूरज गरम है।', 'अरे सूरज गरम है', [85, 100], 'one filler word inserted before the line'],
   ['hi', 'बिल्ली बैठी है।', 'अरे देखो बिल्ली बैठी है यहाँ', [70, 95], 'several inserted words, penalty caps out'],

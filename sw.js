@@ -9,7 +9,7 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v29';
+const CACHE = 'takhti-v40';
 // Recorded audio clips are content-hashed (see core/voice.js) — a given
 // filename can never change, so they live in a cache of their own that
 // the version cleanup below never touches. Bumping CACHE on a normal
@@ -24,21 +24,20 @@ const SHELL = [
   './src/content/ages.js', './src/content/skills.js', './src/content/curriculum-early.js',
   './src/content/lessons.js', './src/core/lesson-gen.js', './src/content/literacy.js',
   './src/content/comprehension.js', './src/core/diagnose.js', './src/core/class-share.js',
-  './src/core/class-sync.js', './src/core/generative-brain.js', './src/core/video-library-catalog.js',
-  './src/core/cartoon-series.js', './src/core/srs.js', './src/core/sfx.js',
-  './src/games/game-core.js', './src/content/anim.js', './src/content/copy.js',
-  './src/content/competencies.js', './src/core/log.js', './src/core/store.js',
-  './src/core/profiles.js', './src/core/voice.js', './src/core/speech.js',
-  './src/core/matcher.js', './src/core/adaptive.js', './src/core/daily-engine.js',
-  './src/core/mathgen.js', './src/core/readability.js', './src/core/tier1.js',
-  './src/ui/mascot.js', './src/ui/readback.js', './src/ui/elephant.js',
-  './src/ui/lesson-player.js', './src/ui/anim-celebrate.js', './src/ui/cards.js',
-  './src/ui/views.js', './src/ui/opening.js', './src/ui/arrival.js',
-  './src/ui/onboarding.js', './src/ui/jungle-map.js', './src/ui/video-player.js',
-  './src/ui/teacher.js', './src/games/runner.js', './src/games/pop.js',
-  './src/games/tower.js', './src/games/match.js', './src/games/sort.js',
-  './src/games/archer.js', './src/ui/self-listen.js', './src/ui/handlers.js',
-  './src/app.js',
+  './src/core/class-sync.js', './src/core/generative-brain.js', './src/core/video-library-catalog.js', './src/core/cartoon-series.js',
+  './src/core/srs.js', './src/core/sfx.js', './src/games/game-core.js',
+  './src/content/anim.js', './src/content/copy.js', './src/content/competencies.js',
+  './src/core/log.js', './src/core/store.js', './src/core/profiles.js',
+  './src/core/voice.js', './src/core/speech.js', './src/core/matcher.js',
+  './src/core/adaptive.js', './src/core/daily-engine.js', './src/core/mathgen.js',
+  './src/core/readability.js', './src/core/tier1.js', './src/core/explain.js', './src/core/mind.js', './src/core/twin.js', './src/core/lang-mistakes.js', './src/ui/mascot.js',
+  './src/ui/readback.js', './src/ui/elephant.js', './src/ui/lesson-player.js',
+  './src/ui/anim-celebrate.js', './src/ui/cards.js', './src/ui/views.js',
+  './src/ui/opening.js', './src/ui/arrival.js', './src/ui/onboarding.js',
+  './src/ui/jungle-map.js', './src/ui/video-player.js', './src/ui/teacher.js',
+  './src/games/runner.js', './src/games/pop.js', './src/games/tower.js',
+  './src/games/match.js', './src/games/sort.js', './src/games/archer.js',
+  './src/ui/self-listen.js', './src/ui/talk-munni.js', './src/ui/cloud-read.js', './src/ui/say-it.js', './src/ui/circle.js', './src/ui/ask-munni.js', './src/ui/mind-ui.js', './src/ui/handlers.js', './src/app.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png'
 ];
 

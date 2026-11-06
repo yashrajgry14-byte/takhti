@@ -78,6 +78,8 @@ async function t1FromModel(words, lang){
         'You write ONE short, simple, kind sentence for a young child in India to read aloud. ' +
         'Use everyday words about family, school, animals, food, weather or games. ' +
         'No names of real people, brands or places. Reply with the sentence only.' +
+        // how this child reads (core/twin.js): letters to practise, what to keep easy — on the phone only
+        (typeof twinProfile === 'function' ? ' About this reader: ' + twinPrompt(twinProfile()) : '') +
         (lang === 'hi' ? ' Write it in Hindi, in Devanagari script.' : '') }]
     });
     const out = await session.prompt(
