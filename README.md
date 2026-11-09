@@ -18,6 +18,10 @@ tracing to writing, counting to carrying, tables and BODMAS.
 **Next:** up to Class 10, every Indian language, following each school's own
 syllabus.
 
+**Build status:** web prototype on `main` (offline shell `takhti-v40`, 36 test
+suites); the voice server has had its first live Bolna call. The Android app
+ports the same logic to Kotlin (`ANDROID.md`).
+
 ---
 
 ## Why
@@ -84,6 +88,12 @@ check, a home activity for a grown-up, a tutor's pack, WhatsApp updates to
 grown-ups. A teacher view diagnoses the class and assigns homework. A shared,
 nameless database of mistakes makes every child's tutor smarter.
 
+Without the voice server, a class still stays in step: with a parent's
+switch, each phone syncs practice counts with the teacher's phone once an
+hour and whenever a signal returns (`core/class-sync.js`), and homework comes
+back down. Phones that rarely see a signal pass short progress and homework
+codes instead, over WhatsApp or SMS.
+
 ### Privacy, by design
 The child's mind stays on the phone. Only a short summary — ids, no name —
 travels, and only where a parent agreed. Recordings for the reading check are
@@ -95,7 +105,7 @@ not kept. No streaks, no reminders to children (India's DPDP Act s.9).
 
 ```bash
 npm run dev                                   # the app, on http://localhost:5173
-npm test                                      # 35 test suites
+npm test                                      # 36 test suites
 npm run voice:sim -- --auto --mistakes        # a whole Munni phone call, in the terminal
 ```
 
@@ -107,9 +117,10 @@ storage need a real origin).
 `cd voice && cp .env.example .env`, fill in the keys (Bolna, Sarvam), then
 `npm run voice`. Full setup in `voice/README.md`.
 
-**Deploying the app:** any static host. `api/ask.js` is the only server piece
-for the app (answers to saved questions); without it the app still runs on its
-on-device content.
+**Deploying the app:** any static host. The app's two server pieces are
+optional: `api/ask.js` (answers to saved questions) and `api/class-sync.mjs`
+(the hourly class sync, which needs Netlify Blobs). Without them the app still
+runs on its on-device content, and classes use codes.
 
 ---
 
