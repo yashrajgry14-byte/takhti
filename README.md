@@ -15,12 +15,18 @@ step on one learning goal a week.
 **Teaching today:** ages 3–10 (Nursery to Class 5) — reading, writing and
 arithmetic, in Hindi and English: letters to reading with understanding,
 tracing to writing, counting to carrying, tables and BODMAS.
-**Next:** up to Class 10, every Indian language, following each school's own
-syllabus.
+**Next:** the explain-back loop — a child explains a concept back to Munni,
+Takhti finds the weak points and teaches them the child's way (KidMonk's
+teach-back, folded into Takhti); lessons built ahead from each school's own
+books (`docs/master-format-plan.md`); then up to Class 10 and every Indian
+language.
 
 **Build status:** web prototype on `main` (offline shell `takhti-v40`, 36 test
-suites); the voice server has had its first live Bolna call. The Android app
-ports the same logic to Kotlin (`ANDROID.md`).
+suites, all passing); the voice server has had its first live Bolna call.
+Lessons from a school's chapter (Gemini drafts, the phone checks, the teacher
+approves) are on the `syllabus-gemini` branch, not yet merged. On Android it
+runs as the installed PWA (`ANDROID.md`); a Kotlin port is planned. Dated log:
+`docs/DEVELOPMENTS.md`.
 
 ---
 
