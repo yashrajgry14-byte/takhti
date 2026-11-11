@@ -3,13 +3,37 @@
 A foundational literacy and numeracy tutor for Indian children aged 3–10
 (four age bands in `content/ages.js`: 3–4, 5–6, 7–8, 9–10).
 Built for the iQOO Hackathon 2026, Smart Education track. This repo is the web
-prototype; the Android build ports the same logic to Kotlin + Compose.
+prototype; on Android it runs as the installed PWA (`ANDROID.md`). A Kotlin +
+Compose port of the same logic is planned, not started — no Kotlin is in the
+repo.
 
 This file describes the repo **as it actually stands** — verified against the
 code and the test suite, not carried forward from earlier drafts of itself
 (which drifted badly once: it described a whole cartoon system as live when no
 screen could reach it). Where something is limited or not built yet, it says
 so — see **Known limitations** at the bottom.
+
+## Product decisions
+
+Read these before planning work:
+`docs/PRODUCT.md` (what Takhti is, who it's for, the decisions),
+`docs/master-format-plan.md` (lessons built ahead from each school's books),
+`docs/DEVELOPMENTS.md` (dated log of what's built, checked against the code).
+
+- **One app (decided Nov 2026).** Takhti is the single master product.
+  KidMonk and its "Forgetful Monk" voice teach-back (the child explains a
+  concept back to a monk who "forgot" it) fold into Takhti. Takhti teaches
+  what the child couldn't learn at school; the teach-back practises and
+  tests at home what the school taught; both use the same syllabus and
+  books, and a weak point found in the teach-back reroutes the child into
+  Takhti's teaching. **Not built yet.**
+- **The build focus is one loop: explain-back → weak points found →
+  remediation.** Work that doesn't serve it isn't the focus.
+- **Standing rules:** lessons run offline (the rule below); no
+  learning-style labels — the way to teach a child is measured from their
+  own answers (`core/mind.js`); original content only, never a textbook's
+  own text; the Sarvam reading check is part of the onboarding terms
+  parents accept, not an optional toggle (see **The reading check**).
 
 ## The one rule that explains the architecture
 
@@ -158,6 +182,7 @@ api/class-sync.mjs          Tier 2 class sync (Netlify Blobs); syncCore() is the
 sw.js                       service worker — offline cache
 voice/                      Munni on a phone call (Bolna), the learning circle's server, the shared mistakes database, the reading check's speech service — a separate Node server, see below
 tools/build-audio.mjs       build-time narration (Sarvam or ElevenLabs) into audio/, played offline: lessons, reading lines, every word and its pieces, letters, Munni's coaching lines
+docs/                       PRODUCT.md, master-format-plan.md, DEVELOPMENTS.md — see Product decisions
 ```
 
 ## Screens and navigation
@@ -865,7 +890,7 @@ app is a client of it, and only when a parent says so.
 
 ## Testing
 
-`npm test` runs 36 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 36 suites (all passing on `main`, checked 11 Nov 2026). Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -923,7 +948,7 @@ Honest edges of what's built:
 1. **Offline reading depends on the browser.** It works where the browser
    offers on-device recognition and the pack has downloaded (recent Chrome);
    elsewhere offline reading is typed. Whether a Hindi pack exists is the
-   browser's call. (The Android build uses `EXTRA_PREFER_OFFLINE`.)
+   browser's call. (The planned Kotlin build would use `EXTRA_PREFER_OFFLINE`.)
 2. **The on-device model depends on the browser too.** Without one, practice
    lines come from the curated bank only — which covers most missed words.
 3. **Class sync needs Netlify, or the learning circle.** The hourly class
@@ -1010,6 +1035,20 @@ Honest edges of what's built:
    the old path (the browser's own recognizer online). The narration isn't
    rendered for Hindi yet (English has 439 lines of the old set): run
    `tools/build-audio.mjs --lang hi --provider sarvam`.
+13. **The build focus isn't built yet.** The explain-back → weak points →
+   remediation loop (the folded-in KidMonk teach-back) and the
+   master-format library (book map, master-lesson schema,
+   `tools/build-library`, the aims-approval screen, the child's planner)
+   have no code on any branch. Lessons from a school's chapter (Gemini
+   drafts, the phone checks, the teacher approves) are on the
+   `syllabus-gemini` branch, not in `main`.
+14. **Gemini is barely in `main`.** Only on-device practice lines use it
+   (Chrome's Prompt API runs Gemini Nano — `core/tier1.js`). The saved
+   question queue goes to Claude (`api/ask.js`); a notebook photo is only
+   checked on the phone for ink, never read; weekly reports are the Bolna
+   parent call and the teacher's digest, in Hindi and English only.
+15. **No native Android app.** `ANDROID.md` installs the PWA (or wraps it
+   with PWABuilder/Capacitor); the Kotlin port is planned, not started.
 
 ## Style
 
