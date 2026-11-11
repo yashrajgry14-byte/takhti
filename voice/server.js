@@ -12,6 +12,7 @@
    Bolna (after a call)    POST /voice/webhook?key=TAKHTI_WEBHOOK_KEY
    The app (synced)        POST /circle/sync             parent's tick + this phone's key
    The app (reading)       POST /reading/asr             the reading terms; one line written down, nothing kept
+   The teacher view        POST /syllabus                a chapter → Gemini's draft lessons (api/syllabus.mjs), checked on the phone
                            POST /reading/tts             Munni says a short teaching line (Sarvam / ElevenLabs)
    The circle's grown-ups  GET  /circle/p|t|c/:token     unguessable link (parent, tutor, class teacher)
    Families                GET  /voice/card/:session     unguessable link
@@ -192,6 +193,19 @@ function createServer(opts) {
         const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
         const r = p === '/reading/tts' ? await asr.speak(await readBody(req, 4 * 1024), ip) : await asr.handle(await readBody(req, 2.2 * 1024 * 1024), ip);
         return send(res, r.status, r.body);
+      }
+
+      /* ---- the school's syllabus → next week's lessons (api/syllabus.mjs; Gemini drafts, the phone checks) ---- */
+      if (p === '/syllabus') {
+        res.setHeader('Access-Control-Allow-Origin', env.TAKHTI_APP_ORIGIN || '*');
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+        if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
+        const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+        const { draftCore } = await import('../api/syllabus.mjs');
+        const r = await draftCore(await readBody(req, 5 * 1024 * 1024), env, ip, opts.fetch || fetch);
+        return send(res, r.status, r.json);
       }
 
       /* ---- the learning circle ---- */

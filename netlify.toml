@@ -13,3 +13,8 @@
   from = "/api/class-sync"
   to = "/.netlify/functions/class-sync"
   status = 200
+
+[[redirects]]
+  from = "/api/syllabus"
+  to = "/.netlify/functions/syllabus"
+  status = 200

@@ -51,9 +51,10 @@ async function syncClass(code){
       children[p.id] = { childName: p.name, skillHistory: p.skillHistory || {}, at: Date.now() };
   const teacherKey = S.syncKeys[code];                       // only on the teacher's phone
   const homework = teacherKey ? (readClassShared(code)._homework || null) : null;
+  const lessons = teacherKey ? (readClassShared(code)._lessons || null) : null;   // the school's own lessons (core/syllabus.js)
   try{
     const res = await fetch(SYNC_URL, { method:'POST', headers:{ 'content-type':'application/json' },
-                                        body: JSON.stringify({ code, children, homework, teacherKey }) });
+                                        body: JSON.stringify({ code, children, homework, lessons, teacherKey }) });
     if(!res.ok) throw new Error(res.status === 503 ? 'noserver' : res.status === 403 ? 'claimed' : 'HTTP ' + res.status);
     const cls = await res.json();
     classMirrorUpdate(code, all => {
@@ -63,6 +64,9 @@ async function syncClass(code){
       }
       const hw = cls.homework;
       if(hw && (!all._homework || (all._homework.assignedAt || 0) < hw.assignedAt)) all._homework = hw;
+      // each phone checks these again before a child sees one (schoolLessons())
+      const ls = cls.lessons;
+      if(ls && Array.isArray(ls.items) && (!all._lessons || (all._lessons.at || 0) < ls.at)) all._lessons = ls;
     });
     S.syncAt = { ...S.syncAt, [code]: Date.now() };
     SYNC_STATE[code] = {};

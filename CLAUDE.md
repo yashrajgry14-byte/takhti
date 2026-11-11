@@ -32,7 +32,7 @@ own recognizer (or typing) takes over, and no answer in 10 s means the same.
 |------|--------------|-------|
 | 0 | Reading matcher + age-band pass thresholds, stroke scoring, skill-shaped problem generation, adaptive level, daily scheduler, skill graph + diagnostic, spaced repetition, cartoon episodes, procedural sound | `src/core/`, `src/content/`, `src/games/` — always on, no network, no model |
 | 1 | A fresh practice line for missed words | `core/tier1.js` — the curated bank everywhere; the phone's own on-device model (Chrome's Prompt API) where it already has one, strictly validated |
-| 2 | Cloud answers for the question queue; class sync between phones | `askCloud()` / `flushQueue()` via `api/ask.js`; `core/class-sync.js` via `api/class-sync.mjs` |
+| 2 | Cloud answers for the question queue; class sync between phones; next week's lessons from the school's own syllabus (Gemini drafts, the phone checks) | `askCloud()` / `flushQueue()` via `api/ask.js`; `core/class-sync.js` via `api/class-sync.mjs`; `core/syllabus.js` via `api/syllabus.mjs` |
 
 The app ships no model of its own. Tier 1 uses the phone's built-in on-device
 model when the browser provides one (see **Tier 1**). "Generative" in
@@ -43,7 +43,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 36 test suites (see Testing)
+npm test           # all 37 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -67,7 +67,7 @@ config.js, state.js
 content/sentences.js, content/games.js, content/themes.js, content/facts.js, content/ages.js
 content/skills.js, content/curriculum-early.js, content/lessons.js, core/lesson-gen.js
 content/literacy.js, content/comprehension.js
-core/diagnose.js, core/class-share.js, core/class-sync.js, core/generative-brain.js, core/video-library-catalog.js, core/cartoon-series.js
+core/diagnose.js, core/class-share.js, core/class-sync.js, core/syllabus.js, core/generative-brain.js, core/video-library-catalog.js, core/cartoon-series.js
 core/srs.js, core/sfx.js, games/game-core.js
 content/anim.js, content/copy.js, content/competencies.js
 core/log.js, core/store.js, core/profiles.js
@@ -81,7 +81,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v40` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v41` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -109,6 +109,7 @@ src/
     diagnose.js             the teacher diagnostic, class-code mirror, homework bridge
     class-share.js          progress/homework codes that carry the class between phones
     class-sync.js           automatic class sync — hourly, on reconnect, and "Sync now"
+    syllabus.js             the school's own chapter → Gemini's draft lessons → sylClean() + validateLesson() → the teacher approves → schoolLessons()
     generative-brain.js     builds one 4-scene cartoon episode for a maths skill
     video-library-catalog.js  which episodes a child is offered, and which first
     cartoon-series.js       short multi-episode ladders, filtered to the child's band
@@ -155,6 +156,7 @@ src/
   app.js                    boot: load(), S.screen='arrival', render()
 api/ask.js                  serverless proxy; keeps the API key off the client
 api/class-sync.mjs          Tier 2 class sync (Netlify Blobs); syncCore() is the merge
+api/syllabus.mjs            Tier 2: a chapter → Gemini drafts lessons in Takhti's format (draftCore(); also POST /syllabus on the voice server)
 sw.js                       service worker — offline cache
 voice/                      Munni on a phone call (Bolna), the learning circle's server, the shared mistakes database, the reading check's speech service — a separate Node server, see below
 tools/build-audio.mjs       build-time narration (Sarvam or ElevenLabs) into audio/, played offline: lessons, reading lines, every word and its pieces, letters, Munni's coaching lines
@@ -293,6 +295,55 @@ a connection, the way schools already pass things around (WhatsApp, SMS):
 
 Format `TKR1|TKH1.base64url(json).checksum`; a code cut short or edited is
 rejected before it touches a record; an older code never overwrites newer data.
+
+## The school's own syllabus — `core/syllabus.js`, `api/syllabus.mjs`
+
+Each school teaches from its own textbook; this turns the teacher's chapter
+into the class's lessons for the week, without a model ever deciding what a
+child sees.
+
+- **The teacher view** (`syllabusHTML()`, a card under the homework): pick
+  the class (Nursery/KG → Class 5, `SYL_CLASSES` → the age band and the
+  grade of its skills), a PDF or a photo of the page (`sylPickFile()`, ≤ 3.4
+  MB) or the pasted text, how many lessons (2–5), an optional note.
+  *Draft this week's lessons* → `sylDraft()`. Needs a signal; offline says
+  so. A school key field appears when the server asks for one (403).
+- **The server** (`api/syllabus.mjs`, `draftCore()`; a Netlify/Vercel
+  function and `POST /syllabus` on the voice server, which has no serverless
+  time limit): builds the prompt itself from clamped inputs — the band's
+  rules (number ceiling, word limit — sent by the phone from `ages.js`),
+  the beat types the player can draw and their limits, the arithmetic rule,
+  both languages, the class's skill ids, the note — and asks Gemini
+  (`GEMINI_API_KEY`, `GEMINI_MODEL`, default `gemini-3.5-flash`) for JSON in
+  Takhti's lesson schema (structured output; one retry with the older field
+  names). A PDF or photo goes as `inline_data`. `mode:'repair'` sends
+  rejected lessons back with the checker's reasons. Drafts only; the key
+  never leaves the server; `TAKHTI_SYLLABUS_KEY` (optional school password)
+  and a per-address hourly limit.
+- **The checks, on the phone** (`sylClean()`, then `validateLesson()`):
+  only the player's beat types and fields; plain text (no markup, links,
+  braces); one emoji; both languages, the Hindi in Devanagari; pictures
+  that can be drawn (≤ 20 dots, shares that divide, a part no bigger than
+  the whole…); a maths question's right answer is a number equal to what
+  the picture before it computes (`sylExpect()`), so the arithmetic is
+  checked; a reading question's right answer is in the passage's own words
+  (`sylGrounded()`), yes/no answers marked for the teacher to check; then
+  the band's number ceiling and sentence lengths. A failure goes back to
+  Gemini **once** with its reasons; still failing → shown as "not used",
+  with why. The right answer is shuffled (stable, by content); the id is a
+  hash of the content, so a lesson edited later gets a different id.
+- **The teacher approves** after reading every line, the right answer
+  marked and how each answer was checked (`sylDraftHTML()`): `sylApprove()`
+  / `sylApproveAll()` / `sylRemove()` write `_lessons {items, at}` (≤ 12)
+  into the class mirror; with *Keep this class synced* on, the class sync
+  carries them to every synced phone (teacher's key only; shape- and
+  size-checked on the server, never trusted).
+- **The child** sees *From your school — this week* at the Story Fire
+  (`schoolLessonsHTML()`), from `schoolLessons()`, which re-runs both checks
+  on this phone and drops any lesson whose id no longer matches. `startLesson()`
+  finds them, never rewrites their words online (`enrichLesson()` is
+  skipped), answers count for the lesson's skill when the checker matched
+  one, and a reading lesson doesn't move the maths ladder.
 
 ## The reading matcher — read this before changing it
 
@@ -865,7 +916,7 @@ app is a client of it, and only when a parent says so.
 
 ## Testing
 
-`npm test` runs 36 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 37 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -904,6 +955,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `mind` | vm + HTTP + jsdom | rounds settle on the child's own answers; two misses switch and cool a way, with the reason; a plan holds while it works; two simulated children who learn differently end up taught differently; a new topic leans on the subject; a low school mark switches at once and becomes the focus; teacher class-test marks reach records and next week's step; in the app: a missed sum taught by steps or with a story invitation, helped answers never count, the Reading Tree's pieces and read-first, the parent's marks and "What Munni changed" (EN/HI), "Munni's idea" on the map, a class test applied once, nothing of the mind in the sync |
 | `twin` | vm + HTTP + jsdom | each wrong answer named as its real mistake, incl. the column-procedure ones (carrying the ones, lining up on the left, borrowing across zero, 0 − N, N − 0, the carry in multiplying…); tips and explanations for thousands never say the answer; a combination found only on two different questions, named and explained from its steps, then guessed; unexplained sums kept; shared rules known at once; codes checked; reading slips (17 cases EN/HI), a line's stopping/adding, traced letters (mirror, part missing, शिरोरेखा, too small) from pixels; reading habits with their letters; right-or-not guesses; knowledge tracing up, down, fading, seeded; the profile (ids only, junk dropped) and its prompt; a simulated child with a habit of thought guessed exactly ≥ 90%; on a call: the clue aimed at the mistake, the profile's twin sum, "I know this tricky bit!", the step-by-step reveal, reading coaching naming the slip; the shared database (promoted at three children, counted without names, erase leaves every count, the review page); in the app: the guesses (sums, reading, lessons, games), the tips, "Munni noticed", the heads-up, paper spelling, a habit deciding Ask Munni's explanation, `appEvidence()` reading the twin, where the profile goes, the parent section EN/HI, only the profile in the sync |
 | `speech` | vm + HTTP + jsdom | Sarvam against a stand-in: verbatim mode, Hindi, the key on the server only, nothing kept, consent, bogus recordings refused, per-address limit, honest 503, an OpenAI-compatible service; Munni's live voice (Bulbul, slow, cached, short lines only); in the app: no terms without a voice server, the bilingual terms at onboarding kept with version and time, online → Sarvam even with a recognizer on the phone, the slip named, **say it with Munni** (the word in pieces in Sarvam's voice, the child says it, checked, praised; two tries then let go kindly; help not evidence), offline → the on-device recognizer and nothing sent, withdrawn → nothing sent, no answer → the honest message; on a call the word in pieces; the narration builder |
+| `syllabus` | vm + HTTP + jsdom | the server against a stand-in Gemini (key in a header on the server only, the PDF and the band's rules and schema in the request, the older field names, 503 with no key, the school key, PDF/photo only, a limit per address, the repair round with the checker's reasons, the voice server's `POST /syllabus`); the class sync carries lessons from the teacher's key only; the phone's checks (a good maths and reading lesson pass; a wrong sum, an answer not in the passage, markup, over the band's ceiling, an undrawable beat, an unequal share, non-Devanagari Hindi, a non-number maths answer all fail with a reason; idempotent; shuffled); in the app: draft → one repaired, one "not used" → approve → remove; offline honest; the child's "From your school" (EN/HI), played, never rewritten, evidence for its skill; an edited lesson not shown; the sync sends them |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -1010,6 +1062,19 @@ Honest edges of what's built:
    the old path (the browser's own recognizer online). The narration isn't
    rendered for Hindi yet (English has 439 lines of the old set): run
    `tools/build-audio.mjs --lang hi --provider sarvam`.
+
+13. **Lessons from the syllabus are new.** Gemini drafting is tested
+   against a stand-in, not yet against real chapters in an account: the
+   model name and the structured-output field names follow the current
+   docs (one retry covers the older names). The checks catch wrong
+   arithmetic, ungrounded reading answers, unsafe text and unsuitable
+   numbers — not a lesson that is correct but teaches the chapter badly;
+   that is what the teacher's reading is for. Lessons use the player's
+   existing pictures only (no new diagrams from a textbook figure); a
+   reading answer counts as "in the passage" by shared words, which a
+   paraphrase can fail. They reach other phones only through the class
+   sync (no lesson code by hand yet), and serverless hosts may time out
+   on a long PDF — the voice server's `POST /syllabus` has no such limit.
 
 ## Style
 

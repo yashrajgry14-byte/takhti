@@ -17,7 +17,10 @@
      2. Assign homework — the tested skill, or the shared gap under it.
         Each child's app then diagnoses it against THAT child's evidence
         (personalizeContentForHomework()).
-     3. See what Takhti covers, by grade and subject, and what it can't
+     3. Turn a chapter of the school's own syllabus into this week's
+        lessons: Gemini drafts them, Takhti's checker tests every one,
+        the teacher reads and approves (core/syllabus.js, syllabusHTML()).
+     4. See what Takhti covers, by grade and subject, and what it can't
         teach yet — the numbers a school asks for, from the live graph.
    ================================================================== */
 
@@ -128,6 +131,8 @@ function teacherHTML(){
     </div>` : ''}
   </div>
 
+  ${code ? syllabusHTML(code) : ''}
+
   <div class="paper" style="margin-top:12px">
     <div class="kicker2">${hi?'तख़्ती क्या सिखाती है':'WHAT TAKHTI COVERS'}</div>
     <div style="font-size:12.5px;opacity:.75;margin-bottom:6px">${hi
@@ -191,6 +196,150 @@ function toggleClassSync(code){
   log(0, `Teacher view · class ${code} sync ${S.syncClasses.includes(code) ? 'on' : 'off'}`);
   save();
   if(S.syncClasses.includes(code)) syncNow(code); else render();
+}
+
+/* ---------- the school's own syllabus → this week's lessons ---------- */
+function syllabusHTML(code){
+  const hi = S.lang === 'hi', c = S.ctx, res = c.sylRes, approved = sylApproved(code);
+  const cls = sylClass(c.sylCls || 'c2');
+  const badge = k => ({ sum: hi ? '✓ जवाब गणित से जाँचा' : '✓ answer checked by the arithmetic',
+                        text: hi ? '✓ जवाब पाठ में मिला' : '✓ answer found in the passage',
+                        teacher: hi ? '👀 यह जवाब आप जाँच लें' : '👀 please check this answer yourself' })[k] || '';
+  return `<div class="paper" style="margin-top:12px">
+    <div class="kicker2">📚 ${hi ? 'आपके पाठ्यक्रम से इस हफ़्ते के पाठ' : "THIS WEEK'S LESSONS FROM YOUR SYLLABUS"}</div>
+    <div style="font-size:12.5px;opacity:.8">${hi
+      ? 'एक अध्याय दें — PDF, किताब के पन्ने की फ़ोटो, या उसका पाठ। Gemini छोटे पाठ बनाता है, तख़्ती हर पाठ का गणित, उम्र के हिसाब से संख्याएँ, वाक्यों की लंबाई और जवाब जाँचती है, और आप पढ़कर मंज़ूरी देते हैं। बच्चे इन्हें कहानी की आग पर खेलते हैं।'
+      : 'Give it one chapter — a PDF, a photo of the textbook page, or its text. Gemini drafts short lessons, Takhti checks every one (the arithmetic, numbers for the age, sentence lengths, that each answer is really right), and you read and approve them. Children play them at the Story Fire.'}</div>
+
+    <div class="row" style="gap:8px;margin-top:10px">
+      <select class="input" style="flex:1" onchange="S.ctx.sylCls=this.value;render()">
+        ${SYL_CLASSES.map(k => `<option value="${k.id}" ${k.id === cls.id ? 'selected' : ''}>${hi ? k.hi : k.en}</option>`).join('')}
+      </select>
+      <select class="input" style="width:auto" onchange="S.ctx.sylCount=Number(this.value)">
+        ${[2,3,4,5].map(n => `<option value="${n}" ${n === (c.sylCount || 3) ? 'selected' : ''}>${n} ${hi ? 'पाठ' : 'lessons'}</option>`).join('')}
+      </select>
+    </div>
+    <label class="btn ghost" style="margin-top:8px;display:block;text-align:center;cursor:pointer">
+      📎 ${c.sylFile ? attr(c.sylFile.name) : (hi ? 'PDF या फ़ोटो चुनें' : 'Choose a PDF or photo')}
+      <input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" style="display:none" onchange="sylPickFile(this)">
+    </label>
+    <textarea class="input" style="margin-top:8px;min-height:70px" placeholder="${hi ? '…या अध्याय का पाठ यहाँ चिपकाएँ' : '…or paste the chapter text here'}" oninput="S.ctx.sylText=this.value">${attr(c.sylText || '')}</textarea>
+    <input class="input" style="margin-top:8px" maxlength="200" value="${attr(c.sylNote || '')}" oninput="S.ctx.sylNote=this.value"
+      placeholder="${hi ? 'कोई निर्देश? जैसे "हासिल वाले जोड़ पर ध्यान दें" (वैकल्पिक)' : 'Anything to focus on? e.g. "carrying in addition" (optional)'}">
+    ${c.sylNeedKey ? `<input class="input" style="margin-top:8px" type="password" value="${attr(c.sylKey || '')}" oninput="S.ctx.sylKey=this.value"
+      placeholder="${hi ? 'स्कूल की कुंजी' : 'School key'}">` : ''}
+    <button class="btn" style="margin-top:8px" ${c.sylBusy ? 'disabled' : ''} onclick="sylGo()">${c.sylBusy
+      ? (hi ? '⏳ Gemini पाठ बना रहा है, तख़्ती जाँच रही है…' : '⏳ Gemini is drafting, Takhti is checking…')
+      : (hi ? '✨ इस हफ़्ते के पाठ बनाओ' : "✨ Draft this week's lessons")}</button>
+    ${c.sylMsg ? `<div class="retry" style="font-size:12.5px;margin-top:6px">${attr(c.sylMsg)}</div>` : ''}
+
+    ${res ? `<div style="margin-top:12px">
+      <div style="font-size:12.5px;opacity:.8">${hi
+        ? `"${attr(res.chapter || 'अध्याय')}" से ${res.drafts.length} पाठ · ${res.drafts.filter(d => d.ok).length} जाँच में पास${res.drafts.some(d => d.repaired) ? ` (${res.drafts.filter(d => d.repaired).length} Gemini ने जाँच के कारण पढ़कर ठीक किए)` : ''}`
+        : `${res.drafts.length} lesson(s) from "${attr(res.chapter || 'the chapter')}" · ${res.drafts.filter(d => d.ok).length} passed the check${res.drafts.some(d => d.repaired) ? ` (${res.drafts.filter(d => d.repaired).length} fixed by Gemini from the checker's reasons)` : ''}`}</div>
+      ${res.drafts.map((d, i) => sylDraftHTML(d, i, approved, badge)).join('')}
+      ${res.drafts.filter(d => d.ok && !approved.some(a => a.id === d.lesson.id)).length > 1
+        ? `<button class="btn leaf" style="margin-top:8px" onclick="sylApproveAll()">${hi ? 'सभी जाँचे हुए पाठ मंज़ूर करें' : 'Approve all the checked lessons'}</button>` : ''}
+    </div>` : ''}
+
+    ${approved.length ? `<div class="kicker2" style="margin-top:14px">${hi ? 'कक्षा के लिए मंज़ूर' : 'APPROVED FOR THE CLASS'}</div>
+      ${approved.map(l => `<div class="metric"><div><b>${l.ic || '📘'} ${attr(L(l.title))}</b>
+        <div style="font-size:12px;opacity:.7">${attr(L(l.sub))}</div></div>
+        <button class="btn ghost" style="width:auto;padding:6px 12px" onclick="sylRemove('${l.id}')">${hi ? 'हटाओ' : 'Remove'}</button></div>`).join('')}
+      <div style="font-size:12px;opacity:.7;margin-top:6px">${S.syncClasses.includes(code)
+        ? (hi ? 'इस फ़ोन के बच्चों को और सिंक वाले हर फ़ोन को मिलते हैं — हर फ़ोन इन्हें दिखाने से पहले फिर जाँचता है।' : 'Children on this phone get them, and so does every synced phone — each one checks them again before showing them.')
+        : (hi ? 'इस फ़ोन के बच्चों को मिलते हैं। दूसरे फ़ोनों तक भेजने के लिए ऊपर "कक्षा को सिंक रखो" चालू करें।' : 'Children on this phone get them. To reach other phones, switch on "Keep this class synced" above.')}</div>` : ''}
+  </div>`;
+}
+
+/* One draft, as the teacher reads it: every line the child will hear or
+   read, the two answers with the right one marked, and how it was checked. */
+function sylDraftHTML(d, i, approved, badge){
+  const hi = S.lang === 'hi', les = d.lesson, isIn = approved.some(a => a.id === les.id);
+  const T = o => o ? attr(hi ? o.hi : o.en) : '';
+  let k = 0;
+  const lines = (les.beats || []).map(b => {
+    if(b.t === 'ask'){
+      const opts = hi ? b.hiOpts || b.opts : b.opts, check = d.checks[k++];
+      return `<div style="margin:4px 0 4px 10px">❓ ${T(b.q)}<div style="font-size:12.5px">${(opts || []).map((o, j) =>
+        `<span style="margin-right:10px;${j === b.correct ? 'font-weight:700' : 'opacity:.7'}">${j === b.correct ? '✓' : '✗'} ${attr(o)}</span>`).join('')}
+        ${check ? `<span style="opacity:.7">· ${badge(check)}</span>` : ''}</div></div>`;
+    }
+    const pic = { count:`${b.n}`, add:`${b.a} + ${b.b}`, take:`${b.a} − ${b.b}`, group:`${b.a}`, line:`${b.a}, +${b.b} × ${b.hops}`,
+                  array:`${b.a} × ${b.b}`, share:`${b.a} ÷ ${b.b}`, bar:`${b.a} = ${b.b} + ?`, frac:`1/${b.b}` }[b.t];
+    const words = b.t === 'passage' ? `📖 ${T(b.p)}` : b.t === 'word' ? `🔤 ${attr(b.w)}` : b.t === 'readline' ? `🗣 ${attr(b.text)}` : '';
+    return `<div style="margin:3px 0 3px 10px;font-size:13px">${pic ? `<span style="font-family:var(--mono);opacity:.75">[${b.t} ${pic}]</span> ` : ''}${words}${b.say ? ` ${T(b.say)}` : ''}</div>`;
+  }).join('');
+  const why = (d.repairErrors || d.errors || []).slice(0, 3);
+  return `<div class="card" style="margin-top:8px;padding:10px;${d.ok ? '' : 'opacity:.75;border:1px dashed var(--line)'}">
+    <b>${les.ic} ${T(les.title)}</b> <span style="font-size:12px;opacity:.7">${T(les.sub)}</span>
+    ${les.skillId && skillById(les.skillId) ? `<div style="font-size:12px;opacity:.75">${hi ? 'कौशल' : 'Skill'}: ${attr(hi ? skillById(les.skillId).hi : skillById(les.skillId).en)}</div>` : ''}
+    ${les.source ? `<div style="font-size:12px;opacity:.6">${hi ? 'स्रोत' : 'From'}: ${attr(les.source)}</div>` : ''}
+    <details style="margin-top:4px" ${d.ok && !isIn ? 'open' : ''}><summary style="font-size:12.5px;cursor:pointer">${hi ? 'पूरा पाठ पढ़ें' : 'Read the whole lesson'}</summary>${lines}</details>
+    ${d.ok
+      ? (isIn ? `<div class="muted" style="font-size:12.5px;margin-top:4px">✓ ${hi ? 'कक्षा के लिए मंज़ूर' : 'Approved for the class'}</div>`
+              : `<button class="btn ghost" style="margin-top:6px" onclick="sylApprove(${i})">${hi ? 'मंज़ूर करें' : 'Approve'}</button>`)
+      : `<div class="retry" style="font-size:12.5px;margin-top:4px">${hi ? 'उपयोग नहीं होगा — जाँच में नहीं पास हुआ' : "Not used — it didn't pass the check"}: ${why.map(attr).join('; ')}</div>`}
+  </div>`;
+}
+
+async function sylPickFile(input){
+  const f = input.files && input.files[0];
+  if(!f) return;
+  const hi = S.lang === 'hi';
+  if(f.size > 3.4 * 1024 * 1024){ S.ctx.sylMsg = hi ? 'फ़ाइल बहुत बड़ी है — एक अध्याय या कुछ पन्ने भेजें।' : 'That file is too big — send one chapter, or a few pages.'; S.ctx.sylFile = null; return render(); }
+  try{
+    S.ctx.sylFile = { name: f.name, mime: f.type, b64: await sylReadFile(f) };
+    S.ctx.sylMsg = '';
+  }catch(e){ S.ctx.sylMsg = hi ? 'यह फ़ाइल पढ़ी नहीं जा सकी।' : "That file couldn't be read."; }
+  render();
+}
+
+async function sylGo(){
+  const c = S.ctx, hi = S.lang === 'hi';
+  if(c.sylBusy) return;
+  const text = (c.sylText || '').trim();
+  if(!c.sylFile && text.length < 40){ c.sylMsg = hi ? 'पहले अध्याय दें — PDF, फ़ोटो, या उसका पाठ।' : 'Give it the chapter first — a PDF, a photo, or its text.'; return render(); }
+  if(!S.online){ c.sylMsg = hi ? 'पाठ बनाने के लिए इंटरनेट चाहिए। बच्चों के मंज़ूर पाठ बिना इंटरनेट चलते रहेंगे।' : 'Drafting needs a connection. Approved lessons keep working offline for the children.'; return render(); }
+  c.sylBusy = true; c.sylMsg = ''; render();
+  try{
+    const chapter = c.sylFile ? { file: c.sylFile.b64, mime: c.sylFile.mime, text } : { text };
+    c.sylRes = await sylDraft({ cls: c.sylCls || 'c2', count: c.sylCount || 3, note: (c.sylNote || '').trim(), chapter });
+    c.sylNeedKey = false;
+    if(!c.sylRes.drafts.length) c.sylMsg = hi ? 'Gemini ने कोई पाठ नहीं लौटाया — दूसरा अध्याय या साफ़ फ़ोटो आज़माएँ।' : 'Gemini sent back no lessons — try another chapter or a clearer photo.';
+  }catch(e){
+    c.sylNeedKey = e.status === 403;
+    c.sylMsg = e.status === 503 ? (hi ? 'इस सर्वर पर Gemini अभी चालू नहीं है।' : "Gemini isn't set up on this server yet.")
+             : e.status === 403 ? (hi ? 'इस सर्वर के लिए स्कूल की कुंजी चाहिए — नीचे डालें और फिर कोशिश करें।' : 'This server needs the school key — enter it and try again.')
+             : e.status === 429 ? (hi ? 'अभी के लिए बहुत हो गया — थोड़ी देर बाद कोशिश करें।' : 'That is enough for now — try again in a while.')
+             : (hi ? 'Gemini तक नहीं पहुँच पाए — थोड़ी देर में फिर कोशिश करें।' : "Couldn't reach Gemini — try again shortly.");
+    log(2, `Syllabus · not drafted (${e.message})`);
+  }
+  c.sylBusy = false;
+  render();
+}
+
+function sylApprove(i){
+  const code = teacherCode(), d = S.ctx.sylRes && S.ctx.sylRes.drafts[i];
+  if(!code || !d || !d.ok) return;
+  sylSave(code, sylApproved(code).filter(l => l.id !== d.lesson.id).concat(d.lesson));
+  log(0, `Syllabus · teacher approved "${d.lesson.title.en}" for class ${code}`);
+  teacherSyncIfOn(code);
+}
+function sylApproveAll(){
+  const code = teacherCode(), res = S.ctx.sylRes;
+  if(!code || !res) return;
+  const add = res.drafts.filter(d => d.ok).map(d => d.lesson);
+  sylSave(code, sylApproved(code).filter(l => !add.some(a => a.id === l.id)).concat(add));
+  log(0, `Syllabus · teacher approved ${add.length} lesson(s) for class ${code}`);
+  teacherSyncIfOn(code);
+}
+function sylRemove(id){
+  const code = teacherCode();
+  if(!code) return;
+  sylSave(code, sylApproved(code).filter(l => l.id !== id));
+  log(0, `Syllabus · teacher removed a lesson from class ${code}`);
+  teacherSyncIfOn(code);
 }
 
 if(typeof VIEWS !== 'undefined') VIEWS.teacher = teacherHTML;

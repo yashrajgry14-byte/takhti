@@ -2,7 +2,7 @@
    CLASS SYNC — Tier 2. One small record per class code, so a teacher's
    phone and every consenting child's phone see the same class.
 
-   POST { code, children:{ id:{childName, skillHistory, at} }, homework, teacherKey }
+   POST { code, children:{ id:{childName, skillHistory, at} }, homework, lessons, teacherKey }
    → merges what the phone sent into the stored class (newest wins, per
    child and for the homework) and answers with what that phone may see.
 
@@ -32,7 +32,7 @@
 
 const CODE = /^[A-Z0-9]{6}$/;
 const SKILL = /^[a-z0-9-]{1,24}$/;
-const MAX_CHILDREN = 60, MAX_SKILLS = 200, MAX_BODY = 64 * 1024;
+const MAX_CHILDREN = 60, MAX_SKILLS = 200, MAX_BODY = 160 * 1024, MAX_LESSONS = 12, MAX_LESSON_JSON = 96 * 1024;
 
 const int = (v, max) => Math.max(0, Math.min(max, Math.floor(Number(v) || 0)));
 
@@ -50,6 +50,18 @@ function cleanHomework(h){
   if(!h || typeof h !== 'object') return null;
   const skills = (Array.isArray(h.skills) ? h.skills : []).filter(s => SKILL.test(s)).slice(0, 10);
   return { skills, note: String(h.note || '').slice(0, 140), assignedAt: int(h.assignedAt, 9e15), cleared: !!h.cleared };
+}
+
+/* The school's own lessons (src/core/syllabus.js): the teacher approved
+   them, and every child's phone checks them again with the app's lesson
+   checker before showing one — so here they are only shape- and
+   size-checked, never trusted. */
+function cleanLessons(l){
+  if(!l || typeof l !== 'object' || !Array.isArray(l.items)) return null;
+  const items = l.items.slice(0, MAX_LESSONS).filter(x => x && typeof x === 'object' && /^sch-[a-z0-9]{1,16}$/.test(String(x.id))
+    && Array.isArray(x.beats) && x.beats.length <= 12);
+  if(JSON.stringify(items).length > MAX_LESSON_JSON) return null;
+  return { items, at: int(l.at, 9e15) };
 }
 
 /* The merge itself, independent of any host — exported for the tests. */
@@ -79,10 +91,12 @@ export async function syncCore(store, body){
   }
   const hw = teacher ? cleanHomework(body.homework) : null;     // only the class's teacher sets homework
   if(hw && (!cur.homework || cur.homework.assignedAt < hw.assignedAt)) cur.homework = hw;
+  const ls = teacher ? cleanLessons(body.lessons) : null;      // and the class's own lessons
+  if(ls && (!cur.lessons || cur.lessons.at < ls.at)) cur.lessons = ls;
 
   await store.setJSON(key, cur);
-  return { status:200, json: teacher ? { children: cur.children, homework: cur.homework, teacher: true }
-                                     : { children: pick(cur.children, sent), homework: cur.homework } };
+  return { status:200, json: teacher ? { children: cur.children, homework: cur.homework, lessons: cur.lessons || null, teacher: true }
+                                     : { children: pick(cur.children, sent), homework: cur.homework, lessons: cur.lessons || null } };
 }
 const pick = (all, ids) => Object.fromEntries(ids.filter(id => all[id]).map(id => [id, all[id]]));
 async function sha256(text){

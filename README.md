@@ -15,10 +15,11 @@ step on one learning goal a week.
 **Teaching today:** ages 3–10 (Nursery to Class 5) — reading, writing and
 arithmetic, in Hindi and English: letters to reading with understanding,
 tracing to writing, counting to carrying, tables and BODMAS.
-**Next:** up to Class 10, every Indian language, following each school's own
-syllabus.
+**Next:** up to Class 10 and every Indian language. Lessons from each
+school's own syllabus have started: a teacher uploads a chapter, Gemini
+drafts the week's lessons, Takhti checks every one.
 
-**Build status:** web prototype on `main` (offline shell `takhti-v40`, 36 test
+**Build status:** web prototype on `main` (offline shell `takhti-v41`, 37 test
 suites); the voice server has had its first live Bolna call. The Android app
 ports the same logic to Kotlin (`ANDROID.md`).
 
@@ -69,6 +70,17 @@ sentence — and graded on the phone. **Say it with Munni:** after a slip, Munni
 teaches the word in pieces (भा · ई), slowly, then whole, the child says it, and
 it's checked again. Offline, the phone's own recognizer takes over.
 
+### Lessons from the school's own syllabus — Gemini
+A teacher uploads a chapter: a PDF, a photo of the textbook page, or the text.
+Gemini drafts a few short lessons in Takhti's own lesson format. Then Takhti's
+lesson checker tests every one on the phone: the arithmetic of each answer,
+numbers right for the age, sentence lengths, that a reading answer is really
+in the passage, plain text only. A lesson that fails goes back to Gemini once
+with the checker's reasons. The teacher reads each lesson and approves it,
+and the class gets it at the Story Fire, offline. Every child's phone checks
+it again before showing it. Gemini prepares next week; it never decides what a
+child sees. → `api/syllabus.mjs`, `src/core/syllabus.js`
+
 ### Ask Munni
 A help button on every question: Munni breaks it down the way a teacher would
 — make ten, tens then ones, borrow a ten, a hard word in pieces — and never
@@ -105,7 +117,7 @@ not kept. No streaks, no reminders to children (India's DPDP Act s.9).
 
 ```bash
 npm run dev                                   # the app, on http://localhost:5173
-npm test                                      # 36 test suites
+npm test                                      # 37 test suites
 npm run voice:sim -- --auto --mistakes        # a whole Munni phone call, in the terminal
 ```
 
@@ -117,9 +129,11 @@ storage need a real origin).
 `cd voice && cp .env.example .env`, fill in the keys (Bolna, Sarvam), then
 `npm run voice`. Full setup in `voice/README.md`.
 
-**Deploying the app:** any static host. The app's two server pieces are
-optional: `api/ask.js` (answers to saved questions) and `api/class-sync.mjs`
-(the hourly class sync, which needs Netlify Blobs). Without them the app still
+**Deploying the app:** any static host. The app's server pieces are optional:
+`api/ask.js` (answers to saved questions), `api/class-sync.mjs` (the hourly
+class sync, which needs Netlify Blobs) and `api/syllabus.mjs` (lessons from a
+chapter; set `GEMINI_API_KEY`, or run it on the voice server as
+`POST /syllabus`). Without them the app still
 runs on its on-device content, and classes use codes.
 
 ---

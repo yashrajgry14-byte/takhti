@@ -181,10 +181,11 @@ function lesArt(b, obj){
    whatever enrichLesson() came back with. */
 async function startLesson(id){
   if(S._lessonBusy) return;
-  const found = lessonBank().find(l => l.id === id);
+  const found = lessonBank().find(l => l.id === id) || schoolLessons().find(l => l.id === id);
   if(!found) return;
   S._lessonBusy = true;
-  const les = S.online ? await enrichLesson(found) : found;   // already falls back to `found` on any failure
+  // a school lesson's words are the ones its teacher approved — never rewritten
+  const les = S.online && !found.school ? await enrichLesson(found) : found;   // already falls back to `found` on any failure
   S._lessonBusy = false;
   S.lesson = { id, data: les, i:0, right:0, asked:0, picked:null };
   // a story is a way of being taught (core/mind.js): the answers that follow tell whether it stuck
@@ -232,7 +233,7 @@ function lesNext(){
     if(!S.lesson.counted){
       S.lesson.counted = true;
       const passed = S.lesson.asked ? S.lesson.right >= S.lesson.asked/2 : true;
-      record('math', passed);
+      if(!les.school || les.subject === 'math') record('math', passed);   // a school reading lesson isn't a maths rung
       markLessonDone(S.lesson.id);
       if(les.isHomeworkStory && S.lesson.hwAt){ S.hwDone = S.lesson.hwAt; saveSoon(); }
       if(passed && S.lesson.asked){
@@ -393,6 +394,8 @@ function lessonListHTML(){
     </div>
   ` : ''}
 
+  ${schoolLessonsHTML()}
+
   <div class="muted">${S.lang==='hi'
     ? `हर कहानी तुम्हारे ${g.hi} से बनी है।`
     : `Every story is told with your ${g.en}.`}</div>
@@ -408,4 +411,21 @@ function lessonListHTML(){
   </div>
   ${mine.length ? '' : `<div class="muted" style="margin-top:14px">${
     S.lang==='hi'?'इस उम्र के लिए कहानियाँ जल्द आ रही हैं।':'Stories for this age are coming soon.'}</div>`}`;
+}
+
+/* The school's own lessons for this child's class (core/syllabus.js) —
+   drafted by Gemini from the class's chapter, approved by the teacher,
+   checked again on this phone. */
+function schoolLessonsHTML(){
+  const mine = schoolLessons();
+  if(!mine.length) return '';
+  const hi = S.lang === 'hi', done = S.doneLessons || [];
+  return `<div class="card" style="margin:10px 0;padding:12px">
+    <div class="kicker2">📚 ${hi ? 'तुम्हारे स्कूल से — इस हफ़्ते' : 'FROM YOUR SCHOOL — THIS WEEK'}</div>
+    ${mine.map(l => `<button class="lescard" style="margin-top:8px" onclick="startLesson('${l.id}')">
+      <span class="lesic">${l.ic}</span>
+      <span><b>${attr(L(l.title))}</b><small>${attr(L(l.sub))}</small></span>
+      <span class="lesgo">${done.includes(l.id) ? '✓' : '▶'}</span>
+    </button>`).join('')}
+  </div>`;
 }
