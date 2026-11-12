@@ -79,6 +79,7 @@ const SCHEMA = {
         ic:{ type:'string', description:'One emoji.' },
         skill:{ type:'string', description:'One id from the skill list, or "".' },
         source:{ type:'string', description:'Where in the chapter this comes from (page, heading, exercise).' },
+        aims:{ type:'array', minItems:1, maxItems:4, items: bi, description:'What the child will be able to do — 3 short points a teacher approves.' },
         beats:{ type:'array', items:{
           type:'object',
           properties:{
@@ -87,6 +88,7 @@ const SCHEMA = {
             p: bi, art:{ type:'string' }, w:{ type:'string' }, text:{ type:'string' },
             q: bi, opts:{ type:'array', items:{ type:'string' } }, hiOpts:{ type:'array', items:{ type:'string' } },
             correct:{ type:'integer' },
+            why: { ...bi, description:'For the teacher only: why children pick the wrong answer.' },
             kind:{ type:'string', enum:['square','rectangle','triangle','circle'] }, s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' },
             sides:{ type:'array', items:{ type:'integer' } }, folds:{ type:'integer' }, deg:{ type:'integer' },
             ask:{ type:'string', enum:['name','sides','corners','perimeter','equal','meet','kind'] },
@@ -97,7 +99,7 @@ const SCHEMA = {
           required:['t']
         } }
       },
-      required:['title','sub','beats']
+      required:['title','sub','aims','beats']
     } }
   },
   required:['lessons']
@@ -121,23 +123,25 @@ Every lesson is a list of "beats" the app draws on screen with the child's favou
 - passage {p, art}: a short text to read (3–5 short sentences), art is one emoji.
 - word {w, art}: one word to read.
 - readline {text}: one sentence for the child to read aloud.
-- ask {q, opts, hiOpts, correct}: a question with exactly 2 options; correct is the index of the right one.
+- ask {q, opts, hiOpts, correct, why}: a question with exactly 2 options; correct is the index of the right one; why (for the teacher only, never shown to the child) says why children pick the wrong one.
 - figure {kind, s | w,h | sides, folds, ask}: Takhti draws one shape — a square (side s), a rectangle (w by h, w and h different), a triangle (sides [a,b,c]) or a circle (folds = 0–4 fold lines through the middle). Side lengths are labelled. Without ask it is for teaching (corners are marked); with ask, the very next beat is a question about it: ask = name | sides | corners | perimeter | equal (are all sides equal? Yes/No) | meet (where the folds meet: Centre, needs 2+ folds).
 - corner {deg, ask}: Takhti draws one corner of deg degrees (20–160). With ask:"kind" the next question's answer is "Square corner", "Smaller corner" or "Bigger corner" (square = 90).
 - figures {items, find}: 2–4 shapes or corners in a row, numbered 1–4 (an item is {kind, s|w,h|sides} or {kind:"corner", deg}). find = square | rectangle | triangle | circle | squarecorner | odd; exactly one must match, and the next question's answer is its NUMBER.
 - win {say}: the closing line — the one idea to remember.
+
+Every lesson starts with its AIMS: 3 short points a teacher can approve ("The child can …"), the Hindi saying exactly what the English says. Every aim is taught in the beats AND checked by a question — never an aim only a question touches.
 
 Hard rules — a checker rejects any lesson that breaks one:
 1. 4 to 8 beats; start with intro, passage or a figure; at least one ask; end with win.
 2. A maths ask comes right after the beat that shows it, and its right answer is a number equal to what that beat computes (count → n, add → a+b, take → a−b, group → a, array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Write numbers as digits in opts and hiOpts.
 3. A reading ask comes after a passage/word/readline, and its right answer uses the passage's own words.
 3b. A shape ask comes right after the figure/corner/figures it is about, and its right answer is what that drawing shows. For anything about shapes, sides, corners or perimeter, USE these drawings — never describe a shape only in words.
-3c. Never say the answer in the lines just before a question: the child works it out from the picture or the numbers. Where you can, ask two questions — one to recognise, one to apply to something new.
+3c. Never say the answer in the lines just before a question, and never put the definition in the question itself: the child works it out from the picture or the numbers (the checker rejects a question whose answer Munni has just said). Where you can, ask two questions — one to recognise, one to apply to something new.
 4. The wrong option is a mistake a child really makes (one off, forgot to carry, added instead of subtracting, a detail from the wrong sentence) — never silly, never equal to the right one.
 5. Every number a child meets is at most ${rules.maxNumber}.
 6. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; speak to the child as "तुम", never "आप"; never scold, never the word "wrong".
 7. title, sub, say, q, p are objects with natural English "en" AND natural Hindi "hi" in Devanagari (not transliteration). opts are English, hiOpts the same answers in Hindi, same order.
-8. Plain text only: no markup, no brackets of code, no links. ic and art are a single emoji.
+8. Plain text only: no markup, no brackets of code, no links. ic and art are a single emoji. Sizes are written "6 × 3" or "sides 6 and 3" — in Hindi never translate "by" as गुणा.
 9. skill: the id from this list that the lesson practises, or "" if none fits: ${skills.length ? skills.map(s => `${s.id} (${s.en})`).join('; ') : '(none given)'}.
 10. source: where in the chapter it comes from.
 ${note ? `The teacher's note: "${note}"` : ''}
@@ -145,7 +149,7 @@ Answer with JSON only, in the given schema.`;
 }
 
 function repairInstructions(rules){
-  return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Return each lesson fixed — same topic, same format, every reason addressed — and change nothing else. Numbers at most ${rules.maxNumber}; every say and q at most ${rules.sayWords} words in Hindi; a maths answer must equal what the beat before it computes; a reading answer must use the passage's words; exactly 2 options; English and Devanagari Hindi everywhere; plain text only. Answer with JSON only, in the given schema.`;
+  return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Return each lesson fixed — same topic, same format, same aims, every reason addressed — and change nothing else. If a reason says the answer was said just before a question, change the narration (or ask about a new example), not the answer. Numbers at most ${rules.maxNumber}; every say and q at most ${rules.sayWords} words in Hindi; a maths answer must equal what the beat before it computes; a reading answer must use the passage's words; exactly 2 options; English and Devanagari Hindi everywhere; plain text only. Answer with JSON only, in the given schema.`;
 }
 
 async function callGemini(parts, system, env, fetchImpl){

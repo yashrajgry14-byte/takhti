@@ -31,11 +31,15 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 /* ---------- lessons a stand-in Gemini sends ---------- */
 const MATH = { title:{ en:'Sharing mangoes', hi:'आम बाँटना' }, sub:{ en:'Take away with a bar', hi:'पट्टी से घटाना' }, ic:'🥭', skill:'sub2', source:'Chapter 4, page 31',
+  aims:[{ en:'The child can take a part away from a whole up to 100.', hi:'बच्चा 100 तक के पूरे में से हिस्सा घटा सकता है।' },
+        { en:'The child can use a bar to find the part that is left.', hi:'बच्चा पट्टी से बचा हुआ हिस्सा ढूँढ सकता है।' }],
   beats:[ { t:'intro', say:{ en:'Ravi had 45 mangoes.', hi:'रवि के पास 45 आम थे।' } },
           { t:'bar', a:45, b:20, say:{ en:'He gave 20 to his friends.', hi:'उसने 20 आम दोस्तों को दिए।' } },
-          { t:'ask', q:{ en:'How many are left?', hi:'कितने आम बचे?' }, opts:['25','65'], hiOpts:['25','65'], correct:0 },
+          { t:'ask', q:{ en:'How many are left?', hi:'कितने आम बचे?' }, opts:['25','65'], hiOpts:['25','65'], correct:0,
+            why:{ en:'Children add instead of taking away when they see two numbers.', hi:'दो संख्याएँ देखकर बच्चे घटाने की जगह जोड़ देते हैं।' } },
           { t:'win', say:{ en:'Take the part away from the whole.', hi:'पूरे में से हिस्सा घटाओ।' } } ] };
 const READ = { title:{ en:"Meena's kite", hi:'मीना की पतंग' }, sub:{ en:'Read and answer', hi:'पढ़ो और जवाब दो' }, ic:'🪁', skill:'read5', source:'Lesson 6',
+  aims:[{ en:'The child can find where something happens in a short story.', hi:'बच्चा छोटी कहानी में ढूँढ सकता है कि कुछ कहाँ होता है।' }],
   beats:[ { t:'passage', art:'🪁', p:{ en:'Meena has a red kite. She flies it on the roof. The wind is strong today.', hi:'मीना के पास लाल पतंग है। वह छत पर उड़ाती है। आज हवा तेज़ है।' } },
           { t:'ask', q:{ en:'Where does Meena fly the kite?', hi:'मीना पतंग कहाँ उड़ाती है?' }, opts:['On the roof','In the park'], hiOpts:['छत पर','पार्क में'], correct:0 },
           { t:'win', say:{ en:'The answer was in the story.', hi:'जवाब कहानी में था।' } } ] };
@@ -84,6 +88,8 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   check("the repair round sends the lesson back with the checker's own reasons, and returns the fix", r3.status === 200 && r3.json.lessons.length === 1
     && JSON.stringify(calls[0].body.contents).includes('shows 25') && /rejected by Takhti's checker/.test(calls[0].body.systemInstruction.parts[0].text), JSON.stringify(r3).slice(0, 200));
   check('the model is told it only drafts from THIS chapter (nothing from outside it)', /nothing from outside it/.test(sys), '');
+  check('…to start every lesson with aims the teacher can approve, each one taught and checked, a note on why children pick the wrong answer, and never गुणा for "by"',
+    /AIMS/.test(sys) && /Every aim is taught in the beats AND checked by a question/.test(sys) && /why/.test(sys) && /गुणा/.test(sys) && c1.body.generationConfig && JSON.stringify(c1.body.generationConfig).includes('"aims"'), sys.slice(0, 200));
 
   // the voice server hosts the same function (no serverless time limit)
   const { createServer } = require('../voice/server.js');
@@ -156,6 +162,9 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     bad("a beat Takhti can't draw is rejected", (() => { const x = clone(MATH); x.beats.splice(1, 0, { t:'video' }); return x; })(), /can't show a "video" beat/);
     bad('an unequal share is rejected', (() => { const x = clone(MATH); x.beats[1] = { t:'share', a:25, b:4 }; return x; })(), /doesn't share equally/);
     bad("Hindi that isn't in Devanagari is rejected", (() => { const x = clone(READ); x.title.hi = 'Meena ki patang'; return x; })(), /Devanagari/);
+    bad('a lesson without aims is rejected — the aims are what the teacher approves', (() => { const x = clone(MATH); delete x.aims; return x; })(), /needs its aims/);
+    bad('an answer Munni has just said is rejected ("20 left… how many are left?")', (() => { const x = clone(MATH); x.beats[1].say = { en:'He gave 20 away, so 25 are left.', hi:'उसने 20 दे दिए, तो 25 बचे।' }; return x; })(), /say the answer "25"/);
+    bad('…in a reading lesson too (the narration, not the passage)', (() => { const x = clone(READ); x.beats.splice(1, 0, { t:'intro', say:{ en:'Meena flies her kite on the roof.', hi:'मीना छत पर पतंग उड़ाती है।' } }); return x; })(), /say the answer "On the roof"/);
     bad('a maths question needs a number for its answer', (() => { const x = clone(MATH); x.beats[2].opts = ['twenty-five','65']; return x; })(), /must be a number/);
     const again = JSON.parse(E(`JSON.stringify(sylClean(sylClean(${JSON.stringify(MATH)}, { band:'developing' }).lesson, { band:'developing' }))`));
     check('checking is idempotent: a checked lesson checks the same again (same id, still passes)', again.ok && again.lesson.id === m.lesson.id, JSON.stringify(again.errors));
@@ -178,6 +187,8 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     const t = screen();
     check('the teacher reads every lesson: the lines, the right answer marked, how each answer was checked, and why one is not used',
       /Ravi had 45 mangoes/.test(t) && /✓ 25/.test(t) && /answer checked by the arithmetic/.test(t) && /answer found in the passage/.test(t) && /Not used — it didn't pass the check/.test(t) && /isn't in the passage/.test(t), t.slice(-1200));
+    check("the teacher sees each lesson's aims to approve, and why children pick the wrong answer",
+      /AIMS — THE CHILD WILL BE ABLE TO/.test(t) && /take a part away from a whole/.test(t) && /Approve these aims/.test(t) && /add instead of taking away/.test(t), t.slice(0, 600));
     check('nothing reaches a child before the teacher approves', E(`sylApproved('CLS001').length`) === 0 && E(`schoolLessons().length`) === 0, '');
     E(`sylApproveAll()`);
     check('approve: the checked lessons (only) are in the class', E(`sylApproved('CLS001').length`) === 3 && /APPROVED FOR THE CLASS/.test(screen()), E(`JSON.stringify(sylApproved('CLS001').map(l => l.title.en))`));
@@ -201,6 +212,8 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     const id = E(`schoolLessons().find(l => l.skillId === 'sub2').id`);
     E(`startLesson('${id}')`);
     for(let i = 0; i < 50 && !E(`!!S.lesson`); i++) await wait(10);
+    for(let s = 0; s < 4; s++){ if(/add instead of taking away|AIMS/.test(screen())) break; E(`S.lesson.i = ${s}; render()`); }
+    check("the teacher's notes and the aims are never on the child's screen", !/add instead of taking away|AIMS|बच्चे घटाने/.test(screen()), screen().slice(0, 300));
     check("it plays, and the teacher's approved words are never rewritten online", E(`S.lesson && S.lesson.data.school`) === true && sent.filter(x => x.url.includes('/api/ask')).length === askCalls, '');
     const k = E(`(() => { const i = S.lesson.data.beats.findIndex(b => b.t === 'ask'); S.lesson.i = i; render(); return S.lesson.data.beats[i].correct; })()`);
     const n0 = E(`(S.skillHistory.sub2 || { n:0 }).n`);

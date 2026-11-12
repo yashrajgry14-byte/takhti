@@ -151,6 +151,7 @@ check('a drafted shape keeps only known fields, typed', !('evil' in draft.beat) 
 
     // Gemini's school lesson with a shape: checked against its drawing
     const raw = { title:{ en:'Around the field', hi:'मैदान के चारों ओर' }, sub:{ en:'Perimeter', hi:'परिमाप' }, ic:'🏏', skill:'perimeter',
+      aims:[{ en:'The child can find the perimeter of a rectangle.', hi:'बच्चा आयत का परिमाप निकाल सकता है।' }],
       beats:[{ t:'intro', say:{ en:'Ravi walks around the field.', hi:'रवि मैदान के चारों ओर चलता है।' } }, { t:'figure', kind:'rectangle', w:30, h:20, ask:'perimeter' },
              { t:'ask', q:{ en:'How far does he walk?', hi:'वह कितना चलता है?' }, opts:['100','50'], hiOpts:['100','50'], correct:0 }, { t:'win', say:{ en:'Add every side.', hi:'हर भुजा जोड़ो।' } }] };
     const ok = JSON.parse(A(`JSON.stringify(sylClean(${JSON.stringify(raw)}, { band:'fluent' }))`));
@@ -158,6 +159,9 @@ check('a drafted shape keeps only known fields, typed', !('evil' in draft.beat) 
     raw.beats[2].opts = ['50','100']; raw.beats[2].hiOpts = ['50','100'];
     const no = JSON.parse(A(`JSON.stringify(sylClean(${JSON.stringify(raw)}, { band:'fluent' }))`));
     check('…and one that marks w + h (the mistake) as right is rejected', !no.ok && no.errors.some(e => /isn't what the picture shows/.test(e)), JSON.stringify(no.errors));
+    raw.beats[2].opts = ['100','50']; raw.beats[2].hiOpts = ['100','50']; raw.beats[1].say = { en:'All the way round is 100.', hi:'चारों ओर कुल 100 है।' };
+    const told = JSON.parse(A(`JSON.stringify(sylClean(${JSON.stringify(raw)}, { band:'fluent' }))`));
+    check("…and one whose picture's own narration says the answer is rejected", !told.ok && told.errors.some(e => /say the answer "100"/.test(e)), JSON.stringify(told.errors));
     check('no uncaught script errors', jsErrors.length === 0, jsErrors.join(' | '));
   }catch(e){ check('the app run finished', false, e.stack); }
   srv.close(); win.close();

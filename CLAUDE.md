@@ -81,7 +81,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v42` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v43` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -331,12 +331,18 @@ child sees.
   (`sylGrounded()`), yes/no answers marked for the teacher to check; a
   shape question's answer is read off its drawing (`geoClean()`, then the
   validator — see **Shapes**); then
-  the band's number ceiling and sentence lengths. A failure goes back to
+  the band's number ceiling and sentence lengths. Every lesson carries its
+  **aims** (1–4 bilingual "the child can …" points — required) and each
+  question may carry a teacher-only `why` (why children pick the wrong
+  answer); a question whose answer Munni has just said (`sylSaysIt()` over
+  the narration since the last question — for a shape, its own picture's
+  narration) is rejected, so the child works it out. A failure goes back to
   Gemini **once** with its reasons; still failing → shown as "not used",
   with why. The right answer is shuffled (stable, by content); the id is a
   hash of the content, so a lesson edited later gets a different id.
-- **The teacher approves** after reading every line, the right answer
-  marked and how each answer was checked (`sylDraftHTML()`): `sylApprove()`
+- **The teacher approves the aims** (`sylDraftHTML()`: the aims first, then
+  the whole lesson folded underneath — every line, the right answer marked,
+  how each answer was checked, the `why` notes, never shown to a child): `sylApprove()`
   / `sylApproveAll()` / `sylRemove()` write `_lessons {items, at}` (≤ 12)
   into the class mirror; with *Keep this class synced* on, the class sync
   carries them to every synced phone (teacher's key only; shape- and

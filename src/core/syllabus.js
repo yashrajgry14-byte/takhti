@@ -41,7 +41,7 @@ const SYL_FIELDS = {
   intro:[], count:['n'], add:['a','b'], take:['a','b'], group:['a'], line:['a','b','hops'],
   array:['a','b'], share:['a','b'], bar:['a','b'], frac:['b'],
   passage:['p','art'], word:['w','art'], readline:['text'],
-  ask:['q','opts','hiOpts','correct'], win:[]
+  ask:['q','opts','hiOpts','correct','why'], win:[]
 };
 const SYL_MATH = ['count','add','take','group','line','array','share','bar','frac'];
 const SYL_READ = ['passage','word','readline'];
@@ -89,6 +89,17 @@ function sylGrounded(answer, text){
   return want.filter(hit).length / want.length >= 0.6;
 }
 
+/* Does a line of narration already say this answer? A number as a whole
+   number; words when every content word of the answer is there. */
+function sylSaysIt(text, answer){
+  if(!text || answer == null) return false;
+  const a = String(answer).trim();
+  if(/^\d+$/.test(a)) return new RegExp(`(^|[^\\d])${a}([^\\d]|$)`).test(text);
+  const stop = /^(the|and|for|with|its|that|this|are|was|का|की|के|है|हैं|में|पर|से|को|और|एक)$/i;
+  const want = sylWords(a).filter(w => !stop.test(w)), have = sylWords(text);
+  return want.length > 0 && want.every(w => have.some(h => h === w || (w.length >= 4 && h.length >= 4 && h.slice(0, 4) === w.slice(0, 4))));
+}
+
 /* One draft (from Gemini, or a lesson that travelled) → a lesson the player
    can run, plus every reason it can't be used. Idempotent on its own output. */
 function sylClean(raw, opts){
@@ -109,11 +120,14 @@ function sylClean(raw, opts){
     band, school: true, ic: sylEmoji(raw.ic) ? raw.ic : '📘',
     title: bi(raw.title, 'the title', 60), sub: bi(raw.sub, 'the subtitle', 80),
     skillId, source: sylPlain(raw.source) ? String(raw.source).slice(0, 120) : '',
+    // what the child will be able to do — what the teacher approves
+    aims: (Array.isArray(raw.aims) ? raw.aims.slice(0, 4) : []).map((a, k) => bi(a, `aim ${k + 1}`, 140)).filter(Boolean),
     beats: []
   };
+  if(!les.aims.length) errs.push('the lesson needs its aims — 1 to 4 things the child will be able to do');
   const beats = Array.isArray(raw.beats) ? raw.beats.slice(0, 12) : [];
   if(beats.length > 10) errs.push('more than 10 beats — keep a lesson short');
-  let lastShown = null, shown = null, readText = '';
+  let lastShown = null, shown = null, readText = '', lead = [];   // lead: what Munni said since the last question
   const checks = [];
 
   beats.forEach((x, i) => {
@@ -125,6 +139,7 @@ function sylClean(raw, opts){
       const g = geoClean(x);
       g.errors.forEach(e => errs.push(`beat ${i}: ${e}`));
       if(x.say){ const s = bi(x.say, `beat ${i}'s narration`, 200); if(s) g.beat.say = s; }
+      if(g.beat.say) lead.push(g.beat.say);
       les.beats.push(g.beat); lastShown = t; shown = g.beat;
       return;
     }
@@ -138,6 +153,8 @@ function sylClean(raw, opts){
       if(['a','b','n','hops','correct'].includes(k)){
         if(!Number.isInteger(v) || v < 0){ errs.push(`beat ${i}: ${k} must be a whole number`); continue; }
         out[k] = v;
+      } else if(k === 'why'){
+        const s = bi(v, `beat ${i}'s note for the teacher`, 220); if(s) out.why = s;   // never shown to a child
       } else if(k === 'p' || k === 'q'){
         const s = bi(v, k === 'p' ? `beat ${i}'s passage` : `beat ${i}'s question`, k === 'p' ? 500 : 160); if(s) out[k] = s;
       } else if(k === 'art'){
@@ -185,10 +202,17 @@ function sylClean(raw, opts){
       } else {
         errs.push(`beat ${i}: a question must come after something to look at or read`);
       }
+      // the child works the answer out: Munni mustn't have just said it (for a
+      // shape, the picture is new — only its own narration counts)
+      const said = lastShown && GEO_TYPES.includes(lastShown) ? (shown && shown.say ? [shown.say] : []) : lead;
+      if(right != null && !opts.every(o => /^(yes|no)$/i.test(o)) && said.some(s => sylSaysIt(s.en, right) || sylSaysIt(s.hi, hiOpts[out.correct])))
+        errs.push(`beat ${i}: the lines just before this question say the answer "${right}" — let the child work it out`);
+      lead = [];
     } else if(t !== 'intro' && t !== 'win'){
       lastShown = t; shown = out;
       if(SYL_READ.includes(t)) readText = [out.p && out.p.en, out.p && out.p.hi, out.w, out.text].filter(Boolean).join(' ');
     }
+    if(t !== 'ask' && out.say) lead.push(out.say);
     les.beats.push(out);
   });
 
@@ -196,7 +220,7 @@ function sylClean(raw, opts){
     les.beats.push({ t:'win', say:{ en:'Well done. You learnt it today.', hi:'शाबाश! आज तुमने यह सीख लिया।' } });
   les.subject = les.beats.some(b => SYL_MATH.includes(b.t) || GEO_TYPES.includes(b.t)) ? 'math' : 'read';
   // the right answer isn't always first: a stable shuffle, by the lesson's own content
-  const id = 'sch-' + sylHash({ t: les.title, s: les.sub, k: les.skillId, b: les.beats.map(b => ({ ...b, correct: undefined, hiOpts: undefined,
+  const id = 'sch-' + sylHash({ t: les.title, s: les.sub, k: les.skillId, a: les.aims, b: les.beats.map(b => ({ ...b, correct: undefined, hiOpts: undefined,
     opts: b.opts && b.opts.slice().sort(), right: b.opts ? b.opts[b.correct] : undefined, hiRight: b.hiOpts ? b.hiOpts[b.correct] : undefined })) });
   les.beats.forEach((b, i) => {
     if(b.t === 'ask' && b.opts && b.hiOpts && b.opts.length === 2 && b.hiOpts.length === 2 && Number.isInteger(b.correct) && b.correct < 2 && (seedOf(id + i) & 1) !== b.correct){
