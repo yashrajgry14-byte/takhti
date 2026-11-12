@@ -31,11 +31,25 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 /* ---------- lessons a stand-in Gemini sends ---------- */
 const MATH = { title:{ en:'Sharing mangoes', hi:'आम बाँटना' }, sub:{ en:'Take away with a bar', hi:'पट्टी से घटाना' }, ic:'🥭', skill:'sub2', source:'Chapter 4, page 31',
+  // aims in the one format: the point the teacher approves, and Munni's lines for Teach Munni
+  aims:[{ short:{ en:'Part from a whole', hi:'पूरे में से हिस्सा' }, point:{ en:'The child can take a part away from a whole up to 100.', hi:'बच्चा 100 तक के पूरे में से हिस्सा घटा सकता है।' },
+          forget:{ en:'Ravi had 45 mangoes and gave some away. I forgot how to find what is left!', hi:'रवि के पास 45 आम थे, कुछ दे दिए। बचे हुए कैसे निकालूँ, मैं भूल गई!' },
+          hints:[{ en:'Is the pile getting bigger or smaller?', hi:'ढेर बड़ा हो रहा है या छोटा?' }, { en:'Which number is the whole?', hi:'पूरा कौन सी संख्या है?' }],
+          ideas:[{ en:'take the part away from the whole', hi:'पूरे में से हिस्सा घटाओ', words:['take away','subtract','minus','ghata','ghatao','घटा','घटाओ','कम करो'] }] },
+        { short:{ en:'Use the bar', hi:'पट्टी से' }, point:{ en:'The child can use a bar to find the part that is left.', hi:'बच्चा पट्टी से बचा हुआ हिस्सा ढूँढ सकता है।' },
+          forget:{ en:'There is a long bar and a short piece of it. What does the rest of the bar show?', hi:'एक लंबी पट्टी है और उसका एक छोटा टुकड़ा। बाकी पट्टी क्या बताती है?' },
+          hints:[{ en:'The long bar is all the mangoes. What is the short piece?', hi:'लंबी पट्टी सारे आम हैं। छोटा टुकड़ा क्या है?' }, { en:'What happens to the mangoes Ravi kept?', hi:'जो आम रवि ने रखे, उनका क्या?' }],
+          ideas:[{ en:'the rest of the bar is the part that is left', hi:'बाकी पट्टी बचा हुआ हिस्सा है', words:['left','left over','remaining','bache','bacha','बचे','बचा','बचा हुआ'] }] }],
   beats:[ { t:'intro', say:{ en:'Ravi had 45 mangoes.', hi:'रवि के पास 45 आम थे।' } },
           { t:'bar', a:45, b:20, say:{ en:'He gave 20 to his friends.', hi:'उसने 20 आम दोस्तों को दिए।' } },
-          { t:'ask', q:{ en:'How many are left?', hi:'कितने आम बचे?' }, opts:['25','65'], hiOpts:['25','65'], correct:0 },
+          { t:'ask', q:{ en:'How many are left?', hi:'कितने आम बचे?' }, opts:['25','65'], hiOpts:['25','65'], correct:0,
+            why:{ en:'Children add instead of taking away when they see two numbers.', hi:'दो संख्याएँ देखकर बच्चे घटाने की जगह जोड़ देते हैं।' } },
           { t:'win', say:{ en:'Take the part away from the whole.', hi:'पूरे में से हिस्सा घटाओ।' } } ] };
 const READ = { title:{ en:"Meena's kite", hi:'मीना की पतंग' }, sub:{ en:'Read and answer', hi:'पढ़ो और जवाब दो' }, ic:'🪁', skill:'read5', source:'Lesson 6',
+  aims:[{ short:{ en:'Find where', hi:'कहाँ, ढूँढो' }, point:{ en:'The child can find where something happens in a short story.', hi:'बच्चा छोटी कहानी में ढूँढ सकता है कि कुछ कहाँ होता है।' },
+          forget:{ en:'I forgot where Meena flies her kite! How can I find out?', hi:'मैं भूल गई मीना पतंग कहाँ उड़ाती है! कैसे पता करूँ?' },
+          hints:[{ en:'Where is the answer hiding — in your head, or somewhere you can look?', hi:'जवाब कहाँ छिपा है — दिमाग़ में, या कहीं जहाँ देख सकते हो?' }, { en:'Which part of it talks about a place?', hi:'कौन सा हिस्सा किसी जगह की बात करता है?' }],
+          ideas:[{ en:'look back in the story for the sentence that says where', hi:'कहानी में वापस देखो, वह वाक्य जो जगह बताता है', words:['story','read again','look back','sentence','kahani','dekho','कहानी','पढ़','देखो','वाक्य'] }] }],
   beats:[ { t:'passage', art:'🪁', p:{ en:'Meena has a red kite. She flies it on the roof. The wind is strong today.', hi:'मीना के पास लाल पतंग है। वह छत पर उड़ाती है। आज हवा तेज़ है।' } },
           { t:'ask', q:{ en:'Where does Meena fly the kite?', hi:'मीना पतंग कहाँ उड़ाती है?' }, opts:['On the roof','In the park'], hiOpts:['छत पर','पार्क में'], correct:0 },
           { t:'win', say:{ en:'The answer was in the story.', hi:'जवाब कहानी में था।' } } ] };
@@ -45,7 +59,8 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
 
 (async () => {
   /* ---------- 1. the server ---------- */
-  const { draftCore } = await import(path.join(root, 'api/syllabus.mjs'));
+  const { pathToFileURL } = require('url');                   // a bare C:\ path isn't an import specifier on Windows
+  const { draftCore } = await import(pathToFileURL(path.join(root, 'api/syllabus.mjs')).href);
   const calls = [];
   const gemini = reply => async (url, o) => {
     const body = JSON.parse(o.body);
@@ -71,6 +86,28 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     : { ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[MATH] }) }] } }] }) }; };
   const r2 = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, env, '1.1.1.2', old);
   check('an API that only knows the older structured-output fields still works (one retry)', r2.status === 200 && calls.length === 2 && !!calls[1].generationConfig.responseJsonSchema, JSON.stringify(r2).slice(0, 200));
+  calls.length = 0;
+  const busyThen = async (url, o) => { calls.push({ url }); return /gemini-test:/.test(url)
+    ? { ok:false, status:503, json: async () => ({ error:{ message:'The model is overloaded' } }) }
+    : { ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[MATH] }) }] } }] }) }; };
+  const rb = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1 }, '1.1.1.8', busyThen);
+  check('Google says the model is busy (503): one more try, then the lighter fallback model answers', rb.status === 200 && rb.json.model === 'gemini-3.5-flash-lite'
+    && calls.filter(c => /gemini-test:/.test(c.url)).length === 2 && /flash-lite:/.test(calls[calls.length - 1].url), JSON.stringify(calls.map(c => c.url.split('/').pop())));
+  calls.length = 0;
+  const hangs = (url, o) => { calls.push({ url }); return /gemini-test:/.test(url)
+    ? new Promise((_, no) => o.signal.addEventListener('abort', () => no(new Error('aborted'))))
+    : Promise.resolve({ ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[READ] }) }] } }] }) }); };
+  const t0 = Date.now();
+  const rh = await draftCore({ chapter:{ text:'Chapter 6. Kites. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_TIMEOUT_MS: 4000 }, '1.1.1.7', hangs);
+  check('a model that hangs is given up on in time for the fallback to answer (no retry of a hang)', rh.status === 200 && rh.json.model === 'gemini-3.5-flash-lite'
+    && calls.filter(c => /gemini-test:/.test(c.url)).length === 1 && Date.now() - t0 < 4000, `${rh.status} ${JSON.stringify(rh.json).slice(0, 80)} ${Date.now() - t0}ms`);
+  const allBusy = async () => ({ ok:false, status:503, json: async () => ({}) });
+  const rz = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1 }, '1.1.1.9', allBusy);
+  check('…and when every model is busy, an honest "busy right now"', rz.status === 502 && /busy right now/.test(rz.json.error), JSON.stringify(rz));
+  const big = Buffer.alloc(5 * 1024 * 1024, 7).toString('base64');
+  const r413 = await draftCore({ chapter:{ file: big, mime:'application/pdf' }, rules }, env, '1.1.2.1', gemini({ lessons:[] }));
+  const r12 = await draftCore({ chapter:{ file: big, mime:'application/pdf' }, rules }, { ...env, TAKHTI_SYLLABUS_MAX_MB: 12 }, '1.1.2.2', gemini({ lessons:[] }));
+  check('a 5 MB chapter: refused at the serverless default (3.4 MB, saying so), taken where the limit is 12 MB (the voice server)', r413.status === 413 && r413.json.maxMb === 3.4 && r12.status === 200, JSON.stringify([r413.status, r12.status, r12.json]));
   check('no Gemini key on the server: an honest 503', (await draftCore({ chapter:{ text:'x'.repeat(50) }, rules }, {}, '1.1.1.3', gemini({ lessons:[] }))).status === 503, '');
   check('a school key, when the server sets one, is required', (await draftCore({ chapter:{ text:'x'.repeat(50) }, rules }, { ...env, TAKHTI_SYLLABUS_KEY:'school-1' }, '1.1.1.4', gemini({ lessons:[] }))).status === 403
     && (await draftCore({ chapter:{ text:'x'.repeat(50) }, rules, schoolKey:'school-1' }, { ...env, TAKHTI_SYLLABUS_KEY:'school-1' }, '1.1.1.4', gemini({ lessons:[] }))).status === 200, '');
@@ -81,9 +118,17 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   check('a limit per address', (await draftCore({ chapter:{ text:'x'.repeat(50) }, rules }, lim, '7.7.7.7', gemini({ lessons:[] }))).status === 429, '');
   calls.length = 0;
   const r3 = await draftCore({ mode:'repair', repair:[{ lesson: WRONG_SUM, errors:['beat 2: marked 35 right, but the picture before it shows 25'] }], rules }, env, '1.1.1.6', gemini({ lessons:[MATH] }));
+  const rsys = calls[0].body.systemInstruction.parts[0].text;
+  check('…and the repair round is told what every beat is, what a shape ask may be, and how to read the reasons', /figure \{kind/.test(rsys) && /ask is exactly one of/.test(rsys) && /must say what is asked \(ask\)" → set the figure's ask/.test(rsys) && /TEACH, THEN ASK/.test(rsys), rsys.slice(0, 200));
   check("the repair round sends the lesson back with the checker's own reasons, and returns the fix", r3.status === 200 && r3.json.lessons.length === 1
     && JSON.stringify(calls[0].body.contents).includes('shows 25') && /rejected by Takhti's checker/.test(calls[0].body.systemInstruction.parts[0].text), JSON.stringify(r3).slice(0, 200));
   check('the model is told it only drafts from THIS chapter (nothing from outside it)', /nothing from outside it/.test(sys), '');
+  check('…teach before asking, the school words (चौकोर कोना…), a why that names the real mistake, Hindi answers in Devanagari, and what each shape ask means',
+    /TEACH, THEN ASK/.test(sys) && /चौकोर कोना/.test(sys) && /names the real misconception/.test(sys) && /हाँ\/नहीं/.test(sys) && /ask is exactly one of: name/.test(sys), '');
+  const beatSchema = c1.body.generationConfig.responseFormat.text.schema.properties.lessons.items.properties.beats.items.properties;
+  check("the schema no longer has two different w's: a word beat's word is \"word\", a rectangle's w a number", beatSchema.word.type === 'string' && beatSchema.w.type === 'integer', JSON.stringify([beatSchema.word, beatSchema.w]));
+  check('…to start every lesson with aims the teacher can approve, each one taught and checked, a note on why children pick the wrong answer, and never गुणा for "by"',
+    /AIMS/.test(sys) && /Every aim is taught in the beats AND checked by a question/.test(sys) && /why/.test(sys) && /गुणा/.test(sys) && c1.body.generationConfig && JSON.stringify(c1.body.generationConfig).includes('"aims"'), sys.slice(0, 200));
 
   // the voice server hosts the same function (no serverless time limit)
   const { createServer } = require('../voice/server.js');
@@ -96,7 +141,7 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   vs.close();
 
   /* ---------- 4 (server half). the class sync carries the lessons ---------- */
-  const { syncCore } = await import(path.join(root, 'api/class-sync.mjs'));
+  const { syncCore } = await import(pathToFileURL(path.join(root, 'api/class-sync.mjs')).href);
   const mem = new Map(), store = { get: async k => mem.get(k) || null, setJSON: async (k, v) => mem.set(k, JSON.parse(JSON.stringify(v))) };
   const pack = { items:[{ id:'sch-abc12', band:'developing', beats:[{ t:'intro' }] }], at: 1000 };
   await syncCore(store, { code:'CLS001', teacherKey:'k'.repeat(32), lessons: pack });
@@ -156,11 +201,34 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     bad("a beat Takhti can't draw is rejected", (() => { const x = clone(MATH); x.beats.splice(1, 0, { t:'video' }); return x; })(), /can't show a "video" beat/);
     bad('an unequal share is rejected', (() => { const x = clone(MATH); x.beats[1] = { t:'share', a:25, b:4 }; return x; })(), /doesn't share equally/);
     bad("Hindi that isn't in Devanagari is rejected", (() => { const x = clone(READ); x.title.hi = 'Meena ki patang'; return x; })(), /Devanagari/);
+    bad('a lesson without aims is rejected — the aims are what the teacher approves', (() => { const x = clone(MATH); delete x.aims; return x; })(), /needs its aims/);
+    bad('an answer Munni has just said is rejected ("20 left… how many are left?")', (() => { const x = clone(MATH); x.beats[1].say = { en:'He gave 20 away, so 25 are left.', hi:'उसने 20 दे दिए, तो 25 बचे।' }; return x; })(), /say the answer "25"/);
+    bad('…in a reading lesson too (the narration, not the passage)', (() => { const x = clone(READ); x.beats.splice(1, 0, { t:'intro', say:{ en:'Meena flies her kite on the roof.', hi:'मीना छत पर पतंग उड़ाती है।' } }); return x; })(), /say the answer "On the roof"/);
+    bad('teach before you ask: a question straight after the intro is rejected',
+      { ...clone(READ), title:{ en:'Square corners', hi:'चौकोर कोने' }, beats:[{ t:'intro', say:{ en:"Let's look at corners.", hi:'आओ कोने देखें।' } }, { t:'corner', deg:90, ask:'kind' },
+        { t:'ask', q:{ en:'What kind of corner is this?', hi:'यह कैसा कोना है?' }, opts:['Square corner','Smaller corner'], hiOpts:['चौकोर कोना','छोटा कोना'], correct:0 }, { t:'win', say:{ en:'Well done.', hi:'शाबाश।' } }] }, /teach before you ask/);
+    bad('Hindi answers in English are rejected (only numbers may stay as they are)', (() => { const x = clone(READ); x.beats[1].hiOpts = ['On the roof','In the park']; return x; })(), /must be in Devanagari/);
+    const shapeL = (q, opts, hiOpts, extra) => ({ ...clone(READ), title:{ en:'Shapes', hi:'आकृतियाँ' }, skill:'shapes2d', beats:[{ t:'intro', say:{ en:'Look at the shapes.', hi:'आकृतियाँ देखो।' } },
+      { t:'figure', kind:'triangle', sides:[4,4,4] }, { t:'figure', kind:'rectangle', w:6, h:3, ...(extra || {}) }, { t:'figure', kind:'rectangle', w:6, h:3, ...(extra || {}) },
+      { t:'ask', q, opts, hiOpts, correct:0 }, { t:'win', say:{ en:'Count every side.', hi:'हर भुजा गिनो।' } }] });
+    const inferred = clean(shapeL({ en:'How many sides does it have?', hi:'इसकी कितनी भुजाएँ हैं?' }, ['4','3'], ['4','3']));
+    check("the live run's pattern — the same shape twice, the question's ask left out — is tidied: one shape, its ask read from the question, then checked against the drawing",
+      inferred.ok && inferred.lesson.beats.filter(b => b.t === 'figure').length === 2 && inferred.lesson.beats.find(b => b.kind === 'rectangle').ask === 'sides' && inferred.checks[0] === 'shape', JSON.stringify(inferred.errors));
+    bad('…and a question the drawing contradicts still fails (a rectangle has 4 corners, not 3)', shapeL({ en:'How many corners?', hi:'कितने कोने?' }, ['3','4'], ['3','4']), /isn't what the picture shows/);
+    bad('a question that names the shape it asks about is rejected ("…in this rectangle?")', shapeL({ en:'Are all the sides equal in this rectangle?', hi:'क्या इस आयत की सारी भुजाएँ बराबर हैं?' }, ['No','Yes'], ['नहीं','हाँ'], { ask:'equal' }), /names the shape/);
+    const wordL = clean({ ...clone(READ), beats:[{ t:'word', word:'पतंग', art:'🪁' }, { t:'ask', q:{ en:'Which word is this?', hi:'यह कौन सा शब्द है?' }, opts:['Kite','Ball'], hiOpts:['पतंग','गेंद'], correct:0 }, { t:'win', say:{ en:'Well read.', hi:'शाबाश।' } }] });
+    check('a word beat sent as "word" (the schema\'s name) works', wordL.ok && wordL.lesson.beats[0].w === 'पतंग', JSON.stringify(wordL.errors));
+    const exSrc = fs.readFileSync(path.join(root, 'api/syllabus.mjs'), 'utf8').match(/An example of one good lesson[^\n]*\n([\s\S]*?)`;\n}/)[1];
+    const ex = JSON.parse(E(`JSON.stringify(sylClean(${exSrc}, { band:'early', skills: sylSkills(sylClass('c1')) }))`));
+    check("the example lesson in Gemini's prompt passes Takhti's own checker (so the example and the rules can't drift apart)", ex.ok && ex.checks[0] === 'shape', JSON.stringify(ex.errors));
+    const c3 = JSON.parse(E(`JSON.stringify(sylSkills(sylClass('c3')).map(s => s.id))`));
+    check('a Class 3 chapter may name the shape skills — flat shapes (Class 1), angles and perimeter (Class 4) — Class 3 skills first', ['shapes2d','angles','perimeter'].every(id => c3.includes(id)) && c3.length <= 60, JSON.stringify(c3));
     bad('a maths question needs a number for its answer', (() => { const x = clone(MATH); x.beats[2].opts = ['twenty-five','65']; return x; })(), /must be a number/);
     const again = JSON.parse(E(`JSON.stringify(sylClean(sylClean(${JSON.stringify(MATH)}, { band:'developing' }).lesson, { band:'developing' }))`));
     check('checking is idempotent: a checked lesson checks the same again (same id, still passes)', again.ok && again.lesson.id === m.lesson.id, JSON.stringify(again.errors));
-    const sides = [MATH, READ, WRONG_SUM].map(x => clean(x).lesson.beats.find(b => b.t === 'ask').correct);
-    check('the right answer is not always the first option', new Set(sides.concat(clean(NOT_IN_TEXT).lesson.beats.find(b => b.t === 'ask').correct)).size === 2 || sides.includes(1), JSON.stringify(sides));
+    // the shuffle is by content, so check over many lessons rather than trusting a few to land both ways
+    const sides = Array.from({ length: 12 }, (_, k) => { const x = clone(k % 2 ? MATH : READ); x.title = { en: x.title.en + ' ' + k, hi: x.title.hi + ' ' + k }; return clean(x).lesson.beats.find(b => b.t === 'ask').correct; });
+    check('the right answer is not always the first option', new Set(sides).size === 2, JSON.stringify(sides));
 
     // 3. the teacher drafts
     E(`go('teacher'); S.ctx.tcode = 'CLS001'; S.online = true; render()`);
@@ -178,6 +246,8 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     const t = screen();
     check('the teacher reads every lesson: the lines, the right answer marked, how each answer was checked, and why one is not used',
       /Ravi had 45 mangoes/.test(t) && /✓ 25/.test(t) && /answer checked by the arithmetic/.test(t) && /answer found in the passage/.test(t) && /Not used — it didn't pass the check/.test(t) && /isn't in the passage/.test(t), t.slice(-1200));
+    check("the teacher sees each lesson's aims to approve, and why children pick the wrong answer",
+      /AIMS — THE CHILD WILL BE ABLE TO/.test(t) && /take a part away from a whole/.test(t) && /Approve these aims/.test(t) && /add instead of taking away/.test(t), t.slice(0, 600));
     check('nothing reaches a child before the teacher approves', E(`sylApproved('CLS001').length`) === 0 && E(`schoolLessons().length`) === 0, '');
     E(`sylApproveAll()`);
     check('approve: the checked lessons (only) are in the class', E(`sylApproved('CLS001').length`) === 3 && /APPROVED FOR THE CLASS/.test(screen()), E(`JSON.stringify(sylApproved('CLS001').map(l => l.title.en))`));
@@ -201,6 +271,8 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     const id = E(`schoolLessons().find(l => l.skillId === 'sub2').id`);
     E(`startLesson('${id}')`);
     for(let i = 0; i < 50 && !E(`!!S.lesson`); i++) await wait(10);
+    for(let s = 0; s < 4; s++){ if(/add instead of taking away|AIMS/.test(screen())) break; E(`S.lesson.i = ${s}; render()`); }
+    check("the teacher's notes and the aims are never on the child's screen", !/add instead of taking away|AIMS|बच्चे घटाने/.test(screen()), screen().slice(0, 300));
     check("it plays, and the teacher's approved words are never rewritten online", E(`S.lesson && S.lesson.data.school`) === true && sent.filter(x => x.url.includes('/api/ask')).length === askCalls, '');
     const k = E(`(() => { const i = S.lesson.data.beats.findIndex(b => b.t === 'ask'); S.lesson.i = i; render(); return S.lesson.data.beats[i].correct; })()`);
     const n0 = E(`(S.skillHistory.sub2 || { n:0 }).n`);

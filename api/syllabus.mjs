@@ -26,7 +26,8 @@
    → { lessons:[…raw drafts…], chapter, model }
 
    Keys stay here: GEMINI_API_KEY (or GOOGLE_API_KEY), GEMINI_MODEL
-   (default gemini-3.8-flash). TAKHTI_SYLLABUS_KEY, if set, is a school
+   (default gemini-3.8-flash; GEMINI_FALLBACK_MODEL, default
+   gemini-3.5-flash-lite, when that one is busy). TAKHTI_SYLLABUS_KEY, if set, is a school
    password the teacher view must send. Works as a Netlify function
    (Request → Response), with the Vercel-style (req, res) signature
    api/ask.js uses, and inside the voice server (voice/server.js,
@@ -35,7 +36,12 @@
 
 const BANDS = ['pre', 'early', 'developing', 'fluent'];
 const FILE_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
-const MAX_TEXT = 30000, MAX_FILE_B64 = 4.6 * 1024 * 1024, MAX_BODY = 5 * 1024 * 1024;
+const MAX_TEXT = 30000;
+/* A chapter's PDF, in MB. Serverless hosts cap a request near 6 MB, so 3.4 by
+   default; the voice server has no such cap and sets 12 (TAKHTI_SYLLABUS_MAX_MB).
+   Gemini takes up to 20 MB inline per request — 12 MB of PDF is ~16 MB encoded. */
+const maxMb = env => Math.min(14, Math.max(1, Number(env.TAKHTI_SYLLABUS_MAX_MB) || 3.4));
+const maxB64 = env => Math.ceil(maxMb(env) * 1024 * 1024 * 4 / 3) + 1024;
 const BEAT_TYPES = ['intro','count','add','take','group','line','array','share','bar','frac','figure','corner','figures','passage','word','readline','ask','win'];
 const SKILL = /^[a-z0-9-]{1,24}$/;
 const HITS = new Map();
@@ -79,7 +85,7 @@ const SCHEMA = {
         ic:{ type:'string', description:'One emoji.' },
         skill:{ type:'string', description:'One id from the skill list, or "".' },
         source:{ type:'string', description:'Where in the chapter this comes from (page, heading, exercise).' },
-        aims:{ type:'array', description:'2–3 points the child should be able to explain afterwards (Teach Munni).', items:{
+        aims:{ type:'array', minItems:1, maxItems:4, description:'What the child will be able to do — the points a teacher approves, and that Munni later "forgets" for the child to explain back (Teach Munni).', items:{
           type:'object',
           properties:{ short: bi, point: bi, forget: bi, hints:{ type:'array', items: bi },
             ideas:{ type:'array', items:{ type:'object', properties:{ en:{ type:'string' }, hi:{ type:'string' }, words:{ type:'array', items:{ type:'string' } } }, required:['en','hi','words'] } } },
@@ -89,9 +95,10 @@ const SCHEMA = {
           properties:{
             t:{ type:'string', enum: BEAT_TYPES },
             say: bi, a:{ type:'integer' }, b:{ type:'integer' }, n:{ type:'integer' }, hops:{ type:'integer' },
-            p: bi, art:{ type:'string' }, w:{ type:'string' }, text:{ type:'string' },
+            p: bi, art:{ type:'string' }, word:{ type:'string' }, text:{ type:'string' },
             q: bi, opts:{ type:'array', items:{ type:'string' } }, hiOpts:{ type:'array', items:{ type:'string' } },
             correct:{ type:'integer' },
+            why: { ...bi, description:'For the teacher only: why children pick the wrong answer.' },
             kind:{ type:'string', enum:['square','rectangle','triangle','circle'] }, s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' },
             sides:{ type:'array', items:{ type:'integer' } }, folds:{ type:'integer' }, deg:{ type:'integer' },
             ask:{ type:'string', enum:['name','sides','corners','perimeter','equal','meet','kind'] },
@@ -102,17 +109,17 @@ const SCHEMA = {
           required:['t']
         } }
       },
-      required:['title','sub','beats']
+      required:['title','sub','aims','beats']
     } }
   },
   required:['lessons']
 };
 
-function instructions(rules, count, skills, note){
-  return `You write short practice lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (age band "${rules.band}").
-A teacher has given you a chapter from their own school's syllabus. Write ${count} lesson(s) that practise what THIS chapter teaches — nothing from outside it.
-
-Every lesson is a list of "beats" the app draws on screen with the child's favourite game pieces, and narrates aloud. Use ONLY these beat types and fields:
+/* What Takhti can draw, and the rules its checker holds a lesson to —
+   one text, used by the draft AND the repair round (the first live run's
+   repair fixed nothing: it was told "add ask" without being told what ask is). */
+function beatsText(){
+  return `Every lesson is a list of "beats" the app draws on screen with the child's favourite game pieces, and narrates aloud. Use ONLY these beat types and fields:
 - intro {say}: an opening line.
 - count {n}: n objects appear (n ≤ 20).
 - add {a,b}: a objects, then b more arrive (a,b ≤ 10).
@@ -124,40 +131,84 @@ Every lesson is a list of "beats" the app draws on screen with the child's favou
 - bar {a,b}: a bar model: whole a, known part b (b ≤ a ≤ 100).
 - frac {b}: one whole cut into b equal parts (2 ≤ b ≤ 8).
 - passage {p, art}: a short text to read (3–5 short sentences), art is one emoji.
-- word {w, art}: one word to read.
+- word {word, art}: one word to read.
 - readline {text}: one sentence for the child to read aloud.
-- ask {q, opts, hiOpts, correct}: a question with exactly 2 options; correct is the index of the right one.
-- figure {kind, s | w,h | sides, folds, ask}: Takhti draws one shape — a square (side s), a rectangle (w by h, w and h different), a triangle (sides [a,b,c]) or a circle (folds = 0–4 fold lines through the middle). Side lengths are labelled. Without ask it is for teaching (corners are marked); with ask, the very next beat is a question about it: ask = name | sides | corners | perimeter | equal (are all sides equal? Yes/No) | meet (where the folds meet: Centre, needs 2+ folds).
-- corner {deg, ask}: Takhti draws one corner of deg degrees (20–160). With ask:"kind" the next question's answer is "Square corner", "Smaller corner" or "Bigger corner" (square = 90).
-- figures {items, find}: 2–4 shapes or corners in a row, numbered 1–4 (an item is {kind, s|w,h|sides} or {kind:"corner", deg}). find = square | rectangle | triangle | circle | squarecorner | odd; exactly one must match, and the next question's answer is its NUMBER.
+- ask {q, opts, hiOpts, correct, why}: a question with exactly 2 options; correct is the index of the right one; why (for the teacher only, never shown to the child) names the real misconception behind the wrong option.
+- figure {kind, s | w,h | sides, folds, ask}: Takhti draws ONE shape — a square (s = its side), a rectangle (w AND h, both needed, different numbers), a triangle (sides = [a,b,c], three numbers that make a triangle) or a circle (folds = 0–4 fold lines through the middle). Side lengths are labelled on the drawing.
+    · A figure WITHOUT ask is a teaching picture: its corners are marked and Munni says what it is.
+    · A figure WITH ask is a question picture, and the VERY NEXT beat must be the ask about it. ask is exactly one of: name (which shape is it?) | sides (how many sides?) | corners (how many corners?) | perimeter (all the way round — add every side) | equal (are all its sides equal? answers Yes / No) | meet (where do the folds meet? answer Centre — the circle needs folds ≥ 2).
+- corner {deg, ask}: Takhti draws one corner of deg degrees (20–160; 90 is a square corner). Without ask it is a teaching picture. With ask:"kind" the next beat asks what kind it is, and the answers are two of "Square corner" / "Smaller corner" / "Bigger corner" (Hindi: चौकोर कोना / छोटा कोना / बड़ा कोना).
+- figures {items, find}: 2–4 shapes or corners in a row, numbered 1–4 (an item is {kind, s | w,h | sides} or {kind:"corner", deg}). find = square | rectangle | triangle | circle | squarecorner | odd; exactly ONE item must match, and the next beat asks which number — its answers are numbers like "2".
 - win {say}: the closing line — the one idea to remember.
+Never repeat a beat. A figure, corner or figures beat never carries a why — notes go on the ask.
+The teaching picture and the question picture are DIFFERENT examples (a different shape or size), so the child applies what they saw.
 
-Hard rules — a checker rejects any lesson that breaks one:
-1. 4 to 8 beats; start with intro, passage or a figure; at least one ask; end with win.
-2. A maths ask comes right after the beat that shows it, and its right answer is a number equal to what that beat computes (count → n, add → a+b, take → a−b, group → a, array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Write numbers as digits in opts and hiOpts.
-3. A reading ask comes after a passage/word/readline, and its right answer uses the passage's own words.
-3b. A shape ask comes right after the figure/corner/figures it is about, and its right answer is what that drawing shows. For anything about shapes, sides, corners or perimeter, USE these drawings — never describe a shape only in words.
-3c. Never say the answer in the lines just before a question: the child works it out from the picture or the numbers. Where you can, ask two questions — one to recognise, one to apply to something new.
-4. The wrong option is a mistake a child really makes (one off, forgot to carry, added instead of subtracting, a detail from the wrong sentence) — never silly, never equal to the right one.
-5. Every number a child meets is at most ${rules.maxNumber}.
-6. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; speak to the child as "तुम", never "आप"; never scold, never the word "wrong".
-7. title, sub, say, q, p are objects with natural English "en" AND natural Hindi "hi" in Devanagari (not transliteration). opts are English, hiOpts the same answers in Hindi, same order.
-8. Plain text only: no markup, no brackets of code, no links. ic and art are a single emoji.
-9. skill: the id from this list that the lesson practises, or "" if none fits: ${skills.length ? skills.map(s => `${s.id} (${s.en})`).join('; ') : '(none given)'}.
-10. source: where in the chapter it comes from.
-11. aims: 2–3 points a child should be able to EXPLAIN afterwards, to Munni the elephant, who pretends she forgot. For each: short (a 2–4 word name), point (what the child can explain, as a teacher would write it), forget (Munni's puzzled question that makes the child explain it — it must NOT contain the explanation), hints (exactly 2 gentle nudges that also do NOT give the explanation), ideas (1–2 things a full explanation says, each with "words": 4–15 words or short phrases a child might use for it, in English, Hindi in Devanagari and romanised Hindi). Munni's lines are spoken to the child: warm, short, "तुम" in Hindi.
+An example of one good lesson (the shape of it, not its content):
+{"title":{"en":"Sides and corners","hi":"भुजाएँ और कोने"},"sub":{"en":"Go round the shape","hi":"आकृति के चारों ओर"},"ic":"🔷","skill":"shapes2d","source":"Page 61",
+ "aims":[{"short":{"en":"Count the sides","hi":"भुजाएँ गिनो"},"point":{"en":"The child can count the sides of a shape.","hi":"बच्चा किसी आकृति की भुजाएँ गिन सकता है।"},"forget":{"en":"I forgot! How do I find out how many sides a shape has?","hi":"मैं भूल गई! किसी आकृति की कितनी भुजाएँ हैं, यह कैसे पता करूँ?"},"hints":[{"en":"Put your finger on one corner. What do you do next?","hi":"एक कोने पर उँगली रखो। फिर क्या करोगे?"},{"en":"How do you know when to stop?","hi":"कैसे पता चलेगा कि कब रुकना है?"}],"ideas":[{"en":"go round the shape and count each straight edge once","hi":"आकृति के चारों ओर घूमकर हर सीधी भुजा एक बार गिनो","words":["go round","count","each side","every side","one by one","once","घूम","गिन","हर भुजा","एक-एक","ek ek","ginti","ginna","एक बार"]}]}],
+ "beats":[{"t":"intro","say":{"en":"Shapes have sides. Let us count them.","hi":"आकृतियों की भुजाएँ होती हैं। आओ गिनें।"}},
+  {"t":"figure","kind":"square","s":4},
+  {"t":"figure","kind":"triangle","sides":[5,5,5],"ask":"sides"},
+  {"t":"ask","q":{"en":"How many sides does it have?","hi":"इसकी कितनी भुजाएँ हैं?"},"opts":["3","4"],"hiOpts":["3","4"],"correct":0,
+   "why":{"en":"Children who just saw the square expect every shape to have 4 sides.","hi":"वर्ग देखने के बाद बच्चे हर आकृति की 4 भुजाएँ मान लेते हैं।"}},
+  {"t":"win","say":{"en":"Go round once and count each side.","hi":"एक बार पूरा घूमो और हर भुजा गिनो।"}}]}`;
+}
+function rulesText(rules){
+  return `Hard rules — Takhti's checker rejects any lesson that breaks one:
+1. 4 to 8 beats; start with intro, passage or a teaching picture; end with win; at least one ask.
+2. TEACH, THEN ASK: before the first question there must be something that teaches — a teaching picture (a figure or corner without ask, or a count/add/take/… beat), or a passage. Every aim is taught in the beats AND checked by a question.
+3. A maths ask comes right after the beat that shows it, and its right answer is a number equal to what that beat computes (count → n, add → a+b, take → a−b, group → a, array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Numbers as digits.
+4. A reading ask comes after a passage/word/readline, and its right answer uses the passage's own words.
+5. A shape ask comes right after the figure/corner/figures it is about (with its ask or find set), and its right answer is what that drawing shows. For anything about shapes, sides, corners or perimeter, USE the drawings — never describe a shape only in words.
+6. Never say the answer in the lines just before a question, and never name it in the question itself ("Are all sides equal in this square?" gives it away — ask "Are all its sides equal?"). Where you can, ask two questions: one to recognise, one to apply to something new.
+7. The wrong option is a mistake a child really makes — never silly, never equal to the right one. Its why names that mistake ("children count only the top two corners"), not "they might guess".
+8. Every number a child meets is at most ${rules.maxNumber}.
+9. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; speak to the child as "तुम", never "आप"; never scold, never the word "wrong".
+10. title, sub, say, q, p, why and each aim's short, point, forget and hints are objects with natural English "en" AND natural Hindi "hi" in Devanagari (not transliteration). opts are English; hiOpts are the same answers in Hindi, in Devanagari unless the answer is a number (Yes/No → हाँ/नहीं).
+11. Use the words Indian schools use: वर्ग (square), आयत (rectangle), त्रिभुज (triangle), वृत्त (circle), भुजा (side), कोना (corner), चौकोर कोना (square corner), केंद्र (centre), परिमाप (perimeter). Sizes are written "6 × 3" or "sides 6 and 3" — in Hindi never translate "by" as गुणा.
+12. Plain text only: no markup, no brackets of code, no links. ic and art are a single emoji.`;
+}
+
+function instructions(rules, count, skills, note){
+  return `You write short practice lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (age band "${rules.band}").
+A teacher has given you a chapter from their own school's syllabus. Write ${count} lesson(s) that practise what THIS chapter teaches — nothing from outside it.
+
+Every lesson starts with its AIMS: 1 to 4 (3 is best) points a teacher can approve. After the lesson, Munni the elephant pretends she forgot them, and the child explains each one back to her. Each aim has:
+- point: what the child will be able to do or explain ("The child can …"), the Hindi saying exactly what the English says;
+- short: a 2–4 word name for it;
+- forget: Munni's puzzled question that makes the child explain it — it must NOT contain the explanation;
+- hints: exactly 2 gentle nudges, which also must NOT give the explanation;
+- ideas: 1–2 things a full explanation says, each with "words": 4–15 words or short phrases a child might use for it, in English, Hindi in Devanagari and romanised Hindi.
+Munni's lines are spoken to the child: warm, short, "तुम" in Hindi. An aim whose question or hints already give the explanation is dropped; a lesson with no usable aim is rejected.
+
+${beatsText()}
+
+${rulesText(rules)}
+13. skill: the id from this list that the lesson practises, or "" if none fits: ${skills.length ? skills.map(s => `${s.id} (${s.en})`).join('; ') : '(none given)'}.
+14. source: where in the chapter it comes from.
 ${note ? `The teacher's note: "${note}"` : ''}
 Answer with JSON only, in the given schema.`;
 }
 
 function repairInstructions(rules){
-  return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Return each lesson fixed — same topic, same format, every reason addressed — and change nothing else. Numbers at most ${rules.maxNumber}; every say and q at most ${rules.sayWords} words in Hindi; a maths answer must equal what the beat before it computes; a reading answer must use the passage's words; exactly 2 options; English and Devanagari Hindi everywhere; plain text only. Answer with JSON only, in the given schema.`;
+  return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Return each lesson fixed — same topic, same format, same aims, every reason addressed — and change nothing else.
+How to read the reasons: "must say what is asked (ask)" → set the figure's ask to what the next question asks (sides, corners, name…); "a rectangle needs w and h" → give both; "say the answer" → change the narration or ask about a new example, not the answer; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi.
+
+${beatsText()}
+
+${rulesText(rules)}
+Answer with JSON only, in the given schema.`;
 }
 
+const wait = ms => new Promise(r => setTimeout(r, ms));
 async function callGemini(parts, system, env, fetchImpl){
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
-  const model = env.GEMINI_MODEL || 'gemini-3.8-flash';
-  const url = `${env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  // the chosen model, then a lighter one when Google says it's busy (503/429)
+  // or doesn't know the model (404) — GEMINI_FALLBACK_MODEL, 'none' to switch off
+  const primary = env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const fallback = env.GEMINI_FALLBACK_MODEL === 'none' ? null : (env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite');
+  const models = [primary].concat(fallback && fallback !== primary ? [fallback] : []);
+  const urlFor = m => `${env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(m)}:generateContent`;
   const base = { systemInstruction:{ parts:[{ text: system }] }, contents:[{ role:'user', parts }] };
   // the current structured-output field first; older deployments of the API
   // take responseMimeType/responseJsonSchema — one retry covers both
@@ -165,16 +216,40 @@ async function callGemini(parts, system, env, fetchImpl){
     { generationConfig:{ temperature:0.4, responseFormat:{ text:{ mimeType:'APPLICATION_JSON', schema: SCHEMA } } } },
     { generationConfig:{ temperature:0.4, responseMimeType:'application/json', responseJsonSchema: SCHEMA } }
   ];
-  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), Number(env.TAKHTI_SYLLABUS_TIMEOUT_MS || 55000));
+  // the whole request has TAKHTI_SYLLABUS_TIMEOUT_MS (55 s on a serverless host, 180 s on the
+  // voice server); one model may take at most 60% of it, so a model that hangs
+  // still leaves time for the fallback (the first live run's health check hung for 55 s)
+  const total = Number(env.TAKHTI_SYLLABUS_TIMEOUT_MS || 55000), started = Date.now();
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), total);
+  const perModel = Math.max(2000, Math.floor(total * (models.length > 1 ? 0.6 : 1)));
   try{
-    let res, d;
-    for(const shape of shapes){
-      res = await fetchImpl(url, { method:'POST', signal: ctl.signal,
-        headers:{ 'content-type':'application/json', 'x-goog-api-key': key }, body: JSON.stringify({ ...base, ...shape }) });
-      d = await res.json().catch(() => ({}));
-      if(res.status !== 400) break;
+    let res, d, model;
+    const busy = s => s === 503 || s === 429;
+    models: for(model of models){
+      for(const shape of shapes){
+        for(let attempt = 0; attempt < 2; attempt++){
+          const one = new AbortController(), left = Math.min(perModel, total - (Date.now() - started));
+          const stop = () => one.abort(), t1 = setTimeout(stop, Math.max(1000, left));
+          ctl.signal.addEventListener('abort', stop);
+          try{
+            res = await fetchImpl(urlFor(model), { method:'POST', signal: one.signal,
+              headers:{ 'content-type':'application/json', 'x-goog-api-key': key }, body: JSON.stringify({ ...base, ...shape }) });
+            d = await res.json().catch(() => ({}));
+          }catch(e){
+            if(ctl.signal.aborted) throw e;                               // the whole request is out of time
+            res = { ok:false, status:503, hung:true }; d = {};            // this model hung: straight to the next one
+          }finally{ clearTimeout(t1); ctl.signal.removeEventListener('abort', stop); }
+          if(res.hung || !busy(res.status)) break;
+          if(attempt === 0) await wait(Number(env.TAKHTI_SYLLABUS_RETRY_MS || 1500));   // once more, a moment later
+        }
+        if(res.ok) break models;
+        if(res.hung) continue models;
+        if(busy(res.status) || res.status === 404) continue models;                  // busy, or no such model: the next one
+        if(res.status !== 400) break models;                                          // 400: the other request shape
+      }
     }
-    if(!res.ok) return { error:`Gemini said ${res.status}`, status: 502 };
+    if(!res.ok) return res.hung ? { error:'Gemini did not answer in time', status: 504 }
+                                : { error: busy(res.status) ? 'Gemini is busy right now — try again in a few minutes' : `Gemini said ${res.status}`, status: 502 };
     const text = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('').replace(/```json|```/g, '').trim();
     let out;
     try{ out = JSON.parse(text); }catch(e){ return { error:'Gemini did not answer in the lesson format', status: 502 }; }
@@ -209,15 +284,17 @@ export async function draftCore(body, env, ip, fetchImpl){
     const mime = String(ch.mime || '');
     if(!FILE_TYPES.includes(mime)) return { status:400, json:{ error:'a PDF or a photo (PNG, JPEG, WebP) of the chapter' } };
     const b64 = String(ch.file);
-    if(b64.length > MAX_FILE_B64) return { status:413, json:{ error:'that file is too big — send one chapter, or a few pages' } };
-    if(!/^[A-Za-z0-9+/=]{100,}$/.test(b64)) return { status:400, json:{ error:'that file could not be read' } };
+    if(b64.length > maxB64(env)) return { status:413, json:{ error:`that file is too big for this server (up to ${maxMb(env)} MB) — send one chapter, or fewer pages`, maxMb: maxMb(env) } };
+    // look for one bad character rather than matching the whole string: a
+    // whole-string pattern overflows the stack on a multi-megabyte chapter
+    if(b64.length < 100 || /[^A-Za-z0-9+/=]/.test(b64)) return { status:400, json:{ error:'that file could not be read' } };
     parts.push({ inline_data:{ mime_type: mime, data: b64 } });
   }
   const text = plain(ch.text, MAX_TEXT).trim();
   if(text) parts.push({ text: 'The chapter:\n' + text });
   if(!parts.length) return { status:400, json:{ error:'no chapter — paste its text or attach a PDF or photo' } };
   const count = clamp(body.count, 1, 5, 3);
-  const skills = (Array.isArray(body.skills) ? body.skills : []).filter(s => s && SKILL.test(s.id)).slice(0, 40)
+  const skills = (Array.isArray(body.skills) ? body.skills : []).filter(s => s && SKILL.test(s.id)).slice(0, 60)
     .map(s => ({ id: s.id, en: plain(s.en, 60) }));
   const note = plain(body.note, 200).trim();
   parts.push({ text: `Write ${count} lesson(s) from this chapter.` });
@@ -243,7 +320,7 @@ export default async function handler(req, res){
     if(vercel) body = req.body;
     else {
       const text = await req.text();
-      if(text.length > MAX_BODY) return reply(413, { error:'too large' });
+      if(text.length > Math.max(5 * 1024 * 1024, maxB64(process.env) + 512 * 1024)) return reply(413, { error:'too large' });
       body = JSON.parse(text);
     }
   }catch(e){ return reply(400, { error:'bad JSON' }); }

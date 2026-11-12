@@ -19,7 +19,7 @@ tracing to writing, counting to carrying, tables and BODMAS.
 school's own syllabus have started: a teacher uploads a chapter, Gemini
 drafts the week's lessons, Takhti checks every one.
 
-**Build status:** web prototype on `main` (offline shell `takhti-v44`, 40 test
+**Build status:** web prototype on `main` (offline shell `takhti-v46`, 40 test
 suites); the voice server has had its first live Bolna call. The Android app
 ports the same logic to Kotlin (`ANDROID.md`).
 
@@ -80,8 +80,10 @@ A teacher uploads a chapter: a PDF, a photo of the textbook page, or the text.
 Gemini drafts a few short lessons in Takhti's own lesson format. Then Takhti's
 lesson checker tests every one on the phone: the arithmetic of each answer,
 numbers right for the age, sentence lengths, that a reading answer is really
-in the passage, plain text only. A lesson that fails goes back to Gemini once
-with the checker's reasons. The teacher reads each lesson and approves it,
+in the passage, that no answer is given away just before its question, plain
+text only. A lesson that fails goes back to Gemini once with the checker's
+reasons. Each lesson comes with its aims in a few plain points; the teacher
+approves the aims,
 and the class gets it at the Story Fire, offline. Every child's phone checks
 it again before showing it. Gemini prepares next week; it never decides what a
 child sees. → `api/syllabus.mjs`, `src/core/syllabus.js`

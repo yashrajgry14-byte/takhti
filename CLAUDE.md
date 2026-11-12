@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v44` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v46` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -315,8 +315,10 @@ child sees.
 
 - **The teacher view** (`syllabusHTML()`, a card under the homework): pick
   the class (Nursery/KG → Class 5, `SYL_CLASSES` → the age band and the
-  grade of its skills), a PDF or a photo of the page (`sylPickFile()`, ≤ 3.4
-  MB) or the pasted text, how many lessons (2–5), an optional note.
+  grade of its skills), a PDF or a photo of the page (`sylPickFile()`, ≤ 12
+  MB on the phone; the server says its own limit — 3.4 MB on a serverless
+  host, 12 MB on the voice server, `TAKHTI_SYLLABUS_MAX_MB` — and a 413
+  names it) or the pasted text, how many lessons (2–5), an optional note.
   *Draft this week's lessons* → `sylDraft()`. Needs a signal; offline says
   so. A school key field appears when the server asks for one (403).
 - **The server** (`api/syllabus.mjs`, `draftCore()`; a Netlify/Vercel
@@ -327,7 +329,20 @@ child sees.
   both languages, the class's skill ids, the note — and asks Gemini
   (`GEMINI_API_KEY`, `GEMINI_MODEL`, default `gemini-3.8-flash`) for JSON in
   Takhti's lesson schema (structured output; one retry with the older field
-  names). A PDF or photo goes as `inline_data`. `mode:'repair'` sends
+  names). Google saying the model is busy (503/429) gets one more try a
+  moment later, then the lighter `GEMINI_FALLBACK_MODEL`
+  (`gemini-3.5-flash-lite`; `none` switches it off), which a 404 also moves
+  to; all busy → "Gemini is busy right now". One model gets at most 60% of
+  the time limit (55 s serverless, 180 s on the voice server), so a model
+  that hangs leaves time for the fallback. The draft and the repair prompt
+  share one description of the beats and the rules (`beatsText()`,
+  `rulesText()`) — what each shape `ask` means, the school's Hindi words
+  (चौकोर कोना, वर्ग…), teach-then-ask, a `why` that names the real mistake —
+  and one worked example lesson, which the test runs through the checker so
+  the two can't drift apart. A word beat's text is `word` in the drafting
+  schema (a rectangle's `w` is a number). The class's skills offered are its
+  own grade first, then the grades around it (a Class 3 shapes chapter
+  reaches `shapes2d`, `angles`, `perimeter`). A PDF or photo goes as `inline_data`. `mode:'repair'` sends
   rejected lessons back with the checker's reasons. Drafts only; the key
   never leaves the server; `TAKHTI_SYLLABUS_KEY` (optional school password)
   and a per-address hourly limit.
@@ -341,12 +356,32 @@ child sees.
   (`sylGrounded()`), yes/no answers marked for the teacher to check; a
   shape question's answer is read off its drawing (`geoClean()`, then the
   validator — see **Shapes**); then
-  the band's number ceiling and sentence lengths. A failure goes back to
+  the band's number ceiling and sentence lengths. Before checking,
+  `sylTidy()` fixes only what is certain and still checked: a beat repeated
+  twice in a row is kept once, a picture's stray notes are dropped, and a
+  figure or corner followed by a question but missing its `ask` gets it from
+  the question's own words (`sylInferAsk()`: "How many sides?" → sides) —
+  a wrong reading fails against the drawing. Then: something must teach (a
+  teaching picture, a worked example or a passage) before the first
+  question; a shape question mustn't name the shape it asks about; the Hindi
+  answers are in Devanagari unless they are numbers. Every lesson carries its
+  **aims** — required, 1–4, in the one format Teach Munni uses (a bilingual
+  `point`, "the child can …", plus Munni's `forget` question, two `hints` and
+  the `ideas` an explanation needs; `teachCleanAims()` — see **Teach
+  Munni**): an aim that fails its check is dropped and named (`aimErrors`),
+  a lesson left with none is rejected — and each
+  question may carry a teacher-only `why` (why children pick the wrong
+  answer); a question whose answer Munni has just said (`sylSaysIt()` over
+  the narration since the last question — for a shape, its own picture's
+  narration) is rejected, so the child works it out. A failure goes back to
   Gemini **once** with its reasons; still failing → shown as "not used",
   with why. The right answer is shuffled (stable, by content); the id is a
   hash of the content, so a lesson edited later gets a different id.
-- **The teacher approves** after reading every line, the right answer
-  marked and how each answer was checked (`sylDraftHTML()`): `sylApprove()`
+- **The teacher approves the aims** (`sylDraftHTML()`: the aims' points
+  first, *Approve these aims*, Munni's questions for them folded under
+  "Afterwards Munni forgets these", any aim left out and why, then
+  the whole lesson folded underneath — every line, the right answer marked,
+  how each answer was checked, the `why` notes, never shown to a child): `sylApprove()`
   / `sylApproveAll()` / `sylRemove()` write `_lessons {items, at}` (≤ 12)
   into the class mirror; with *Keep this class synced* on, the class sync
   carries them to every synced phone (teacher's key only; shape- and
@@ -814,12 +849,14 @@ protégé effect, and the one place a child gets to *say* what they learnt.
   decides. The Netlify function (`api/teachback`) takes a transcript only.
 - **What the phone sends**: the points still to teach, the band's ages,
   the audio or words — no name, no id.
-- **School lessons' aims** (`core/syllabus.js`): the syllabus prompt asks
-  Gemini for 2–3 aims per lesson; `sylClean()` runs `teachCleanAims()`,
-  drops a failing aim with its reason (`aimErrors`, shown to the teacher)
-  and keeps the rest **inside the lesson's id** (an aim edited on the way
-  changes the id, so no phone shows it). The teacher reads them with the
-  lesson ("Munni will forget these afterwards").
+- **School lessons' aims** (`core/syllabus.js`): one format for both jobs —
+  the syllabus prompt asks Gemini for 1–4 aims per lesson (required), each
+  a `point` the teacher approves plus Munni's lines; `sylClean()` runs
+  `teachCleanAims()`, drops a failing aim with its reason (`aimErrors`,
+  shown to the teacher), rejects a lesson left with none, and keeps the rest
+  **inside the lesson's id** (an aim edited on the way changes the id, so
+  no phone shows it). The teacher approves the points first ("Approve these
+  aims"), Munni's questions folded underneath.
 - **Where it shows**: the end of a lesson (*🐘 Teach Munni*), the Story
   Fire, the parent's **How … explains** (`teachParentHTML()`: points
   explained, without a hint, in their own words, the lesson's words used,
@@ -1252,8 +1289,16 @@ Honest edges of what's built:
    yet); a
    reading answer counts as "in the passage" by shared words, which a
    paraphrase can fail. They reach other phones only through the class
-   sync (no lesson code by hand yet), and serverless hosts may time out
-   on a long PDF — the voice server's `POST /syllabus` has no such limit.
+   sync (no lesson code by hand yet). Serverless hosts cap a chapter at
+   3.4 MB and may time out on a long PDF — NCERT chapters are often 5–10 MB,
+   so use the voice server's `POST /syllabus` (12 MB, no time limit); past
+   that, the Gemini Files API would be next. The first live runs (12 Nov
+   2026) found `gemini-3.8-flash` overloaded (503) for an hour, hence the
+   fallback; `gemini-3.5-flash-lite` then passed 1 of 6 drafted lessons on
+   the *Maths Mela* Class 3 shapes chapter, every rejection a missing shape
+   `ask` or a rectangle without `h`, and the repair round (which then didn't
+   describe the beats) fixed none — the reason for the shared prompt, the
+   worked example and `sylTidy()`. Not yet re-run.
 14. **Teach Munni is new and untested on real children.** The judge (Gemini
    on a transcript) is tested against a stand-in; whether it judges a
    seven-year-old's Hinglish fairly needs real recordings first (try ten

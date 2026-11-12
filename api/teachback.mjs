@@ -158,7 +158,7 @@ export async function judgeCore(body, env, ip, fetchImpl, hear){
   if(body.audio){
     if(!hear) return { status: 400, json: { error: 'this server takes a transcript, not a recording' } };
     const b64 = String(body.audio);
-    if(!/^[A-Za-z0-9+/=]{200,}$/.test(b64)) return { status: 400, json: { error: 'no recording' } };
+    if(b64.length < 200 || /[^A-Za-z0-9+/=]/.test(b64)) return { status: 400, json: { error: 'no recording' } };   // a scan, not a whole-string match (stack-safe)
     const buf = Buffer.from(b64, 'base64');
     if(buf.length > 1.5 * 1024 * 1024) return { status: 413, json: { error: 'that recording is too long' } };
     const r = await hear(buf, body.mime, lang);

@@ -41,7 +41,7 @@ const SYL_FIELDS = {
   intro:[], count:['n'], add:['a','b'], take:['a','b'], group:['a'], line:['a','b','hops'],
   array:['a','b'], share:['a','b'], bar:['a','b'], frac:['b'],
   passage:['p','art'], word:['w','art'], readline:['text'],
-  ask:['q','opts','hiOpts','correct'], win:[]
+  ask:['q','opts','hiOpts','correct','why'], win:[]
 };
 const SYL_MATH = ['count','add','take','group','line','array','share','bar','frac'];
 const SYL_READ = ['passage','word','readline'];
@@ -63,9 +63,14 @@ function sylRules(bandId){
   const b = AGE_BANDS[bandId] || AGE_BANDS.developing;
   return { band: b.id, ages: b.ages, maxNumber: b.maxNumber, sayWords: SYL_WORDS[b.id] || 18, read: b.read };
 }
-/* the skills a lesson for this class may name: its grade and the one below */
+/* the skills a lesson for this class may name: its own grade first, then
+   the grades around it — a Class 3 shapes chapter practises flat shapes
+   (graded Class 1) and square corners and perimeter (Class 4), and its
+   answers should count for them */
 function sylSkills(cls){
-  return SKILLS.filter(s => s.g <= cls.g && s.g >= cls.g - 1).map(s => ({ id: s.id, en: s.en }));
+  const near = s => s.g === cls.g ? 0 : s.g === cls.g - 1 ? 1 : s.g === cls.g + 1 ? 2 : 3;
+  return SKILLS.filter(s => s.g >= cls.g - 2 && s.g <= cls.g + 1 && s.strand !== 'evs')
+    .sort((a, b) => near(a) - near(b)).slice(0, 60).map(s => ({ id: s.id, en: s.en }));
 }
 
 /* What a maths picture computes — the number its question must have as the answer. */
@@ -89,6 +94,58 @@ function sylGrounded(answer, text){
   return want.filter(hit).length / want.length >= 0.6;
 }
 
+/* Before checking: tidy what a model commonly gets slightly wrong, where
+   the fix is certain and the checker still tests the result —
+   · a beat repeated twice in a row is kept once;
+   · a word beat's word may come as "word" (the drafting schema's name,
+     because a rectangle's w is a number);
+   · a notes field on a picture is dropped (notes belong on the question);
+   · a figure or corner followed by a question but missing what it asks gets
+     it from the question's own words ("How many sides?" → sides). If that
+     reading is wrong, validateLesson() rejects the answer against the drawing. */
+function sylTidy(beats){
+  const out = [];
+  for(const x0 of beats){
+    if(!x0 || typeof x0 !== 'object') { out.push(x0); continue; }
+    const x = { ...x0 };
+    if(x.t === 'word' && x.w == null && typeof x.word === 'string') x.w = x.word;
+    delete x.word;
+    if(x.t !== 'ask') delete x.why;
+    const prev = out[out.length - 1];
+    if(prev && JSON.stringify(prev) === JSON.stringify(x)) continue;
+    out.push(x);
+  }
+  out.forEach((x, i) => {
+    const next = out[i + 1];
+    if(!x || !next || next.t !== 'ask') return;
+    if(x.t === 'corner' && x.ask == null) x.ask = 'kind';
+    if(x.t === 'figure' && x.ask == null) x.ask = sylInferAsk(x, next);
+  });
+  return out;
+}
+function sylInferAsk(fig, q){
+  const text = [q.q && q.q.en, q.q && q.q.hi].filter(Boolean).join(' ').toLowerCase();
+  const right = (q.opts || [])[q.correct], num = /^\d+$/.test(String(right == null ? '' : right).trim());
+  if(num && /perimeter|all the way round|around|distance round|परिमाप|चारों ओर/.test(text)) return 'perimeter';
+  if(fig.kind === 'circle' && /meet|cross|cent(re|er)|मिल|केंद्र|केन्द्र/.test(text)) return 'meet';
+  if(/equal|same length|बराबर/.test(text)) return 'equal';
+  if(num && /corner|कोन/.test(text)) return 'corners';
+  if(num && /side|भुज/.test(text)) return 'sides';
+  if(!num && /shape|which|what is (this|it)|called|आकृति|आकार|कौन|क्या कहते/.test(text)) return 'name';
+  return undefined;                                   // can't tell: the checker asks for it
+}
+
+/* Does a line of narration already say this answer? A number as a whole
+   number; words when every content word of the answer is there. */
+function sylSaysIt(text, answer){
+  if(!text || answer == null) return false;
+  const a = String(answer).trim();
+  if(/^\d+$/.test(a)) return new RegExp(`(^|[^\\d])${a}([^\\d]|$)`).test(text);
+  const stop = /^(the|and|for|with|its|that|this|are|was|का|की|के|है|हैं|में|पर|से|को|और|एक)$/i;
+  const want = sylWords(a).filter(w => !stop.test(w)), have = sylWords(text);
+  return want.length > 0 && want.every(w => have.some(h => h === w || (w.length >= 4 && h.length >= 4 && h.slice(0, 4) === w.slice(0, 4))));
+}
+
 /* One draft (from Gemini, or a lesson that travelled) → a lesson the player
    can run, plus every reason it can't be used. Idempotent on its own output. */
 function sylClean(raw, opts){
@@ -109,11 +166,20 @@ function sylClean(raw, opts){
     band, school: true, ic: sylEmoji(raw.ic) ? raw.ic : '📘',
     title: bi(raw.title, 'the title', 60), sub: bi(raw.sub, 'the subtitle', 80),
     skillId, source: sylPlain(raw.source) ? String(raw.source).slice(0, 120) : '',
+    // what the child will be able to do — what the teacher approves
+    // what the child will be able to do — what the teacher approves, and what
+    // Munni forgets afterwards (Teach Munni): each aim is a plain point plus her
+    // question, two hints and what a full explanation says (core/teachback.js)
+    aims: [],
     beats: []
   };
-  const beats = Array.isArray(raw.beats) ? raw.beats.slice(0, 12) : [];
+  // an aim that fails its check is dropped and named (aimErrors); a lesson with none fails
+  const ta = typeof teachCleanAims === 'function' ? teachCleanAims(raw.aims, 'sch-tmp') : { aims: [], errors: ['the aim checker is not loaded'] };
+  les.aims = ta.aims;
+  if(!les.aims.length) errs.push('the lesson needs its aims — 1 to 4 things the child will be able to do' + (ta.errors.length ? ` (${ta.errors[0]})` : ''));
+  const beats = sylTidy(Array.isArray(raw.beats) ? raw.beats.slice(0, 12) : []);
   if(beats.length > 10) errs.push('more than 10 beats — keep a lesson short');
-  let lastShown = null, shown = null, readText = '';
+  let lastShown = null, shown = null, readText = '', lead = [], taught = false, asked = false;   // lead: what Munni said since the last question
   const checks = [];
 
   beats.forEach((x, i) => {
@@ -125,7 +191,9 @@ function sylClean(raw, opts){
       const g = geoClean(x);
       g.errors.forEach(e => errs.push(`beat ${i}: ${e}`));
       if(x.say){ const s = bi(x.say, `beat ${i}'s narration`, 200); if(s) g.beat.say = s; }
+      if(g.beat.say) lead.push(g.beat.say);
       les.beats.push(g.beat); lastShown = t; shown = g.beat;
+      if(t !== 'figures' && g.beat.ask == null) taught = true;           // a teaching picture
       return;
     }
     const fields = SYL_FIELDS[t];
@@ -138,10 +206,14 @@ function sylClean(raw, opts){
       if(['a','b','n','hops','correct'].includes(k)){
         if(!Number.isInteger(v) || v < 0){ errs.push(`beat ${i}: ${k} must be a whole number`); continue; }
         out[k] = v;
+      } else if(k === 'why'){
+        const s = bi(v, `beat ${i}'s note for the teacher`, 220); if(s) out.why = s;   // never shown to a child
       } else if(k === 'p' || k === 'q'){
         const s = bi(v, k === 'p' ? `beat ${i}'s passage` : `beat ${i}'s question`, k === 'p' ? 500 : 160); if(s) out[k] = s;
       } else if(k === 'art'){
         if(sylEmoji(v)) out.art = v;
+      } else if(k === 'w' && t === 'word' && typeof v !== 'string'){
+        errs.push(`beat ${i}: the word must be short plain text`);
       } else if(k === 'w' || k === 'text'){
         if(typeof v === 'string' && sylPlain(v) && v.trim() && v.length <= (k === 'w' ? 24 : 140)) out[k] = v.trim();
         else errs.push(`beat ${i}: ${k === 'w' ? 'the word' : 'the line'} must be short plain text`);
@@ -167,6 +239,9 @@ function sylClean(raw, opts){
     if(t === 'ask'){
       const opts = out.opts || [], hiOpts = out.hiOpts || [];
       if(opts.length !== 2) errs.push(`beat ${i}: a question needs exactly 2 answers`);
+      if(hiOpts.some(o => !/^\d+$/.test(o) && !/[ऀ-ॿ]/.test(o))) errs.push(`beat ${i}: the Hindi answers must be in Devanagari (Yes/No → हाँ/नहीं)`);
+      if(!asked && !taught) errs.push(`beat ${i}: teach before you ask — put a teaching picture, a worked example or a passage before the first question`);
+      asked = true;
       const right = opts[out.correct];
       if(lastShown && SYL_MATH.includes(lastShown)){
         // a maths question: not "derived", so validateLesson() tests the arithmetic
@@ -176,6 +251,10 @@ function sylClean(raw, opts){
         checks.push('sum');
       } else if(lastShown && GEO_TYPES.includes(lastShown)){
         checks.push('shape');                          // validateLesson() reads the answer off the drawing
+        // "Are all sides equal in this square?" — the question mustn't name the shape it asks about
+        if(shown && shown.t === 'figure' && ['name', 'equal'].includes(shown.ask) && GEO_WORDS[shown.kind]
+           && out.q && GEO_WORDS[shown.kind].some(r => r.test(out.q.en) || r.test(out.q.hi)))
+          errs.push(`beat ${i}: the question names the shape it asks about — let the child work it out`);
       } else if(lastShown && SYL_READ.includes(lastShown)){
         out.derived = true;
         const grounded = right != null && (sylGrounded(right, readText) || sylGrounded(hiOpts[out.correct], readText));
@@ -185,24 +264,29 @@ function sylClean(raw, opts){
       } else {
         errs.push(`beat ${i}: a question must come after something to look at or read`);
       }
+      // the child works the answer out: Munni mustn't have just said it (for a
+      // shape, the picture is new — only its own narration counts)
+      const said = lastShown && GEO_TYPES.includes(lastShown) ? (shown && shown.say ? [shown.say] : []) : lead;
+      if(right != null && !opts.every(o => /^(yes|no)$/i.test(o)) && said.some(s => sylSaysIt(s.en, right) || sylSaysIt(s.hi, hiOpts[out.correct])))
+        errs.push(`beat ${i}: the lines just before this question say the answer "${right}" — let the child work it out`);
+      lead = [];
     } else if(t !== 'intro' && t !== 'win'){
       lastShown = t; shown = out;
       if(SYL_READ.includes(t)) readText = [out.p && out.p.en, out.p && out.p.hi, out.w, out.text].filter(Boolean).join(' ');
     }
+    if(t !== 'ask' && out.say) lead.push(out.say);
+    if(t !== 'ask' && t !== 'intro' && t !== 'win') taught = true;          // a worked example or a passage
     les.beats.push(out);
   });
 
   if(les.beats.length && les.beats[les.beats.length - 1].t !== 'win')
     les.beats.push({ t:'win', say:{ en:'Well done. You learnt it today.', hi:'शाबाश! आज तुमने यह सीख लिया।' } });
   les.subject = les.beats.some(b => SYL_MATH.includes(b.t) || GEO_TYPES.includes(b.t)) ? 'math' : 'read';
-  // the points Munni will ask about afterwards (Teach Munni, core/teachback.js):
-  // a point that fails its check is dropped and named — the lesson still works without it
-  const ta = typeof teachCleanAims === 'function' && Array.isArray(raw.aims) ? teachCleanAims(raw.aims, 'sch-tmp') : { aims: [], errors: [] };
   // the right answer isn't always first: a stable shuffle, by the lesson's own content
-  const id = 'sch-' + sylHash({ t: les.title, s: les.sub, k: les.skillId, b: les.beats.map(b => ({ ...b, correct: undefined, hiOpts: undefined,
-    opts: b.opts && b.opts.slice().sort(), right: b.opts ? b.opts[b.correct] : undefined, hiRight: b.hiOpts ? b.hiOpts[b.correct] : undefined })),
-    ...(ta.aims.length ? { a: ta.aims.map(a => ({ ...a, id: undefined })) } : {}) });
-  if(ta.aims.length){ les.aims = ta.aims; les.aims.forEach((a, k) => { a.id = ('s' + id.replace(/^sch-/, '') + '.' + k).slice(0, 32); }); }
+  // (the aims are inside the id, without their ids: an aim edited on the way changes it)
+  const id = 'sch-' + sylHash({ t: les.title, s: les.sub, k: les.skillId, a: les.aims.map(a => ({ ...a, id: undefined })), b: les.beats.map(b => ({ ...b, correct: undefined, hiOpts: undefined,
+    opts: b.opts && b.opts.slice().sort(), right: b.opts ? b.opts[b.correct] : undefined, hiRight: b.hiOpts ? b.hiOpts[b.correct] : undefined })) });
+  les.aims.forEach((a, k) => { a.id = ('s' + id.replace(/^sch-/, '') + '.' + k).slice(0, 32); });
   les.beats.forEach((b, i) => {
     if(b.t === 'ask' && b.opts && b.hiOpts && b.opts.length === 2 && b.hiOpts.length === 2 && Number.isInteger(b.correct) && b.correct < 2 && (seedOf(id + i) & 1) !== b.correct){
       b.opts = [b.opts[1], b.opts[0]]; b.hiOpts = [b.hiOpts[1], b.hiOpts[0]]; b.correct = 1 - b.correct;
@@ -221,7 +305,7 @@ async function sylDraft(input){
     const res = await fetch(SYL_URL, { method:'POST', headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ ...body, rules, schoolKey: S.ctx.sylKey || undefined }) });
     const d = await res.json().catch(() => ({}));
-    if(!res.ok) throw Object.assign(new Error(d.error || ('HTTP ' + res.status)), { status: res.status });
+    if(!res.ok) throw Object.assign(new Error(d.error || ('HTTP ' + res.status)), { status: res.status, maxMb: d.maxMb });
     return d;
   };
   const d = await post({ mode:'draft', chapter: input.chapter, count: input.count, skills, note: input.note });

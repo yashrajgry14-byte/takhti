@@ -221,7 +221,9 @@ function createServer(opts) {
         if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
         const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
         const { draftCore } = await import('../api/syllabus.mjs');
-        const r = await draftCore(await readBody(req, 5 * 1024 * 1024), env, ip, opts.fetch || fetch);
+        // no serverless caps here: whole NCERT chapters fit, and a whole chapter can take Gemini a minute
+        const senv = { TAKHTI_SYLLABUS_MAX_MB: 12, TAKHTI_SYLLABUS_TIMEOUT_MS: 180000, ...env };
+        const r = await draftCore(await readBody(req, Math.ceil(Number(senv.TAKHTI_SYLLABUS_MAX_MB) * 1.4 + 1) * 1024 * 1024), senv, ip, opts.fetch || fetch);
         return send(res, r.status, r.json);
       }
 

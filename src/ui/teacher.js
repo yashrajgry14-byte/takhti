@@ -210,8 +210,8 @@ function syllabusHTML(code){
   return `<div class="paper" style="margin-top:12px">
     <div class="kicker2">📚 ${hi ? 'आपके पाठ्यक्रम से इस हफ़्ते के पाठ' : "THIS WEEK'S LESSONS FROM YOUR SYLLABUS"}</div>
     <div style="font-size:12.5px;opacity:.8">${hi
-      ? 'एक अध्याय दें — PDF, किताब के पन्ने की फ़ोटो, या उसका पाठ। Gemini छोटे पाठ बनाता है, तख़्ती हर पाठ का गणित, उम्र के हिसाब से संख्याएँ, वाक्यों की लंबाई और जवाब जाँचती है, और आप पढ़कर मंज़ूरी देते हैं। बच्चे इन्हें कहानी की आग पर खेलते हैं।'
-      : 'Give it one chapter — a PDF, a photo of the textbook page, or its text. Gemini drafts short lessons, Takhti checks every one (the arithmetic, numbers for the age, sentence lengths, that each answer is really right), and you read and approve them. Children play them at the Story Fire.'}</div>
+      ? 'एक अध्याय दें — PDF, किताब के पन्ने की फ़ोटो, या उसका पाठ। Gemini छोटे पाठ बनाता है, तख़्ती हर पाठ का गणित, उम्र के हिसाब से संख्याएँ, वाक्यों की लंबाई और जवाब जाँचती है, और आप हर पाठ के उद्देश्य मंज़ूर करते हैं। बच्चे इन्हें कहानी की आग पर खेलते हैं।'
+      : "Give it one chapter — a PDF, a photo of the textbook page, or its text. Gemini drafts short lessons, Takhti checks every one (the arithmetic, numbers for the age, sentence lengths, that each answer is really right and not given away), and you approve each lesson's aims. Children play them at the Story Fire."}</div>
 
     <div class="row" style="gap:8px;margin-top:10px">
       <select class="input" style="flex:1" onchange="S.ctx.sylCls=this.value;render()">
@@ -241,12 +241,12 @@ function syllabusHTML(code){
         : `${res.drafts.length} lesson(s) from "${attr(res.chapter || 'the chapter')}" · ${res.drafts.filter(d => d.ok).length} passed the check${res.drafts.some(d => d.repaired) ? ` (${res.drafts.filter(d => d.repaired).length} fixed by Gemini from the checker's reasons)` : ''}`}</div>
       ${res.drafts.map((d, i) => sylDraftHTML(d, i, approved, badge)).join('')}
       ${res.drafts.filter(d => d.ok && !approved.some(a => a.id === d.lesson.id)).length > 1
-        ? `<button class="btn leaf" style="margin-top:8px" onclick="sylApproveAll()">${hi ? 'सभी जाँचे हुए पाठ मंज़ूर करें' : 'Approve all the checked lessons'}</button>` : ''}
+        ? `<button class="btn leaf" style="margin-top:8px" onclick="sylApproveAll()">${hi ? 'सभी जाँचे हुए पाठों के उद्देश्य मंज़ूर करें' : "Approve all the checked lessons' aims"}</button>` : ''}
     </div>` : ''}
 
     ${approved.length ? `<div class="kicker2" style="margin-top:14px">${hi ? 'कक्षा के लिए मंज़ूर' : 'APPROVED FOR THE CLASS'}</div>
       ${approved.map(l => `<div class="metric"><div><b>${l.ic || '📘'} ${attr(L(l.title))}</b>
-        <div style="font-size:12px;opacity:.7">${attr(L(l.sub))}</div></div>
+        <div style="font-size:12px;opacity:.7">${(l.aims || []).length ? (l.aims || []).map(a => attr(L(a))).join(' · ') : attr(L(l.sub))}</div></div>
         <button class="btn ghost" style="width:auto;padding:6px 12px" onclick="sylRemove('${l.id}')">${hi ? 'हटाओ' : 'Remove'}</button></div>`).join('')}
       <div style="font-size:12px;opacity:.7;margin-top:6px">${S.syncClasses.includes(code)
         ? (hi ? 'इस फ़ोन के बच्चों को और सिंक वाले हर फ़ोन को मिलते हैं — हर फ़ोन इन्हें दिखाने से पहले फिर जाँचता है।' : 'Children on this phone get them, and so does every synced phone — each one checks them again before showing them.')
@@ -265,7 +265,8 @@ function sylDraftHTML(d, i, approved, badge){
       const opts = hi ? b.hiOpts || b.opts : b.opts, check = d.checks[k++];
       return `<div style="margin:4px 0 4px 10px">❓ ${T(b.q)}<div style="font-size:12.5px">${(opts || []).map((o, j) =>
         `<span style="margin-right:10px;${j === b.correct ? 'font-weight:700' : 'opacity:.7'}">${j === b.correct ? '✓' : '✗'} ${attr(o)}</span>`).join('')}
-        ${check ? `<span style="opacity:.7">· ${badge(check)}</span>` : ''}</div></div>`;
+        ${check ? `<span style="opacity:.7">· ${badge(check)}</span>` : ''}</div>
+        ${b.why ? `<div style="font-size:12px;opacity:.75;font-style:italic">${hi ? 'बच्चे दूसरा जवाब क्यों चुनते हैं' : 'Why children pick the other answer'}: ${T(b.why)}</div>` : ''}</div>`;
     }
     const pic = { count:`${b.n}`, add:`${b.a} + ${b.b}`, take:`${b.a} − ${b.b}`, group:`${b.a}`, line:`${b.a}, +${b.b} × ${b.hops}`,
                   array:`${b.a} × ${b.b}`, share:`${b.a} ÷ ${b.b}`, bar:`${b.a} = ${b.b} + ?`, frac:`1/${b.b}` }[b.t];
@@ -280,13 +281,15 @@ function sylDraftHTML(d, i, approved, badge){
     <b>${les.ic} ${T(les.title)}</b> <span style="font-size:12px;opacity:.7">${T(les.sub)}</span>
     ${les.skillId && skillById(les.skillId) ? `<div style="font-size:12px;opacity:.75">${hi ? 'कौशल' : 'Skill'}: ${attr(hi ? skillById(les.skillId).hi : skillById(les.skillId).en)}</div>` : ''}
     ${les.source ? `<div style="font-size:12px;opacity:.6">${hi ? 'स्रोत' : 'From'}: ${attr(les.source)}</div>` : ''}
-    <details style="margin-top:4px" ${d.ok && !isIn ? 'open' : ''}><summary style="font-size:12.5px;cursor:pointer">${hi ? 'पूरा पाठ पढ़ें' : 'Read the whole lesson'}</summary>${lines}</details>
-    ${(les.aims || []).length ? `<div style="font-size:12.5px;margin-top:6px"><b>🐘 ${hi ? 'मुन्नी बाद में ये बातें भूलेगी — बच्चा सिखाएगा' : 'Munni will forget these afterwards — the child teaches them back'}:</b>
-      ${les.aims.map(a => `<div style="margin:3px 0 3px 10px">• ${T(a.point)} <span style="opacity:.65">— "${T(a.forget)}"</span></div>`).join('')}</div>` : ''}
-    ${(d.aimErrors || []).length ? `<div style="font-size:12px;opacity:.7;margin-top:2px">${hi ? 'छोड़ी गई बातें' : 'Points left out'}: ${d.aimErrors.slice(0, 2).map(attr).join('; ')}</div>` : ''}
+    ${(les.aims || []).length ? `<div style="margin-top:6px"><div class="kicker2" style="font-size:10.5px">${hi ? 'उद्देश्य — बच्चा यह कर पाएगा' : 'AIMS — THE CHILD WILL BE ABLE TO'}</div>
+      ${les.aims.map(a => `<div style="font-size:13.5px;margin:2px 0">• ${T(a.point)}</div>`).join('')}
+      <details style="margin-top:2px"><summary style="font-size:12px;cursor:pointer;opacity:.8">🐘 ${hi ? 'बाद में मुन्नी ये भूलेगी — बच्चा उसे वापस सिखाएगा' : 'Afterwards Munni forgets these — the child teaches her back'}</summary>
+        ${les.aims.map(a => `<div style="font-size:12.5px;margin:3px 0 3px 10px">${T(a.short)}: "${T(a.forget)}"</div>`).join('')}</details></div>` : ''}
+    ${(d.aimErrors || []).length ? `<div style="font-size:12px;opacity:.7;margin-top:2px">${hi ? 'छोड़े गए उद्देश्य' : 'Aims left out'}: ${d.aimErrors.slice(0, 2).map(attr).join('; ')}</div>` : ''}
+    <details style="margin-top:4px"><summary style="font-size:12.5px;cursor:pointer">${hi ? 'पूरा पाठ पढ़ें' : 'Read the whole lesson'}</summary>${lines}</details>
     ${d.ok
       ? (isIn ? `<div class="muted" style="font-size:12.5px;margin-top:4px">✓ ${hi ? 'कक्षा के लिए मंज़ूर' : 'Approved for the class'}</div>`
-              : `<button class="btn ghost" style="margin-top:6px" onclick="sylApprove(${i})">${hi ? 'मंज़ूर करें' : 'Approve'}</button>`)
+              : `<button class="btn ghost" style="margin-top:6px" onclick="sylApprove(${i})">${hi ? 'ये उद्देश्य मंज़ूर करें' : 'Approve these aims'}</button>`)
       : `<div class="retry" style="font-size:12.5px;margin-top:4px">${hi ? 'उपयोग नहीं होगा — जाँच में नहीं पास हुआ' : "Not used — it didn't pass the check"}: ${why.map(attr).join('; ')}</div>`}
   </div>`;
 }
@@ -295,7 +298,7 @@ async function sylPickFile(input){
   const f = input.files && input.files[0];
   if(!f) return;
   const hi = S.lang === 'hi';
-  if(f.size > 3.4 * 1024 * 1024){ S.ctx.sylMsg = hi ? 'फ़ाइल बहुत बड़ी है — एक अध्याय या कुछ पन्ने भेजें।' : 'That file is too big — send one chapter, or a few pages.'; S.ctx.sylFile = null; return render(); }
+  if(f.size > 12 * 1024 * 1024){ S.ctx.sylMsg = hi ? 'फ़ाइल बहुत बड़ी है — एक अध्याय या कुछ पन्ने भेजें।' : 'That file is too big — send one chapter, or a few pages.'; S.ctx.sylFile = null; return render(); }
   try{
     S.ctx.sylFile = { name: f.name, mime: f.type, b64: await sylReadFile(f) };
     S.ctx.sylMsg = '';
@@ -319,6 +322,7 @@ async function sylGo(){
     c.sylNeedKey = e.status === 403;
     c.sylMsg = e.status === 503 ? (hi ? 'इस सर्वर पर Gemini अभी चालू नहीं है।' : "Gemini isn't set up on this server yet.")
              : e.status === 403 ? (hi ? 'इस सर्वर के लिए स्कूल की कुंजी चाहिए — नीचे डालें और फिर कोशिश करें।' : 'This server needs the school key — enter it and try again.')
+             : e.status === 413 ? (hi ? `फ़ाइल इस सर्वर के लिए बड़ी है${e.maxMb ? ` (${e.maxMb} MB तक)` : ''} — सिर्फ़ अध्याय के पन्ने भेजें।` : `That file is too big for this server${e.maxMb ? ` (up to ${e.maxMb} MB)` : ''} — send just the chapter's pages.`)
              : e.status === 429 ? (hi ? 'अभी के लिए बहुत हो गया — थोड़ी देर बाद कोशिश करें।' : 'That is enough for now — try again in a while.')
              : (hi ? 'Gemini तक नहीं पहुँच पाए — थोड़ी देर में फिर कोशिश करें।' : "Couldn't reach Gemini — try again shortly.");
     log(2, `Syllabus · not drafted (${e.message})`);
