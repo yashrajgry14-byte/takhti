@@ -141,27 +141,47 @@ reviews the rest at `GET /voice/admin/mistakes` — where the next named
 mistake gets written into `src/core/mathgen.js`. Erasing a child takes them
 out of every count.
 
-## The reading check and "say it with Munni" (Sarvam)
+## The reading check and "say it with Munni" (Gemini, Sarvam as backup)
 
-Under the reading terms a parent accepts at onboarding, whenever there is a
-signal, the app sends one line the child read (or one word said after Munni)
-to `POST /reading/asr` (`asr.js`): Sarvam `saaras:v3` in **verbatim** mode
-writes down what was said — not a tidied sentence — and the text goes back
-to be graded on the phone. The audio is never written down or logged. Any
-OpenAI-compatible transcription service works too (`WHISPER_API_KEY`).
+All speech goes through `speech.js`: `checkReading()` and `narrate()`.
+`SPEECH_PROVIDER=gemini|sarvam` in `.env` picks the provider (default
+`gemini`).
+
+Under the reading terms a parent accepts at onboarding (v3), whenever there
+is a signal, the app sends one line the child read (or one word said after
+Munni) to `POST /reading/asr`. With `gemini`, Gemini (`GEMINI_SPEECH_MODEL`,
+default `gemini-3.8-flash`) hears the clip and writes down what was said —
+not a tidied sentence — word by word against the line, if the line is one of
+the app's own (the server's copy, never the phone's word for it); if Gemini
+fails or is too slow, Sarvam does it (when `SARVAM_API_KEY` is set). With
+`sarvam`, only Sarvam (`asr.js`: `saaras:v3` in **verbatim** mode, or any
+OpenAI-compatible service with `WHISPER_API_KEY`). Neither inside 9 s →
+"skipped": the phone carries on and offers the line again later. The text
+goes back to be graded on the phone; the audio and the text are never
+written down or logged.
+
+**Day 1:** put real recordings in a folder (`clip.webm` + `clip.txt` with the
+line + `clip.truth.txt` with what the child really said) and run
+`node tools/compare-speech.mjs <folder>`. It prints where each provider
+misjudged a word and whether to switch to `SPEECH_PROVIDER=sarvam`.
 
 After a slip, the app's "say it with Munni" teaches the word in pieces in
 Munni's voice: pre-rendered by `tools/build-audio.mjs`, or live from
-`POST /reading/tts` (Sarvam Bulbul, short teaching lines only, cached;
+`POST /reading/tts` (the backup only — Sarvam Bulbul, never Gemini live — short teaching lines only, cached;
 `SARVAM_TTS_MODEL` / `SARVAM_SPEAKER` — use the same voice as the pack and,
 ideally, as the Bolna agent's synthesizer, so Munni sounds the same
 everywhere). On a call, a misread word is said the same way ("भा… लू… भालू").
 
-## Narration (ElevenLabs / Sarvam)
+## Narration (Gemini TTS; Sarvam / ElevenLabs as backups)
 
-`node tools/build-audio.mjs --lang hi --provider sarvam` (or ElevenLabs)
-renders every lesson line, reading line and letter once, at build time, into
-`audio/`; the phone plays the files offline (`src/core/voice.js`).
+`node tools/build-audio.mjs --lang hi` renders every lesson line, reading
+line and letter once, at build time, into `audio/` — by default with Gemini
+TTS (`GEMINI_TTS_MODEL`, default `gemini-3.8-flash-tts`; `GEMINI_TTS_VOICE`,
+default Kore) in one Batch API job (half price; `--limit 20` to try a few
+first). With ffmpeg the files become small mp3s; without, WAV. The phone
+plays them offline (`src/core/voice.js`); a line the pack lacks → the live
+backup → the phone's own voice. `--provider sarvam` or `--provider
+elevenlabs` builds the pack the old way.
 
 ## The reading card
 

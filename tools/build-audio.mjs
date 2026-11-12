@@ -8,12 +8,21 @@
    each to a voice service ONCE, and writes an mp3 plus a manifest keyed
    by a hash of (text + language).
 
-   Two services, the same files:
-   · ElevenLabs (ELEVEN_API_KEY + ELEVEN_VOICE_HI / ELEVEN_VOICE_EN)
+   Three services, the same files:
+   · Gemini TTS (GEMINI_API_KEY; GEMINI_TTS_MODEL, default
+     gemini-3.8-flash-tts; GEMINI_TTS_VOICE, default Kore) — the default
+     since 12 Nov 2026 (SPEECH_PROVIDER=gemini). The whole pack goes through
+     Gemini's Batch API in one job (half price; it can take a while), via
+     voice/speech.js narrateBatch(). Gemini answers in WAV; with ffmpeg on
+     the machine each file is made a small mp3, otherwise the WAV ships and
+     the manifest says so (x:'wav' — src/core/voice.js plays either).
    · Sarvam Bulbul (SARVAM_API_KEY; SARVAM_SPEAKER, default "anushka" on
      bulbul:v2 or set SARVAM_TTS_MODEL=bulbul:v3 with a v3 speaker) — made
-     for Indian voices, and it says Hindi letters the way a teacher does.
-   --provider sarvam|elevenlabs picks one; otherwise whichever has a key.
+     for Indian voices, the backup.
+   · ElevenLabs (ELEVEN_API_KEY + ELEVEN_VOICE_HI / ELEVEN_VOICE_EN)
+   --provider gemini|sarvam|elevenlabs picks one; otherwise SPEECH_PROVIDER,
+   else whichever has a key. --limit N renders at most N lines (try a few
+   before paying for all); --out DIR writes somewhere other than audio/.
 
    This is a build step, not a runtime feature. The child's phone never
    calls a voice service — it plays a file. So the good voice works in
@@ -23,8 +32,9 @@
    because shared narration is reused across dozens of generated
    lessons. You pay for 982.
 
-     ELEVEN_API_KEY=... node tools/build-audio.mjs --lang hi
+     GEMINI_API_KEY=... node tools/build-audio.mjs --lang hi                     # Gemini, one batch job
      SARVAM_API_KEY=... node tools/build-audio.mjs --lang hi --provider sarvam
+     ELEVEN_API_KEY=... node tools/build-audio.mjs --lang hi --provider elevenlabs
      node tools/build-audio.mjs --lang en --dry-run        # count, send nothing
 
    Re-running skips anything already rendered, so a content change costs
@@ -36,9 +46,13 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT  = path.join(ROOT, 'audio');
+const argv = k => process.argv.includes(k) ? process.argv[process.argv.indexOf(k) + 1] : '';
+const OUT  = argv('--out') ? path.resolve(argv('--out')) : path.join(ROOT, 'audio');
+const LIMIT = Number(argv('--limit')) || Infinity;
 const LANG = (process.argv.includes('--lang') ? process.argv[process.argv.indexOf('--lang')+1] : 'hi');
 const DRY  = process.argv.includes('--dry-run');
 
@@ -48,9 +62,14 @@ const VOICE = LANG === 'hi'
   ? (process.env.ELEVEN_VOICE_HI || '')
   : (process.env.ELEVEN_VOICE_EN || '');
 
-const ARG_PROVIDER = process.argv.includes('--provider') ? process.argv[process.argv.indexOf('--provider')+1] : '';
-const PROVIDER = ARG_PROVIDER || (process.env.ELEVEN_API_KEY ? 'elevenlabs' : process.env.SARVAM_API_KEY ? 'sarvam' : 'elevenlabs');
-const KEY = PROVIDER === 'sarvam' ? process.env.SARVAM_API_KEY : process.env.ELEVEN_API_KEY;
+const ARG_PROVIDER = argv('--provider');
+const GEMINI_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+const WANT = String(process.env.SPEECH_PROVIDER || 'gemini').toLowerCase();
+const PROVIDER = ARG_PROVIDER
+  || (WANT === 'gemini' && GEMINI_KEY ? 'gemini' : WANT === 'sarvam' && process.env.SARVAM_API_KEY ? 'sarvam' : '')
+  || (GEMINI_KEY ? 'gemini' : process.env.SARVAM_API_KEY ? 'sarvam' : process.env.ELEVEN_API_KEY ? 'elevenlabs' : 'gemini');
+const KEY = PROVIDER === 'gemini' ? GEMINI_KEY : PROVIDER === 'sarvam' ? process.env.SARVAM_API_KEY : process.env.ELEVEN_API_KEY;
+const HAS_FFMPEG = (() => { try{ execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' }); return !process.env.TAKHTI_NO_FFMPEG; }catch(e){ return false; } })();
 
 /* ---------- load the bank in a sandbox, same as the tests do ---------- */
 function loadBank(){
@@ -136,6 +155,39 @@ async function render(text, file){
 }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const fileOf = (k, ext) => path.join(OUT, LANG, k + '.' + (ext || 'mp3'));
+
+/* Gemini: the lines still to render, in batch jobs of up to 400 (inline
+   requests stay well under the 20 MB limit), each answer written as it comes. */
+async function renderGemini(todo, manifest, save){
+  const speech = createRequire(import.meta.url)('../voice/speech.js');
+  let done = 0, failed = 0;
+  for(let i = 0; i < todo.length; i += 400){
+    const part = todo.slice(i, i + 400);
+    const got = await speech.narrateBatch(part.map(([key, text]) => ({ key, text })), LANG, {
+      env: process.env, pollMs: Number(process.env.TAKHTI_BATCH_POLL_MS || 15000), name: `takhti-${LANG}-${i / 400 + 1}`,
+      onWait: st => console.log(`  batch ${i / 400 + 1}: ${st}…`) });
+    for(const [k, text] of part){
+      const a = got.get(k);
+      if(!a || a.error){ failed++; console.error(`  failed: "${text.slice(0, 42)}" — ${(a && a.error) || 'no answer'}`); continue; }
+      const wav = Buffer.from(a.audio, 'base64');
+      let ext = 'wav';
+      if(HAS_FFMPEG){
+        try{
+          fs.writeFileSync(fileOf(k, 'wav'), wav);
+          execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', fileOf(k, 'wav'), '-ac', '1', '-ar', '22050', '-b:a', '32k', fileOf(k, 'mp3')]);
+          fs.unlinkSync(fileOf(k, 'wav'));
+          ext = 'mp3';
+        }catch(e){ ext = 'wav'; }
+      }
+      if(ext === 'wav') fs.writeFileSync(fileOf(k, 'wav'), wav);
+      manifest[k] = { t: text, b: fs.statSync(fileOf(k, ext)).size, ...(ext === 'wav' ? { x: 'wav' } : {}), v: 'gemini' };
+      done++;
+    }
+    save();
+  }
+  return { done, failed };
+}
 
 (async () => {
   const src   = loadBank();
@@ -148,21 +200,26 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   const manifest = fs.existsSync(manifestPath)
     ? JSON.parse(fs.readFileSync(manifestPath,'utf8')) : {};
 
-  const todo = [...lines].filter(([k]) => !manifest[k] ||
-    !fs.existsSync(path.join(OUT, LANG, k + '.mp3')));
+  const pending = [...lines].filter(([k]) => !manifest[k] || !fs.existsSync(fileOf(k, manifest[k].x)));
+  const todo = pending.slice(0, LIMIT);
 
   console.log(`bank         : ${bank.length} lessons`);
   console.log(`unique lines : ${lines.size} (${chars.toLocaleString()} chars)`);
-  console.log(`already done : ${lines.size - todo.length}`);
+  console.log(`already done : ${lines.size - pending.length}`);
   console.log(`to render    : ${todo.length}`);
   console.log(`voice service : ${PROVIDER}`);
   if(DRY) return console.log('\n--dry-run: nothing sent.');
-  if(!KEY)   return console.error(PROVIDER === 'sarvam' ? '\nSet SARVAM_API_KEY.' : '\nSet ELEVEN_API_KEY.');
-  if(PROVIDER !== 'sarvam' && !VOICE) return console.error(`\nSet ELEVEN_VOICE_${LANG.toUpperCase()} to a voice id.`);
+  if(!KEY)   return console.error(PROVIDER === 'gemini' ? '\nSet GEMINI_API_KEY.' : PROVIDER === 'sarvam' ? '\nSet SARVAM_API_KEY.' : '\nSet ELEVEN_API_KEY.');
+  if(PROVIDER === 'elevenlabs' && !VOICE) return console.error(`\nSet ELEVEN_VOICE_${LANG.toUpperCase()} to a voice id.`);
 
   let done = 0, failed = 0;
+  if(PROVIDER === 'gemini'){
+    if(!HAS_FFMPEG) console.log('no ffmpeg here: the files ship as WAV (bigger, played the same way)');
+    ({ done, failed } = await renderGemini(todo, manifest, () => fs.writeFileSync(manifestPath, JSON.stringify(manifest))));
+    todo.length = 0;
+  }
   for(const [k, text] of todo){
-    const file = path.join(OUT, LANG, k + '.mp3');
+    const file = fileOf(k, 'mp3');
     try{
       await render(text, file);
       manifest[k] = { t:text, b:fs.statSync(file).size };

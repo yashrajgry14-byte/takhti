@@ -25,7 +25,6 @@
    is the child's own.
    ================================================================== */
 let SAY = null;            // { word, pieces, slip, lang, tries, step, heard, line, busy }
-const SAY_TTS = new Map(); // text|lang|pace -> data URL, for this session
 
 const SAYL = {
   intro:  { en: w => `Let's say ${w} together.`,  hi: w => `चलो, ${w} साथ में बोलें।` },
@@ -50,24 +49,7 @@ function sayVoice(text, lang, slow){
           return;
         }
       }catch(e){}
-      if(TALK_URL && S.online){
-        try{
-          const k = `${text}|${lang}|${slow ? 0.7 : 0.95}`;
-          let src = SAY_TTS.get(k);
-          if(!src){
-            const res = await fetch(TALK_URL + '/reading/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text, lang, pace: slow ? 0.7 : 0.95 }) });
-            const d = await res.json().catch(() => ({}));
-            if(res.ok && d.audio){ src = 'data:' + (d.mime || 'audio/mpeg') + ';base64,' + d.audio; SAY_TTS.set(k, src); }
-          }
-          if(src){
-            const a = new Audio(src);
-            a.onended = finish; a.onerror = finish;
-            await a.play();
-            return;
-          }
-        }catch(e){ /* the phone's own voice below */ }
-      }
+      if(typeof playLive === 'function' && await playLive(text, lang, finish, slow ? 0.7 : 0.95)) return;   // the backup voice, live (core/voice.js)
       if(typeof speakDevice === 'function') speakDevice(text, lang, finish); else finish();
     })();
   });

@@ -199,14 +199,17 @@ function box(){
   process.env.TAKHTI_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'takhti-teach-'));
   const { createServer } = require('../voice/server.js');
   calls.length = 0;
+  // Gemini both hears (audio in → what was said) and judges; Sarvam is the backup (voice/speech.js)
+  const both = gemini(body => (body.contents[0].parts || []).some(p => p.inline_data)
+    ? { said: 'पाँच से एक दहाई उधार लो' } : { aims: [{ id: 'borrow.when', verdict: 'covered', quote: 'एक दहाई उधार लो' }] });
   const { server: vs } = createServer({ env: { ...env, SARVAM_API_KEY: 'sk', SARVAM_API_BASE: `http://127.0.0.1:${svc.address().port}` },
-    fetch: gemini({ aims: [{ id: 'borrow.when', verdict: 'covered', quote: 'एक दहाई उधार लो' }] }), toolToken: 't'.repeat(24), webhookKey: 'w'.repeat(24), adminKey: 'a'.repeat(24) });
+    fetch: both, toolToken: 't'.repeat(24), webhookKey: 'w'.repeat(24), adminKey: 'a'.repeat(24) });
   await new Promise(r => vs.listen(0, '127.0.0.1', r));
   const vr = await fetch(`http://127.0.0.1:${vs.address().port}/teach/judge`, { method: 'POST', headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ consent: true, lang: 'hi', mime: 'audio/webm', audio: Buffer.alloc(6000, 3).toString('base64'), ask: 'borrow.when', aims: [{ id: 'borrow.when', kind: 'explain' }] }) });
   const vj = await vr.json();
-  check('the voice server: the recording written down by the speech service, judged by Gemini, CORS for the app — and nothing written to its data folder',
-    vr.status === 200 && vj.transcript === 'पाँच से एक दहाई उधार लो' && vj.provider === 'sarvam' && vj.judge.aims[0].verdict === 'covered' && vr.headers.get('access-control-allow-origin') === '*'
+  check('the voice server: the recording heard by Gemini (the speech provider), judged by Gemini, CORS for the app — and nothing written to its data folder',
+    vr.status === 200 && vj.transcript === 'पाँच से एक दहाई उधार लो' && vj.provider === 'gemini' && vj.judge.aims[0].verdict === 'covered' && vr.headers.get('access-control-allow-origin') === '*'
       && fs.readdirSync(process.env.TAKHTI_DATA_DIR).every(f => !/teach/i.test(f)), JSON.stringify(vj));
   vs.close(); svc.close();
 
@@ -329,9 +332,9 @@ function box(){
     const v = await boot(true, body => ({ transcript: body.transcript || 'take a ten from the tens', provider: body.transcript ? 'typing' : 'sarvam', judge: judgeAnswer, model: 'gemini-test' }));
     v.E(`S.online = true; S.voiceTerms = { v: 1, at: '2026-11-01', by: 'parent' }; teachStart(teachUnitBuiltin('borrow'))`);
     await tell(v, 'take a ten from the tens');
-    check('with a voice server but only the old (v1) terms: nothing leaves the phone — the rubric judges it here', !v.sent.some(x => x.url === '/teach/judge') && v.$$('.teachchip.is-covered').length === 1, JSON.stringify(v.sent.map(x => x.url)));
+    check('with a voice server but only older terms (v1): nothing leaves the phone — the rubric judges it here', !v.sent.some(x => x.url === '/teach/judge') && v.$$('.teachchip.is-covered').length === 1, JSON.stringify(v.sent.map(x => x.url)));
     v.E(`go('parent')`);
-    check('…and the parent page says what is new in the terms, with a button to agree', /New in these terms: in Teach Munni/.test(v.screen()) && !!button(v, /Agree to the new terms/), '');
+    check('…and the parent page says what is new in the terms, with a button to agree', /New in these terms: Google's Gemini now hears/.test(v.screen()) && !!button(v, /Agree to the new terms/), '');
     button(v, /Agree to the new terms/).click();
     v.E(`teachStart(teachUnitBuiltin('borrow'))`);
     v.$('.teachmic').click();

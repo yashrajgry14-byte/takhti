@@ -21,7 +21,8 @@ you are ever tempted to put a network call in the path of a lesson, don't — th
 breaks the entire premise and the demo.
 
 **One deliberate exception: hearing a child read.** With a signal, a line the
-child reads (or a word said after Munni) is written down by Sarvam, under the
+child reads (or a word said after Munni) is written down by Gemini (Sarvam as
+backup — `voice/speech.js`), under the
 reading terms a parent accepts at onboarding (see **The reading check**) —
 because no phone's own recognizer can hear a child's misreading reliably.
 It never *serves* the lesson in the sense that matters: the grading, the
@@ -46,7 +47,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 39 test suites (see Testing)
+npm test           # all 40 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -84,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v43` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v44` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -153,8 +154,8 @@ src/
     teacher.js              the teacher view (VIEWS.teacher)
     self-listen.js          hear-your-own-reading
     talk-munni.js           Talking Munni at the Pond and on into the games — parent opt-in, voice leaves the phone only during a talk
-    cloud-read.js           the reading check: online, a line goes to Sarvam (verbatim) under the reading terms accepted at onboarding; offline, the phone's own recognizer
-    say-it.js               "say it with Munni": after a slip, the word in pieces in Sarvam's voice, the child says it, checked again
+    cloud-read.js           the reading check: online, a line goes to the voice server (Gemini, Sarvam as backup) under the reading terms accepted at onboarding (v3); offline, the phone's own recognizer; a skipped check keeps the line to read again
+    say-it.js               "say it with Munni": after a slip, the word in pieces in Munni's voice (the offline pack, else the live backup), the child says it, checked again
     circle.js               the learning circle's app side: the parent's sync tick, this week's step, the Friday check, the home question
     mind-ui.js              the mind on screen: missed sums and reading lines taught the child's way, "Munni's idea" on the map, the parent's "How … learns" and school marks; the twin's tip after a mistake and the parent's "How well Munni knows how … thinks"
     ask-munni.js            "Ask Munni": instant step-by-step help on the question on screen; "still stuck?" → Munni calls (in the app)
@@ -166,8 +167,9 @@ api/class-sync.mjs          Tier 2 class sync (Netlify Blobs); syncCore() is the
 api/syllabus.mjs            Tier 2: a chapter → Gemini drafts lessons in Takhti's format (draftCore(); also POST /syllabus on the voice server)
 api/teachback.mjs           Tier 2: Teach Munni's judge — which aims an explanation covered, each credit quoted (judgeCore(); POST /teach/judge on the voice server takes audio)
 sw.js                       service worker — offline cache
-voice/                      Munni on a phone call (Bolna), the learning circle's server, the shared mistakes database, the reading check's speech service — a separate Node server, see below
-tools/build-audio.mjs       build-time narration (Sarvam or ElevenLabs) into audio/, played offline: lessons, reading lines, every word and its pieces, letters, Munni's coaching lines
+voice/                      Munni on a phone call (Bolna), the learning circle's server, the shared mistakes database, the speech adapter (speech.js: Gemini, Sarvam as backup in asr.js) — a separate Node server, see below
+tools/build-audio.mjs       build-time narration into audio/, played offline: lessons, reading lines, every word and its pieces, letters, Munni's coaching lines — Gemini TTS through the Batch API by default (Sarvam or ElevenLabs with --provider)
+tools/compare-speech.mjs    day 1: a folder of children's recordings through both speech providers; where each misjudged a word, and whether to switch the reading check back to Sarvam
 ```
 
 ## Screens and navigation
@@ -620,29 +622,72 @@ the child thinks*, from their own answers only, in all three subjects.
 - **Stays on this phone**: `S.mind` and `S.twin` themselves are never in the
   sync body — only the checked profile (the tests check exactly which keys).
 
-## The reading check — `ui/cloud-read.js`, `ui/say-it.js`, `voice/asr.js`
+## The reading check — `ui/cloud-read.js`, `ui/say-it.js`, `voice/speech.js`
 
-**Why Sarvam, not the phone.** Phones do have recognizers: Android's
+**Why the voice server, not the phone.** Phones do have recognizers: Android's
 on-device speech recognition (offline language packs, Hindi included on
 many phones; `SpeechRecognizer.createOnDeviceSpeechRecognizer`, Android 12+),
 Apple's on-device speech, and Chrome's on-device Web Speech
 (`SpeechRecognition.available()/install()`, `processLocally`). All of them
 are built for adults dictating and write down *dictionary words*: a child's
 "बाई" for "भाई" comes back as "भाई", and the slip — the thing to teach —
-is gone. Sarvam's `saaras:v3` in **verbatim** mode writes down what was said.
+is gone. The voice server's speech provider writes down what was *said*.
+
+**The speech adapter** (`voice/speech.js`, 12 Nov 2026): every voice Takhti
+hears or makes goes through two functions, `checkReading(clip, passage,
+lang)` and `narrate(text, lang)`. `SPEECH_PROVIDER=gemini|sarvam` in
+`voice/.env` picks the provider, **default gemini** (the Google buildathon);
+Sarvam stays as the backup — its code is `voice/asr.js`, unchanged, and is
+the whole reading check again the moment the setting says `sarvam`.
+- **Gemini hears** (`GEMINI_SPEECH_MODEL`, default `gemini-3.8-flash`): the
+  clip as inline audio, structured output `{ said, words:[{word, said}] }`,
+  told to write what it HEARS ("बाई" for "भाई" stays "बाई"). The response
+  keeps the shape the reading check always had — `{ transcript, provider }`,
+  `words` extra — and the phone still grades it with its own matcher.
+- **The passage is the server's own**: the phone names the line it showed;
+  the server uses it only if it is one of the app's own `SENTENCES` (or a
+  word of one, for "say it with Munni") — `knownLine()` in
+  `voice/server.js`. Anything else is heard without a line.
+- **The order**: `gemini` → Gemini, then Sarvam if set up; `sarvam` →
+  Sarvam only (that setting exists for the day Gemini mishears children
+  reading Hindi, and a mishearing gives wrong marks). Both inside
+  `TAKHTI_SPEECH_BUDGET_MS` (9 s, under the phone's 10 s). Neither answers →
+  `{ skipped: true }` (503): the phone says so kindly, the typed fallback is
+  there, and the line goes in `S.readAgain` (the line only, never the
+  recording) — the Reading Tree offers it next time (`readAgainNext()`).
+  Clamped inputs, a per-address limit, nothing kept: no clip, no
+  transcript, no audio on the server.
+- **Teach Munni** hears an explanation through the same `checkReading()`
+  (no passage), in the same order, before Gemini judges it.
+- **Munni's voice** (`narrate()`): built ahead with **Gemini TTS**
+  (`GEMINI_TTS_MODEL`, default `gemini-3.8-flash-tts`, from Google's
+  speech-generation guide; voice `GEMINI_TTS_VOICE`, Kore) through the
+  **Batch API** (`narrateBatch()`, half price) by `tools/build-audio.mjs`,
+  and shipped offline — mp3 where the machine has ffmpeg, else WAV with
+  `x:'wav'` in the manifest (`core/voice.js` plays either). At run time:
+  the pack → the live backup (`POST /reading/tts`, Sarvam/ElevenLabs only,
+  never Gemini; `playLive()`, ≤ 2.5 s) → the phone's own voice.
+- **Day 1**: `tools/compare-speech.mjs` runs a folder of real recordings
+  through both providers and prints where each misjudged a word (a slip
+  missed, a slip invented, against a person's `.truth.txt`), and whether to
+  switch the reading check to Sarvam.
 
 - **The terms, once, at onboarding** (`voiceTermsHTML()`, a grown-up step
   before the learning circle's, only with a voice server): what goes (a
-  line read, or a word said after Munni; since v2 also a Teach Munni
-  explanation, whose words go on to Google's Gemini), to whom (Takhti's
-  voice server and Sarvam AI), that neither recording nor words are kept,
-  how to withdraw — in Hindi and English, one "I'm the parent or guardian,
-  and I agree". Kept as `S.voiceTerms {v, at, by}` (`VOICE_TERMS_V` = 2;
-  reading needs v1 or later, Teach Munni's judge v2). Not a switch. The parent
+  line read, a word said after Munni, a Teach Munni explanation), to whom
+  (Takhti's voice server and Google's Gemini — the paid tier, so Google
+  doesn't train on it — with Sarvam AI as the backup), that neither
+  recording nor words are kept, how to withdraw — in Hindi and English, one
+  "I'm the parent or guardian, and I agree". Kept as `S.voiceTerms {v, at,
+  by}` (`VOICE_TERMS_V` = **3**, 12 Nov 2026: Gemini named as a processor).
+  **Every online check needs v3**: a family that agreed to v1/v2 agreed to
+  Sarvam only, so until they agree again (the parent page offers the new
+  terms) everything stays on the phone. The wording is for the lawyer —
+  not final. Not a switch. The parent
   page shows the agreement and can **withdraw** it (the law's right, DPDP
   s.6(4)); withdrawn, nothing leaves the phone.
 - **Who hears a turn** (`startListening()`): online with the terms →
-  Sarvam (`cloudListen()` → `POST /reading/asr`), even where the phone has
+  the voice server (`cloudListen()` → `POST /reading/asr`), even where the phone has
   its own recognizer; offline → the phone's on-device recognizer
   (`listen()`), else typing; with a voice server and **no** terms, only the
   on-device recognizer — a general cloud recognizer never hears the child.
@@ -652,16 +697,16 @@ is gone. Sarvam's `saaras:v3` in **verbatim** mode writes down what was said.
   starts it at once; an "almost" word on a pass offers a button) Munni says
   the word, its pieces slowly (akshara: भा · ई; syllables in English), the
   help for HOW it slipped (`langTip()`), the word slowly, at speed, then
-  "now you say it". The child says it → Sarvam writes it down → `gradeWord()`.
+  "now you say it". The child says it → the voice server writes it down → `gradeWord()`.
   Right → "Yes! That is exactly it!" and "read the whole line again"; not
   yet → the pieces again, slower, with the help for the new slip; after two
   tries, "we'll say it again next time" — never "wrong". Help, not evidence:
   nothing recorded, only `mindTaught(…, 'chunks')`.
-- **Munni's voice is Sarvam's** (`sayVoice()`): pre-rendered files
-  (`tools/build-audio.mjs`: every word of every reading line, its pieces,
+- **Munni's voice** (`sayVoice()`): pre-rendered files (Gemini TTS,
+  `tools/build-audio.mjs`: every word of every reading line, its pieces,
   her coaching lines) played offline by `core/voice.js`, slowed for pieces;
-  a line not in the pack → Sarvam live (`POST /reading/tts`, short teaching
-  lines only, cached); else the phone's own voice.
+  a line not in the pack → the live backup, Sarvam (`POST /reading/tts`,
+  short teaching lines only, cached); else the phone's own voice.
 - **On calls** the same teaching: a misread word is said in pieces, slowly,
   then whole ("भा… लू… भालू", `wordPieces()` in `session.js`), with the
   help for how it slipped.
@@ -747,11 +792,11 @@ protégé effect, and the one place a child gets to *say* what they learnt.
   gap's skill the child's way (`mindGoWay()` with `mindChoose()`; a school
   aim replays its lesson), and the Story Fire shows **"Munni forgot
   again!"** (`teachAgainHTML()`), which asks only the aims still to teach.
-- **How Munni hears** (`teachMic()`): online under the **v2** reading terms
-  (`S.voiceTerms.v >= 2`; v2 adds this — `VOICE_TERMS_V`, the parent page
-  offers the new terms to a v1 family): the recording (`cloudListen()` with
+- **How Munni hears** (`teachMic()`): online under the current reading terms
+  (`S.voiceTerms.v >= VOICE_TERMS_V`, v3; the parent page offers the new
+  terms to an older family): the recording (`cloudListen()` with
   a longer turn) goes to `POST /teach/judge` on the voice server, written
-  down by the reading check's speech service (`voice/asr.js`), then judged
+  down by the speech adapter (`voice/speech.js`: Gemini, Sarvam as backup), then judged
   by Gemini (`api/teachback.mjs`, `judgeCore()`). Otherwise the phone's
   on-device recognizer or typing, and the **offline judge**
   (`teachRubric()`: covered when every idea has a word). Typed words go to
@@ -1030,21 +1075,21 @@ app is a client of it, and only when a parent says so.
   that in `test/circle.test.js`.
 - **Photos and voice clips never leave the device** — with exceptions a
   parent agrees to: the reading check (a line read, or a word said after
-  Munni, to Sarvam for writing down — the reading terms at onboarding, not
-  kept, withdrawable), and Talking Munni (below), off for every child until a parent
+  Munni, to Gemini — Sarvam as backup — for writing down; the reading terms
+  at onboarding, v3, not kept, withdrawable), and Talking Munni (below), off for every child until a parent
   turns it on behind the PIN after reading, in both languages, that the
   child's voice goes to the voice service while they talk (at the Pond, and
   in a game the talk carries on into, with the "Munni is with you" bar
   showing), and in Ask Munni's "still stuck? Munni calls", which the same
   switch allows and the same notice names; and Teach Munni's explanation,
-  under the same reading terms (v2). Nothing else
+  under the same reading terms (v3). Nothing else
   ever sends a voice. Keep it true, and keep saying so in both languages.
 - **A tutor, not a companion.** Bounded, task-scoped.
 - **Every child-facing string ships in Hindi and English.**
 
 ## Testing
 
-`npm test` runs 39 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 40 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -1082,10 +1127,11 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `ask-munni` | jsdom + the real voice server + a stand-in Bolna | the steps for hundreds of sums of every kind never say the final answer and ask only true sub-answers; 38 + 24 and 52 − 27 broken down as a teacher would; Hindi words split into whole letters; the server refuses a made-up line, non-numbers, unknown signs or lessons, asks the steps one by one with a clue, records nothing; in the app: the button only where something is asked, instant help out loud with no server, "I get it", a helped answer not counted, reading help from the stumbled word, help leaves with the screen; with a voice server: no call until the parent's switch, then the call about this question, the step and the two choices on the panel, leaving ends it |
 | `mind` | vm + HTTP + jsdom | rounds settle on the child's own answers; two misses switch and cool a way, with the reason; a plan holds while it works; two simulated children who learn differently end up taught differently; a new topic leans on the subject; a low school mark switches at once and becomes the focus; teacher class-test marks reach records and next week's step; in the app: a missed sum taught by steps or with a story invitation, helped answers never count, the Reading Tree's pieces and read-first, the parent's marks and "What Munni changed" (EN/HI), "Munni's idea" on the map, a class test applied once, nothing of the mind in the sync |
 | `twin` | vm + HTTP + jsdom | each wrong answer named as its real mistake, incl. the column-procedure ones (carrying the ones, lining up on the left, borrowing across zero, 0 − N, N − 0, the carry in multiplying…); tips and explanations for thousands never say the answer; a combination found only on two different questions, named and explained from its steps, then guessed; unexplained sums kept; shared rules known at once; codes checked; reading slips (17 cases EN/HI), a line's stopping/adding, traced letters (mirror, part missing, शिरोरेखा, too small) from pixels; reading habits with their letters; right-or-not guesses; knowledge tracing up, down, fading, seeded; the profile (ids only, junk dropped) and its prompt; a simulated child with a habit of thought guessed exactly ≥ 90%; on a call: the clue aimed at the mistake, the profile's twin sum, "I know this tricky bit!", the step-by-step reveal, reading coaching naming the slip; the shared database (promoted at three children, counted without names, erase leaves every count, the review page); in the app: the guesses (sums, reading, lessons, games), the tips, "Munni noticed", the heads-up, paper spelling, a habit deciding Ask Munni's explanation, `appEvidence()` reading the twin, where the profile goes, the parent section EN/HI, only the profile in the sync |
-| `speech` | vm + HTTP + jsdom | Sarvam against a stand-in: verbatim mode, Hindi, the key on the server only, nothing kept, consent, bogus recordings refused, per-address limit, honest 503, an OpenAI-compatible service; Munni's live voice (Bulbul, slow, cached, short lines only); in the app: no terms without a voice server, the bilingual terms at onboarding kept with version and time, online → Sarvam even with a recognizer on the phone, the slip named, **say it with Munni** (the word in pieces in Sarvam's voice, the child says it, checked, praised; two tries then let go kindly; help not evidence), offline → the on-device recognizer and nothing sent, withdrawn → nothing sent, no answer → the honest message; on a call the word in pieces; the narration builder |
+| `speech` | vm + HTTP + jsdom | the Sarvam provider (the backup) against a stand-in: verbatim mode, Hindi, the key on the server only, nothing kept, consent, bogus recordings refused, per-address limit, honest 503, an OpenAI-compatible service; Munni's live voice (Bulbul, slow, cached, short lines only); in the app: no terms without a voice server, the bilingual terms at onboarding kept with version and time, online → Sarvam even with a recognizer on the phone, the slip named, **say it with Munni** (the word in pieces in Sarvam's voice, the child says it, checked, praised; two tries then let go kindly; help not evidence), offline → the on-device recognizer and nothing sent, withdrawn → nothing sent, no answer → the honest message; on a call the word in pieces; the narration builder |
 | `syllabus` | vm + HTTP + jsdom | the server against a stand-in Gemini (key in a header on the server only, the PDF and the band's rules and schema in the request, the older field names, 503 with no key, the school key, PDF/photo only, a limit per address, the repair round with the checker's reasons, the voice server's `POST /syllabus`); the class sync carries lessons from the teacher's key only; the phone's checks (a good maths and reading lesson pass; a wrong sum, an answer not in the passage, markup, over the band's ceiling, an undrawable beat, an unequal share, non-Devanagari Hindi, a non-number maths answer all fail with a reason; idempotent; shuffled); in the app: draft → one repaired, one "not used" → approve → remove; offline honest; the child's "From your school" (EN/HI), played, never rewritten, evidence for its skill; an edited lesson not shown; the sync sends them |
 | `geometry` | vm + jsdom | answers read off the drawing (sides, corners, names, perimeter, equal sides, the centre, corner kinds, a numbered row, the odd one out), in English and Hindi; the checker rejects a wrong marked answer, a disagreeing Hindi answer, two right answers, a figure that doesn't say what it asks, an equal-sided "rectangle", an impossible triangle, a row with two matches, a number over the ceiling, an undrawable shape; the 27 built-in lessons pass, a question's picture is never named or measured aloud, Ask Munni's hint never says the answer, clean SVGs, labels hidden while counting, no shape question in the games, drafted fields sanitised; in the app: the picture stays on screen during the question, the answer counts for the skill, Ask Munni's how-to-look help, a drafted shape lesson checked against its drawing |
 | `teachback` | vm + HTTP + jsdom | every built-in aim passes its check; the checker rejects a question or hint that gives the explanation, no Hindi, markup; the offline judge (covered/partly/missing/unsure, EN/HI/romanised, Devanagari digits); Munni's sum for every skill, three ages, many sums: never the right answer in her working, a real named mistake, the right option there; the child's own habit acted out; a whole session (hints, "later", never "wrong", unsure costs nothing, one explanation teaching two aims, the first tap as evidence and an agreed mistake into the twin, a nudged tap not); what is kept; "forgot again" asks only the gaps; the judge's credit needs a real quote of the child; Gemini's school aims cleaned, inside the lesson's id, idempotent; the judge against a stand-in Gemini (key in a header, schema, the server's own aim text not the phone's, words as data, fix ideas from the mistake id, downgrade, 403/400, no key → no judge, failing Gemini → no judge, per-address limit) and through the voice server with a stand-in speech service; in the app: the end-of-lesson button, chips, Munni's sum, the summary, learn it again, "Munni forgot again", the parent's "How … explains" (EN/HI), the teacher's results per aim, the class mirror and sync carrying only ids and c/p/g; with a voice server: nothing sent on v1 terms, the new terms offered, then the recording and typed words judged with no name, an unquoted credit refused; no button for 3–4 |
+| `speech-provider` | vm + HTTP + jsdom + child processes | one stand-in for Gemini (hearing, TTS, Batch API) and Sarvam: the switch both ways (unset/gemini → Gemini; sarvam → Sarvam only, Gemini never called); Gemini's request (the model, key in a header, inline audio, structured output, "write what you hear"); the answer's shape; the passage only from the server's own lines; Gemini failing or slow → Sarvam inside the budget; neither → skipped at once; sarvam set and down → skipped, no Gemini; live `/reading/tts` never Gemini; per-address limit; Teach Munni hears the same way; nothing kept in the data folder; Gemini TTS (model, voice, WAV, PCM wrapped, the older voice field after a 400); `tools/build-audio.mjs` through the Batch API (WAV without ffmpeg, mp3 with it, carries on where it stopped, `--provider sarvam`); on the phone: pack → live backup → device voice, a `.wav` pack, v2 terms send nothing, a skipped check never blocks (message, typing, the line comes back, no recording kept); `tools/compare-speech.mjs` names the slip Gemini missed and advises switching back, or keeping Gemini |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -1181,14 +1227,14 @@ Honest edges of what's built:
    write it into `mathgen.js` from the review page.
 12. **The reading check depends on a network and a service.** It is the one
    place a child's lesson uses the network, so it never waits: no answer in
-   10 s → the typed fallback; offline, the phone's recognizer, which misses
-   some slips. Its endpoints are open to any browser (rate-limited per
+   10 s (or "skipped") → the typed fallback and the line comes back later;
+   offline, the phone's recognizer, which misses some slips. Its endpoints are open to any browser (rate-limited per
    address), like Talking Munni's minting. The terms are an in-app
    agreement with a timestamp — the team's T&C and lawyer decide the final
    wording, whether accepting them may be a condition of using the app,
    and the DPDP Rules' verifiable parental consent (same caveat as 8);
-   Sarvam needs a data-processing agreement. Children's speech through
-   Sarvam is untested on real children. Builds without a voice server keep
+   Gemini (paid tier) and Sarvam each need a data-processing agreement.
+   Children's speech through either is untested on real children. Builds without a voice server keep
    the old path (the browser's own recognizer online). The narration isn't
    rendered for Hindi yet (English has 439 lines of the old set): run
    `tools/build-audio.mjs --lang hi --provider sarvam`.
@@ -1215,12 +1261,27 @@ Honest edges of what's built:
    so it misses a correct explanation in other words (it says "partly" or
    "missing" and Munni hints — never "wrong"), and a child who says the
    key word in a muddled sentence can pass it. Audio is written down by the
-   reading check's speech service before Gemini sees it (the voice server
-   only); sending audio straight to Gemini isn't built. Built-in aims cover
+   speech adapter's `checkReading()` before Gemini judges the words (the
+   voice server only). Built-in aims cover
    four maths topics; reading topics get aims only from school lessons.
    The explained points travel with the class sync, not in progress codes.
    On calls there is no Teach Munni yet (a `teach` slot in `planSession()`
    would suit a voice-only phone).
+15. **Gemini as the speech provider is new (12 Nov 2026).** It is tested
+   against a stand-in only. The real risk is that a model given the line
+   "hears" the line — tidying a child's misreading the way the phone's
+   recognizers do — so it is told to write what it hears, and the line is
+   only a list of words to listen for; whether that holds for children
+   reading Hindi is exactly what `tools/compare-speech.mjs` is for (run it
+   on real recordings before the demo; switch with `SPEECH_PROVIDER=sarvam`
+   if it doesn't). Gemini's docs list WebM among audio types, but the
+   phone's `audio/webm` (Opus) clips haven't been tried against the live
+   API. The TTS request follows the docs, which are inconsistent about the
+   voice field (`voiceConfig.voice` vs `prebuiltVoiceConfig.voiceName`) —
+   one retry covers both; the Batch API's job state and inline answers
+   appear under two field names in the docs, and both are read. Phone
+   calls (Bolna) use the transcriber set in Bolna's dashboard — unchanged.
+   The v3 terms wording is for the lawyer, not final.
 
 ## Style
 

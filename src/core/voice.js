@@ -73,7 +73,7 @@ async function playRecorded(text, lang, onDone){
     if(!VOICE_EL){ VOICE_EL = new Audio(); VOICE_EL.preload = 'auto'; }
     VOICE_EL.pause();
     VOICE_EL.onended = null; VOICE_EL.onerror = null;
-    VOICE_EL.src = `${VOICE_BASE}/${lang}/${key}.mp3`;
+    VOICE_EL.src = `${VOICE_BASE}/${lang}/${key}.${man[key].x || 'mp3'}`;   // x: 'wav' when the pack was built without an mp3 encoder
 
     // playbackRate follows the age band, exactly as device TTS does
     try{ VOICE_EL.playbackRate = (typeof band === 'function') ? band().speechRate / 0.85 : 1; }catch(e){}
@@ -92,3 +92,39 @@ async function playRecorded(text, lang, onDone){
     return false;
   }
 }
+
+/* The live backup for a line the offline pack lacks: the voice server's
+   POST /reading/tts, which speaks only through the backup provider
+   (Sarvam / ElevenLabs — voice/speech.js). The order at run time is the
+   pack → this → the phone's own voice. A short line, online, with a voice
+   server; never longer than LIVE_TTS_MS to answer, so nothing waits on it.
+   Returns true if it played. */
+const LIVE_TTS = new Map(); // text|lang|pace -> data URL, for this session
+const LIVE_TTS_MS = 2500;
+async function playLive(text, lang, onDone, pace){
+  if(!(typeof TALK_URL !== 'undefined' && TALK_URL && S.online) || !text || String(text).length > 160) return false;
+  const k = `${text}|${lang}|${pace || 0.95}`;
+  try{
+    let src = LIVE_TTS.get(k);
+    if(!src){
+      const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const to = setTimeout(() => ctl && ctl.abort(), LIVE_TTS_MS);
+      const res = await fetch(TALK_URL + '/reading/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl ? ctl.signal : undefined,
+        body: JSON.stringify({ text, lang, pace: pace || 0.95 }) });
+      clearTimeout(to);
+      const d = await res.json().catch(() => ({}));
+      if(!res.ok || !d.audio) return false;
+      src = 'data:' + (d.mime || 'audio/mpeg') + ';base64,' + d.audio;
+      LIVE_TTS.set(k, src);
+      if(LIVE_TTS.size > 200) LIVE_TTS.delete(LIVE_TTS.keys().next().value);
+    }
+    const a = new Audio(src);
+    a.onended = () => onDone && onDone(); a.onerror = () => onDone && onDone();
+    await a.play();
+    log(2, `Voice · a line the offline pack lacks, said live by the backup voice (${src.slice(5, 15)})`);
+    return true;
+  }catch(e){ return false; }
+}
+/* Is there an offline pack for this language at all? (A build without one
+   speaks with the phone's voice rather than going online for every line.) */
+function voicePackLoaded(lang){ return !!(VOICE_MANIFEST[lang] && Object.keys(VOICE_MANIFEST[lang]).length); }

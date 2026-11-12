@@ -150,7 +150,11 @@ read(){
     const due = getDueSrsItems(S, 'read')
       .sort((a,b) => a.nextReview - b.nextReview)
       .map(it => it.content).filter(Boolean);
-    if(due.length){
+    const again = typeof readAgainNext === 'function' ? readAgainNext() : null;   // a line the clearer check had to skip
+    if(again){
+      S.ctx.sentence = again;
+      if(due.length) S.ctx._srsQueue = due;
+    } else if(due.length){
       S.ctx.sentence = due[0];
       if(due.length > 1) S.ctx._srsQueue = due.slice(1);
     } else {
@@ -187,6 +191,7 @@ read(){
      ${S.ctx.practice ? `<button class="btn ghost practise" onclick="practiseLine()">🔁 ${S.lang==='hi'?'इन शब्दों के साथ एक और':'One more with these words'}: <b>${S.ctx.practice.line}</b></button>` : ''}
      ${typeof selfListenHTML === 'function' ? selfListenHTML() : ''}`:''}
   ${S.ctx.unsure? `<div class="retry">${S.lang==='hi'?'साफ़ सुनाई नहीं दिया — थोड़ा पास आकर फिर बोलो।':'I could not hear that clearly — come a little closer and try again.'}</div>`:''}
+  ${S.ctx.score==null && S.ctx.msg ? `<div class="retry">${S.ctx.msg}</div>` : ''}
   <button class="mic ${S.ctx.live?'live':''}" id="mic" aria-label="record">${S.ctx.live?'●':'🎙'}</button>
   <div class="muted" style="text-align:center">${S.ctx.live? t('listening') : t('tapMic')}</div>
   <div class="row" style="margin-top:14px">

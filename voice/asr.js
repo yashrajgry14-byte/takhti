@@ -1,5 +1,12 @@
 /* ==================================================================
-   THE READING CHECK — the speech service behind it (server half)
+   THE "SARVAM" SPEECH PROVIDER — the backup since 12 Nov 2026
+
+   voice/speech.js is the one door for speech now (narrate(),
+   checkReading()); SPEECH_PROVIDER=gemini|sarvam in voice/.env picks the
+   provider, default gemini. This file is the "sarvam" provider, unchanged:
+   it is Gemini's fallback for the reading check, the live voice for a line
+   the offline pack lacks, and the whole reading check again the moment
+   SPEECH_PROVIDER=sarvam. Don't delete it.
 
    Under the reading terms a parent accepts at onboarding, whenever there
    is a signal (src/ui/cloud-read.js): the child's reading of ONE line (or
@@ -91,46 +98,10 @@ async function synthesize(text, lang, pace, env) {
   return { error: 'no voice service is set up on this server', status: 503 };
 }
 
-/* POST /reading/asr — { consent: true, lang, mime, audio: base64 }. */
-function createAsr(env) {
-  const hits = new Map();
-  const rateOk = ip => {
-    const now = Date.now(), per = Number(env.TAKHTI_ASR_PER_HOUR || 120);
-    const xs = (hits.get(ip) || []).filter(t => now - t < 36e5);
-    if (xs.length >= per) { hits.set(ip, xs); return false; }
-    xs.push(now); hits.set(ip, xs); return true;
-  };
-  async function handle(body, ip) {
-    body = body || {};
-    if (body.consent !== true) return { status: 403, body: { error: 'a parent has not turned on the clearer reading check' } };
-    if (!provider(env)) return { status: 503, body: { error: 'no speech service is set up on this server' } };
-    if (!rateOk(ip || '?')) return { status: 429, body: { error: 'enough for now — try later' } };
-    const b64 = String(body.audio || '');
-    if (!/^[A-Za-z0-9+/=]{200,}$/.test(b64)) return { status: 400, body: { error: 'no recording' } };
-    const buf = Buffer.from(b64, 'base64');
-    if (buf.length > 1.5 * 1024 * 1024) return { status: 413, body: { error: 'that recording is too long for one line' } };
-    const r = await transcribe(buf, body.mime, body.lang === 'en' ? 'en' : 'hi', env);
-    if (r.error) return { status: r.status || 502, body: { error: r.error } };
-    return { status: 200, body: { transcript: r.transcript, provider: r.provider } };
-  }
-  /* POST /reading/tts — { text, lang, pace }: Munni says a short teaching line. */
-  const cache = new Map();
-  async function speak(body, ip) {
-    body = body || {};
-    const text = String(body.text || '').trim(), lang = body.lang === 'en' ? 'en' : 'hi';
-    const pace = Math.max(0.5, Math.min(1.5, Number(body.pace) || 0.95));
-    if (!text || text.length > 160 || !/^[\u0900-\u097F A-Za-z0-9.,!?'"“”‘’—–…:;()\-]+$/.test(text)) return { status: 400, body: { error: 'only a short teaching line' } };
-    const k = `${lang}|${pace}|${text}`;
-    if (cache.has(k)) return { status: 200, body: cache.get(k) };
-    if (!rateOk('tts:' + (ip || '?'))) return { status: 429, body: { error: 'enough for now — try later' } };
-    const r = await synthesize(text, lang, pace, env).catch(() => ({ error: 'the voice service did not answer', status: 504 }));
-    if (r.error) return { status: r.status || 502, body: { error: r.error } };
-    const out = { audio: r.audio, mime: r.mime, provider: r.provider };
-    cache.set(k, out);
-    if (cache.size > 500) cache.delete(cache.keys().next().value);
-    return { status: 200, body: out };
-  }
-  return { handle, speak, provider: () => provider(env) };
+/* The HTTP routes moved to voice/speech.js (they choose the provider);
+   createAsr() stays the name the server and the tests use. */
+function createAsr(env, opts) {
+  return require('./speech').createSpeechRoutes(env || {}, opts);
 }
 
 module.exports = { createAsr, transcribe, synthesize, provider };

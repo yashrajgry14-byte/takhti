@@ -36,7 +36,8 @@ const { createScheduler } = require('./schedule');
 const { buildCorpus, corpusCsv } = require('./corpus');
 const CP = require('./circle-pages');
 const P = require('./pages');
-const { createAsr, transcribe } = require('./asr');
+const { createAsr } = require('./asr');
+const speech = require('./speech');
 
 /* tiny .env loader so `node voice/server.js` just works */
 (function loadEnv() {
@@ -64,7 +65,22 @@ function createServer(opts) {
   const ADMIN = opts.adminKey || secret('TAKHTI_ADMIN_KEY');
   const env = opts.env || process.env;
   const web = createWeb(brain, env);
-  const asr = createAsr(env);
+  /* the reading check's passage comes only from the server's own copy of
+     the app's reading lines (or a word of one: "say it with Munni") —
+     never from the phone (voice/speech.js) */
+  let LINES = null;
+  const knownLine = text => {
+    if (!LINES) {
+      LINES = new Set();
+      const all = (brain.core && brain.core.T && brain.core.T.SENTENCES) || {};
+      for (const lang of Object.keys(all)) for (const lv of Object.values(all[lang])) for (const line of lv) {
+        LINES.add(line);
+        for (const w of line.replace(/[.,!?।"“”]/g, ' ').split(/\s+/).filter(Boolean)) LINES.add(w);
+      }
+    }
+    return LINES.has(text) ? text : null;
+  };
+  const asr = createAsr(env, { knownLine, fetch: opts.fetch });
   const flow = createFlow(brain, env);
   const scheduler = createScheduler(brain, env);
   const base = () => (env.TAKHTI_PUBLIC_URL || '').replace(/\/$/, '');
@@ -184,7 +200,7 @@ function createServer(opts) {
         return send(res, 200, r);
       }
 
-      /* ---- a clearer reading check: one line written down by a speech service, nothing kept (voice/asr.js) ---- */
+      /* ---- a clearer reading check: one line written down by the speech provider (voice/speech.js: Gemini, Sarvam as backup), nothing kept ---- */
       if (p === '/reading/asr' || p === '/reading/tts') {
         res.setHeader('Access-Control-Allow-Origin', env.TAKHTI_APP_ORIGIN || '*');
         res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -209,7 +225,7 @@ function createServer(opts) {
         return send(res, r.status, r.json);
       }
 
-      /* ---- Teach Munni: the child's explanation, written down (voice/asr.js) and judged by Gemini (api/teachback.mjs) ---- */
+      /* ---- Teach Munni: the child's explanation, written down (voice/speech.js) and judged by Gemini (api/teachback.mjs) ---- */
       if (p === '/teach/judge') {
         res.setHeader('Access-Control-Allow-Origin', env.TAKHTI_APP_ORIGIN || '*');
         res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -218,7 +234,7 @@ function createServer(opts) {
         if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
         const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
         const { judgeCore } = await import('../api/teachback.mjs');
-        const hear = (buf, mime, lang) => transcribe(buf, mime, lang, env);
+        const hear = (buf, mime, lang) => speech.checkReading({ buf, mime }, null, lang, { env, fetch: opts.fetch || fetch });
         const r = await judgeCore(await readBody(req, 2.2 * 1024 * 1024), env, ip, opts.fetch || fetch, hear);
         return send(res, r.status, r.json);
       }

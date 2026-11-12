@@ -41,6 +41,8 @@ async function speak(text, lang, onDone){
   const l = lang || S.lang;
   let played = false;
   try{ played = await playRecorded(text, l, onDone); }catch(e){ played = false; }
+  // the pack lacks this line: the live backup (Sarvam), then the phone's own voice
+  if(!played && typeof voicePackLoaded === 'function' && voicePackLoaded(l)){ try{ played = await playLive(text, l, onDone); }catch(e){ played = false; } }
   if(!played) speakDevice(text, l, onDone);
 }
 function speakDevice(text, lang, onDone){
@@ -191,6 +193,9 @@ function micReason(err){
   if(err==='no-terms') return hi
     ? 'इस फ़ोन पर बोलकर जाँच के लिए माता-पिता की सहमति चाहिए — अभी नीचे लिखकर देखो।'
     : 'Reading aloud here needs a grown-up to agree to the terms first — type it below for now.';
+  if(err==='skipped') return hi
+    ? 'मुन्नी अभी यह नहीं सुन पाई — यह पंक्ति बाद में फिर आएगी। चाहो तो फिर से पढ़ो, या नीचे लिखकर देखो।'
+    : "Munni couldn't hear that one just now — this line will come back later. Read it again, or type it below.";
   if(err==='cloud-limit') return hi
     ? 'आज के लिए इतना ही साफ़ जाँच — नीचे लिखकर देखो।'
     : "That's enough of the clearer check for now — type it below.";

@@ -19,7 +19,7 @@ tracing to writing, counting to carrying, tables and BODMAS.
 school's own syllabus have started: a teacher uploads a chapter, Gemini
 drafts the week's lessons, Takhti checks every one.
 
-**Build status:** web prototype on `main` (offline shell `takhti-v43`, 39 test
+**Build status:** web prototype on `main` (offline shell `takhti-v44`, 40 test
 suites); the voice server has had its first live Bolna call. The Android app
 ports the same logic to Kotlin (`ANDROID.md`).
 
@@ -65,10 +65,13 @@ Story Fire (story lessons and homework), the Play Clearing (six games), the
 Picture Hut (cartoon episodes for one maths skill each) and Munni's Pond.
 Lessons are generated and checked on the phone; nothing waits for a network.
 
-### Hearing a child read — Sarvam
+### Hearing a child read — Gemini (Sarvam as backup)
 With the reading terms a parent accepts at sign-up, a line the child reads is
-written down by Sarvam in *verbatim* mode — what was said, not a tidied
-sentence — and graded on the phone. **Say it with Munni:** after a slip, Munni
+written down by Google's Gemini — what was said, not a tidied sentence — and
+graded on the phone. Sarvam (verbatim mode) is the backup, and one setting
+(`SPEECH_PROVIDER=sarvam`) makes it the reading check again; a day-1 script
+(`tools/compare-speech.mjs`) compares the two on real children's recordings.
+Munni's voice is built ahead with Gemini TTS and ships offline. **Say it with Munni:** after a slip, Munni
 teaches the word in pieces (भा · ई), slowly, then whole, the child says it, and
 it's checked again. Offline, the phone's own recognizer takes over.
 
@@ -139,7 +142,7 @@ Serve it rather than opening `index.html` directly (camera, microphone and
 storage need a real origin).
 
 **The voice server** (phone calls, the learning circle, the reading check):
-`cd voice && cp .env.example .env`, fill in the keys (Bolna, Sarvam), then
+`cd voice && cp .env.example .env`, fill in the keys (Bolna, Gemini, Sarvam as backup), then
 `npm run voice`. Full setup in `voice/README.md`.
 
 **Deploying the app:** any static host. The app's server pieces are optional:

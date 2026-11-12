@@ -16,7 +16,10 @@ function nextSentence(){
   // session's first sentence.
   SAY = null;                                                     // "say it with Munni" belongs to the line being left
   const queue = S.ctx._srsQueue || [];
-  if(queue.length){
+  const again = typeof readAgainNext === 'function' ? readAgainNext() : null;   // a line the clearer check had to skip
+  if(again){
+    S.ctx = { sentence: again, _srsQueue: queue };
+  } else if(queue.length){
     S.ctx = { sentence: queue[0], _srsQueue: queue.slice(1) };
   } else {
     const pool = ageSentences(S.lang, S.levels.read);
@@ -53,6 +56,7 @@ function startListening(){
     ACTIVE_LISTEN = null;
     if(typeof selfListenStop === 'function') selfListenStop();
     S.ctx.live=false;
+    if(err === 'skipped' && typeof readAgainQueue === 'function') readAgainQueue(S.ctx.sentence);   // not graded: kept to read again later
     if(err && err!=='no-speech'){
       S.ctx.msg = micReason(err);
       log(null,'recognizer error: '+err);

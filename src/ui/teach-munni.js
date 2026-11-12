@@ -6,10 +6,11 @@
    is core/teachback.js; this draws it and listens.
 
    How Munni hears an explanation:
-   · Online, under the terms a grown-up accepted (v2 — ui/cloud-read.js):
+   · Online, under the terms a grown-up accepted (v3 — ui/cloud-read.js):
      the recording goes to the voice server, is written down by the same
-     speech service as the reading check, and Gemini says which points it
-     covered, quoting the child (POST /teach/judge, api/teachback.mjs).
+     speech provider as the reading check (voice/speech.js: Gemini, Sarvam
+     as backup), and Gemini says which points it covered, quoting the child
+     (POST /teach/judge, api/teachback.mjs).
      Nothing is kept there. The quote is checked again here.
    · Otherwise: the phone's own on-device recognizer, or typing, and the
      offline judge (teachRubric()). It never waits on the network: no
@@ -28,7 +29,7 @@ let TEACH = null;   // { s: session, sum: summary once finished, busy, msg, typi
 const TMR = o => o ? (S.lang === 'hi' ? o.hi : o.en) : '';
 const TMW = o => attr(TMR(o));
 
-function teachTermsOk(){ return !!(TALK_URL && S.voiceTerms && S.voiceTerms.v >= 2); }
+function teachTermsOk(){ return !!(TALK_URL && S.voiceTerms && S.voiceTerms.v >= VOICE_TERMS_V); }   // v3: Gemini hears it (ui/cloud-read.js)
 function teachCloudReady(){
   return teachTermsOk() && S.online && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && typeof MediaRecorder !== 'undefined';
 }
