@@ -18,3 +18,8 @@
   from = "/api/syllabus"
   to = "/.netlify/functions/syllabus"
   status = 200
+
+[[redirects]]
+  from = "/api/teachback"
+  to = "/.netlify/functions/teachback"
+  status = 200

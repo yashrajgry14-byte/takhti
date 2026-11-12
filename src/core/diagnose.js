@@ -108,6 +108,12 @@ function classMirrorKey(code){ return 'takhti-class-' + code; }
    debounce below so a test (or a caller that already knows it is the last
    write for a while, e.g. right before the app backgrounds) can force it
    immediately instead of waiting out the debounce window. */
+/* Teach Munni's points (core/teachback.js) travel with the counts: which
+   lesson points this child explained — ids and c/p/g only, nothing said. */
+function teachExplainedOf(c){
+  const e = c && c.teach && c.teach.explained;
+  return e && Object.keys(e).length ? { explained: e } : {};
+}
 function mirrorToClassNow(child){
   const c = child || S;
   if(!c || !c.classCode || !c.id) return;
@@ -115,7 +121,7 @@ function mirrorToClassNow(child){
     const key = classMirrorKey(c.classCode);
     const raw = localStorage.getItem(key);
     const all = raw ? JSON.parse(raw) : {};
-    all[c.id] = { childName: c.name, skillHistory: c.skillHistory || {}, at: Date.now() };   // at: newest-wins merging, see core/class-sync.js
+    all[c.id] = { childName: c.name, skillHistory: c.skillHistory || {}, ...teachExplainedOf(c), at: Date.now() };   // at: newest-wins merging, see core/class-sync.js
     localStorage.setItem(key, JSON.stringify(all));
   }catch(e){ /* mirroring is a bonus, never a dependency */ }
 }

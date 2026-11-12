@@ -25,15 +25,17 @@
    It never blocks the lesson: no answer in 10 s → the honest message and
    the typed fallback.
    ================================================================== */
-const VOICE_TERMS_V = 1;
+/* v2 adds Teach Munni (an explanation written down, then checked by
+   Gemini). Reading needs v1 or later; Teach Munni's online judge needs v2. */
+const VOICE_TERMS_V = 2;
 const VOICE_TERMS = {
-  en: n => `When ${n} reads aloud in Takhti, or says a word after Munni, the recording goes over the internet to Takhti's voice server and to Sarvam AI, an Indian speech service, which writes down exactly what was said. Takhti checks it on this phone, shows ${n} what to fix, and Munni teaches the right way to say it. The recording is not kept — not on our server, not by us. What ${n} got right or wrong stays on this phone. Without internet, the phone's own recognizer is used, or ${n} types. You can withdraw this any time on the parent page.`,
-  hi: n => `जब ${n} तख़्ती में ज़ोर से पढ़ते हैं, या मुन्नी के बाद कोई शब्द बोलते हैं, तो वह रिकॉर्डिंग इंटरनेट से तख़्ती के वॉइस सर्वर और Sarvam AI (एक भारतीय बोली पहचानने वाली सेवा) तक जाती है, जो ठीक वही लिखती है जो बोला गया। तख़्ती इसी फ़ोन पर जाँचती है, ${n} को बताती है क्या सुधारना है, और मुन्नी सही बोलना सिखाती है। रिकॉर्डिंग रखी नहीं जाती — न हमारे सर्वर पर, न हमारे पास। ${n} ने क्या सही किया, क्या नहीं, वह इसी फ़ोन पर रहता है। इंटरनेट न हो तो फ़ोन की अपनी पहचान इस्तेमाल होती है, या ${n} लिखकर देते हैं। माता-पिता वाले पेज पर इसे कभी भी वापस ले सकते हैं।`
+  en: n => `When ${n} reads aloud in Takhti, or says a word after Munni, the recording goes over the internet to Takhti's voice server and to Sarvam AI, an Indian speech service, which writes down exactly what was said. Takhti checks it on this phone, shows ${n} what to fix, and Munni teaches the right way to say it. When ${n} teaches Munni back what a lesson was about (Teach Munni), the explanation goes the same way to be written down, and the written words go to Google's Gemini, which only checks which of the lesson's points ${n} explained. The recording is not kept — not on our server, not by us — and neither are the words. What ${n} got right or wrong, and which points ${n} explained, stays on this phone (and with the class, if you switch on class sync). Without internet, the phone's own recognizer is used, or ${n} types. You can withdraw this any time on the parent page.`,
+  hi: n => `जब ${n} तख़्ती में ज़ोर से पढ़ते हैं, या मुन्नी के बाद कोई शब्द बोलते हैं, तो वह रिकॉर्डिंग इंटरनेट से तख़्ती के वॉइस सर्वर और Sarvam AI (एक भारतीय बोली पहचानने वाली सेवा) तक जाती है, जो ठीक वही लिखती है जो बोला गया। तख़्ती इसी फ़ोन पर जाँचती है, ${n} को बताती है क्या सुधारना है, और मुन्नी सही बोलना सिखाती है। जब ${n} मुन्नी को किसी पाठ की बातें वापस सिखाते हैं (मुन्नी को सिखाओ), तो वह समझाना भी इसी तरह लिखा जाता है, और लिखे हुए शब्द Google के Gemini तक जाते हैं, जो सिर्फ़ यह जाँचता है कि ${n} ने पाठ की कौन-सी बातें समझाईं। रिकॉर्डिंग रखी नहीं जाती — न हमारे सर्वर पर, न हमारे पास — और शब्द भी नहीं। ${n} ने क्या सही किया, क्या नहीं, और कौन-सी बातें समझाईं, वह इसी फ़ोन पर रहता है (और क्लास के साथ, अगर आप क्लास सिंक चालू करते हैं)। इंटरनेट न हो तो फ़ोन की अपनी पहचान इस्तेमाल होती है, या ${n} लिखकर देते हैं। माता-पिता वाले पेज पर इसे कभी भी वापस ले सकते हैं।`
 };
 
 /* Hear this turn with Sarvam? The terms accepted, a voice server, a signal. */
 function cloudReadReady(){
-  return !!(TALK_URL && S.voiceTerms && S.voiceTerms.v === VOICE_TERMS_V && S.online &&
+  return !!(TALK_URL && S.voiceTerms && S.voiceTerms.v >= 1 && S.online &&
             navigator.mediaDevices && navigator.mediaDevices.getUserMedia && typeof MediaRecorder !== 'undefined');
 }
 /* With a voice server, a child's voice goes nowhere but Sarvam, and only
@@ -44,7 +46,7 @@ function deviceListenAllowed(){
 }
 
 /* ---------- the grown-ups' terms, at the end of onboarding ---------- */
-function voiceTermsWanted(){ return !!TALK_URL && !(S.voiceTerms && S.voiceTerms.v === VOICE_TERMS_V); }
+function voiceTermsWanted(){ return !!TALK_URL && !(S.voiceTerms && S.voiceTerms.v >= VOICE_TERMS_V); }
 function voiceTermsHTML(){
   const hi = S.lang === 'hi', n = attr(S.name || (hi ? 'आपका बच्चा' : 'your child'));
   return `<div class="ob"><div class="card circlecard" style="text-align:left">
@@ -71,7 +73,7 @@ function cloudListen(onResult, onEnd, opts){
   let rec = null, stream = null, over = false, timer = null, ac = null, raf = null;
   const chunks = [];
   const words = String((opts && opts.text) || S.ctx.sentence || '').split(/\s+/).length;
-  const maxMs = Math.min(15000, 2500 + words * 900);          // a line's worth of time, no more
+  const maxMs = (opts && opts.maxMs) || Math.min(15000, 2500 + words * 900);          // a line's worth of time, no more
   const cleanup = () => {
     clearTimeout(timer); if(raf) cancelAnimationFrame(raf);
     try{ stream && stream.getTracks().forEach(t => t.stop()); }catch(e){}
@@ -99,7 +101,7 @@ function cloudListen(onResult, onEnd, opts){
         let peak = 0; for(const v of buf) peak = Math.max(peak, Math.abs(v - 128));
         const now = performance.now();
         if(peak > 18){ spoke = true; quiet = 0; }
-        else if(spoke){ if(!quiet) quiet = now; else if(now - quiet > 1300) return finish(); }
+        else if(spoke){ if(!quiet) quiet = now; else if(now - quiet > ((opts && opts.pauseMs) || 1300)) return finish(); }
         raf = requestAnimationFrame(tick);
       };
       tick();
@@ -115,13 +117,14 @@ function cloudListen(onResult, onEnd, opts){
     try{
       const audio = await blobB64(blob);
       const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      const to = setTimeout(() => ctl && ctl.abort(), 10000);
-      const res = await fetch(TALK_URL + '/reading/asr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl ? ctl.signal : undefined,
-        body: JSON.stringify({ consent: true, lang: S.lang, mime: blob.type, audio }) });
+      const to = setTimeout(() => ctl && ctl.abort(), (opts && opts.timeout) || 10000);
+      const res = await fetch((opts && opts.url) || TALK_URL + '/reading/asr', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl ? ctl.signal : undefined,
+        body: JSON.stringify({ consent: true, lang: S.lang, mime: blob.type, audio, ...((opts && opts.body) || {}) }) });
       clearTimeout(to);
       const d = await res.json().catch(() => ({}));
       if(over) return;
       if(!res.ok || typeof d.transcript !== 'string' || !d.transcript.trim()) return end(onEnd, res.status === 429 ? 'cloud-limit' : res.ok ? 'no-speech' : 'network');
+      if(opts && opts.full) return end(onResult, d);        // Teach Munni: the transcript and the judge's verdicts
       log(2, `Reading check · written down by ${d.provider} (verbatim) on the voice server — the recording is not kept — and graded here on the phone`);
       S.ctx.heardBy = d.provider;
       end(onResult, [{ transcript: d.transcript, confidence: 0.9 }]);
@@ -141,6 +144,8 @@ function cloudReadParentHTML(){
     <div style="font-size:12.5px;margin-top:6px">${t
       ? (hi ? `सहमति दी: ${String(t.at).slice(0, 10)} (शर्तें v${t.v})` : `Agreed on ${String(t.at).slice(0, 10)} (terms v${t.v})`)
       : (hi ? 'सहमति वापस ली गई — आवाज़ फ़ोन से बाहर नहीं जाती; पढ़ना फ़ोन की अपनी पहचान से या लिखकर।' : "Withdrawn — the voice doesn't leave the phone; reading uses the phone's own recognizer, or typing.")}</div>
+    ${t && t.v < VOICE_TERMS_V ? `<div style="font-size:12.5px;margin-top:6px">${hi ? 'नई शर्तें: "मुन्नी को सिखाओ" में समझाना Gemini से जाँचा जाता है। सहमत होने तक यह इसी फ़ोन पर जाँचा जाता है।' : 'New in these terms: in Teach Munni, an explanation is checked by Gemini. Until you agree, it is checked on this phone only.'}</div>
+      <button class="btn" style="margin-top:6px" onclick="voiceTermsAgain()">${hi ? 'नई शर्तों से सहमत हों' : 'Agree to the new terms'}</button>` : ''}
     ${t ? (S.ctx.termsAsk
       ? `<div style="font-size:12.5px;margin-top:6px">${hi ? `वापस लेने पर ${n} की पढ़ाई की जाँच कम सटीक होगी और मुन्नी गलतियाँ उतनी अच्छी तरह नहीं सिखा पाएगी।` : `If you withdraw, ${n}'s reading is checked less closely and Munni can't teach slips as well.`}</div>
          <div class="row" style="gap:8px;margin-top:6px"><button class="btn ghost" onclick="voiceTermsWithdraw()">${hi ? 'हाँ, वापस लें' : 'Yes, withdraw'}</button><button class="btn" onclick="S.ctx.termsAsk=false;render()">${hi ? 'रहने दें' : 'Keep it'}</button></div>`

@@ -2,7 +2,7 @@
    CLASS SYNC — Tier 2. One small record per class code, so a teacher's
    phone and every consenting child's phone see the same class.
 
-   POST { code, children:{ id:{childName, skillHistory, at} }, homework, lessons, teacherKey }
+   POST { code, children:{ id:{childName, skillHistory, explained?, at} }, homework, lessons, teacherKey }
    → merges what the phone sent into the stored class (newest wins, per
    child and for the homework) and answers with what that phone may see.
 
@@ -44,7 +44,11 @@ function cleanChild(c){
     const n = int(h.n, 1e6);
     skillHistory[id] = { n, right: Math.min(n, int(h.right, 1e6)) };
   }
-  return { childName: String(c.childName || '?').slice(0, 40), skillHistory, at: int(c.at, 9e15) };
+  // Teach Munni: which lesson points the child explained (c/p/g), ids only
+  const explained = {};
+  for(const [id, v] of Object.entries(c.explained && typeof c.explained === 'object' ? c.explained : {}).slice(0, 60))
+    if(/^[a-z0-9.-]{1,32}$/.test(id) && ['c', 'p', 'g'].includes(v)) explained[id] = v;
+  return { childName: String(c.childName || '?').slice(0, 40), skillHistory, ...(Object.keys(explained).length ? { explained } : {}), at: int(c.at, 9e15) };
 }
 function cleanHomework(h){
   if(!h || typeof h !== 'object') return null;

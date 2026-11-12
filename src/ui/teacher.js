@@ -132,6 +132,7 @@ function teacherHTML(){
   </div>
 
   ${code ? syllabusHTML(code) : ''}
+  ${code && typeof teachTeacherHTML === 'function' ? teachTeacherHTML(code) : ''}
 
   <div class="paper" style="margin-top:12px">
     <div class="kicker2">${hi?'तख़्ती क्या सिखाती है':'WHAT TAKHTI COVERS'}</div>
@@ -280,6 +281,9 @@ function sylDraftHTML(d, i, approved, badge){
     ${les.skillId && skillById(les.skillId) ? `<div style="font-size:12px;opacity:.75">${hi ? 'कौशल' : 'Skill'}: ${attr(hi ? skillById(les.skillId).hi : skillById(les.skillId).en)}</div>` : ''}
     ${les.source ? `<div style="font-size:12px;opacity:.6">${hi ? 'स्रोत' : 'From'}: ${attr(les.source)}</div>` : ''}
     <details style="margin-top:4px" ${d.ok && !isIn ? 'open' : ''}><summary style="font-size:12.5px;cursor:pointer">${hi ? 'पूरा पाठ पढ़ें' : 'Read the whole lesson'}</summary>${lines}</details>
+    ${(les.aims || []).length ? `<div style="font-size:12.5px;margin-top:6px"><b>🐘 ${hi ? 'मुन्नी बाद में ये बातें भूलेगी — बच्चा सिखाएगा' : 'Munni will forget these afterwards — the child teaches them back'}:</b>
+      ${les.aims.map(a => `<div style="margin:3px 0 3px 10px">• ${T(a.point)} <span style="opacity:.65">— "${T(a.forget)}"</span></div>`).join('')}</div>` : ''}
+    ${(d.aimErrors || []).length ? `<div style="font-size:12px;opacity:.7;margin-top:2px">${hi ? 'छोड़ी गई बातें' : 'Points left out'}: ${d.aimErrors.slice(0, 2).map(attr).join('; ')}</div>` : ''}
     ${d.ok
       ? (isIn ? `<div class="muted" style="font-size:12.5px;margin-top:4px">✓ ${hi ? 'कक्षा के लिए मंज़ूर' : 'Approved for the class'}</div>`
               : `<button class="btn ghost" style="margin-top:6px" onclick="sylApprove(${i})">${hi ? 'मंज़ूर करें' : 'Approve'}</button>`)

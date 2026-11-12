@@ -48,7 +48,7 @@ async function syncClass(code){
   const children = {};
   for(const p of S.profiles)
     if(p.classCode === code && p.syncOn && p.id)
-      children[p.id] = { childName: p.name, skillHistory: p.skillHistory || {}, at: Date.now() };
+      children[p.id] = { childName: p.name, skillHistory: p.skillHistory || {}, ...teachExplainedOf(p), at: Date.now() };
   const teacherKey = S.syncKeys[code];                       // only on the teacher's phone
   const homework = teacherKey ? (readClassShared(code)._homework || null) : null;
   const lessons = teacherKey ? (readClassShared(code)._lessons || null) : null;   // the school's own lessons (core/syllabus.js)

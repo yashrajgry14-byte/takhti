@@ -1289,3 +1289,27 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 
 /* shapes (content/geometry.js) */
 .geo{color:var(--chalk);max-width:100%;height:auto;display:block;margin:0 auto}
+
+/* ---------- Teach Munni (ui/teach-munni.js) ---------- */
+.teachchips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.teachchip{font-size:12.5px;padding:5px 10px;border-radius:14px;border:1px dashed rgba(237,230,210,.35);opacity:.8;transition:background .4s,transform .4s}
+.teachchip.is-now{border-style:solid;opacity:1}
+.teachchip.is-covered{background:var(--leaf);color:#0E2A1E;border-color:transparent;opacity:1;transform:scale(1.04)}
+.teachchip.is-partly,.teachchip.is-gap{background:rgba(240,160,42,.18);border-color:var(--marigold)}
+.teachstage{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:6px}
+.teachmunni{position:relative;width:170px}
+.teachmunni .hm-munni{width:170px;height:auto}
+.teachmunni.is-puzzled .hm-munni{animation:teachTilt 2.6s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes teachTilt{0%,100%{transform:rotate(0)}50%{transform:rotate(-6deg)}}
+.teachq{position:absolute;top:-6px;right:6px;font-family:'Baloo 2';font-size:30px;color:var(--marigold)}
+.teachbubble{background:rgba(237,230,210,.08);border:1px solid rgba(237,230,210,.18);border-radius:16px;padding:12px 14px;font-size:15px;line-height:1.5;max-width:520px}
+.teachslate{font-family:'Baloo 2';font-size:28px;background:#1F3A33;color:#F6F1E2;border-radius:12px;padding:6px 18px}
+.teachopts{grid-template-columns:repeat(3,1fr)}
+.teachmic{margin-top:12px;font-size:17px}
+.teachmic.live{background:var(--rani);color:#fff}
+.teachtype{margin-top:6px;width:auto;padding:6px 12px;font-size:13px}
+.teachrow{margin:8px 0}
+.teachbar{display:flex;height:9px;border-radius:5px;overflow:hidden;background:rgba(237,230,210,.12);margin:3px 0}
+.teachbar i{display:block;height:100%}
+.teachbar .c{background:var(--leaf)} .teachbar .p{background:var(--marigold)} .teachbar .g{background:rgba(237,230,210,.3)}
+@media (prefers-reduced-motion: reduce){.teachmunni.is-puzzled .hm-munni{animation:none}}

@@ -25,6 +25,7 @@ function go(s){
   if(s!=='archer') archerStop();
   askFollow(s);    // Ask Munni's help belongs to the screen it was asked on
   talkFollow(s);   // a Talking Munni call lives at the Pond and in the games, nowhere else
+  if(typeof teachFollow === 'function') teachFollow(s);   // what the child taught Munni counts even if they leave half way
   S.screen=s; S.ctx={}; render(); talkChip();
 }
 
@@ -447,6 +448,7 @@ parent(){
     ${cloudReadParentHTML()}
     ${typeof circleParentHTML === 'function' ? circleParentHTML() : ''}
     ${mindParentHTML()}
+    ${typeof teachParentHTML === 'function' ? teachParentHTML() : ''}
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'बिना इंटरनेट':'WITHOUT INTERNET'}</div>
     ${(() => {
@@ -496,8 +498,8 @@ parent(){
     <div class="metric">
       <div><b>${S.lang==='hi'?'अपने आप सिंक करो (हर घंटे)':'Sync automatically (every hour)'}</b>
         <div style="font-size:12.5px;opacity:.7">${S.lang==='hi'
-          ? `सिर्फ़ ${attr(S.name)} का नाम और अभ्यास की गिनती शिक्षक की कक्षा में भेजी जाती है — तस्वीरें, आवाज़ या पढ़ा हुआ पाठ कभी नहीं। कभी भी बंद कर सकते हैं।`
-          : `Only ${attr(S.name)}'s name and practice counts go to the teacher's class — never photos, voice or what was read. You can switch it off any time.`}</div>
+          ? `सिर्फ़ ${attr(S.name)} का नाम, अभ्यास की गिनती और पाठ की कौन-सी बातें मुन्नी को समझाईं, शिक्षक की कक्षा में भेजी जाती हैं — तस्वीरें, आवाज़, बोले गए शब्द या पढ़ा हुआ पाठ कभी नहीं। कभी भी बंद कर सकते हैं।`
+          : `Only ${attr(S.name)}'s name, practice counts and which lesson points they explained to Munni go to the teacher's class — never photos, voice, the words they said or what was read. You can switch it off any time.`}</div>
       </div>
       <button class="toggle ${S.syncOn?'on':''}" onclick="toggleSyncConsent()" aria-label="${S.syncOn?'sync on':'sync off'}"><span></span></button>
     </div>

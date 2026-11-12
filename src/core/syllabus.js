@@ -195,9 +195,14 @@ function sylClean(raw, opts){
   if(les.beats.length && les.beats[les.beats.length - 1].t !== 'win')
     les.beats.push({ t:'win', say:{ en:'Well done. You learnt it today.', hi:'शाबाश! आज तुमने यह सीख लिया।' } });
   les.subject = les.beats.some(b => SYL_MATH.includes(b.t) || GEO_TYPES.includes(b.t)) ? 'math' : 'read';
+  // the points Munni will ask about afterwards (Teach Munni, core/teachback.js):
+  // a point that fails its check is dropped and named — the lesson still works without it
+  const ta = typeof teachCleanAims === 'function' && Array.isArray(raw.aims) ? teachCleanAims(raw.aims, 'sch-tmp') : { aims: [], errors: [] };
   // the right answer isn't always first: a stable shuffle, by the lesson's own content
   const id = 'sch-' + sylHash({ t: les.title, s: les.sub, k: les.skillId, b: les.beats.map(b => ({ ...b, correct: undefined, hiOpts: undefined,
-    opts: b.opts && b.opts.slice().sort(), right: b.opts ? b.opts[b.correct] : undefined, hiRight: b.hiOpts ? b.hiOpts[b.correct] : undefined })) });
+    opts: b.opts && b.opts.slice().sort(), right: b.opts ? b.opts[b.correct] : undefined, hiRight: b.hiOpts ? b.hiOpts[b.correct] : undefined })),
+    ...(ta.aims.length ? { a: ta.aims.map(a => ({ ...a, id: undefined })) } : {}) });
+  if(ta.aims.length){ les.aims = ta.aims; les.aims.forEach((a, k) => { a.id = ('s' + id.replace(/^sch-/, '') + '.' + k).slice(0, 32); }); }
   les.beats.forEach((b, i) => {
     if(b.t === 'ask' && b.opts && b.hiOpts && b.opts.length === 2 && b.hiOpts.length === 2 && Number.isInteger(b.correct) && b.correct < 2 && (seedOf(id + i) & 1) !== b.correct){
       b.opts = [b.opts[1], b.opts[0]]; b.hiOpts = [b.hiOpts[1], b.hiOpts[0]]; b.correct = 1 - b.correct;
@@ -206,7 +211,7 @@ function sylClean(raw, opts){
   les.id = id;
   const v = validateLesson(les);
   const errors = errs.concat(v.errors);
-  return { lesson: les, ok: errors.length === 0, errors, checks };
+  return { lesson: les, ok: errors.length === 0, errors, checks, aimErrors: ta.errors };
 }
 
 /* Ask the server for drafts, check them, send the failures back once. */

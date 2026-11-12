@@ -27,12 +27,15 @@ because no phone's own recognizer can hear a child's misreading reliably.
 It never *serves* the lesson in the sense that matters: the grading, the
 mistakes, the teaching are all on the phone; without a signal the phone's
 own recognizer (or typing) takes over, and no answer in 10 s means the same.
+**Teach Munni** uses the same exception for a child's *explanation* (written
+down, then judged by Gemini — see **Teach Munni**); without a signal or the
+v2 terms, the phone's own rubric judges it.
 
 | Tier | What it does | Where |
 |------|--------------|-------|
 | 0 | Reading matcher + age-band pass thresholds, stroke scoring, skill-shaped problem generation, shapes drawn and checked, adaptive level, daily scheduler, skill graph + diagnostic, spaced repetition, cartoon episodes, procedural sound | `src/core/`, `src/content/`, `src/games/` — always on, no network, no model |
 | 1 | A fresh practice line for missed words | `core/tier1.js` — the curated bank everywhere; the phone's own on-device model (Chrome's Prompt API) where it already has one, strictly validated |
-| 2 | Cloud answers for the question queue; class sync between phones; next week's lessons from the school's own syllabus (Gemini drafts, the phone checks) | `askCloud()` / `flushQueue()` via `api/ask.js`; `core/class-sync.js` via `api/class-sync.mjs`; `core/syllabus.js` via `api/syllabus.mjs` |
+| 2 | Cloud answers for the question queue; class sync between phones; next week's lessons from the school's own syllabus (Gemini drafts, the phone checks); Teach Munni's judge (Gemini, every credit quoted and checked) | `askCloud()` / `flushQueue()` via `api/ask.js`; `core/class-sync.js` via `api/class-sync.mjs`; `core/syllabus.js` via `api/syllabus.mjs`; `ui/teach-munni.js` via `POST /teach/judge` (`api/teachback.mjs`) |
 
 The app ships no model of its own. Tier 1 uses the phone's built-in on-device
 model when the browser provides one (see **Tier 1**). "Generative" in
@@ -43,7 +46,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 38 test suites (see Testing)
+npm test           # all 39 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -72,16 +75,16 @@ core/srs.js, core/sfx.js, games/game-core.js
 content/anim.js, content/copy.js, content/competencies.js
 core/log.js, core/store.js, core/profiles.js
 core/voice.js, core/speech.js, core/matcher.js
-core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js, core/tier1.js, core/explain.js, core/mind.js, core/twin.js, core/lang-mistakes.js
+core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js, core/tier1.js, core/explain.js, core/mind.js, core/twin.js, core/lang-mistakes.js, content/teach.js, core/teachback.js
 ui/mascot.js, ui/readback.js, ui/elephant.js, ui/lesson-player.js, ui/anim-celebrate.js, ui/cards.js
 ui/views.js, ui/opening.js
 ui/arrival.js, ui/onboarding.js, ui/jungle-map.js, ui/video-player.js, ui/teacher.js
 games/runner.js, games/pop.js, games/tower.js, games/match.js, games/sort.js, games/archer.js
-ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.js, ui/ask-munni.js, ui/mind-ui.js, ui/handlers.js
+ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.js, ui/ask-munni.js, ui/mind-ui.js, ui/teach-munni.js, ui/handlers.js
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v42` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v43` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -105,6 +108,7 @@ src/
     literacy.js             literacy + early-numeracy beats
     comprehension.js        comprehension + grammar beats (the last gaps below Class 4)
     geometry.js             shapes: figure / corner / figures beats drawn as SVG, geoExpect() reads each answer off the drawing; 27 built-in lessons
+    teach.js                Teach Munni's content: the built-in units (aims with Munni's question, two hints, the ideas and their words), Munni's acted mistakes and what explaining each needs
     anim.js, copy.js, competencies.js   animation templates, UI strings, NIPUN/NCERT level names
   core/
     diagnose.js             the teacher diagnostic, class-code mirror, homework bridge
@@ -132,6 +136,7 @@ src/
     twin.js                 how THIS child thinks: what they know and how it fades, the mistakes they repeat (all three subjects), a guess before each answer; the checked profile for calls and model steps
     lang-mistakes.js        how a read word, a typed-back word or a traced letter went wrong (aspiration, vowel signs, half letters, b/d, mirrored, no शिरोरेखा…) and the help for each
     explain.js              one question step by step (make ten, tens/ones, borrow, multiply first, a word in pieces) — Ask Munni and the help call
+    teachback.js            Teach Munni's engine: the aim checker, the offline judge, the quote check, Munni's mistake, the session, what is kept
   games/
     game-core.js            shared round lifecycle + GAME_SHELLS registry
     runner, pop, tower, match, sort, archer   the six game shells
@@ -153,11 +158,13 @@ src/
     circle.js               the learning circle's app side: the parent's sync tick, this week's step, the Friday check, the home question
     mind-ui.js              the mind on screen: missed sums and reading lines taught the child's way, "Munni's idea" on the map, the parent's "How … learns" and school marks; the twin's tip after a mistake and the parent's "How well Munni knows how … thinks"
     ask-munni.js            "Ask Munni": instant step-by-step help on the question on screen; "still stuck?" → Munni calls (in the app)
+    teach-munni.js          "Teach Munni" (VIEWS.teach): the child teaches a lesson's aims back; the end-of-lesson button, "Munni forgot again", the parent's "How … explains", the teacher's results per aim
     handlers.js             event handlers
   app.js                    boot: load(), S.screen='arrival', render()
 api/ask.js                  serverless proxy; keeps the API key off the client
 api/class-sync.mjs          Tier 2 class sync (Netlify Blobs); syncCore() is the merge
 api/syllabus.mjs            Tier 2: a chapter → Gemini drafts lessons in Takhti's format (draftCore(); also POST /syllabus on the voice server)
+api/teachback.mjs           Tier 2: Teach Munni's judge — which aims an explanation covered, each credit quoted (judgeCore(); POST /teach/judge on the voice server takes audio)
 sw.js                       service worker — offline cache
 voice/                      Munni on a phone call (Bolna), the learning circle's server, the shared mistakes database, the reading check's speech service — a separate Node server, see below
 tools/build-audio.mjs       build-time narration (Sarvam or ElevenLabs) into audio/, played offline: lessons, reading lines, every word and its pieces, letters, Munni's coaching lines
@@ -267,8 +274,9 @@ teacher view). Runs whenever the phone really has a connection
 (`navigator.onLine`), regardless of the demo signal toggle.
 - **Consent first.** A child's data is only sent if a parent switched *Sync
   automatically* on for that child (`S.syncOn`, off by default, behind the
-  PIN; the dashboard says exactly what is sent). Only the name and practice
-  counts per skill — never photos, voice, levels or what was read.
+  PIN; the dashboard says exactly what is sent). Only the name, practice
+  counts per skill and which Teach Munni points were explained (`explained`,
+  ids and c/p/g) — never photos, voice, levels, what was said or read.
 - **Who sees what.** The teacher's phone holds a random per-class key
   (`S.syncKeys`, made when the teacher switches *Keep this class synced* on,
   never shown or shared; the server stores only its SHA-256). The first
@@ -625,10 +633,12 @@ is gone. Sarvam's `saaras:v3` in **verbatim** mode writes down what was said.
 
 - **The terms, once, at onboarding** (`voiceTermsHTML()`, a grown-up step
   before the learning circle's, only with a voice server): what goes (a
-  line read, or a word said after Munni), to whom (Takhti's voice server
-  and Sarvam AI), that the recording is not kept, how to withdraw — in Hindi
-  and English, one "I'm the parent or guardian, and I agree". Kept as
-  `S.voiceTerms {v, at, by}` (`VOICE_TERMS_V`). Not a switch. The parent
+  line read, or a word said after Munni; since v2 also a Teach Munni
+  explanation, whose words go on to Google's Gemini), to whom (Takhti's
+  voice server and Sarvam AI), that neither recording nor words are kept,
+  how to withdraw — in Hindi and English, one "I'm the parent or guardian,
+  and I agree". Kept as `S.voiceTerms {v, at, by}` (`VOICE_TERMS_V` = 2;
+  reading needs v1 or later, Teach Munni's judge v2). Not a switch. The parent
   page shows the agreement and can **withdraw** it (the law's right, DPDP
   s.6(4)); withdrawn, nothing leaves the phone.
 - **Who hears a turn** (`startListening()`): online with the terms →
@@ -692,6 +702,88 @@ only knows this one question.
   the child gives on screen after help isn't either (`S.ctx.helped`,
   `S.lesson.helpedAt`, `activeVideo.helpedAt`): no `record()`, no skill
   attempt. The next question is the child's own again.
+
+## Teach Munni — `content/teach.js`, `core/teachback.js`, `ui/teach-munni.js`, `api/teachback.mjs`
+
+Elephants never forget. Munni does, on purpose: after a lesson she
+"forgets" its **aims** and the child teaches them back out loud — the
+protégé effect, and the one place a child gets to *say* what they learnt.
+(This is KidMonk's "Forgetful Monk", folded into Takhti.)
+
+- **A unit is one topic's aims** — 3–5 plain points a teacher would
+  approve ("knows to borrow when the top ones digit is smaller"). Built in
+  for `add10`, `carry`, `borrow`, `place2` (`TEACH_UNITS`); any other maths
+  skill with a sum gets Munni's sum alone (`teachUnitBuiltin()`); a school
+  lesson brings the aims Gemini drafted and the teacher approved (below).
+  `teachUnitFor(les)` prefers a skill with written aims (a bar-model
+  take-away is borrowing too). None for the 3–4 band.
+- **Everything Munni says is written ahead**, in Hindi and English: per
+  aim her puzzled question (`forget`), two hints, and the `ideas` a full
+  explanation contains, each with the words that show it (English, Hindi,
+  romanised Hindi). **Never the answer, checked**: `teachCheckAim()`
+  rejects an aim whose question or either hint would already pass the
+  offline judge as the explanation — every built-in aim and every drafted
+  one goes through it (the test checks all of them).
+- **Munni's sum** (`kind:'fix'`, `teachFixFor()`): a `skillProblem()` sum
+  worked with a real mistake — **this child's own habit** when the twin has
+  one (`twinHabit()`), else the skill's commonest (`TEACH_FIX_DEFAULT`) —
+  in her own words (`TEACH_ACTS`, never the right answer: checked over
+  every skill, three ages and many sums). The child taps the right answer
+  of three, then explains her slip, judged against what that mistake needs
+  (`TEACH_FIX_IDEAS`). The first tap is **real evidence**
+  (`noteSkillAttempt()`, and `twinAnswer()` when the child agrees with her
+  mistake); a nudged tap isn't.
+- **The session** (`teachBegin()` / `teachHeard()` / `teachPick()` /
+  `teachFinish()`): one aim at a time. Covered → a chip turns green and she
+  thanks them; partly or missing → hint 1, then hint 2; still not →
+  "we'll figure it out together later" (never "wrong"); `unsure` (too few
+  words) costs nothing — ask again. One explanation can cover later aims
+  too. Leaving half way keeps what was taught (`teachFollow()` in `go()`).
+- **Explanations are their own measure**, not mastery: they go to
+  `S.teach` (units with their gaps, the last result per aim, a log of
+  sessions), never into the twin's numbers — a child who can do it but
+  can't yet say it is not a child who can't do it.
+- **Gaps come back**: the summary's *Let's learn it again* teaches the
+  gap's skill the child's way (`mindGoWay()` with `mindChoose()`; a school
+  aim replays its lesson), and the Story Fire shows **"Munni forgot
+  again!"** (`teachAgainHTML()`), which asks only the aims still to teach.
+- **How Munni hears** (`teachMic()`): online under the **v2** reading terms
+  (`S.voiceTerms.v >= 2`; v2 adds this — `VOICE_TERMS_V`, the parent page
+  offers the new terms to a v1 family): the recording (`cloudListen()` with
+  a longer turn) goes to `POST /teach/judge` on the voice server, written
+  down by the reading check's speech service (`voice/asr.js`), then judged
+  by Gemini (`api/teachback.mjs`, `judgeCore()`). Otherwise the phone's
+  on-device recognizer or typing, and the **offline judge**
+  (`teachRubric()`: covered when every idea has a word). Typed words go to
+  the judge too when the terms allow it. No answer in time → the honest
+  message and typing; the lesson never waits.
+- **The judge never writes a word the child hears**, and must **quote the
+  child** for every aim it credits: a quote not in what the child said, or
+  only repeating Munni, is downgraded (covered → partly → missing), on the
+  server (`grounded()`) and again on the phone (`teachApplyJudge()`). A
+  built-in aim is read from the **server's own copy** of `content/teach.js`
+  (a fix aim's ideas from the mistake's id), so a phone can't put words in
+  the prompt; a school aim is clamped and passed as data; the child's
+  words are labelled as data, not instructions. Nothing is kept. No
+  Gemini key, or Gemini failing → `judge: null` and the phone's rubric
+  decides. The Netlify function (`api/teachback`) takes a transcript only.
+- **What the phone sends**: the points still to teach, the band's ages,
+  the audio or words — no name, no id.
+- **School lessons' aims** (`core/syllabus.js`): the syllabus prompt asks
+  Gemini for 2–3 aims per lesson; `sylClean()` runs `teachCleanAims()`,
+  drops a failing aim with its reason (`aimErrors`, shown to the teacher)
+  and keeps the rest **inside the lesson's id** (an aim edited on the way
+  changes the id, so no phone shows it). The teacher reads them with the
+  lesson ("Munni will forget these afterwards").
+- **Where it shows**: the end of a lesson (*🐘 Teach Munni*), the Story
+  Fire, the parent's **How … explains** (`teachParentHTML()`: points
+  explained, without a hint, in their own words, the lesson's words used,
+  the last sessions, "never compared"), and the teacher's **What the class
+  could explain** (`teachTeacherHTML()`: per aim, explained / partly /
+  still to come, the hardest first). The class mirror and the class sync
+  carry `explained {aimId: c|p|g}` — ids and three letters, nothing said
+  (`teachExplainedOf()`; the server keeps only well-formed ids); the
+  parent's sync notice says so in both languages.
 
 ## Talking Munni — `ui/talk-munni.js`
 
@@ -944,14 +1036,15 @@ app is a client of it, and only when a parent says so.
   child's voice goes to the voice service while they talk (at the Pond, and
   in a game the talk carries on into, with the "Munni is with you" bar
   showing), and in Ask Munni's "still stuck? Munni calls", which the same
-  switch allows and the same notice names. Nothing else
+  switch allows and the same notice names; and Teach Munni's explanation,
+  under the same reading terms (v2). Nothing else
   ever sends a voice. Keep it true, and keep saying so in both languages.
 - **A tutor, not a companion.** Bounded, task-scoped.
 - **Every child-facing string ships in Hindi and English.**
 
 ## Testing
 
-`npm test` runs 38 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 39 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -992,6 +1085,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `speech` | vm + HTTP + jsdom | Sarvam against a stand-in: verbatim mode, Hindi, the key on the server only, nothing kept, consent, bogus recordings refused, per-address limit, honest 503, an OpenAI-compatible service; Munni's live voice (Bulbul, slow, cached, short lines only); in the app: no terms without a voice server, the bilingual terms at onboarding kept with version and time, online → Sarvam even with a recognizer on the phone, the slip named, **say it with Munni** (the word in pieces in Sarvam's voice, the child says it, checked, praised; two tries then let go kindly; help not evidence), offline → the on-device recognizer and nothing sent, withdrawn → nothing sent, no answer → the honest message; on a call the word in pieces; the narration builder |
 | `syllabus` | vm + HTTP + jsdom | the server against a stand-in Gemini (key in a header on the server only, the PDF and the band's rules and schema in the request, the older field names, 503 with no key, the school key, PDF/photo only, a limit per address, the repair round with the checker's reasons, the voice server's `POST /syllabus`); the class sync carries lessons from the teacher's key only; the phone's checks (a good maths and reading lesson pass; a wrong sum, an answer not in the passage, markup, over the band's ceiling, an undrawable beat, an unequal share, non-Devanagari Hindi, a non-number maths answer all fail with a reason; idempotent; shuffled); in the app: draft → one repaired, one "not used" → approve → remove; offline honest; the child's "From your school" (EN/HI), played, never rewritten, evidence for its skill; an edited lesson not shown; the sync sends them |
 | `geometry` | vm + jsdom | answers read off the drawing (sides, corners, names, perimeter, equal sides, the centre, corner kinds, a numbered row, the odd one out), in English and Hindi; the checker rejects a wrong marked answer, a disagreeing Hindi answer, two right answers, a figure that doesn't say what it asks, an equal-sided "rectangle", an impossible triangle, a row with two matches, a number over the ceiling, an undrawable shape; the 27 built-in lessons pass, a question's picture is never named or measured aloud, Ask Munni's hint never says the answer, clean SVGs, labels hidden while counting, no shape question in the games, drafted fields sanitised; in the app: the picture stays on screen during the question, the answer counts for the skill, Ask Munni's how-to-look help, a drafted shape lesson checked against its drawing |
+| `teachback` | vm + HTTP + jsdom | every built-in aim passes its check; the checker rejects a question or hint that gives the explanation, no Hindi, markup; the offline judge (covered/partly/missing/unsure, EN/HI/romanised, Devanagari digits); Munni's sum for every skill, three ages, many sums: never the right answer in her working, a real named mistake, the right option there; the child's own habit acted out; a whole session (hints, "later", never "wrong", unsure costs nothing, one explanation teaching two aims, the first tap as evidence and an agreed mistake into the twin, a nudged tap not); what is kept; "forgot again" asks only the gaps; the judge's credit needs a real quote of the child; Gemini's school aims cleaned, inside the lesson's id, idempotent; the judge against a stand-in Gemini (key in a header, schema, the server's own aim text not the phone's, words as data, fix ideas from the mistake id, downgrade, 403/400, no key → no judge, failing Gemini → no judge, per-address limit) and through the voice server with a stand-in speech service; in the app: the end-of-lesson button, chips, Munni's sum, the summary, learn it again, "Munni forgot again", the parent's "How … explains" (EN/HI), the teacher's results per aim, the class mirror and sync carrying only ids and c/p/g; with a voice server: nothing sent on v1 terms, the new terms offered, then the recording and typed words judged with no name, an unquoted credit refused; no button for 3–4 |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -1114,6 +1208,19 @@ Honest edges of what's built:
    paraphrase can fail. They reach other phones only through the class
    sync (no lesson code by hand yet), and serverless hosts may time out
    on a long PDF — the voice server's `POST /syllabus` has no such limit.
+14. **Teach Munni is new and untested on real children.** The judge (Gemini
+   on a transcript) is tested against a stand-in; whether it judges a
+   seven-year-old's Hinglish fairly needs real recordings first (try ten
+   before a demo). The offline rubric only knows the words an aim lists,
+   so it misses a correct explanation in other words (it says "partly" or
+   "missing" and Munni hints — never "wrong"), and a child who says the
+   key word in a muddled sentence can pass it. Audio is written down by the
+   reading check's speech service before Gemini sees it (the voice server
+   only); sending audio straight to Gemini isn't built. Built-in aims cover
+   four maths topics; reading topics get aims only from school lessons.
+   The explained points travel with the class sync, not in progress codes.
+   On calls there is no Teach Munni yet (a `teach` slot in `planSession()`
+   would suit a voice-only phone).
 
 ## Style
 

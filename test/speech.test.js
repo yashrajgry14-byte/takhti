@@ -128,7 +128,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     check('onboarding ends with the grown-ups\' reading terms: Sarvam, what is checked, nothing kept, how to withdraw — in Hindi and English, one "I agree", no switch',
       /How Munni listens to reading|मुन्नी पढ़ना कैसे सुनती है/.test(app.terms) && /Sarvam/.test(app.terms) && /recording is not kept/.test(app.terms) && /रिकॉर्डिंग रखी नहीं जाती/.test(app.terms) && /withdraw/.test(app.terms) && /I agree|सहमत हूँ/.test(app.terms),
       app.terms.slice(0, 400));
-    check('…and the agreement is kept with its version and time', app.E(`S.voiceTerms && S.voiceTerms.v`) === 1 && !!app.E(`S.voiceTerms.at`), app.E(`JSON.stringify(S.voiceTerms)`));
+    check('…and the agreement is kept with its version and time', app.E(`S.voiceTerms && S.voiceTerms.v`) === app.E(`VOICE_TERMS_V`) && !!app.E(`S.voiceTerms.at`), app.E(`JSON.stringify(S.voiceTerms)`));
     // 2. online: Sarvam hears it, even when the phone has its own recognizer
     app.E(`STT_LOCAL.hi = 'available'`);
     await readLine(app, 'मेरा भाई घर गया।');

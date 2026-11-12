@@ -79,6 +79,11 @@ const SCHEMA = {
         ic:{ type:'string', description:'One emoji.' },
         skill:{ type:'string', description:'One id from the skill list, or "".' },
         source:{ type:'string', description:'Where in the chapter this comes from (page, heading, exercise).' },
+        aims:{ type:'array', description:'2–3 points the child should be able to explain afterwards (Teach Munni).', items:{
+          type:'object',
+          properties:{ short: bi, point: bi, forget: bi, hints:{ type:'array', items: bi },
+            ideas:{ type:'array', items:{ type:'object', properties:{ en:{ type:'string' }, hi:{ type:'string' }, words:{ type:'array', items:{ type:'string' } } }, required:['en','hi','words'] } } },
+          required:['short','point','forget','hints','ideas'] } },
         beats:{ type:'array', items:{
           type:'object',
           properties:{
@@ -140,6 +145,7 @@ Hard rules — a checker rejects any lesson that breaks one:
 8. Plain text only: no markup, no brackets of code, no links. ic and art are a single emoji.
 9. skill: the id from this list that the lesson practises, or "" if none fits: ${skills.length ? skills.map(s => `${s.id} (${s.en})`).join('; ') : '(none given)'}.
 10. source: where in the chapter it comes from.
+11. aims: 2–3 points a child should be able to EXPLAIN afterwards, to Munni the elephant, who pretends she forgot. For each: short (a 2–4 word name), point (what the child can explain, as a teacher would write it), forget (Munni's puzzled question that makes the child explain it — it must NOT contain the explanation), hints (exactly 2 gentle nudges that also do NOT give the explanation), ideas (1–2 things a full explanation says, each with "words": 4–15 words or short phrases a child might use for it, in English, Hindi in Devanagari and romanised Hindi). Munni's lines are spoken to the child: warm, short, "तुम" in Hindi.
 ${note ? `The teacher's note: "${note}"` : ''}
 Answer with JSON only, in the given schema.`;
 }

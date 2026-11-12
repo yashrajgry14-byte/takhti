@@ -19,7 +19,7 @@ tracing to writing, counting to carrying, tables and BODMAS.
 school's own syllabus have started: a teacher uploads a chapter, Gemini
 drafts the week's lessons, Takhti checks every one.
 
-**Build status:** web prototype on `main` (offline shell `takhti-v42`, 38 test
+**Build status:** web prototype on `main` (offline shell `takhti-v43`, 39 test
 suites); the voice server has had its first live Bolna call. The Android app
 ports the same logic to Kotlin (`ANDROID.md`).
 
@@ -87,6 +87,17 @@ child sees. → `api/syllabus.mjs`, `src/core/syllabus.js`
 A help button on every question: Munni breaks it down the way a teacher would
 — make ten, tens then ones, borrow a ten, a hard word in pieces — and never
 says the answer. Still stuck? Munni calls, inside the app.
+
+### Teach Munni
+Elephants never forget — but Munni does, on purpose. After a lesson she
+forgets its aims and the child teaches them back, out loud, while each aim's
+chip turns green. For a sum, Munni makes the child's own habitual mistake and
+the child catches it and explains it. Two hints at most, then "we'll figure it
+out together later"; the gap is taught again the child's way and Munni forgets
+it again. Online, Gemini judges which aims the explanation covered and must
+quote the child for each; offline, Takhti's own rubric does. Parents see how
+their child explains; the teacher sees which aims the class could explain.
+→ `src/core/teachback.js`, `src/ui/teach-munni.js`, `api/teachback.mjs`
 
 ### Munni on a phone call — Bolna
 For children with no smartphone or data, Munni calls at the family's chosen

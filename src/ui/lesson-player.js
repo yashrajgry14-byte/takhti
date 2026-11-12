@@ -353,7 +353,7 @@ function lessonHTML(){
   <div class="row" style="margin-top:12px;gap:6px;">
     <button class="btn ghost" onclick="lesNarrate()">🔊 ${t('hear')}</button>
     ${last
-      ? `<button class="btn leaf" onclick="endLesson()">${S.lang==='hi'?'हो गया ⭐':'Done ⭐'}</button>`
+      ? `${typeof teachLessonButtonHTML === 'function' ? teachLessonButtonHTML(les) : ''}<button class="btn ${typeof teachUnitFor === 'function' && teachUnitFor(les) ? 'ghost' : 'leaf'}" onclick="endLesson()">${S.lang==='hi'?'हो गया ⭐':'Done ⭐'}</button>`
       : `<button class="btn" onclick="lesNext()">${t('next')} →</button>`}
   </div>`;
 }
@@ -399,6 +399,7 @@ function lessonListHTML(){
   ` : ''}
 
   ${schoolLessonsHTML()}
+  ${typeof teachAgainHTML === 'function' ? teachAgainHTML() : ''}
 
   <div class="muted">${S.lang==='hi'
     ? `हर कहानी तुम्हारे ${g.hi} से बनी है।`

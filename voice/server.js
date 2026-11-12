@@ -13,6 +13,7 @@
    The app (synced)        POST /circle/sync             parent's tick + this phone's key
    The app (reading)       POST /reading/asr             the reading terms; one line written down, nothing kept
    The teacher view        POST /syllabus                a chapter → Gemini's draft lessons (api/syllabus.mjs), checked on the phone
+   The app (Teach Munni)   POST /teach/judge             the terms; an explanation written down, then judged by Gemini; nothing kept
                            POST /reading/tts             Munni says a short teaching line (Sarvam / ElevenLabs)
    The circle's grown-ups  GET  /circle/p|t|c/:token     unguessable link (parent, tutor, class teacher)
    Families                GET  /voice/card/:session     unguessable link
@@ -35,7 +36,7 @@ const { createScheduler } = require('./schedule');
 const { buildCorpus, corpusCsv } = require('./corpus');
 const CP = require('./circle-pages');
 const P = require('./pages');
-const { createAsr } = require('./asr');
+const { createAsr, transcribe } = require('./asr');
 
 /* tiny .env loader so `node voice/server.js` just works */
 (function loadEnv() {
@@ -205,6 +206,20 @@ function createServer(opts) {
         const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
         const { draftCore } = await import('../api/syllabus.mjs');
         const r = await draftCore(await readBody(req, 5 * 1024 * 1024), env, ip, opts.fetch || fetch);
+        return send(res, r.status, r.json);
+      }
+
+      /* ---- Teach Munni: the child's explanation, written down (voice/asr.js) and judged by Gemini (api/teachback.mjs) ---- */
+      if (p === '/teach/judge') {
+        res.setHeader('Access-Control-Allow-Origin', env.TAKHTI_APP_ORIGIN || '*');
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+        if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
+        const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+        const { judgeCore } = await import('../api/teachback.mjs');
+        const hear = (buf, mime, lang) => transcribe(buf, mime, lang, env);
+        const r = await judgeCore(await readBody(req, 2.2 * 1024 * 1024), env, ip, opts.fetch || fetch, hear);
         return send(res, r.status, r.json);
       }
 
