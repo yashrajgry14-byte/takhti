@@ -314,7 +314,7 @@ child sees.
   rules (number ceiling, word limit — sent by the phone from `ages.js`),
   the beat types the player can draw and their limits, the arithmetic rule,
   both languages, the class's skill ids, the note — and asks Gemini
-  (`GEMINI_API_KEY`, `GEMINI_MODEL`, default `gemini-3.5-flash`) for JSON in
+  (`GEMINI_API_KEY`, `GEMINI_MODEL`, default `gemini-3.8-flash`) for JSON in
   Takhti's lesson schema (structured output; one retry with the older field
   names). A PDF or photo goes as `inline_data`. `mode:'repair'` sends
   rejected lessons back with the checker's reasons. Drafts only; the key

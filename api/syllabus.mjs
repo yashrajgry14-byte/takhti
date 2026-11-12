@@ -26,7 +26,7 @@
    → { lessons:[…raw drafts…], chapter, model }
 
    Keys stay here: GEMINI_API_KEY (or GOOGLE_API_KEY), GEMINI_MODEL
-   (default gemini-3.5-flash). TAKHTI_SYLLABUS_KEY, if set, is a school
+   (default gemini-3.8-flash). TAKHTI_SYLLABUS_KEY, if set, is a school
    password the teacher view must send. Works as a Netlify function
    (Request → Response), with the Vercel-style (req, res) signature
    api/ask.js uses, and inside the voice server (voice/server.js,
@@ -139,7 +139,7 @@ function repairInstructions(rules){
 
 async function callGemini(parts, system, env, fetchImpl){
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
-  const model = env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const model = env.GEMINI_MODEL || 'gemini-3.8-flash';
   const url = `${env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   const base = { systemInstruction:{ parts:[{ text: system }] }, contents:[{ role:'user', parts }] };
   // the current structured-output field first; older deployments of the API
