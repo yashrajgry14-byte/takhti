@@ -49,7 +49,8 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
 
 (async () => {
   /* ---------- 1. the server ---------- */
-  const { draftCore } = await import(path.join(root, 'api/syllabus.mjs'));
+  const { pathToFileURL } = require('url');                   // a bare C:\ path isn't an import specifier on Windows
+  const { draftCore } = await import(pathToFileURL(path.join(root, 'api/syllabus.mjs')).href);
   const calls = [];
   const gemini = reply => async (url, o) => {
     const body = JSON.parse(o.body);
@@ -75,6 +76,20 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     : { ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[MATH] }) }] } }] }) }; };
   const r2 = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, env, '1.1.1.2', old);
   check('an API that only knows the older structured-output fields still works (one retry)', r2.status === 200 && calls.length === 2 && !!calls[1].generationConfig.responseJsonSchema, JSON.stringify(r2).slice(0, 200));
+  calls.length = 0;
+  const busyThen = async (url, o) => { calls.push({ url }); return /gemini-test:/.test(url)
+    ? { ok:false, status:503, json: async () => ({ error:{ message:'The model is overloaded' } }) }
+    : { ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[MATH] }) }] } }] }) }; };
+  const rb = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1 }, '1.1.1.8', busyThen);
+  check('Google says the model is busy (503): one more try, then the lighter fallback model answers', rb.status === 200 && rb.json.model === 'gemini-3.5-flash-lite'
+    && calls.filter(c => /gemini-test:/.test(c.url)).length === 2 && /flash-lite:/.test(calls[calls.length - 1].url), JSON.stringify(calls.map(c => c.url.split('/').pop())));
+  const allBusy = async () => ({ ok:false, status:503, json: async () => ({}) });
+  const rz = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1 }, '1.1.1.9', allBusy);
+  check('…and when every model is busy, an honest "busy right now"', rz.status === 502 && /busy right now/.test(rz.json.error), JSON.stringify(rz));
+  const big = Buffer.alloc(5 * 1024 * 1024, 7).toString('base64');
+  const r413 = await draftCore({ chapter:{ file: big, mime:'application/pdf' }, rules }, env, '1.1.2.1', gemini({ lessons:[] }));
+  const r12 = await draftCore({ chapter:{ file: big, mime:'application/pdf' }, rules }, { ...env, TAKHTI_SYLLABUS_MAX_MB: 12 }, '1.1.2.2', gemini({ lessons:[] }));
+  check('a 5 MB chapter: refused at the serverless default (3.4 MB, saying so), taken where the limit is 12 MB (the voice server)', r413.status === 413 && r413.json.maxMb === 3.4 && r12.status === 200, JSON.stringify([r413.status, r12.status, r12.json]));
   check('no Gemini key on the server: an honest 503', (await draftCore({ chapter:{ text:'x'.repeat(50) }, rules }, {}, '1.1.1.3', gemini({ lessons:[] }))).status === 503, '');
   check('a school key, when the server sets one, is required', (await draftCore({ chapter:{ text:'x'.repeat(50) }, rules }, { ...env, TAKHTI_SYLLABUS_KEY:'school-1' }, '1.1.1.4', gemini({ lessons:[] }))).status === 403
     && (await draftCore({ chapter:{ text:'x'.repeat(50) }, rules, schoolKey:'school-1' }, { ...env, TAKHTI_SYLLABUS_KEY:'school-1' }, '1.1.1.4', gemini({ lessons:[] }))).status === 200, '');
@@ -102,7 +117,7 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   vs.close();
 
   /* ---------- 4 (server half). the class sync carries the lessons ---------- */
-  const { syncCore } = await import(path.join(root, 'api/class-sync.mjs'));
+  const { syncCore } = await import(pathToFileURL(path.join(root, 'api/class-sync.mjs')).href);
   const mem = new Map(), store = { get: async k => mem.get(k) || null, setJSON: async (k, v) => mem.set(k, JSON.parse(JSON.stringify(v))) };
   const pack = { items:[{ id:'sch-abc12', band:'developing', beats:[{ t:'intro' }] }], at: 1000 };
   await syncCore(store, { code:'CLS001', teacherKey:'k'.repeat(32), lessons: pack });

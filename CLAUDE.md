@@ -81,7 +81,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v43` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v44` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -305,8 +305,10 @@ child sees.
 
 - **The teacher view** (`syllabusHTML()`, a card under the homework): pick
   the class (Nursery/KG → Class 5, `SYL_CLASSES` → the age band and the
-  grade of its skills), a PDF or a photo of the page (`sylPickFile()`, ≤ 3.4
-  MB) or the pasted text, how many lessons (2–5), an optional note.
+  grade of its skills), a PDF or a photo of the page (`sylPickFile()`, ≤ 12
+  MB on the phone; the server says its own limit — 3.4 MB on a serverless
+  host, 12 MB on the voice server, `TAKHTI_SYLLABUS_MAX_MB` — and a 413
+  names it) or the pasted text, how many lessons (2–5), an optional note.
   *Draft this week's lessons* → `sylDraft()`. Needs a signal; offline says
   so. A school key field appears when the server asks for one (403).
 - **The server** (`api/syllabus.mjs`, `draftCore()`; a Netlify/Vercel
@@ -317,7 +319,10 @@ child sees.
   both languages, the class's skill ids, the note — and asks Gemini
   (`GEMINI_API_KEY`, `GEMINI_MODEL`, default `gemini-3.8-flash`) for JSON in
   Takhti's lesson schema (structured output; one retry with the older field
-  names). A PDF or photo goes as `inline_data`. `mode:'repair'` sends
+  names). Google saying the model is busy (503/429) gets one more try a
+  moment later, then the lighter `GEMINI_FALLBACK_MODEL`
+  (`gemini-3.5-flash-lite`; `none` switches it off), which a 404 also moves
+  to; all busy → "Gemini is busy right now". A PDF or photo goes as `inline_data`. `mode:'repair'` sends
   rejected lessons back with the checker's reasons. Drafts only; the key
   never leaves the server; `TAKHTI_SYLLABUS_KEY` (optional school password)
   and a per-address hourly limit.
@@ -1118,8 +1123,12 @@ Honest edges of what's built:
    yet); a
    reading answer counts as "in the passage" by shared words, which a
    paraphrase can fail. They reach other phones only through the class
-   sync (no lesson code by hand yet), and serverless hosts may time out
-   on a long PDF — the voice server's `POST /syllabus` has no such limit.
+   sync (no lesson code by hand yet). Serverless hosts cap a chapter at
+   3.4 MB and may time out on a long PDF — NCERT chapters are often 5–10 MB,
+   so use the voice server's `POST /syllabus` (12 MB, no time limit); past
+   that, the Gemini Files API would be next. The first live runs (12 Nov
+   2026) found `gemini-3.8-flash` overloaded (503) for an hour, hence the
+   fallback.
 
 ## Style
 

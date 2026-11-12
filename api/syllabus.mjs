@@ -26,7 +26,8 @@
    → { lessons:[…raw drafts…], chapter, model }
 
    Keys stay here: GEMINI_API_KEY (or GOOGLE_API_KEY), GEMINI_MODEL
-   (default gemini-3.8-flash). TAKHTI_SYLLABUS_KEY, if set, is a school
+   (default gemini-3.8-flash; GEMINI_FALLBACK_MODEL, default
+   gemini-3.5-flash-lite, when that one is busy). TAKHTI_SYLLABUS_KEY, if set, is a school
    password the teacher view must send. Works as a Netlify function
    (Request → Response), with the Vercel-style (req, res) signature
    api/ask.js uses, and inside the voice server (voice/server.js,
@@ -35,7 +36,12 @@
 
 const BANDS = ['pre', 'early', 'developing', 'fluent'];
 const FILE_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
-const MAX_TEXT = 30000, MAX_FILE_B64 = 4.6 * 1024 * 1024, MAX_BODY = 5 * 1024 * 1024;
+const MAX_TEXT = 30000;
+/* A chapter's PDF, in MB. Serverless hosts cap a request near 6 MB, so 3.4 by
+   default; the voice server has no such cap and sets 12 (TAKHTI_SYLLABUS_MAX_MB).
+   Gemini takes up to 20 MB inline per request — 12 MB of PDF is ~16 MB encoded. */
+const maxMb = env => Math.min(14, Math.max(1, Number(env.TAKHTI_SYLLABUS_MAX_MB) || 3.4));
+const maxB64 = env => Math.ceil(maxMb(env) * 1024 * 1024 * 4 / 3) + 1024;
 const BEAT_TYPES = ['intro','count','add','take','group','line','array','share','bar','frac','figure','corner','figures','passage','word','readline','ask','win'];
 const SKILL = /^[a-z0-9-]{1,24}$/;
 const HITS = new Map();
@@ -152,10 +158,15 @@ function repairInstructions(rules){
   return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Return each lesson fixed — same topic, same format, same aims, every reason addressed — and change nothing else. If a reason says the answer was said just before a question, change the narration (or ask about a new example), not the answer. Numbers at most ${rules.maxNumber}; every say and q at most ${rules.sayWords} words in Hindi; a maths answer must equal what the beat before it computes; a reading answer must use the passage's words; exactly 2 options; English and Devanagari Hindi everywhere; plain text only. Answer with JSON only, in the given schema.`;
 }
 
+const wait = ms => new Promise(r => setTimeout(r, ms));
 async function callGemini(parts, system, env, fetchImpl){
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
-  const model = env.GEMINI_MODEL || 'gemini-3.8-flash';
-  const url = `${env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  // the chosen model, then a lighter one when Google says it's busy (503/429)
+  // or doesn't know the model (404) — GEMINI_FALLBACK_MODEL, 'none' to switch off
+  const primary = env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const fallback = env.GEMINI_FALLBACK_MODEL === 'none' ? null : (env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite');
+  const models = [primary].concat(fallback && fallback !== primary ? [fallback] : []);
+  const urlFor = m => `${env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(m)}:generateContent`;
   const base = { systemInstruction:{ parts:[{ text: system }] }, contents:[{ role:'user', parts }] };
   // the current structured-output field first; older deployments of the API
   // take responseMimeType/responseJsonSchema — one retry covers both
@@ -165,14 +176,23 @@ async function callGemini(parts, system, env, fetchImpl){
   ];
   const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), Number(env.TAKHTI_SYLLABUS_TIMEOUT_MS || 55000));
   try{
-    let res, d;
-    for(const shape of shapes){
-      res = await fetchImpl(url, { method:'POST', signal: ctl.signal,
-        headers:{ 'content-type':'application/json', 'x-goog-api-key': key }, body: JSON.stringify({ ...base, ...shape }) });
-      d = await res.json().catch(() => ({}));
-      if(res.status !== 400) break;
+    let res, d, model;
+    const busy = s => s === 503 || s === 429;
+    models: for(model of models){
+      for(const shape of shapes){
+        for(let attempt = 0; attempt < 2; attempt++){
+          res = await fetchImpl(urlFor(model), { method:'POST', signal: ctl.signal,
+            headers:{ 'content-type':'application/json', 'x-goog-api-key': key }, body: JSON.stringify({ ...base, ...shape }) });
+          d = await res.json().catch(() => ({}));
+          if(!busy(res.status)) break;
+          if(attempt === 0) await wait(Number(env.TAKHTI_SYLLABUS_RETRY_MS || 1500));   // once more, a moment later
+        }
+        if(res.ok) break models;
+        if(busy(res.status) || res.status === 404) continue models;                  // busy, or no such model: the next one
+        if(res.status !== 400) break models;                                          // 400: the other request shape
+      }
     }
-    if(!res.ok) return { error:`Gemini said ${res.status}`, status: 502 };
+    if(!res.ok) return { error: busy(res.status) ? 'Gemini is busy right now — try again in a few minutes' : `Gemini said ${res.status}`, status: 502 };
     const text = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('').replace(/```json|```/g, '').trim();
     let out;
     try{ out = JSON.parse(text); }catch(e){ return { error:'Gemini did not answer in the lesson format', status: 502 }; }
@@ -207,8 +227,10 @@ export async function draftCore(body, env, ip, fetchImpl){
     const mime = String(ch.mime || '');
     if(!FILE_TYPES.includes(mime)) return { status:400, json:{ error:'a PDF or a photo (PNG, JPEG, WebP) of the chapter' } };
     const b64 = String(ch.file);
-    if(b64.length > MAX_FILE_B64) return { status:413, json:{ error:'that file is too big — send one chapter, or a few pages' } };
-    if(!/^[A-Za-z0-9+/=]{100,}$/.test(b64)) return { status:400, json:{ error:'that file could not be read' } };
+    if(b64.length > maxB64(env)) return { status:413, json:{ error:`that file is too big for this server (up to ${maxMb(env)} MB) — send one chapter, or fewer pages`, maxMb: maxMb(env) } };
+    // look for one bad character rather than matching the whole string: a
+    // whole-string pattern overflows the stack on a multi-megabyte chapter
+    if(b64.length < 100 || /[^A-Za-z0-9+/=]/.test(b64)) return { status:400, json:{ error:'that file could not be read' } };
     parts.push({ inline_data:{ mime_type: mime, data: b64 } });
   }
   const text = plain(ch.text, MAX_TEXT).trim();
@@ -241,7 +263,7 @@ export default async function handler(req, res){
     if(vercel) body = req.body;
     else {
       const text = await req.text();
-      if(text.length > MAX_BODY) return reply(413, { error:'too large' });
+      if(text.length > Math.max(5 * 1024 * 1024, maxB64(process.env) + 512 * 1024)) return reply(413, { error:'too large' });
       body = JSON.parse(text);
     }
   }catch(e){ return reply(400, { error:'bad JSON' }); }

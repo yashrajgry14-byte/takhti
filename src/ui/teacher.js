@@ -294,7 +294,7 @@ async function sylPickFile(input){
   const f = input.files && input.files[0];
   if(!f) return;
   const hi = S.lang === 'hi';
-  if(f.size > 3.4 * 1024 * 1024){ S.ctx.sylMsg = hi ? 'फ़ाइल बहुत बड़ी है — एक अध्याय या कुछ पन्ने भेजें।' : 'That file is too big — send one chapter, or a few pages.'; S.ctx.sylFile = null; return render(); }
+  if(f.size > 12 * 1024 * 1024){ S.ctx.sylMsg = hi ? 'फ़ाइल बहुत बड़ी है — एक अध्याय या कुछ पन्ने भेजें।' : 'That file is too big — send one chapter, or a few pages.'; S.ctx.sylFile = null; return render(); }
   try{
     S.ctx.sylFile = { name: f.name, mime: f.type, b64: await sylReadFile(f) };
     S.ctx.sylMsg = '';
@@ -318,6 +318,7 @@ async function sylGo(){
     c.sylNeedKey = e.status === 403;
     c.sylMsg = e.status === 503 ? (hi ? 'इस सर्वर पर Gemini अभी चालू नहीं है।' : "Gemini isn't set up on this server yet.")
              : e.status === 403 ? (hi ? 'इस सर्वर के लिए स्कूल की कुंजी चाहिए — नीचे डालें और फिर कोशिश करें।' : 'This server needs the school key — enter it and try again.')
+             : e.status === 413 ? (hi ? `फ़ाइल इस सर्वर के लिए बड़ी है${e.maxMb ? ` (${e.maxMb} MB तक)` : ''} — सिर्फ़ अध्याय के पन्ने भेजें।` : `That file is too big for this server${e.maxMb ? ` (up to ${e.maxMb} MB)` : ''} — send just the chapter's pages.`)
              : e.status === 429 ? (hi ? 'अभी के लिए बहुत हो गया — थोड़ी देर बाद कोशिश करें।' : 'That is enough for now — try again in a while.')
              : (hi ? 'Gemini तक नहीं पहुँच पाए — थोड़ी देर में फिर कोशिश करें।' : "Couldn't reach Gemini — try again shortly.");
     log(2, `Syllabus · not drafted (${e.message})`);

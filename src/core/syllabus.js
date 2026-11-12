@@ -240,7 +240,7 @@ async function sylDraft(input){
     const res = await fetch(SYL_URL, { method:'POST', headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ ...body, rules, schoolKey: S.ctx.sylKey || undefined }) });
     const d = await res.json().catch(() => ({}));
-    if(!res.ok) throw Object.assign(new Error(d.error || ('HTTP ' + res.status)), { status: res.status });
+    if(!res.ok) throw Object.assign(new Error(d.error || ('HTTP ' + res.status)), { status: res.status, maxMb: d.maxMb });
     return d;
   };
   const d = await post({ mode:'draft', chapter: input.chapter, count: input.count, skills, note: input.note });
