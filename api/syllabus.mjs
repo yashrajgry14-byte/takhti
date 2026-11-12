@@ -36,7 +36,7 @@
 const BANDS = ['pre', 'early', 'developing', 'fluent'];
 const FILE_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
 const MAX_TEXT = 30000, MAX_FILE_B64 = 4.6 * 1024 * 1024, MAX_BODY = 5 * 1024 * 1024;
-const BEAT_TYPES = ['intro','count','add','take','group','line','array','share','bar','frac','passage','word','readline','ask','win'];
+const BEAT_TYPES = ['intro','count','add','take','group','line','array','share','bar','frac','figure','corner','figures','passage','word','readline','ask','win'];
 const SKILL = /^[a-z0-9-]{1,24}$/;
 const HITS = new Map();
 
@@ -86,7 +86,13 @@ const SCHEMA = {
             say: bi, a:{ type:'integer' }, b:{ type:'integer' }, n:{ type:'integer' }, hops:{ type:'integer' },
             p: bi, art:{ type:'string' }, w:{ type:'string' }, text:{ type:'string' },
             q: bi, opts:{ type:'array', items:{ type:'string' } }, hiOpts:{ type:'array', items:{ type:'string' } },
-            correct:{ type:'integer' }
+            correct:{ type:'integer' },
+            kind:{ type:'string', enum:['square','rectangle','triangle','circle'] }, s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' },
+            sides:{ type:'array', items:{ type:'integer' } }, folds:{ type:'integer' }, deg:{ type:'integer' },
+            ask:{ type:'string', enum:['name','sides','corners','perimeter','equal','meet','kind'] },
+            items:{ type:'array', items:{ type:'object', properties:{ kind:{ type:'string', enum:['square','rectangle','triangle','circle','corner'] },
+              s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' }, sides:{ type:'array', items:{ type:'integer' } }, deg:{ type:'integer' } }, required:['kind'] } },
+            find:{ type:'string', enum:['square','rectangle','triangle','circle','squarecorner','odd'] }
           },
           required:['t']
         } }
@@ -116,15 +122,20 @@ Every lesson is a list of "beats" the app draws on screen with the child's favou
 - word {w, art}: one word to read.
 - readline {text}: one sentence for the child to read aloud.
 - ask {q, opts, hiOpts, correct}: a question with exactly 2 options; correct is the index of the right one.
+- figure {kind, s | w,h | sides, folds, ask}: Takhti draws one shape — a square (side s), a rectangle (w by h, w and h different), a triangle (sides [a,b,c]) or a circle (folds = 0–4 fold lines through the middle). Side lengths are labelled. Without ask it is for teaching (corners are marked); with ask, the very next beat is a question about it: ask = name | sides | corners | perimeter | equal (are all sides equal? Yes/No) | meet (where the folds meet: Centre, needs 2+ folds).
+- corner {deg, ask}: Takhti draws one corner of deg degrees (20–160). With ask:"kind" the next question's answer is "Square corner", "Smaller corner" or "Bigger corner" (square = 90).
+- figures {items, find}: 2–4 shapes or corners in a row, numbered 1–4 (an item is {kind, s|w,h|sides} or {kind:"corner", deg}). find = square | rectangle | triangle | circle | squarecorner | odd; exactly one must match, and the next question's answer is its NUMBER.
 - win {say}: the closing line — the one idea to remember.
 
 Hard rules — a checker rejects any lesson that breaks one:
-1. 4 to 8 beats; start with intro or passage; at least one ask; end with win.
+1. 4 to 8 beats; start with intro, passage or a figure; at least one ask; end with win.
 2. A maths ask comes right after the beat that shows it, and its right answer is a number equal to what that beat computes (count → n, add → a+b, take → a−b, group → a, array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Write numbers as digits in opts and hiOpts.
 3. A reading ask comes after a passage/word/readline, and its right answer uses the passage's own words.
+3b. A shape ask comes right after the figure/corner/figures it is about, and its right answer is what that drawing shows. For anything about shapes, sides, corners or perimeter, USE these drawings — never describe a shape only in words.
+3c. Never say the answer in the lines just before a question: the child works it out from the picture or the numbers. Where you can, ask two questions — one to recognise, one to apply to something new.
 4. The wrong option is a mistake a child really makes (one off, forgot to carry, added instead of subtracting, a detail from the wrong sentence) — never silly, never equal to the right one.
 5. Every number a child meets is at most ${rules.maxNumber}.
-6. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; never scold, never the word "wrong".
+6. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; speak to the child as "तुम", never "आप"; never scold, never the word "wrong".
 7. title, sub, say, q, p are objects with natural English "en" AND natural Hindi "hi" in Devanagari (not transliteration). opts are English, hiOpts the same answers in Hindi, same order.
 8. Plain text only: no markup, no brackets of code, no links. ic and art are a single emoji.
 9. skill: the id from this list that the lesson practises, or "" if none fits: ${skills.length ? skills.map(s => `${s.id} (${s.en})`).join('; ') : '(none given)'}.

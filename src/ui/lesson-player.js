@@ -46,6 +46,7 @@ const LES_SAY = {
 function lesSay(b){
   if(typeof litSay === 'function'){ const s = litSay(b); if(s != null) return s; }
   if(typeof compSay === 'function'){ const s = compSay(b); if(s != null) return s; }
+  if(typeof geoSay === 'function'){ const s = geoSay(b); if(s != null) return s; }
   if(b.say) return L(b.say);
   const tpl = LES_SAY[b.t];
   if(!tpl) return '';
@@ -70,6 +71,7 @@ function lesValues(b){
 function lesArt(b, obj){
   if(typeof litArt === 'function'){ const h = litArt(b); if(h) return h; }
   if(typeof compArt === 'function'){ const h = compArt(b); if(h) return h; }
+  if(typeof geoArt === 'function'){ const h = geoArt(b); if(h) return h; }
 
   const dots = (n, cls, delay=0.07, size=24) => [...Array(n)].map((_,i) =>
     `<span class="obj in" style="animation-delay:${(delay*i).toFixed(2)}s;font-size:${size}px">${obj}</span>`).join('');
@@ -303,6 +305,8 @@ function lessonHTML(){
   const last = S.lesson.i >= les.beats.length - 1;
 
   const asking = b.t === 'ask';
+  // a question about a shape keeps the shape on screen — the answer is in the picture
+  const pic = asking && typeof geoPicFor === 'function' ? geoPicFor(les, S.lesson.i) : null;
   const opts = asking ? (S.lang==='hi' ? (b.hiOpts || b.opts) : b.opts) : [];
   if(asking && S.lesson.picked == null && S.lesson.helpedAt !== S.lesson.i && typeof twinExpectLesson === 'function') twinExpectLesson(les, S.lesson.i);
 
@@ -333,7 +337,7 @@ function lessonHTML(){
 
   <div class="lesstage">
     ${b.svg ? b.svg : ''}
-    <div class="lesart">${asking ? `<div class="lesq">${L(b.q)}</div>` : lesArt(b, obj)}</div>
+    <div class="lesart">${asking ? `${pic ? geoArt(pic) : ''}<div class="lesq">${L(b.q)}</div>` : lesArt(b, obj)}</div>
     ${!asking ? `<div class="lescap">${lesSay(b)}</div>` : ''}
     ${cardRewardHtml}
   </div>

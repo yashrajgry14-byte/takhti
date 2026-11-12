@@ -19,7 +19,7 @@ const LOAD_LIST = ['src/core/matcher.js','src/core/readability.js','src/content/
                 'src/content/games.js','src/content/themes.js','src/content/facts.js','src/content/ages.js',
                 'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
                 'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-                'src/content/comprehension.js','src/core/diagnose.js','src/content/copy.js'];
+                'src/content/comprehension.js','src/content/geometry.js','src/core/diagnose.js','src/content/copy.js'];
 for(const f of LOAD_LIST)
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
 
@@ -45,7 +45,7 @@ vm.runInContext(fs.readFileSync('src/ui/lesson-player.js','utf8'), ctx, {filenam
 
 vm.runInContext(`globalThis.__={generateLessons,validateLesson,CONCEPTS,SKILLS,skillById,
   coverageMatrix,ladderCoverage,contentQueue,
-  compArt,compSay,COMP_CONCEPTS,COMP_BEAT_TYPES,CL,
+  compArt,compSay,COMP_CONCEPTS,COMP_BEAT_TYPES,CL,GEO_CONCEPTS,
   litArt,litSay,
   startLesson,endLesson,lessonHTML,lesArt,lesSay,lessonBank,S};`, ctx);
 const X = ctx.__;
@@ -69,16 +69,17 @@ console.log('lessons  :', lessons.length);
 console.log('rejected :', rejected.length);
 rejected.slice(0,8).forEach(r=>console.log('   ', r.id, '→', r.errors[0]));
 
-check('41 concepts (34 before comprehension.js + 7 new comprehension/grammar concepts)',
-  X.CONCEPTS.length===41, `got ${X.CONCEPTS.length}`);
-check('489 lessons generated', lessons.length===489, `got ${lessons.length}`);
+check('46 concepts (34 before comprehension.js + 7 comprehension/grammar + 5 shape concepts from geometry.js)',
+  X.CONCEPTS.length===46, `got ${X.CONCEPTS.length}`);
+check('516 lessons generated (489 + 27 shape lessons)', lessons.length===516, `got ${lessons.length}`);
 check('0 rejected — every generated comprehension/grammar lesson passed the validator first try',
   rejected.length===0, `${rejected.length} rejected: ${rejected.slice(0,3).map(r=>r.id+' → '+r.errors[0]).join(' | ')}`);
 
 const comp = lessons.filter(l => X.COMP_CONCEPTS.some(c=>c.id===l.concept));
-console.log('comprehension/grammar lessons:', comp.length);
-check('comprehension.js\'s 7 concepts account for every lesson beyond the pre-existing 467',
-  comp.length === lessons.length - 467, `got ${comp.length}, expected ${lessons.length-467}`);
+const geoLes = lessons.filter(l => X.GEO_CONCEPTS.some(c=>c.id===l.concept));
+console.log('comprehension/grammar lessons:', comp.length, '· shape lessons:', geoLes.length);
+check('comprehension.js\'s 7 concepts and geometry.js\'s 5 account for every lesson beyond the pre-existing 467',
+  comp.length + geoLes.length === lessons.length - 467 && geoLes.length === 27, `got ${comp.length} + ${geoLes.length}, expected ${lessons.length-467}`);
 
 console.log('\n=== the last Class 2-3 gaps ===');
 const closedIds = ['e2-compre','e2-noun','e3-compre','e3-verb','e3-para','h3-compre','h3-vyakaran'];

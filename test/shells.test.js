@@ -24,7 +24,7 @@ const COMMON_FILES = ['src/core/matcher.js','src/core/readability.js','src/conte
   'src/content/games.js','src/content/facts.js','src/content/ages.js',
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
   'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-  'src/content/comprehension.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'];
+  'src/content/comprehension.js','src/content/geometry.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'];
 
 const loadCheck = verifyLoadListHasAllContent(COMMON_FILES, 'src/core/diagnose.js');
 check("this file's own COMMON_FILES includes every content/*.js file index.html actually loads before core/diagnose.js",

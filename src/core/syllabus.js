@@ -27,6 +27,10 @@
         AGAIN before a lesson appears (schoolLessons()), so a lesson
         edited on the way is simply not shown.
 
+   Shapes (content/geometry.js) work the same way: a figure, a corner or a
+   numbered row of them, and the question's answer is worked out from the
+   drawing itself.
+
    A child plays them at the Story Fire, under "From your school". Their
    answers count as evidence only for a skill the checker could match.
    ================================================================== */
@@ -114,7 +118,17 @@ function sylClean(raw, opts){
 
   beats.forEach((x, i) => {
     x = x && typeof x === 'object' ? x : {};
-    const t = x.t, fields = SYL_FIELDS[t];
+    const t = x.t;
+    // a shape (content/geometry.js): only what can be drawn; validateLesson()
+    // then checks the question after it against the answer read off the drawing
+    if(GEO_TYPES.includes(t)){
+      const g = geoClean(x);
+      g.errors.forEach(e => errs.push(`beat ${i}: ${e}`));
+      if(x.say){ const s = bi(x.say, `beat ${i}'s narration`, 200); if(s) g.beat.say = s; }
+      les.beats.push(g.beat); lastShown = t; shown = g.beat;
+      return;
+    }
+    const fields = SYL_FIELDS[t];
     if(!fields){ errs.push(`beat ${i}: Takhti can't show a "${t}" beat`); return; }
     const out = { t };
     if(x.say) { const s = bi(x.say, `beat ${i}'s narration`, 200); if(s) out.say = s; }
@@ -160,6 +174,8 @@ function sylClean(raw, opts){
         else if(sylExpect(shown) != null && Number(right) !== sylExpect(shown))
           errs.push(`beat ${i}: marked ${right} right, but the picture before it shows ${sylExpect(shown)}`);
         checks.push('sum');
+      } else if(lastShown && GEO_TYPES.includes(lastShown)){
+        checks.push('shape');                          // validateLesson() reads the answer off the drawing
       } else if(lastShown && SYL_READ.includes(lastShown)){
         out.derived = true;
         const grounded = right != null && (sylGrounded(right, readText) || sylGrounded(hiOpts[out.correct], readText));
@@ -178,7 +194,7 @@ function sylClean(raw, opts){
 
   if(les.beats.length && les.beats[les.beats.length - 1].t !== 'win')
     les.beats.push({ t:'win', say:{ en:'Well done. You learnt it today.', hi:'शाबाश! आज तुमने यह सीख लिया।' } });
-  les.subject = les.beats.some(b => SYL_MATH.includes(b.t)) ? 'math' : 'read';
+  les.subject = les.beats.some(b => SYL_MATH.includes(b.t) || GEO_TYPES.includes(b.t)) ? 'math' : 'read';
   // the right answer isn't always first: a stable shuffle, by the lesson's own content
   const id = 'sch-' + sylHash({ t: les.title, s: les.sub, k: les.skillId, b: les.beats.map(b => ({ ...b, correct: undefined, hiOpts: undefined,
     opts: b.opts && b.opts.slice().sort(), right: b.opts ? b.opts[b.correct] : undefined, hiRight: b.hiOpts ? b.hiOpts[b.correct] : undefined })) });

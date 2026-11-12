@@ -40,7 +40,7 @@ const LOAD_LIST = [
   'src/content/games.js','src/content/themes.js','src/content/facts.js','src/content/ages.js',
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
   'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-  'src/content/comprehension.js','src/core/diagnose.js','src/core/generative-brain.js',
+  'src/content/comprehension.js','src/content/geometry.js','src/core/diagnose.js','src/core/generative-brain.js',
   'src/core/video-library-catalog.js','src/core/cartoon-series.js','src/core/mathgen.js',
   'src/ui/mascot.js','src/ui/lesson-player.js','src/ui/video-player.js'
 ];

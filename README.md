@@ -19,7 +19,7 @@ tracing to writing, counting to carrying, tables and BODMAS.
 school's own syllabus have started: a teacher uploads a chapter, Gemini
 drafts the week's lessons, Takhti checks every one.
 
-**Build status:** web prototype on `main` (offline shell `takhti-v41`, 37 test
+**Build status:** web prototype on `main` (offline shell `takhti-v42`, 38 test
 suites); the voice server has had its first live Bolna call. The Android app
 ports the same logic to Kotlin (`ANDROID.md`).
 
@@ -57,7 +57,9 @@ division. One teacher, thirty children, one way of teaching — and no way to se
 - **A mistake made twice decides the next explanation.**
 
 ### Reading, writing, arithmetic — offline
-Seven places on a jungle map: the Reading Tree (read aloud, graded word by
+Takhti draws shapes too — squares, rectangles, triangles, circles and corners —
+and checks a shape question the way it checks a sum: the answer must be readable
+off the drawing on screen. Seven places on a jungle map: the Reading Tree (read aloud, graded word by
 word), the Sand Patch (trace, or write in a notebook), Counting Stones, the
 Story Fire (story lessons and homework), the Play Clearing (six games), the
 Picture Hut (cartoon episodes for one maths skill each) and Munni's Pond.
@@ -117,7 +119,7 @@ not kept. No streaks, no reminders to children (India's DPDP Act s.9).
 
 ```bash
 npm run dev                                   # the app, on http://localhost:5173
-npm test                                      # 37 test suites
+npm test                                      # 38 test suites
 npm run voice:sim -- --auto --mistakes        # a whole Munni phone call, in the terminal
 ```
 

@@ -35,7 +35,7 @@ const LOAD_LIST = ['src/core/matcher.js','src/core/readability.js','src/content/
                 'src/content/games.js','src/content/themes.js','src/content/facts.js','src/content/ages.js',
                 'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
                 'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-                'src/content/comprehension.js',
+                'src/content/comprehension.js','src/content/geometry.js',
                 'src/core/diagnose.js'];
 for(const f of LOAD_LIST)
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
@@ -93,16 +93,17 @@ console.log(`absorbed (read*/write* duplicates removed from the count): ${cov.ab
 // file loads curriculum-early.js, literacy.js AND comprehension.js, same
 // order as index.html — see the self-check above).
 check('103 skills counted after dedup (126 raw − 23 read/write-absorbed duplicates)', cov.total===103, `got ${cov.total}`);
-check('53% teachable today (55/103) — comprehension.js closes 7 more gaps on top of the 47% (48/103) before it existed',
-  cov.pct===53, `got ${cov.pct}%`);
+check('55% teachable today (57/103) — comprehension.js closed 7 gaps on top of the 47% (48/103), geometry.js 2 more (perimeter, angles)',
+  cov.pct===55 && cov.taught===57, `got ${cov.pct}% (${cov.taught})`);
+check("geometry.js's shape lessons closed perimeter and angles", !cov.gaps.includes('4·perimeter') && !cov.gaps.includes('4·angles'), JSON.stringify(cov.gaps.filter(g => /perimeter|angles/.test(g))));
 check("literacy.js's own concepts closed two PRE-EXISTING maths gaps (shapes2d, time2)",
   !cov.gaps.includes('1·shapes2d') && !cov.gaps.includes('2·time2'),
   JSON.stringify(cov.gaps.filter(g=>/shapes2d|time2/.test(g))));
 check("comprehension.js's own 7 concepts closed their matching gaps (e2-compre, e2-noun, e3-compre, e3-verb, e3-para, h3-compre, h3-vyakaran) — this is the exact drift the stale version of this file missed",
   ['2·e2-compre','2·e2-noun','3·e3-compre','3·e3-verb','3·e3-para','3·h3-compre','3·h3-vyakaran'].every(g => !cov.gaps.includes(g)),
   JSON.stringify(cov.gaps.filter(g=>/compre|e2-noun|e3-verb|e3-para|vyakaran/.test(g))));
-check('48 content gaps remain — dedup never changes gaps, since an absorbed skill is by definition already taught',
-  cov.gaps.length===48, `got ${cov.gaps.length}: ${JSON.stringify(cov.gaps)}`);
+check('46 content gaps remain — dedup never changes gaps, since an absorbed skill is by definition already taught',
+  cov.gaps.length===46, `got ${cov.gaps.length}: ${JSON.stringify(cov.gaps)}`);
 check('e1-decode and u-blend (curriculum-early.js\'s own decoding/blending skills) are absorbed into read2, not double-counted',
   cov.absorbed.includes('e1-decode') && cov.absorbed.includes('u-blend'),
   JSON.stringify(cov.absorbed));

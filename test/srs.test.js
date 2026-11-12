@@ -30,7 +30,7 @@ const LOAD_LIST = [
   'src/content/games.js','src/content/facts.js','src/content/ages.js',
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
   'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-  'src/content/comprehension.js','src/content/themes.js',
+  'src/content/comprehension.js','src/content/geometry.js','src/content/themes.js',
   'src/core/diagnose.js','src/core/srs.js'
 ];
 for(const f of LOAD_LIST){

@@ -204,6 +204,7 @@ function syllabusHTML(code){
   const cls = sylClass(c.sylCls || 'c2');
   const badge = k => ({ sum: hi ? '✓ जवाब गणित से जाँचा' : '✓ answer checked by the arithmetic',
                         text: hi ? '✓ जवाब पाठ में मिला' : '✓ answer found in the passage',
+                        shape: hi ? '✓ जवाब चित्र से जाँचा' : '✓ answer checked against the drawing',
                         teacher: hi ? '👀 यह जवाब आप जाँच लें' : '👀 please check this answer yourself' })[k] || '';
   return `<div class="paper" style="margin-top:12px">
     <div class="kicker2">📚 ${hi ? 'आपके पाठ्यक्रम से इस हफ़्ते के पाठ' : "THIS WEEK'S LESSONS FROM YOUR SYLLABUS"}</div>
@@ -267,6 +268,9 @@ function sylDraftHTML(d, i, approved, badge){
     }
     const pic = { count:`${b.n}`, add:`${b.a} + ${b.b}`, take:`${b.a} − ${b.b}`, group:`${b.a}`, line:`${b.a}, +${b.b} × ${b.hops}`,
                   array:`${b.a} × ${b.b}`, share:`${b.a} ÷ ${b.b}`, bar:`${b.a} = ${b.b} + ?`, frac:`1/${b.b}` }[b.t];
+    const shape = b.t === 'figure' ? `[${b.kind}${b.kind === 'square' ? ' ' + b.s : b.kind === 'rectangle' ? ` ${b.w} × ${b.h}` : b.kind === 'triangle' ? ' ' + (b.sides || []).join(', ') : b.folds ? `, ${b.folds} folds` : ''}${b.ask ? ' · asks ' + b.ask : ''}]`
+      : b.t === 'corner' ? `[corner ${b.deg}°]` : b.t === 'figures' ? `[${(b.items || []).map((it, n) => `${n + 1}: ${it.kind === 'corner' ? it.deg + '°' : it.kind}`).join(' · ')} · find ${b.find}]` : '';
+    if(shape) return `<div style="margin:3px 0 3px 10px;font-size:13px"><span style="font-family:var(--mono);opacity:.75">${attr(shape)}</span>${b.say ? ` ${T(b.say)}` : ''}</div>`;
     const words = b.t === 'passage' ? `📖 ${T(b.p)}` : b.t === 'word' ? `🔤 ${attr(b.w)}` : b.t === 'readline' ? `🗣 ${attr(b.text)}` : '';
     return `<div style="margin:3px 0 3px 10px;font-size:13px">${pic ? `<span style="font-family:var(--mono);opacity:.75">[${b.t} ${pic}]</span> ` : ''}${words}${b.say ? ` ${T(b.say)}` : ''}</div>`;
   }).join('');

@@ -26,6 +26,7 @@ function gameBuildPool(){
     const skills = gameSkillsForConcept(les.concept || les.id);
     for(const b of les.beats){
       if(b.t !== 'ask' || !b.opts || b.opts.length < 2) continue;
+      if(typeof geoPicFor === 'function' && geoPicFor(les, les.beats.indexOf(b))) continue;   // its answer is in a picture a game can't show
       const right = b.opts[b.correct];
       const wrong = b.opts.filter((_,i) => i !== b.correct);
       const rightHi = (b.hiOpts || b.opts)[b.correct];

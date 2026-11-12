@@ -366,11 +366,18 @@ function validateLesson(les){
   if(!Array.isArray(les.beats) || les.beats.length < 3) errs.push('needs at least 3 beats');
 
   const b = AGE_BANDS[les.band] || AGE_BANDS.developing;
-  let last = null, asks = 0;
+  let last = null, asks = 0, pic = null;
 
   (les.beats || []).forEach((x, i) => {
     if(!GEN_BEATS.includes(x.t)) errs.push(`beat ${i}: unknown type "${x.t}"`);
     if(x.say) bi(x.say, `beat ${i} say`);
+
+    // a shape (content/geometry.js): drawable, inside the band, and the
+    // question after it is checked against the answer worked out from it
+    const geo = typeof GEO_TYPES !== 'undefined' && GEO_TYPES.includes(x.t);
+    if(geo){ last = null; for(const e of geoErrors(x, b.maxNumber)) errs.push(`beat ${i}: ${e}`); }
+    if(x.t !== 'ask') pic = geo ? x : null;
+    if(x.t === 'ask' && pic){ const e = geoAskError(pic, x); if(e) errs.push(`beat ${i}: ${e}`); }
 
     // every number a child meets must sit inside their age band
     for(const k of ['a','b','n']){

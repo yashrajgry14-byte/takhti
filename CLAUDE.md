@@ -30,7 +30,7 @@ own recognizer (or typing) takes over, and no answer in 10 s means the same.
 
 | Tier | What it does | Where |
 |------|--------------|-------|
-| 0 | Reading matcher + age-band pass thresholds, stroke scoring, skill-shaped problem generation, adaptive level, daily scheduler, skill graph + diagnostic, spaced repetition, cartoon episodes, procedural sound | `src/core/`, `src/content/`, `src/games/` — always on, no network, no model |
+| 0 | Reading matcher + age-band pass thresholds, stroke scoring, skill-shaped problem generation, shapes drawn and checked, adaptive level, daily scheduler, skill graph + diagnostic, spaced repetition, cartoon episodes, procedural sound | `src/core/`, `src/content/`, `src/games/` — always on, no network, no model |
 | 1 | A fresh practice line for missed words | `core/tier1.js` — the curated bank everywhere; the phone's own on-device model (Chrome's Prompt API) where it already has one, strictly validated |
 | 2 | Cloud answers for the question queue; class sync between phones; next week's lessons from the school's own syllabus (Gemini drafts, the phone checks) | `askCloud()` / `flushQueue()` via `api/ask.js`; `core/class-sync.js` via `api/class-sync.mjs`; `core/syllabus.js` via `api/syllabus.mjs` |
 
@@ -43,7 +43,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 37 test suites (see Testing)
+npm test           # all 38 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -66,7 +66,7 @@ Current order (`index.html`):
 config.js, state.js
 content/sentences.js, content/games.js, content/themes.js, content/facts.js, content/ages.js
 content/skills.js, content/curriculum-early.js, content/lessons.js, core/lesson-gen.js
-content/literacy.js, content/comprehension.js
+content/literacy.js, content/comprehension.js, content/geometry.js
 core/diagnose.js, core/class-share.js, core/class-sync.js, core/syllabus.js, core/generative-brain.js, core/video-library-catalog.js, core/cartoon-series.js
 core/srs.js, core/sfx.js, games/game-core.js
 content/anim.js, content/copy.js, content/competencies.js
@@ -81,7 +81,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v41` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v42` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -104,6 +104,7 @@ src/
     lessons.js              hand-authored lessons (lesson-gen.js generates the rest)
     literacy.js             literacy + early-numeracy beats
     comprehension.js        comprehension + grammar beats (the last gaps below Class 4)
+    geometry.js             shapes: figure / corner / figures beats drawn as SVG, geoExpect() reads each answer off the drawing; 27 built-in lessons
     anim.js, copy.js, competencies.js   animation templates, UI strings, NIPUN/NCERT level names
   core/
     diagnose.js             the teacher diagnostic, class-code mirror, homework bridge
@@ -327,7 +328,9 @@ child sees.
   the whole…); a maths question's right answer is a number equal to what
   the picture before it computes (`sylExpect()`), so the arithmetic is
   checked; a reading question's right answer is in the passage's own words
-  (`sylGrounded()`), yes/no answers marked for the teacher to check; then
+  (`sylGrounded()`), yes/no answers marked for the teacher to check; a
+  shape question's answer is read off its drawing (`geoClean()`, then the
+  validator — see **Shapes**); then
   the band's number ceiling and sentence lengths. A failure goes back to
   Gemini **once** with its reasons; still failing → shown as "not used",
   with why. The right answer is shuffled (stable, by content); the id is a
@@ -344,6 +347,37 @@ child sees.
   finds them, never rewrites their words online (`enrichLesson()` is
   skipped), answers count for the lesson's skill when the checker matched
   one, and a reading lesson doesn't move the maths ladder.
+
+## Shapes — `content/geometry.js`
+
+Takhti draws shapes and checks shape questions the way it checks sums: the
+answer must be readable off what is on the screen.
+
+- **Three beats**, drawn as SVG by `geoArt()` (to scale, theme-coloured):
+  `figure` (a square with side `s`, a rectangle `w`×`h` with w ≠ h, a
+  triangle `sides:[a,b,c]` that can exist, a circle with 0–4 `folds`),
+  `corner` (`deg` 20–160) and `figures` (2–4 shapes or corners in a row,
+  numbered 1–4, no side labels there). Side lengths are labelled, except
+  while sides or corners are being counted; a teaching picture (no
+  question about it) marks its corners, a square corner's box, the centre.
+- **What a question asks is on the picture**: a figure's `ask` (name,
+  sides, corners, perimeter, equal, meet), a corner's `ask:'kind'`, a
+  row's `find` (square, rectangle, triangle, circle, squarecorner, odd).
+  `geoExpect()` works the answer out from the drawing; `geoAskError()`,
+  called by `validateLesson()` for every lesson, rejects a marked answer
+  (English or Hindi, read by `geoSays()`: वर्ग, आयत, चौकोर कोना, केंद्र…)
+  that isn't it, or a second answer that also is; `geoErrors()` rejects what
+  can't be drawn and numbers over the band's ceiling.
+- **In the player**: a question's picture stays on screen (`geoPicFor()`),
+  its narration never names or measures the answer (`geoSay()`), Ask Munni
+  gives how-to-look help (`geoHint()`, never the answer;
+  `explainLessonBeat()` stops at a shape), and such questions never enter
+  the arcade games.
+- **27 built-in lessons** (`GEO_CONCEPTS`): counting sides and corners and
+  finding a shape in a row (5–6), square corners and the centre of a circle
+  (7–8), perimeter (9–10) — making `perimeter` and `angles` teachable and
+  adding to `shapes2d`. Gemini's school lessons use the same beats
+  (`sylClean()` → `geoClean()`, the prompt describes them).
 
 ## The reading matcher — read this before changing it
 
@@ -371,10 +405,11 @@ capture → normalize → align → grade → confidence gate → score.
 `SKILLS` (`skills.js`, extended by `curriculum-early.js`) tags every attempt
 with the skill it really exercises, so a failed BODMAS question can be traced
 to the prerequisite underneath. **Verified numbers** (`test/comprehension.test.js`,
-the one suite that loads the full graph): 41 concepts → 489 lessons, 0
-rejected; 103 skills after dedup (126 raw, 23 absorbed); 55/103 = 53%
-teachable; Nursery–Class 3 subject coverage 63/63; reading and writing
-ladders 6/6 each; 517 game-pool items.
+the one suite that loads the full graph): 46 concepts → 516 lessons, 0
+rejected; 103 skills after dedup (126 raw, 23 absorbed); 57/103 = 55%
+teachable (`test/diagnose.test.js`); Nursery–Class 3 subject coverage 63/63;
+reading and writing ladders 6/6 each; 517 game-pool items (shape questions
+stay out of the games — their answer is in a picture a game can't show).
 
 ## Spaced repetition
 
@@ -916,7 +951,7 @@ app is a client of it, and only when a parent says so.
 
 ## Testing
 
-`npm test` runs 37 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 38 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -956,6 +991,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `twin` | vm + HTTP + jsdom | each wrong answer named as its real mistake, incl. the column-procedure ones (carrying the ones, lining up on the left, borrowing across zero, 0 − N, N − 0, the carry in multiplying…); tips and explanations for thousands never say the answer; a combination found only on two different questions, named and explained from its steps, then guessed; unexplained sums kept; shared rules known at once; codes checked; reading slips (17 cases EN/HI), a line's stopping/adding, traced letters (mirror, part missing, शिरोरेखा, too small) from pixels; reading habits with their letters; right-or-not guesses; knowledge tracing up, down, fading, seeded; the profile (ids only, junk dropped) and its prompt; a simulated child with a habit of thought guessed exactly ≥ 90%; on a call: the clue aimed at the mistake, the profile's twin sum, "I know this tricky bit!", the step-by-step reveal, reading coaching naming the slip; the shared database (promoted at three children, counted without names, erase leaves every count, the review page); in the app: the guesses (sums, reading, lessons, games), the tips, "Munni noticed", the heads-up, paper spelling, a habit deciding Ask Munni's explanation, `appEvidence()` reading the twin, where the profile goes, the parent section EN/HI, only the profile in the sync |
 | `speech` | vm + HTTP + jsdom | Sarvam against a stand-in: verbatim mode, Hindi, the key on the server only, nothing kept, consent, bogus recordings refused, per-address limit, honest 503, an OpenAI-compatible service; Munni's live voice (Bulbul, slow, cached, short lines only); in the app: no terms without a voice server, the bilingual terms at onboarding kept with version and time, online → Sarvam even with a recognizer on the phone, the slip named, **say it with Munni** (the word in pieces in Sarvam's voice, the child says it, checked, praised; two tries then let go kindly; help not evidence), offline → the on-device recognizer and nothing sent, withdrawn → nothing sent, no answer → the honest message; on a call the word in pieces; the narration builder |
 | `syllabus` | vm + HTTP + jsdom | the server against a stand-in Gemini (key in a header on the server only, the PDF and the band's rules and schema in the request, the older field names, 503 with no key, the school key, PDF/photo only, a limit per address, the repair round with the checker's reasons, the voice server's `POST /syllabus`); the class sync carries lessons from the teacher's key only; the phone's checks (a good maths and reading lesson pass; a wrong sum, an answer not in the passage, markup, over the band's ceiling, an undrawable beat, an unequal share, non-Devanagari Hindi, a non-number maths answer all fail with a reason; idempotent; shuffled); in the app: draft → one repaired, one "not used" → approve → remove; offline honest; the child's "From your school" (EN/HI), played, never rewritten, evidence for its skill; an edited lesson not shown; the sync sends them |
+| `geometry` | vm + jsdom | answers read off the drawing (sides, corners, names, perimeter, equal sides, the centre, corner kinds, a numbered row, the odd one out), in English and Hindi; the checker rejects a wrong marked answer, a disagreeing Hindi answer, two right answers, a figure that doesn't say what it asks, an equal-sided "rectangle", an impossible triangle, a row with two matches, a number over the ceiling, an undrawable shape; the 27 built-in lessons pass, a question's picture is never named or measured aloud, Ask Munni's hint never says the answer, clean SVGs, labels hidden while counting, no shape question in the games, drafted fields sanitised; in the app: the picture stays on screen during the question, the answer counts for the skill, Ask Munni's how-to-look help, a drafted shape lesson checked against its drawing |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -1070,7 +1106,10 @@ Honest edges of what's built:
    arithmetic, ungrounded reading answers, unsafe text and unsuitable
    numbers — not a lesson that is correct but teaches the chapter badly;
    that is what the teacher's reading is for. Lessons use the player's
-   existing pictures only (no new diagrams from a textbook figure); a
+   own pictures — counting, sums, bars, fractions and now squares,
+   rectangles, triangles, circles and corners — never a copy of a textbook
+   figure (no clocks, maps, 3-D shapes, angles in degrees or patterns
+   yet); a
    reading answer counts as "in the passage" by shared words, which a
    paraphrase can fail. They reach other phones only through the class
    sync (no lesson code by hand yet), and serverless hosts may time out

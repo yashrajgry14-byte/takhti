@@ -48,7 +48,8 @@ function askTarget(){
     const told = [];
     for(let k = i - 1; k >= 0 && les.beats[k].t !== 'ask'; k--) told.unshift(lesSay(les.beats[k]));
     const opts = hi ? (b.hiOpts || b.opts) : b.opts;
-    const lines = told.filter(Boolean).concat(`${L(b.q)} ${opts.join(hi ? ' या ' : ' or ')}?`);
+    const hint = typeof geoHint === 'function' ? geoHint(les, i) : null;   // a shape: how to look, never the answer
+    const lines = told.filter(Boolean).concat(hint ? [hint] : [], `${L(b.q)} ${opts.join(hi ? ' या ' : ' or ')}?`);
     return { key, lines, call: null };
   }
   if(S.screen === 'theater' && S.activeVideo){
