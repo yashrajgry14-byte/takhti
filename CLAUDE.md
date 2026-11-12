@@ -81,7 +81,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v44` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v45` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -322,7 +322,17 @@ child sees.
   names). Google saying the model is busy (503/429) gets one more try a
   moment later, then the lighter `GEMINI_FALLBACK_MODEL`
   (`gemini-3.5-flash-lite`; `none` switches it off), which a 404 also moves
-  to; all busy → "Gemini is busy right now". A PDF or photo goes as `inline_data`. `mode:'repair'` sends
+  to; all busy → "Gemini is busy right now". One model gets at most 60% of
+  the time limit (55 s serverless, 180 s on the voice server), so a model
+  that hangs leaves time for the fallback. The draft and the repair prompt
+  share one description of the beats and the rules (`beatsText()`,
+  `rulesText()`) — what each shape `ask` means, the school's Hindi words
+  (चौकोर कोना, वर्ग…), teach-then-ask, a `why` that names the real mistake —
+  and one worked example lesson, which the test runs through the checker so
+  the two can't drift apart. A word beat's text is `word` in the drafting
+  schema (a rectangle's `w` is a number). The class's skills offered are its
+  own grade first, then the grades around it (a Class 3 shapes chapter
+  reaches `shapes2d`, `angles`, `perimeter`). A PDF or photo goes as `inline_data`. `mode:'repair'` sends
   rejected lessons back with the checker's reasons. Drafts only; the key
   never leaves the server; `TAKHTI_SYLLABUS_KEY` (optional school password)
   and a per-address hourly limit.
@@ -336,7 +346,15 @@ child sees.
   (`sylGrounded()`), yes/no answers marked for the teacher to check; a
   shape question's answer is read off its drawing (`geoClean()`, then the
   validator — see **Shapes**); then
-  the band's number ceiling and sentence lengths. Every lesson carries its
+  the band's number ceiling and sentence lengths. Before checking,
+  `sylTidy()` fixes only what is certain and still checked: a beat repeated
+  twice in a row is kept once, a picture's stray notes are dropped, and a
+  figure or corner followed by a question but missing its `ask` gets it from
+  the question's own words (`sylInferAsk()`: "How many sides?" → sides) —
+  a wrong reading fails against the drawing. Then: something must teach (a
+  teaching picture, a worked example or a passage) before the first
+  question; a shape question mustn't name the shape it asks about; the Hindi
+  answers are in Devanagari unless they are numbers. Every lesson carries its
   **aims** (1–4 bilingual "the child can …" points — required) and each
   question may carry a teacher-only `why` (why children pick the wrong
   answer); a question whose answer Munni has just said (`sylSaysIt()` over
@@ -1128,7 +1146,11 @@ Honest edges of what's built:
    so use the voice server's `POST /syllabus` (12 MB, no time limit); past
    that, the Gemini Files API would be next. The first live runs (12 Nov
    2026) found `gemini-3.8-flash` overloaded (503) for an hour, hence the
-   fallback.
+   fallback; `gemini-3.5-flash-lite` then passed 1 of 6 drafted lessons on
+   the *Maths Mela* Class 3 shapes chapter, every rejection a missing shape
+   `ask` or a rectangle without `h`, and the repair round (which then didn't
+   describe the beats) fixed none — the reason for the shared prompt, the
+   worked example and `sylTidy()`. Not yet re-run.
 
 ## Style
 
