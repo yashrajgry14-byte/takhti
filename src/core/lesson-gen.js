@@ -367,6 +367,7 @@ function validateLesson(les){
 
   const b = AGE_BANDS[les.band] || AGE_BANDS.developing;
   let last = null, asks = 0, pic = null;
+  const taughtPics = [];   // shapes drawn to teach — a question about the same drawing would show its answer one step early
 
   (les.beats || []).forEach((x, i) => {
     if(!GEN_BEATS.includes(x.t)) errs.push(`beat ${i}: unknown type "${x.t}"`);
@@ -375,7 +376,12 @@ function validateLesson(les){
     // a shape (content/geometry.js): drawable, inside the band, and the
     // question after it is checked against the answer worked out from it
     const geo = typeof GEO_TYPES !== 'undefined' && GEO_TYPES.includes(x.t);
-    if(geo){ last = null; for(const e of geoErrors(x, b.maxNumber)) errs.push(`beat ${i}: ${e}`); }
+    if(geo){
+      last = null; for(const e of geoErrors(x, b.maxNumber)) errs.push(`beat ${i}: ${e}`);
+      const asks = x.t === 'figures' || x.ask != null;
+      if(!asks) taughtPics.push(geoSig(x));
+      else if(taughtPics.includes(geoSig(x))) errs.push(`beat ${i}: the question's picture is the teaching picture again (which shows the answer) — ask about a different shape or size`);
+    }
     if(x.t !== 'ask') pic = geo ? x : null;
     if(x.t === 'ask' && pic){ const e = geoAskError(pic, x); if(e) errs.push(`beat ${i}: ${e}`); }
 

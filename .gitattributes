@@ -1,0 +1,7 @@
+# One line ending everywhere: a Windows checkout (core.autocrlf) otherwise
+# gets \r\n, and source-reading tests and tools then miss their patterns.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.pdf binary
+*.mp3 binary

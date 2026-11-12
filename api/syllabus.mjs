@@ -141,12 +141,15 @@ The teaching picture and the question picture are DIFFERENT examples (a differen
 
 An example of one good lesson (the shape of it, not its content):
 {"title":{"en":"Sides and corners","hi":"भुजाएँ और कोने"},"sub":{"en":"Go round the shape","hi":"आकृति के चारों ओर"},"ic":"🔷","skill":"shapes2d","source":"Page 61",
- "aims":[{"en":"The child can count the sides of a shape.","hi":"बच्चा किसी आकृति की भुजाएँ गिन सकता है।"}],
+ "aims":[{"en":"The child can count the sides of a shape.","hi":"बच्चा किसी आकृति की भुजाएँ गिन सकता है।"},{"en":"The child can find the shape with 3 sides.","hi":"बच्चा 3 भुजाओं वाली आकृति ढूँढ सकता है।"}],
  "beats":[{"t":"intro","say":{"en":"Shapes have sides. Let us count them.","hi":"आकृतियों की भुजाएँ होती हैं। आओ गिनें।"}},
   {"t":"figure","kind":"square","s":4},
   {"t":"figure","kind":"triangle","sides":[5,5,5],"ask":"sides"},
   {"t":"ask","q":{"en":"How many sides does it have?","hi":"इसकी कितनी भुजाएँ हैं?"},"opts":["3","4"],"hiOpts":["3","4"],"correct":0,
    "why":{"en":"Children who just saw the square expect every shape to have 4 sides.","hi":"वर्ग देखने के बाद बच्चे हर आकृति की 4 भुजाएँ मान लेते हैं।"}},
+  {"t":"figures","items":[{"kind":"rectangle","w":6,"h":3},{"kind":"triangle","sides":[3,4,5]},{"kind":"square","s":3}],"find":"triangle"},
+  {"t":"ask","q":{"en":"Which number has 3 sides?","hi":"किस नंबर वाली आकृति की 3 भुजाएँ हैं?"},"opts":["2","1"],"hiOpts":["2","1"],"correct":0,
+   "why":{"en":"Children pick the first shape they see without counting its sides.","hi":"बच्चे भुजाएँ गिने बिना पहली दिखी आकृति चुन लेते हैं।"}},
   {"t":"win","say":{"en":"Go round once and count each side.","hi":"एक बार पूरा घूमो और हर भुजा गिनो।"}}]}`;
 }
 function rulesText(rules){
@@ -156,12 +159,14 @@ function rulesText(rules){
 3. A maths ask comes right after the beat that shows it, and its right answer is a number equal to what that beat computes (count → n, add → a+b, take → a−b, group → a, array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Numbers as digits.
 4. A reading ask comes after a passage/word/readline, and its right answer uses the passage's own words.
 5. A shape ask comes right after the figure/corner/figures it is about (with its ask or find set), and its right answer is what that drawing shows. For anything about shapes, sides, corners or perimeter, USE the drawings — never describe a shape only in words.
-6. Never say the answer in the lines just before a question, and never name it in the question itself ("Are all sides equal in this square?" gives it away — ask "Are all its sides equal?"). Where you can, ask two questions: one to recognise, one to apply to something new.
-7. The wrong option is a mistake a child really makes — never silly, never equal to the right one. Its why names that mistake ("children count only the top two corners"), not "they might guess".
+6. Never say the answer in the lines just before a question (the intro counts), and never name it in the question itself ("Are all sides equal in this square?" gives it away — ask "Are all its sides equal?").
+6b. TEACH ON ONE SHAPE, ASK ON ANOTHER: the question's picture is never the teaching picture again (a teaching picture marks the answer). Teach with a 6 × 3 rectangle, ask about a 4 × 2 one; teach a square corner, ask about a smaller or bigger corner; teach a circle with 2 folds, ask with 3.
+6c. Ask TWO questions per lesson: the first to recognise, the second about a NEW example (another shape, a numbered row, an odd one out).
+7. The wrong option is a mistake a child really makes — never silly, never equal to the right one. Its why names the misconception behind it ("children judge a corner by how long its arms are", "children count only the top two corners"), never "they might guess" or "they might confuse it".
 8. Every number a child meets is at most ${rules.maxNumber}.
 9. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; speak to the child as "तुम", never "आप"; never scold, never the word "wrong".
 10. title, sub, say, q, p, aims and why are objects with natural English "en" AND natural Hindi "hi" in Devanagari (not transliteration). opts are English; hiOpts are the same answers in Hindi, in Devanagari unless the answer is a number (Yes/No → हाँ/नहीं).
-11. Use the words Indian schools use: वर्ग (square), आयत (rectangle), त्रिभुज (triangle), वृत्त (circle), भुजा (side), कोना (corner), चौकोर कोना (square corner), केंद्र (centre), परिमाप (perimeter). Sizes are written "6 × 3" or "sides 6 and 3" — in Hindi never translate "by" as गुणा.
+11. Use the words Indian schools use: वर्ग (square), आयत (rectangle), त्रिभुज (triangle), वृत्त (circle), भुजा (side), कोना (corner), चौकोर कोना (square corner), केंद्र (centre), परिमाप (perimeter), तह / तह की रेखा (fold / fold line), ढूँढो (find). Sizes are written "6 × 3" or "sides 6 and 3" — in Hindi never translate "by" as गुणा.
 12. Plain text only: no markup, no brackets of code, no links. ic and art are a single emoji.`;
 }
 
@@ -182,7 +187,7 @@ Answer with JSON only, in the given schema.`;
 
 function repairInstructions(rules){
   return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Return each lesson fixed — same topic, same format, same aims, every reason addressed — and change nothing else.
-How to read the reasons: "must say what is asked (ask)" → set the figure's ask to what the next question asks (sides, corners, name…); "a rectangle needs w and h" → give both; "say the answer" → change the narration or ask about a new example, not the answer; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi.
+How to read the reasons: "must say what is asked (ask)" → set the figure's ask to what the next question asks (sides, corners, name…); "a rectangle needs w and h" → give both; "say the answer" → change the narration or ask about a new example, not the answer; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "the teaching picture again" → change the QUESTION's picture to a different size or shape (and its answer, if that changes); "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi.
 
 ${beatsText()}
 
@@ -191,13 +196,21 @@ Answer with JSON only, in the given schema.`;
 }
 
 const wait = ms => new Promise(r => setTimeout(r, ms));
+/* A model that just hung or said "busy" rests for a few minutes
+   (TAKHTI_GEMINI_REST_MS, default 5 min): the repair round and the next
+   chapter go straight to the fallback instead of waiting on it again — on
+   the first live runs that wait was ~110 s a request. Kept per server
+   process; a serverless host forgets it when it goes cold, which is fine. */
+const RESTING = new Map();
 async function callGemini(parts, system, env, fetchImpl){
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
   // the chosen model, then a lighter one when Google says it's busy (503/429)
   // or doesn't know the model (404) — GEMINI_FALLBACK_MODEL, 'none' to switch off
   const primary = env.GEMINI_MODEL || 'gemini-3.8-flash';
   const fallback = env.GEMINI_FALLBACK_MODEL === 'none' ? null : (env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite');
-  const models = [primary].concat(fallback && fallback !== primary ? [fallback] : []);
+  const all = [primary].concat(fallback && fallback !== primary ? [fallback] : []);
+  const now = Date.now(), awake = all.filter(m => !(RESTING.get(m) > now));
+  const models = awake.length ? awake : all.slice(-1);               // all resting: the last one still tries
   const urlFor = m => `${env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(m)}:generateContent`;
   const base = { systemInstruction:{ parts:[{ text: system }] }, contents:[{ role:'user', parts }] };
   // the current structured-output field first; older deployments of the API
@@ -230,11 +243,12 @@ async function callGemini(parts, system, env, fetchImpl){
             res = { ok:false, status:503, hung:true }; d = {};            // this model hung: straight to the next one
           }finally{ clearTimeout(t1); ctl.signal.removeEventListener('abort', stop); }
           if(res.hung || !busy(res.status)) break;
+          // (a busy model gets one more try, a moment later)
           if(attempt === 0) await wait(Number(env.TAKHTI_SYLLABUS_RETRY_MS || 1500));   // once more, a moment later
         }
-        if(res.ok) break models;
-        if(res.hung) continue models;
-        if(busy(res.status) || res.status === 404) continue models;                  // busy, or no such model: the next one
+        if(res.ok){ RESTING.delete(model); break models; }
+        if(res.hung || busy(res.status)){ RESTING.set(model, Date.now() + (env.TAKHTI_GEMINI_REST_MS != null ? Number(env.TAKHTI_GEMINI_REST_MS) : 300000)); continue models; }
+        if(res.status === 404) continue models;                                       // no such model: the next one
         if(res.status !== 400) break models;                                          // 400: the other request shape
       }
     }

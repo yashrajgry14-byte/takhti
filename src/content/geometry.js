@@ -169,6 +169,13 @@ function geoAskError(pic, ask){
   return null;
 }
 
+/* What a picture draws, without what it asks — two pictures with the same
+   signature look the same on screen. */
+function geoSig(b){
+  const it = b.t === 'figures' ? { t: b.t, items: b.items } : { t: b.t, kind: b.kind, s: b.s, w: b.w, h: b.h, sides: b.sides, folds: b.folds || 0, deg: b.deg };
+  return JSON.stringify(it);
+}
+
 /* The picture a question at beat i is about, if it is a shape. */
 function geoPicFor(les, i){
   for(let k = i - 1; k >= 0; k--){
@@ -364,7 +371,7 @@ const GEO_CONCEPTS = [
   title:()=>gq('Square corners', 'चौकोर कोने'),
   sub:()=>gq('Like the corner of a book', 'किताब के कोने जैसे'),
   space:()=>[
-    { deg:45, row:[60, 90, 130], i:0 }, { deg:120, row:[90, 45, 150], i:1 }, { deg:90, row:[110, 70, 90], i:2 },
+    { deg:45, row:[60, 90, 130], i:0 }, { deg:120, row:[90, 45, 150], i:1 }, { deg:100, row:[110, 70, 90], i:2 },
     { deg:60, row:[135, 90, 40], i:3 }, { deg:135, row:[90, 120, 60], i:4 }, { deg:30, row:[50, 140, 90], i:5 }
   ],
   beats:(p)=>{

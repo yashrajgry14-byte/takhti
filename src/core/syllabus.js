@@ -121,6 +121,15 @@ function sylTidy(beats){
     if(x.t === 'corner' && x.ask == null) x.ask = 'kind';
     if(x.t === 'figure' && x.ask == null) x.ask = sylInferAsk(x, next);
   });
+  // a rectangle with only one side given: give it the other, half as long
+  // (never equal, so it stays a rectangle) — unless the question is its
+  // perimeter, where the made-up side would change the answer
+  out.forEach(x => {
+    if(!x || x.t !== 'figure' || x.kind !== 'rectangle' || x.ask === 'perimeter') return;
+    const ok = v => Number.isInteger(v) && v >= 1;
+    if(ok(x.w) && !ok(x.h)) x.h = x.w >= 2 ? Math.max(1, Math.round(x.w / 2)) : 2;
+    else if(ok(x.h) && !ok(x.w)) x.w = x.h * 2;
+  });
   return out;
 }
 function sylInferAsk(fig, q){
@@ -185,7 +194,8 @@ function sylClean(raw, opts){
       const g = geoClean(x);
       g.errors.forEach(e => errs.push(`beat ${i}: ${e}`));
       if(x.say){ const s = bi(x.say, `beat ${i}'s narration`, 200); if(s) g.beat.say = s; }
-      if(g.beat.say) lead.push(g.beat.say);
+      // remember whether this picture teaches or is a question's picture
+      if(g.beat.say) lead.push({ ...g.beat.say, pic: t !== 'figures' && g.beat.ask == null ? 'teach' : 'question' });
       les.beats.push(g.beat); lastShown = t; shown = g.beat;
       if(t !== 'figures' && g.beat.ask == null) taught = true;           // a teaching picture
       return;
@@ -258,9 +268,13 @@ function sylClean(raw, opts){
       } else {
         errs.push(`beat ${i}: a question must come after something to look at or read`);
       }
-      // the child works the answer out: Munni mustn't have just said it (for a
-      // shape, the picture is new — only its own narration counts)
-      const said = lastShown && GEO_TYPES.includes(lastShown) ? (shown && shown.say ? [shown.say] : []) : lead;
+      // the child works the answer out: Munni mustn't have just said it. For a
+      // shape question that is everything said since the last question — the
+      // intro too — except that a teaching picture may name the idea it
+      // teaches ("this is the centre") when the answer is a word; a number
+      // said there ("it has 4 sides") still gives a count away
+      const geoQ = lastShown && GEO_TYPES.includes(lastShown);
+      const said = geoQ ? lead.filter(s => s.pic !== 'teach' || /^\d+$/.test(String(right))) : lead;
       if(right != null && !opts.every(o => /^(yes|no)$/i.test(o)) && said.some(s => sylSaysIt(s.en, right) || sylSaysIt(s.hi, hiOpts[out.correct])))
         errs.push(`beat ${i}: the lines just before this question say the answer "${right}" — let the child work it out`);
       lead = [];
@@ -268,7 +282,7 @@ function sylClean(raw, opts){
       lastShown = t; shown = out;
       if(SYL_READ.includes(t)) readText = [out.p && out.p.en, out.p && out.p.hi, out.w, out.text].filter(Boolean).join(' ');
     }
-    if(t !== 'ask' && out.say) lead.push(out.say);
+    if(t !== 'ask' && out.say) lead.push({ ...out.say });
     if(t !== 'ask' && t !== 'intro' && t !== 'win') taught = true;          // a worked example or a passage
     les.beats.push(out);
   });

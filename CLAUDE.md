@@ -81,7 +81,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v45` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v46` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -322,7 +322,9 @@ child sees.
   names). Google saying the model is busy (503/429) gets one more try a
   moment later, then the lighter `GEMINI_FALLBACK_MODEL`
   (`gemini-3.5-flash-lite`; `none` switches it off), which a 404 also moves
-  to; all busy → "Gemini is busy right now". One model gets at most 60% of
+  to; all busy → "Gemini is busy right now". A model that just hung or said
+  busy rests for five minutes (`TAKHTI_GEMINI_REST_MS`), so the repair round
+  and the next chapter go straight to the fallback. One model gets at most 60% of
   the time limit (55 s serverless, 180 s on the voice server), so a model
   that hangs leaves time for the fallback. The draft and the repair prompt
   share one description of the beats and the rules (`beatsText()`,
@@ -351,15 +353,21 @@ child sees.
   twice in a row is kept once, a picture's stray notes are dropped, and a
   figure or corner followed by a question but missing its `ask` gets it from
   the question's own words (`sylInferAsk()`: "How many sides?" → sides) —
-  a wrong reading fails against the drawing. Then: something must teach (a
+  a wrong reading fails against the drawing — and a rectangle given only its
+  width gets a height half as long, except for a perimeter question, where a
+  made-up side would change the answer. Then: something must teach (a
   teaching picture, a worked example or a passage) before the first
   question; a shape question mustn't name the shape it asks about; the Hindi
   answers are in Devanagari unless they are numbers. Every lesson carries its
   **aims** (1–4 bilingual "the child can …" points — required) and each
   question may carry a teacher-only `why` (why children pick the wrong
   answer); a question whose answer Munni has just said (`sylSaysIt()` over
-  the narration since the last question — for a shape, its own picture's
-  narration) is rejected, so the child works it out. A failure goes back to
+  the narration since the last question — for a shape question the intro
+  counts too, but a teaching picture may name the idea it teaches when the
+  answer is a word) is rejected, so the child works it out. A shape
+  question whose picture is the teaching picture again (same drawing, which
+  marks the answer) is rejected by `validateLesson()` (`geoSig()`) — teach
+  on one shape, ask on another, as the built-in lessons do. A failure goes back to
   Gemini **once** with its reasons; still failing → shown as "not used",
   with why. The right answer is shuffled (stable, by content); the id is a
   hash of the content, so a lesson edited later gets a different id.
@@ -1150,7 +1158,12 @@ Honest edges of what's built:
    the *Maths Mela* Class 3 shapes chapter, every rejection a missing shape
    `ask` or a rectangle without `h`, and the repair round (which then didn't
    describe the beats) fixed none — the reason for the shared prompt, the
-   worked example and `sylTidy()`. Not yet re-run.
+   worked example and `sylTidy()`. The second run (still flash-lite;
+   3.8-flash hung or was busy every time) passed 2 of 3, but both passing
+   lessons asked about their own teaching picture and one intro said the
+   answer — the reason for the same-picture rule, the wider "said it" check,
+   the resting model and the rectangle's inferred height. A fair verdict on
+   3.8-flash still needs a quieter hour.
 
 ## Style
 

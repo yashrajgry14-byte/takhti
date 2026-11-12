@@ -80,7 +80,7 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   const busyThen = async (url, o) => { calls.push({ url }); return /gemini-test:/.test(url)
     ? { ok:false, status:503, json: async () => ({ error:{ message:'The model is overloaded' } }) }
     : { ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[MATH] }) }] } }] }) }; };
-  const rb = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1 }, '1.1.1.8', busyThen);
+  const rb = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.8', busyThen);
   check('Google says the model is busy (503): one more try, then the lighter fallback model answers', rb.status === 200 && rb.json.model === 'gemini-3.5-flash-lite'
     && calls.filter(c => /gemini-test:/.test(c.url)).length === 2 && /flash-lite:/.test(calls[calls.length - 1].url), JSON.stringify(calls.map(c => c.url.split('/').pop())));
   calls.length = 0;
@@ -92,7 +92,18 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   check('a model that hangs is given up on in time for the fallback to answer (no retry of a hang)', rh.status === 200 && rh.json.model === 'gemini-3.5-flash-lite'
     && calls.filter(c => /gemini-test:/.test(c.url)).length === 1 && Date.now() - t0 < 4000, `${rh.status} ${JSON.stringify(rh.json).slice(0, 80)} ${Date.now() - t0}ms`);
   const allBusy = async () => ({ ok:false, status:503, json: async () => ({}) });
-  const rz = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1 }, '1.1.1.9', allBusy);
+  const rz = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.9', allBusy);
+  // a model that just failed rests: the next request (the repair round) goes straight to the fallback
+  const restEnv = { ...env, GEMINI_MODEL: 'gemini-resty', TAKHTI_SYLLABUS_RETRY_MS: 1 };
+  calls.length = 0;
+  const restFake = async (url) => { calls.push({ url }); return /gemini-resty:/.test(url)
+    ? { ok:false, status:503, json: async () => ({}) }
+    : { ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[MATH] }) }] } }] }) }; };
+  await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, restEnv, '1.1.3.1', restFake);
+  const firstCalls = calls.length; calls.length = 0;
+  const again = await draftCore({ mode:'repair', repair:[{ lesson: WRONG_SUM, errors:['x'] }], rules }, restEnv, '1.1.3.2', restFake);
+  check('a model that just said "busy" rests: the next request (the repair round) goes straight to the fallback, no waiting',
+    firstCalls === 3 && calls.length === 1 && /flash-lite:/.test(calls[0].url) && again.json.model === 'gemini-3.5-flash-lite', `${firstCalls} then ${JSON.stringify(calls.map(c => c.url.split('/').pop()))}`);
   check('…and when every model is busy, an honest "busy right now"', rz.status === 502 && /busy right now/.test(rz.json.error), JSON.stringify(rz));
   const big = Buffer.alloc(5 * 1024 * 1024, 7).toString('base64');
   const r413 = await draftCore({ chapter:{ file: big, mime:'application/pdf' }, rules }, env, '1.1.2.1', gemini({ lessons:[] }));
@@ -208,9 +219,26 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     bad('a question that names the shape it asks about is rejected ("…in this rectangle?")', shapeL({ en:'Are all the sides equal in this rectangle?', hi:'क्या इस आयत की सारी भुजाएँ बराबर हैं?' }, ['No','Yes'], ['नहीं','हाँ'], { ask:'equal' }), /names the shape/);
     const wordL = clean({ ...clone(READ), beats:[{ t:'word', word:'पतंग', art:'🪁' }, { t:'ask', q:{ en:'Which word is this?', hi:'यह कौन सा शब्द है?' }, opts:['Kite','Ball'], hiOpts:['पतंग','गेंद'], correct:0 }, { t:'win', say:{ en:'Well read.', hi:'शाबाश।' } }] });
     check('a word beat sent as "word" (the schema\'s name) works', wordL.ok && wordL.lesson.beats[0].w === 'पतंग', JSON.stringify(wordL.errors));
-    const exSrc = fs.readFileSync(path.join(root, 'api/syllabus.mjs'), 'utf8').match(/An example of one good lesson[^\n]*\n([\s\S]*?)`;\n}/)[1];
+    // (line endings normalised: a Windows checkout has \r\n)
+    const exSrc = fs.readFileSync(path.join(root, 'api/syllabus.mjs'), 'utf8').replace(/\r\n/g, '\n').match(/An example of one good lesson[^\n]*\n([\s\S]*?)`;\n}/)[1];
     const ex = JSON.parse(E(`JSON.stringify(sylClean(${exSrc}, { band:'early', skills: sylSkills(sylClass('c1')) }))`));
-    check("the example lesson in Gemini's prompt passes Takhti's own checker (so the example and the rules can't drift apart)", ex.ok && ex.checks[0] === 'shape', JSON.stringify(ex.errors));
+    check("the example lesson in Gemini's prompt passes Takhti's own checker (so the example and the rules can't drift apart) — two questions, the second on a new example", ex.ok && ex.checks.length === 2 && ex.checks.every(c => c === 'shape'), JSON.stringify(ex.errors));
+    // from the second live run: the question's picture was the teaching picture again, and the intro said the answer
+    const circ = (beats) => ({ ...clone(READ), title:{ en:'The centre', hi:'केंद्र' }, skill:'shapes2d', beats:[...beats,
+      { t:'ask', q:{ en:'Where do the fold lines meet?', hi:'तह की रेखाएँ कहाँ मिलती हैं?' }, opts:['Centre','Edge'], hiOpts:['केंद्र','किनारा'], correct:0 },
+      { t:'win', say:{ en:'Folds meet in the middle.', hi:'तह बीच में मिलती हैं।' } }] });
+    bad('a question about the very picture that just taught it is rejected (the teaching picture marks the answer)',
+      circ([{ t:'intro', say:{ en:'Let us fold a plate.', hi:'आओ प्लेट मोड़ें।' } }, { t:'figure', kind:'circle', folds:2 }, { t:'figure', kind:'circle', folds:2, ask:'meet' }]), /teaching picture again/);
+    bad('an intro that says the answer before a shape question is rejected',
+      circ([{ t:'intro', say:{ en:'Fold lines meet at the centre.', hi:'तह की रेखाएँ केंद्र पर मिलती हैं।' } }, { t:'figure', kind:'circle', folds:2 }, { t:'figure', kind:'circle', folds:3, ask:'meet' }]), /say the answer "Centre"/);
+    const named = clean(circ([{ t:'intro', say:{ en:'Let us fold a plate.', hi:'आओ प्लेट मोड़ें।' } }, { t:'figure', kind:'circle', folds:2, say:{ en:'The folds meet in the middle. This is the centre.', hi:'तह बीच में मिलती हैं। यह केंद्र है।' } }, { t:'figure', kind:'circle', folds:3, ask:'meet' }]));
+    check('…but a teaching picture may name the idea it teaches when the question is about a NEW picture', named.ok, JSON.stringify(named.errors));
+    const noH = (ask, opts) => ({ ...clone(READ), title:{ en:'Rectangles', hi:'आयत' }, skill:'shapes2d', beats:[{ t:'intro', say:{ en:'Look.', hi:'देखो।' } },
+      { t:'figure', kind:'triangle', sides:[4,4,4] }, { t:'figure', kind:'rectangle', w:8, ask }, { t:'ask', q:{ en:'How many sides? Or how far round?', hi:'कितनी भुजाएँ? या कितनी दूरी?' }, opts, hiOpts: opts, correct:0 },
+      { t:'win', say:{ en:'Well done.', hi:'शाबाश।' } }] });
+    const hFixed = clean(noH('sides', ['4','3']));
+    check("a rectangle with only its width gets a height (half, so it stays a rectangle) when the question doesn't depend on it", hFixed.ok && hFixed.lesson.beats.find(b => b.kind === 'rectangle').h === 4, JSON.stringify(hFixed.errors));
+    bad('…but never for a perimeter question, where a made-up side would change the answer', noH('perimeter', ['24','16']), /needs w and h/);
     const c3 = JSON.parse(E(`JSON.stringify(sylSkills(sylClass('c3')).map(s => s.id))`));
     check('a Class 3 chapter may name the shape skills — flat shapes (Class 1), angles and perimeter (Class 4) — Class 3 skills first', ['shapes2d','angles','perimeter'].every(id => c3.includes(id)) && c3.length <= 60, JSON.stringify(c3));
     bad('a maths question needs a number for its answer', (() => { const x = clone(MATH); x.beats[2].opts = ['twenty-five','65']; return x; })(), /must be a number/);
