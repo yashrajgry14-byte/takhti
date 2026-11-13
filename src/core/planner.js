@@ -11,9 +11,14 @@
      · a gap underneath (a prerequisite the twin has seen go wrong) →
        that first, with a built-in lesson;
      · the way to teach it (the mind, core/mind.js — measured, topic by
-       topic, switched when it doesn't stick): for shapes, pictures first
-       (the built-in drawn lessons) or straight into the school's own
-       story lesson;
+       topic, switched when it doesn't stick):
+         shapes  — pictures first (a built-in drawn lesson), or straight
+                   into the school's own story lesson;
+         maths   — the Picture Hut's cartoon for the skill first, or
+                   straight into the school's story;
+         reading — inside the school's lesson itself: Munni reads the
+                   passage first, its hard words in pieces, or the child
+                   reads it alone first;
      · the school's lesson — the teacher's chapter, the same for every
        child — whose answers tell the mind whether the way worked;
      · Teach Munni on the aims the teacher approved.
@@ -34,6 +39,22 @@ function planBuiltin(skill, c){
   const l = (typeof lessonsForSkill === 'function' ? lessonsForSkill(skill, c || S) : []).find(x => x && x.id && !x.screen && !x.school);
   return l ? l.id : null;
 }
+
+/* Does the Picture Hut have this skill's cartoon for this child's band? */
+function planHasCartoon(skill, c){
+  try{ return typeof getVideoCatalog === 'function' && getVideoCatalog(c || S).some(v => v.skillId === skill); }catch(e){ return false; }
+}
+/* A cartoon step is done once the child has watched it for this round: the
+   episode's card earned, or the mind's round for it still open. */
+function planCartoonDone(skill, c){
+  const ch = c || S, m = mindOf(ch), p = m.pending[skill];
+  return (ch.cards || []).some(k => k.id === `card-vid-${skill}`) || !!(p && p.way === 'cartoon');
+}
+const PLAN_READ_LABEL = {
+  model:  { en: 'Munni reads it first', hi: 'मुन्नी पहले पढ़ेगी' },
+  chunks: { en: 'Hard words in pieces', hi: 'कठिन शब्द टुकड़ों में' },
+  solo:   { en: 'You read it first',    hi: 'पहले तुम पढ़ो' }
+};
 
 /* Why this way, in words a parent understands — from this child's own record. */
 function planWhyWay(skill, way, c){
@@ -69,33 +90,54 @@ function planFor(les, c){
       }
     }
     // the way to teach it
-    if(mindDomain(skill) === 'shape'){
+    const dom = mindDomain(skill);
+    if(dom === 'shape'){
       const pic = planBuiltin(skill, ch);
       way = mindChoose(skill, pic ? ['show', 'story'] : ['story'], ch);
       if(way === 'show' && pic) steps.push({ k: 'show', skill, lesson: pic, done: done(pic),
         label: { en: 'Pictures first', hi: 'पहले चित्र' }, why: planWhyWay(skill, 'show', ch) });
+    } else if(dom === 'math'){
+      // the cartoon or the school's story; "show" and "steps" stay in Counting
+      // Stones, where they teach a missed sum
+      way = mindChoose(skill, planHasCartoon(skill, ch) ? ['cartoon', 'story'] : ['story'], ch);
+      if(way === 'cartoon') steps.push({ k: 'cartoon', skill, done: planCartoonDone(skill, ch),
+        label: { en: 'The cartoon first', hi: 'पहले कार्टून' }, why: planWhyWay(skill, 'cartoon', ch) });
+    } else if(dom === 'read'){
+      // the way lives inside the school's lesson: how its passage is read
+      way = mindChoose(skill, ['model', 'chunks', 'solo'], ch);
     }
   }
-  steps.push({ k: 'school', lesson: les.id, done: done(les.id),
-    label: knows ? { en: 'Show you know it', hi: 'दिखाओ कि तुम्हें आता है' } : { en: 'The school’s lesson', hi: 'स्कूल का पाठ' },
+  const readWay = PLAN_READ_LABEL[way] ? way : null;
+  steps.push({ k: 'school', lesson: les.id, done: done(les.id), readWay,
+    label: knows ? { en: 'Show you know it', hi: 'दिखाओ कि तुम्हें आता है' }
+         : readWay ? { en: 'The school’s lesson — ' + PLAN_READ_LABEL[readWay].en.toLowerCase(), hi: 'स्कूल का पाठ — ' + PLAN_READ_LABEL[readWay].hi }
+         : { en: 'The school’s lesson', hi: 'स्कूल का पाठ' },
     why: knows ? { en: 'you already know this well', hi: 'यह तुम्हें अच्छे से आता है' }
-         : way === 'story' ? planWhyWay(skill, 'story', ch) : { en: 'what your class is learning this week', hi: 'इस हफ़्ते तुम्हारी कक्षा यही सीख रही है' } });
+         : way === 'story' || readWay ? planWhyWay(skill, way, ch) : { en: 'what your class is learning this week', hi: 'इस हफ़्ते तुम्हारी कक्षा यही सीख रही है' } });
   const unit = typeof teachUnitFor === 'function' ? teachUnitFor(les, ch) : null;
   if(unit){
     const taught = Object.values((typeof teachOf === 'function' ? teachOf(ch) : { units: {} }).units).some(u => u.lessonId === les.id);
     steps.push({ k: 'teach', lesson: les.id, done: taught, label: { en: 'Teach Munni', hi: 'मुन्नी को सिखाओ' },
       why: { en: 'Munni forgets — you explain it back', hi: 'मुन्नी भूल जाती है — तुम उसे समझाओ' } });
   }
-  return { lesson: les.id, skill, knows, way, steps, next: steps.find(s => !s.done) || null };
+  // the next step comes after the last one done: a step skipped on the way
+  // (the child opened the school's lesson straight away) doesn't come back
+  let last = -1; steps.forEach((s, i) => { if(s.done) last = i; });
+  return { lesson: les.id, skill, knows, way, steps, next: steps.find((s, i) => i > last && !s.done) || null };
 }
 
-/* How a lesson being opened counts as teaching (core/mind.js): a built-in
-   shape lesson is "pictures first"; a school lesson is "the school's story",
-   unless this child's plan had pictures first — then it is the check that
-   tells whether the pictures worked, and labels nothing. */
+/* How a lesson being opened counts as teaching (core/mind.js):
+   · a built-in shape lesson is "pictures first";
+   · a school reading lesson is taught the plan's reading way, inside it;
+   · any other school lesson is "the school's story" — unless this child's
+     plan taught it another way first (pictures, the cartoon): then the
+     school's lesson is the check that tells whether that way worked, and
+     labels nothing. */
 function planMarkWay(les, skill, c){
-  if(mindDomain(skill) !== 'shape') return 'story';
-  if(!les.school) return 'show';
+  const dom = mindDomain(skill);
+  if(!les.school) return dom === 'shape' ? 'show' : 'story';
+  if(skill !== les.skillId) return 'story';            // the plan's way is for the lesson's own skill
   const p = planFor(les, c);
-  return p && p.way === 'show' ? null : 'story';
+  if(dom === 'read') return p && p.way ? p.way : null;
+  return p && p.way && p.way !== 'story' ? null : 'story';
 }

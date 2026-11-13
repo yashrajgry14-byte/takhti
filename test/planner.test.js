@@ -43,17 +43,19 @@ for(const f of [...html.matchAll(/<script src="([^"]+)"/g)].map(m => m[1])
   .filter(f => /^src\/(config|state)\.js$|^src\/(content|core)\/|^src\/games\/game-core\.js$/.test(f)).filter(f => !/\/(speech|voice|sfx)\.js$/.test(f)))
   vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
 ctx.log = () => {};
+// the mind samples (Thompson): a seeded random makes every run the same run
+vm.runInContext(`var __seed = 7; mindRand = () => (__seed = (__seed * 16807) % 2147483647) / 2147483647;`, ctx);
 const V = src => JSON.parse(vm.runInContext(`JSON.stringify(${src})`, ctx));
 vm.runInContext(`S.age = 8; var LES = sylClean(${JSON.stringify(CIRCLE)}, { band: 'developing' }).lesson;
-  var kid = (extra) => Object.assign({ age: 8, doneLessons: [] }, extra || {});
+  var kid = (extra) => Object.assign(JSON.parse(JSON.stringify(S)), { age: 8, doneLessons: [], cards: [], mind: undefined, twin: undefined, teach: undefined }, extra || {});
   var steps = p => p.steps.map(s => s.k + (s.k === 'gap' ? ':' + s.skill : ''));`, ctx);
 check('the approved school lesson is a shapes lesson with its aims (the topic the mind now tracks as "shape")',
   V(`[LES.school, LES.skillId, LES.aims.length, mindDomain('shapes2d'), mindDomain('angles'), mindDomain('perimeter'), Object.keys(WAYS.shape)]`).join() === 'true,shapes2d,1,shape,shape,shape,show,story', V(`LES`));
 
 // two children: their own records say different ways have worked on shapes
 vm.runInContext(`
-  var asha = kid({ mind: { v: 1, arms: { angles: { show: { a: 5, b: 0 }, story: { a: 0, b: 4 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} } });
-  var kabir = kid({ mind: { v: 1, arms: { angles: { show: { a: 0, b: 4 }, story: { a: 5, b: 0 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} } });
+  var asha = kid({ mind: { v: 1, arms: { angles: { show: { a: 12, b: 0 }, story: { a: 0, b: 12 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} } });
+  var kabir = kid({ mind: { v: 1, arms: { angles: { show: { a: 0, b: 12 }, story: { a: 12, b: 0 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} } });
   var pa = planFor(LES, asha), pk = planFor(LES, kabir);`, ctx);
 check('two children, the same approved aims, two different paths: pictures first for the child drawings work for; straight into the school\'s story for the other',
   V(`[pa.way, steps(pa).join(' '), pk.way, steps(pk).join(' ')]`).join(' | ') === 'show | show school teach | story | school teach', V(`[steps(pa), steps(pk)]`));
@@ -98,6 +100,44 @@ vm.runInContext(`var raj = kid(); var w0 = planFor(LES, raj).way; for(let r = 0;
 check('a way that doesn\'t stick twice is switched, with the reason — and the plan follows the switch',
   V(`[pr.way !== w0, raj.mind.changes.length >= 1, raj.mind.changes[0].from === w0]`).every(Boolean), V(`[w0, pr.way, raj.mind.changes]`));
 
+// maths: the Picture Hut's cartoon, or straight into the school's story
+const SUB = { title:{ en:'Mangoes left', hi:'बचे हुए आम' }, sub:{ en:'Take away with a bar', hi:'पट्टी से घटाना' }, ic:'🥭', skill:'sub2', source:'Chapter 4',
+  aims:[{ short:{ en:'Part from a whole', hi:'पूरे में से हिस्सा' }, point:{ en:'The child can take a part away from a whole up to 100.', hi:'बच्चा 100 तक के पूरे में से हिस्सा घटा सकता है।' },
+          forget:{ en:'Ravi had 45 mangoes and gave some away. I forgot how to find what is left!', hi:'रवि के पास 45 आम थे, कुछ दे दिए। बचे हुए कैसे निकालूँ, मैं भूल गई!' },
+          hints:[{ en:'Is the pile getting bigger or smaller?', hi:'ढेर बड़ा हो रहा है या छोटा?' }, { en:'Which number is the whole?', hi:'पूरा कौन सी संख्या है?' }],
+          ideas:[{ en:'take the part away from the whole', hi:'पूरे में से हिस्सा घटाओ', words:['take away','subtract','minus','ghatao','घटा','घटाओ'] }] }],
+  beats:[{ t:'intro', say:{ en:'Ravi had 45 mangoes.', hi:'रवि के पास 45 आम थे।' } }, { t:'bar', a:45, b:20, say:{ en:'He gave 20 to his friends.', hi:'उसने 20 आम दोस्तों को दिए।' } },
+         { t:'ask', q:{ en:'How many are left?', hi:'कितने आम बचे?' }, opts:['25','65'], hiOpts:['25','65'], correct:0, why:{ en:'Children add instead of taking away.', hi:'बच्चे घटाने की जगह जोड़ देते हैं।' } },
+         { t:'win', say:{ en:'Take the part away from the whole.', hi:'पूरे में से हिस्सा घटाओ।' } }] };
+vm.runInContext(`var MLES = sylClean(${JSON.stringify(SUB)}, { band: 'developing' }).lesson;
+  var toon = kid({ mind: { v: 1, arms: { carry: { cartoon: { a: 12, b: 0 }, story: { a: 0, b: 12 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} } });
+  var tale = kid({ mind: { v: 1, arms: { carry: { cartoon: { a: 0, b: 12 }, story: { a: 12, b: 0 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} } });
+  var pt = planFor(MLES, toon), ps = planFor(MLES, tale);`, ctx);
+check('maths: the same approved subtraction lesson — the cartoon first for the child cartoons work for, straight into the school\'s story for the other',
+  V(`[MLES && MLES.skillId, planHasCartoon('sub2', toon), pt.way, steps(pt).join(' '), ps.way, steps(ps).join(' ')]`).join(' | ') === 'sub2 | true | cartoon | cartoon school teach | story | school teach', JSON.stringify(V(`[MLES && MLES.skillId, planHasCartoon('sub2', toon), pt.way, steps(pt), ps.way, steps(ps)]`)));
+vm.runInContext(`mindTaught('sub2', 'cartoon', toon); var pt2 = planFor(MLES, toon);`, ctx);
+check('…the cartoon step is done once it was watched (its round open), the school\'s lesson next — and that lesson, after the cartoon, is the check that labels nothing',
+  V(`[pt2.steps[0].done, pt2.next.k, planMarkWay(MLES, 'sub2', toon), planMarkWay(MLES, 'sub2', tale)]`).join() === 'true,school,,story', JSON.stringify(V(`[pt2.steps, planMarkWay(MLES, 'sub2', toon), planMarkWay(MLES, 'sub2', tale)]`)));
+vm.runInContext(`var skip = kid({ mind: JSON.parse(JSON.stringify(toon.mind)) }); skip.mind.pending = {}; skip.doneLessons.push(MLES.id); var pk2 = planFor(MLES, skip);`, ctx);
+check('…a step skipped on the way doesn\'t come back: the school\'s lesson done first, next is Teach Munni, not the cartoon', V(`pk2.next && pk2.next.k`) === 'teach', V(`pk2`));
+
+// reading: the way lives inside the school's lesson — how its passage is read
+const RD = { title:{ en:"Meena's kite", hi:'मीना की पतंग' }, sub:{ en:'Read and answer', hi:'पढ़ो और जवाब दो' }, ic:'🪁', skill:'read5', source:'Lesson 6',
+  aims:[{ short:{ en:'Find where', hi:'कहाँ, ढूँढो' }, point:{ en:'The child can find where something happens in a short story.', hi:'बच्चा छोटी कहानी में ढूँढ सकता है कि कुछ कहाँ होता है।' },
+          forget:{ en:'I forgot where Meena flies her kite! How can I find out?', hi:'मैं भूल गई मीना पतंग कहाँ उड़ाती है! कैसे पता करूँ?' },
+          hints:[{ en:'Where is the answer hiding — in your head, or somewhere you can look?', hi:'जवाब कहाँ छिपा है — दिमाग़ में, या कहीं जहाँ देख सकते हो?' }, { en:'Which part of it talks about a place?', hi:'कौन सा हिस्सा किसी जगह की बात करता है?' }],
+          ideas:[{ en:'look back in the story for the sentence that says where', hi:'कहानी में वापस देखो, वह वाक्य जो जगह बताता है', words:['story','read again','look back','sentence','kahani','dekho','कहानी','पढ़','देखो','वाक्य'] }] }],
+  beats:[{ t:'passage', art:'🪁', p:{ en:'Meena has a red kite. She flies it on the roof. The wind is strong today.', hi:'मीना के पास लाल पतंग है। वह छत पर उड़ाती है। आज हवा तेज़ है।' } },
+         { t:'ask', q:{ en:'Where does Meena fly the kite?', hi:'मीना पतंग कहाँ उड़ाती है?' }, opts:['On the roof','In the park'], hiOpts:['छत पर','पार्क में'], correct:0 },
+         { t:'win', say:{ en:'The answer was in the story.', hi:'जवाब कहानी में था।' } }] };
+vm.runInContext(`var RLES = sylClean(${JSON.stringify(RD)}, { band: 'developing' }).lesson;
+  var rk = w => kid({ mind: { v: 1, arms: { read4: Object.fromEntries(['model','chunks','solo'].map(x => [x, x === w ? { a: 12, b: 0 } : { a: 0, b: 12 }])) }, plan: {}, pending: {}, cool: {}, changes: [], school: {} } });
+  var rm = planFor(RLES, rk('model')), rc = planFor(RLES, rk('chunks')), rs = planFor(RLES, rk('solo'));`, ctx);
+check('reading: three children, the same approved passage, three ways — Munni reads it first / hard words in pieces / you read it first — inside the school\'s lesson',
+  V(`[rm.way, rc.way, rs.way, steps(rm).join(' ')]`).join(' | ') === 'model | chunks | solo | school teach'
+    && /munni reads it first/.test(V(`rm.steps[0].label.en`)) && /टुकड़ों/.test(V(`rc.steps[0].label.hi`)) && /you read it first/.test(V(`rs.steps[0].label.en`)), V(`[rm.steps[0], rc.steps[0], rs.steps[0]]`));
+check('…and opening the school\'s reading lesson counts as that way for the mind', V(`[planMarkWay(RLES, 'read5', rk('model')), planMarkWay(RLES, 'read5', rk('chunks'))]`).join() === 'model,chunks', '');
+
 /* ---------- 2. the app ---------- */
 (async () => {
   const MIME = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css', '.json':'application/json', '.svg':'image/svg+xml', '.webmanifest':'application/manifest+json' };
@@ -125,7 +165,7 @@ check('a way that doesn\'t stick twice is switched, with the reason — and the 
     [...win.document.querySelectorAll('.ob-av')][0].click(); [...win.document.querySelectorAll('.ob-cakebtn')][5].click(); win.document.querySelector('.ob-go').click();
     E(`S.game = S.game || 'cricket'; S.name = 'Asha'; S.age = 8; S.classCode = 'CLS001'; go('map')`);
     E(`sylSave('CLS001', [sylClean(${JSON.stringify(CIRCLE)}, { band: 'developing' }).lesson]);
-       S.mind = { v: 1, arms: { angles: { show: { a: 5, b: 0 }, story: { a: 0, b: 4 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} }; go('lessons')`);
+       S.mind = { v: 1, arms: { angles: { show: { a: 12, b: 0 }, story: { a: 0, b: 12 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} }; go('lessons')`);
     await wait(20);
     const steps = [...win.document.querySelectorAll('.planstep')].map(x => x.textContent.trim());
     check('the Story Fire shows this child\'s path under the school lesson — pictures first, the school\'s lesson, teach Munni — and why',
@@ -145,6 +185,31 @@ check('a way that doesn\'t stick twice is switched, with the reason — and the 
     for(let i = 0; i < 50 && !(E(`S.lesson && S.lesson.id`) || '').startsWith('sch-'); i++) await wait(10);
     check('…then the school\'s lesson, which — after pictures — is the check and doesn\'t open a second way',
       /^sch-/.test(E(`S.lesson && S.lesson.id`)) && E(`S.mind.pending.shapes2d && S.mind.pending.shapes2d.way`) === 'show', E(`JSON.stringify([S.lesson && S.lesson.id, S.mind.pending])`));
+
+    // reading: the school's passage, read this child's way
+    E(`endLesson(); sylSave('CLS001', [sylClean(${JSON.stringify(RD)}, { band: 'developing' }).lesson]);
+       S.mind = { v: 1, arms: { read4: { chunks: { a: 12, b: 0 }, model: { a: 0, b: 12 }, solo: { a: 0, b: 12 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} }; go('lessons')`);
+    await wait(20);
+    check('the Story Fire names the reading way inside the school\'s lesson ("hard words in pieces")', /hard words in pieces/.test(screen()), screen().slice(0, 300));
+    win.document.querySelector('.lescard[onclick^="planGo"]').click();
+    for(let i = 0; i < 50 && !E(`!!S.lesson`); i++) await wait(10);
+    check('…its passage shows the two hardest words in pieces, Munni says to say them first, and the mind counts it as "pieces"',
+      E(`S.lesson && S.lesson.readWay`) === 'chunks' && /·/.test(win.document.querySelector('.planchunks') ? win.document.querySelector('.planchunks').textContent : '') && /hard words in pieces/.test(screen())
+        && E(`S.mind.pending.read5 && S.mind.pending.read5.way`) === 'chunks', E(`JSON.stringify([S.lesson && S.lesson.readWay, S.mind.pending])`) + ' ' + screen().slice(0, 300));
+    E(`endLesson(); S.mind = { v: 1, arms: { read4: { model: { a: 12, b: 0 }, chunks: { a: 0, b: 12 }, solo: { a: 0, b: 12 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} }; go('lessons')`);
+    await wait(20);
+    win.document.querySelector('.lescard[onclick^="planGo"]').click();
+    for(let i = 0; i < 50 && !E(`!!S.lesson`); i++) await wait(10);
+    check('…for a child Munni-reads-first works for, Munni reads the passage itself aloud first',
+      E(`S.lesson && S.lesson.readWay`) === 'model' && /Listen — I will read it first\. Meena has a red kite/.test(win.document.querySelector('.lescap').textContent), win.document.querySelector('.lescap') && win.document.querySelector('.lescap').textContent);
+    // maths: the cartoon first
+    E(`endLesson(); sylSave('CLS001', [sylClean(${JSON.stringify(SUB)}, { band: 'developing' }).lesson]);
+       S.mind = { v: 1, arms: { carry: { cartoon: { a: 12, b: 0 }, story: { a: 0, b: 12 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} }; go('lessons')`);
+    await wait(20);
+    check('maths: the Story Fire shows the cartoon first for a child cartoons work for', /The cartoon first/.test(screen()), screen().slice(0, 300));
+    win.document.querySelector('.lescard[onclick^="planGo"]').click();
+    await wait(30);
+    check('…and the button opens that skill\'s cartoon in the Picture Hut', E(`S.screen`) === 'theater' && E(`S.activeVideo && S.activeVideo.data.skillId`) === 'sub2', E(`JSON.stringify([S.screen, S.activeVideo && S.activeVideo.data.skillId])`));
     check('no uncaught script errors', jsErrors.length === 0, jsErrors.join(' | '));
   }catch(e){ check('the app run finished', false, e.stack); }
   appServer.close();

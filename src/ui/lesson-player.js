@@ -43,7 +43,15 @@ const LES_SAY = {
   frac:  { en:'One whole, cut into {b} equal parts. Each part is one out of {b}.', hi:'एक पूरा, {b} बराबर हिस्सों में। हर हिस्सा {b} में से एक।' }
 };
 
+/* Lines for a passage read this child's way (core/planner.js, core/mind.js). */
+const LES_READ_SAY = {
+  model:  { en: 'Listen — I will read it first. ', hi: 'सुनो — पहले मैं पढ़ती हूँ। ' },
+  chunks: { en: 'Here are the hard words in pieces. Say them, then read it all.', hi: 'ये रहे कठिन शब्द टुकड़ों में। इन्हें बोलो, फिर पूरा पढ़ो।' },
+  solo:   { en: 'You read it first. Then I will ask you about it.', hi: 'पहले तुम पढ़ो। फिर मैं पूछूँगी।' }
+};
 function lesSay(b){
+  const rw = b.t === 'passage' && S.lesson && S.lesson.readWay;
+  if(rw && LES_READ_SAY[rw]) return (LES_READ_SAY[rw][S.lang] || LES_READ_SAY[rw].en) + (rw === 'model' ? L(b.p) : '');
   if(typeof litSay === 'function'){ const s = litSay(b); if(s != null) return s; }
   if(typeof compSay === 'function'){ const s = compSay(b); if(s != null) return s; }
   if(typeof geoSay === 'function'){ const s = geoSay(b); if(s != null) return s; }
@@ -190,6 +198,8 @@ async function startLesson(id){
   const les = S.online && !found.school ? await enrichLesson(found) : found;   // already falls back to `found` on any failure
   S._lessonBusy = false;
   S.lesson = { id, data: les, i:0, right:0, asked:0, picked:null };
+  // a school reading lesson's passage is read this child's way (core/planner.js)
+  if(les.school && typeof planFor === 'function' && les.skillId && mindDomain(les.skillId) === 'read'){ const p = planFor(les); S.lesson.readWay = p && p.way; }
   // a story is a way of being taught (core/mind.js): the answers that follow tell whether it stuck
   // (a shapes lesson: pictures or the school's story — or, after pictures, the check; core/planner.js)
   if(typeof mindTaught === 'function') for(const sk of [les.skillId].concat(CONCEPT_SKILLS[les.concept] || []).filter((x, i, a) => x && mindDomain(x) && a.indexOf(x) === i)){
@@ -341,7 +351,7 @@ function lessonHTML(){
 
   <div class="lesstage">
     ${b.svg ? b.svg : ''}
-    <div class="lesart">${asking ? `${pic ? geoArt(pic) : ''}<div class="lesq">${L(b.q)}</div>` : lesArt(b, obj)}</div>
+    <div class="lesart">${asking ? `${pic ? geoArt(pic) : ''}<div class="lesq">${L(b.q)}</div>` : lesArt(b, obj)}${!asking ? lesChunksHTML(b) : ''}</div>
     ${!asking ? `<div class="lescap">${lesSay(b)}</div>` : ''}
     ${cardRewardHtml}
   </div>
@@ -446,6 +456,16 @@ function schoolLessonsHTML(){
     </button>${path(l)}`).join('')}
   </div>`;
 }
+/* A passage's two longest words, in pieces — the "hard words in pieces" way. */
+function lesChunksHTML(b){
+  if(b.t !== 'passage' || !S.lesson || S.lesson.readWay !== 'chunks' || typeof wordChunks !== 'function') return '';
+  const text = L(b.p), lang = /[ऀ-ॿ]/.test(text) ? 'hi' : 'en';
+  const len = w => typeof graphemes === 'function' ? graphemes(w).length : w.length;
+  const words = text.replace(/[.,!?।"“”]/g, ' ').trim().split(/\s+/).filter((w, i, a) => len(w) >= 3 && a.indexOf(w) === i)
+    .sort((x, y) => len(y) - len(x)).slice(0, 2);
+  if(!words.length) return '';
+  return `<div class="planchunks" style="margin-top:8px;font-size:15px">${words.map(w => `<div>${attr(wordChunks(w, lang).join(' · '))} → <b>${attr(w)}</b></div>`).join('')}</div>`;
+}
 /* The next step of this child's path for a school lesson. */
 function planGo(id){
   const les = schoolLessons().find(l => l.id === id);
@@ -453,5 +473,6 @@ function planGo(id){
   const p = typeof planFor === 'function' ? planFor(les) : null, s = p && p.next;
   log(0, `Plan · "${les.title.en}" for this child: ${p ? p.steps.map(x => (x.done ? '✓' : x === s ? '▶' : '·') + x.k + (x.k === 'gap' ? ' ' + x.skill : '')).join(' → ') : 'none'}${p && p.way ? ' · way: ' + p.way : ''}${p && p.knows ? ' · already knows it' : ''}`);
   if(s && s.k === 'teach' && typeof teachStart === 'function'){ const u = teachUnitFor(les); if(u){ teachStart(u); return; } }
+  if(s && s.k === 'cartoon' && typeof startCartoonVideo === 'function'){ go('theater'); startCartoonVideo(s.skill); return; }
   startLesson(s && (s.k === 'gap' || s.k === 'show') ? s.lesson : id);
 }

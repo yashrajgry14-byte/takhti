@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v49` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v50` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -417,20 +417,33 @@ the mind already know — nothing new measured, nothing sent:
   school's lesson as "show you know it", then Teach Munni;
 - **a gap underneath** (a prerequisite below 0.5 over ≥ 3 answers) → a
   built-in lesson for it first (perimeter → two-digit adding);
-- **the way** — for shapes (`mindDomain()` → `'shape'` for `shapes2d`,
-  `angles`, `perimeter`; `WAYS.shape`): *pictures first* (a built-in drawn
-  lesson, `planBuiltin()`) or *the school's story*, chosen by
-  `mindChoose()` and held per topic, switched when it doesn't stick;
-- **the school's lesson** — the same for every child; after pictures it is
-  the check, so opening it labels no second way (`planMarkWay()`, called by
-  `startLesson()`), and its answers settle whether the pictures worked;
+- **the way**, chosen by `mindChoose()` from this child's own record, held
+  per topic, switched when it doesn't stick:
+  - *shapes* (`mindDomain()` → `'shape'` for `shapes2d`, `angles`,
+    `perimeter`; `WAYS.shape`): **pictures first** (a built-in drawn lesson,
+    `planBuiltin()`) or **the school's story**;
+  - *maths*: **the cartoon first** (the Picture Hut's episode for the skill,
+    when the band has one — `planHasCartoon()`; done once watched, its card
+    earned or its round open — `planCartoonDone()`) or **the school's
+    story**; *show* and *steps* stay in Counting Stones, where they teach a
+    missed sum;
+  - *reading*: inside the school's lesson itself — **Munni reads the
+    passage first** (she reads it aloud), **its hard words in pieces** (the
+    two longest, `wordChunks()`, `lesChunksHTML()`), or **you read it
+    first** (`S.lesson.readWay`, `LES_READ_SAY`);
+- **the school's lesson** — the same for every child; after pictures or
+  the cartoon it is the check, so opening it labels no second way
+  (`planMarkWay()`, called by `startLesson()`, for the lesson's own skill
+  only), and its answers settle whether that way worked; a reading lesson
+  opens as the plan's reading way;
 - **Teach Munni** on the approved aims.
 
 Each step says why, from the child's own record ("this has worked for you
 before"), in Hindi and English. A step's status is read from what is kept
 (`S.doneLessons`, `S.teach` units' `lessonId`) — the plan has no state of
-its own. Maths and reading school lessons get the gap and knows-it steps;
-their own ways (cartoons, read-first) stay where they already live.
+its own. The next step is the first one not done *after* the last one
+done, so a step skipped on the way (the school's lesson opened straight
+away) doesn't come back.
 
 ## Shapes — `content/geometry.js`
 
@@ -571,8 +584,8 @@ when it stops working.
   app really has (`WAYS`): maths — *show* (the objects animation), *steps*
   (`explain.js`), *story* (a lesson), *cartoon*; reading — *model* (Munni
   reads first), *chunks* (hard words in pieces), *solo*; shapes — *show* (a
-  built-in drawn lesson), *story* (the school's lesson; see **This child's
-  path**).
+  built-in drawn lesson), *story* (the school's lesson). A school lesson in
+  any of the three gets its way from **This child's path**.
 - **Every teaching moment is labelled** (`mindTaught()`): "Show me", Ask
   Munni, a story lesson, a cartoon, the Reading Tree's way for the line.
   The next answers the child gives **on their own** on that skill settle
@@ -1210,7 +1223,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `geometry` | vm + jsdom | answers read off the drawing (sides, corners, names, perimeter, equal sides, the centre, corner kinds, a numbered row, the odd one out), in English and Hindi; the checker rejects a wrong marked answer, a disagreeing Hindi answer, two right answers, a figure that doesn't say what it asks, an equal-sided "rectangle", an impossible triangle, a row with two matches, a number over the ceiling, an undrawable shape; the 27 built-in lessons pass, a question's picture is never named or measured aloud, Ask Munni's hint never says the answer, clean SVGs, labels hidden while counting, no shape question in the games, drafted fields sanitised; in the app: the picture stays on screen during the question, the answer counts for the skill, Ask Munni's how-to-look help, a drafted shape lesson checked against its drawing |
 | `teachback` | vm + HTTP + jsdom | every built-in aim passes its check; the checker rejects a question or hint that gives the explanation, no Hindi, markup; the offline judge (covered/partly/missing/unsure, EN/HI/romanised, Devanagari digits); Munni's sum for every skill, three ages, many sums: never the right answer in her working, a real named mistake, the right option there; the child's own habit acted out; a whole session (hints, "later", never "wrong", unsure costs nothing, one explanation teaching two aims, the first tap as evidence and an agreed mistake into the twin, a nudged tap not); what is kept; "forgot again" asks only the gaps; the judge's credit needs a real quote of the child; Gemini's school aims cleaned, inside the lesson's id, idempotent; a topic word Munni's question and the point share taken out of the explanation words (centre), but a question that says the answer still dropped; a giveaway hint named with its words, mended to a general nudge only after the repair round, a giveaway question never; the repair gets every dropped aim's reason; the judge against a stand-in Gemini (key in a header, schema, the server's own aim text not the phone's, words as data, fix ideas from the mistake id, downgrade, 403/400, no key → no judge, failing Gemini → no judge, per-address limit) and through the voice server with a stand-in speech service; in the app: the end-of-lesson button, chips, Munni's sum, the summary, learn it again, "Munni forgot again", the parent's "How … explains" (EN/HI), the teacher's results per aim, the class mirror and sync carrying only ids and c/p/g; with a voice server: nothing sent on v1 terms, the new terms offered, then the recording and typed words judged with no name, an unquoted credit refused; no button for 3–4 |
 | `speech-provider` | vm + HTTP + jsdom + child processes | one stand-in for Gemini (hearing, TTS, Batch API) and Sarvam: the switch both ways (unset/gemini → Gemini; sarvam → Sarvam only, Gemini never called); Gemini's request (the model, key in a header, inline audio, structured output, "write what you hear"); the answer's shape; the passage only from the server's own lines; Gemini failing or slow → Sarvam inside the budget; neither → skipped at once; sarvam set and down → skipped, no Gemini; live `/reading/tts` never Gemini; per-address limit; Teach Munni hears the same way; nothing kept in the data folder; Gemini TTS (model, voice, WAV, PCM wrapped, the older voice field after a 400); `tools/build-audio.mjs` through the Batch API (WAV without ffmpeg, mp3 with it, carries on where it stopped, `--provider sarvam`); on the phone: pack → live backup → device voice, a `.wav` pack, v2 terms send nothing, a skipped check never blocks (message, typing, the line comes back, no recording kept); `tools/compare-speech.mjs` names the slip Gemini missed and advises switching back, or keeping Gemini |
-| `planner` | vm + jsdom | two children, the same approved shapes aims, two different paths from their own records (pictures first / the school's story), each step's why in EN/HI, the plan held; already knows it → show it, teach Munni; a gap underneath first (perimeter → add2) with a built-in lesson; status from what the child really did; labelling (pictures, the story, the check labels nothing), the answers settling it, two misses switching the way and the plan following; in the app: the Story Fire's path and why (EN/HI), the button starting the next step, then the school lesson as the check |
+| `planner` | vm + jsdom | two children, the same approved shapes aims, two different paths from their own records (pictures first / the school's story), each step's why in EN/HI, the plan held; maths: the cartoon first or the school's story, the cartoon done once watched, the school's lesson after it the check, a skipped step not coming back; reading: three children, three ways inside the same lesson (Munni reads first / pieces / you first), each counted as that way; already knows it → show it, teach Munni; a gap underneath first (perimeter → add2) with a built-in lesson; status from what the child really did; labelling (pictures, the story, the check labels nothing), the answers settling it, two misses switching the way and the plan following; in the app: the Story Fire's path and why (EN/HI), the button starting the next step, then the school lesson as the check; a reading lesson's passage in pieces, or read aloud by Munni first; a maths lesson's button opening the cartoon (seeded sampling, so every run is the same) |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -1369,11 +1382,12 @@ Honest edges of what's built:
    would suit a voice-only phone).
 16. **The child's path is new (13 Nov 2026).** Its thresholds (knows ≥ 0.85
    over 4 answers, a gap < 0.5 over 3) inherit the twin's uncalibrated
-   numbers; only shapes have two ways for a school lesson (pictures or the
-   school's story) — a maths or reading school lesson gets the gap and
-   knows-it steps but no choice of way yet; built-in picture lessons for
-   `shapes2d` at 7–8 are only the centre-of-a-circle ones; the teacher
-   doesn't yet see which path each child took.
+   numbers; a maths school lesson can only choose the cartoon or the
+   story (and only for skills with an episode at the child's band — the
+   rest go straight to the story); reading ways change how the passage is
+   read, not the questions; built-in picture lessons for `shapes2d` at 7–8
+   are only the centre-of-a-circle ones; the teacher doesn't yet see which
+   path each child took.
 15. **Gemini as the speech provider is new (12 Nov 2026).** It is tested
    against a stand-in only. The real risk is that a model given the line
    "hears" the line — tidying a child's misreading the way the phone's
