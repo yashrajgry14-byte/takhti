@@ -20,6 +20,10 @@
    --class kg | c1 … c5 (default c3)     --count 2–5 lessons (default 4)
    --note "…" what to stress               --out folder (default syllabus-run)
 
+     node tools/try-syllabus.mjs --recheck syllabus-run/raw.json
+   checks a saved run's drafts again with today's checker (no Gemini, no
+   key) and rewrites its report — what the same drafts would get now.
+
    The key comes from voice/.env (GEMINI_API_KEY), as the voice server
    reads it. It is never printed or written: the report and raw.json
    hold only what Gemini sent and what the checker said.
@@ -105,17 +109,28 @@ export async function run(opts, fetchImpl){
   if(failed.length){
     const t1 = Date.now();
     const r = await draftCore({ mode:'repair', repair: failed.map(x => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })), rules }, env, 'try-syllabus', fetchImpl);
-    repair = { status: r.status, model: r.json.model || '', error: r.json.error || '', ms: Date.now() - t1 };
+    repair = { status: r.status, model: r.json.model || '', error: r.json.error || '', ms: Date.now() - t1, tried: r.json.tried || [] };
     if(r.status === 200) (r.json.lessons || []).forEach((raw, k) => { if(failed[k]){ failed[k].repairRaw = raw; failed[k].second = ph.clean(raw, cls.band, skills, true); } });
     say(`Sent ${failed.length} back with the checker's reasons · ${failed.filter(x => x.second && x.second.ok).length} fixed`);
   }
   const result = {
     at: new Date().toISOString(), cls: cls.id, band: cls.band, rules, note: opts.note || '',
-    source: opts.file ? path.basename(opts.file) : path.basename(opts.text), model: d.json.model, chapter: d.json.chapter, draftMs, repair,
+    source: opts.file ? path.basename(opts.file) : path.basename(opts.text), model: d.json.model, chapter: d.json.chapter, draftMs, tried: d.json.tried || [], repair,
     drafts: drafts.map(x => ({ raw: x.raw, first: x.first, repairRaw: x.repairRaw || null, second: x.second || null,
       verdict: x.first.ok ? 'passed' : x.second && x.second.ok ? 'repaired' : 'not used' }))
   };
   return result;
+}
+
+/* A saved run checked again by today's checker — no Gemini, no key. After a
+   change to the checks, this says what the same drafts would get now. */
+export function recheck(r){
+  const ph = phoneChecker(), skills = ph.skills(r.cls);
+  const drafts = r.drafts.map(x => {
+    const first = ph.clean(x.raw, r.band, skills), second = x.repairRaw ? ph.clean(x.repairRaw, r.band, skills, true) : null;
+    return { ...x, first, second, verdict: first.ok ? 'passed' : second && second.ok ? 'repaired' : 'not used' };
+  });
+  return { ...r, rechecked: new Date().toISOString(), drafts };
 }
 
 /* ---------- the report a person reads ---------- */
@@ -150,6 +165,12 @@ export function report(r){
     `**${n('passed')} passed first time · ${n('repaired')} fixed by the repair round · ${n('not used')} not used** (of ${r.drafts.length})  `,
     `Draft took ${(r.draftMs / 1000).toFixed(0)} s` + (r.repair ? ` · repair ${r.repair.status === 200 ? 'took ' + (r.repair.ms / 1000).toFixed(0) + ' s (' + r.repair.model + ')' : 'failed: ' + r.repair.error}` : ''), ''
   ];
+  // which models answered, and how — a 429 is the key's quota, not Google being busy
+  const tl = a => (a || []).map(x => `${x.model} ${x.outcome} (${(x.ms / 1000).toFixed(0)} s)`).join(' → ');
+  if(r.tried && r.tried.length) L.push(`Models for the draft: ${tl(r.tried)}  `);
+  if(r.repair && r.repair.tried && r.repair.tried.length) L.push(`Models for the repair: ${tl(r.repair.tried)}  `);
+  if(r.rechecked) L.push(`_Checked again on ${r.rechecked} by today's checker (the same drafts, no new call to Gemini)._  `);
+  L.push('');
   const why = {};
   r.drafts.forEach(x => (x.first.errors || []).forEach(e => { const k = e.replace(/\d+/g, 'N').replace(/"[^"]*"/g, '"…"').slice(0, 90); why[k] = (why[k] || 0) + 1; }));
   if(Object.keys(why).length) L.push('## What the checker caught first time', ...Object.entries(why).sort((a, b) => b[1] - a[1]).map(([k, c]) => `- ${c}× ${k}`), '');
@@ -172,18 +193,22 @@ function args(argv){
     else if(k === '--count') o.count = Number(v), i++;
     else if(k === '--note') o.note = v, i++;
     else if(k === '--out') o.out = v, i++;
+    else if(k === '--recheck') o.recheck = v, i++;
     else if(k === '--help' || k === '-h') o.help = true;
   }
   return o;
 }
 if(process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)){
   const o = args(process.argv.slice(2));
-  if(o.help || (!o.file && !o.text)){
+  if(o.help || (!o.file && !o.text && !o.recheck)){
     console.log('node tools/try-syllabus.mjs --file chapter.pdf [--class c3] [--count 4] [--note "…"] [--out syllabus-run]');
+    console.log('node tools/try-syllabus.mjs --recheck syllabus-run/raw.json   (the saved drafts, checked again — no Gemini)');
     process.exit(o.help ? 0 : 1);
   }
-  run({ ...o, say: s => console.log('· ' + s) }).then(r => {
-    const out = path.resolve(o.out || 'syllabus-run');
+  const job = o.recheck ? Promise.resolve().then(() => recheck(JSON.parse(fs.readFileSync(o.recheck, 'utf8'))))
+    : run({ ...o, say: s => console.log('· ' + s) });
+  job.then(r => {
+    const out = path.resolve(o.out || (o.recheck ? path.dirname(o.recheck) : 'syllabus-run'));
     fs.mkdirSync(out, { recursive: true });
     fs.writeFileSync(path.join(out, 'raw.json'), JSON.stringify(r, null, 2));
     fs.writeFileSync(path.join(out, 'report.md'), report(r));

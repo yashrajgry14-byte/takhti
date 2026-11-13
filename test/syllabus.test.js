@@ -236,15 +236,17 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
              { t:'figure', kind:'triangle', sides:[5,4,6], ask:'sides' }, { t:'ask', q:{ en:'How many sides does it have?', hi:'इसकी कितनी भुजाएँ हैं?' }, opts:['4','3'], hiOpts:['4','3'], correct:1,
                why:{ en:'Children who just saw the square say four.', hi:'वर्ग देखकर बच्चे चार कहते हैं।' } }, { t:'win', say:{ en:'Count every side once.', hi:'हर भुजा एक बार गिनो।' } }] };
     const tri = clean(TRI), triOk = clean({ ...TRI, beats:[{ t:'intro', say:{ en:'Shapes have straight sides. Let us count them.', hi:'आकृतियों की सीधी भुजाएँ होती हैं। आओ गिनें।' } }].concat(TRI.beats.slice(1)) });
-    check('"A triangle has three straight sides" before "how many sides?" gives the answer away — a number word counts like a digit (and in Hindi, तीन)',
-      !tri.ok && tri.errors.some(e => /say the answer "3"/.test(e)) && triOk.ok, JSON.stringify([tri.errors, triOk.errors]));
+    check('"A triangle has three straight sides" before "how many sides?" gives the answer away — a number word counts like a digit (and in Hindi, तीन) — and the reason says where ("in the intro")',
+      !tri.ok && tri.errors.some(e => /say the answer "3" \(in the intro\)/.test(e)) && triOk.ok, JSON.stringify([tri.errors, triOk.errors]));
     const SQC = { ...TRI, title:{ en:'Square corners', hi:'चौकोर कोने' }, skill:'angles',
       beats:[{ t:'intro', say:{ en:'Look at this corner.', hi:'इस कोने को देखो।' } }, { t:'corner', deg:90 }, { t:'corner', deg:90, ask:'kind' },
              { t:'ask', q:{ en:'What kind of corner is this?', hi:'यह किस तरह का कोना है?' }, opts:['Square corner','Smaller corner'], hiOpts:['चौकोर कोना','छोटा कोना'], correct:0,
                why:{ en:'Children call any corner square.', hi:'बच्चे हर कोने को चौकोर कहते हैं।' } }, { t:'win', say:{ en:'Check it with a book corner.', hi:'किताब के कोने से मिलाओ।' } }] };
     const sqc = clean(SQC), sqcOk = clean({ ...SQC, beats: SQC.beats.map((b, k) => k === 1 ? { t:'corner', deg:60 } : b) });
-    check('teach on one example, ask on another: the teaching corner asked about again is sent back; a different teaching corner passes',
-      !sqc.ok && sqc.errors.some(e => /teaching picture again/.test(e)) && sqcOk.ok, JSON.stringify([sqc.errors, sqcOk.errors]));
+    const sqcQ = sqc.lesson && sqc.lesson.beats.find(b => b.t === 'ask'), sqcPic = sqc.lesson && sqc.lesson.beats.find(b => b.t === 'corner' && b.ask);
+    check('teach on one example, ask on another: the teaching corner asked about again becomes a corner of the OTHER answer\'s kind (smaller) — "square corner", what was just shown, is the wrong answer now',
+      sqc.ok && sqcPic.deg < 90 && /Smaller/.test(sqcQ.opts[sqcQ.correct]) && /छोटा/.test(sqcQ.hiOpts[sqcQ.correct]) && /repeat/.test(sqcQ.why.en) && /दोहरा/.test(sqcQ.why.hi) && sqcOk.ok,
+      JSON.stringify([sqc.errors, sqcPic, sqcQ, sqcOk.errors]));
     const CIR = { ...TRI, title:{ en:'Centre', hi:'केंद्र' },
       beats:[{ t:'intro', say:{ en:'Fold a circle plate to find its center.', hi:'गोल प्लेट को मोड़ो।' } }, { t:'figure', kind:'circle', folds:0 }, { t:'figure', kind:'circle', folds:2, ask:'meet' },
              { t:'ask', q:{ en:'Where do the folds meet?', hi:'मोड़ कहाँ मिलते हैं?' }, opts:['Side','Centre'], hiOpts:['भुजा','केंद्र'], correct:1,
@@ -284,8 +286,13 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     const circ = (beats) => ({ ...clone(READ), title:{ en:'The centre', hi:'केंद्र' }, skill:'shapes2d', beats:[...beats,
       { t:'ask', q:{ en:'Where do the fold lines meet?', hi:'तह की रेखाएँ कहाँ मिलती हैं?' }, opts:['Centre','Edge'], hiOpts:['केंद्र','किनारा'], correct:0 },
       { t:'win', say:{ en:'Folds meet in the middle.', hi:'तह बीच में मिलती हैं।' } }] });
-    bad('a question about the very picture that just taught it is rejected (the teaching picture marks the answer)',
-      circ([{ t:'intro', say:{ en:'Let us fold a plate.', hi:'आओ प्लेट मोड़ें।' } }, { t:'figure', kind:'circle', folds:2 }, { t:'figure', kind:'circle', folds:2, ask:'meet' }]), /teaching picture again/);
+    const refold = clean(circ([{ t:'intro', say:{ en:'Let us fold a plate.', hi:'आओ प्लेट मोड़ें।' } }, { t:'figure', kind:'circle', folds:2 }, { t:'figure', kind:'circle', folds:2, ask:'meet' }]));
+    check('a question about the very picture that just taught it gets a picture of its own (the folds meet at the centre for any number from 2, so the question\'s circle gets 3)',
+      refold.ok && refold.lesson.beats.filter(b => b.kind === 'circle').map(b => b.folds).join() === '2,3', JSON.stringify(refold.errors));
+    bad('…and the same picture twice, where no shape has the other answer (5 sides), is still sent back',
+      { ...clone(READ), title:{ en:'Sides', hi:'भुजाएँ' }, skill:'shapes2d', beats:[{ t:'intro', say:{ en:'Look.', hi:'देखो।' } },
+        { t:'figure', kind:'rectangle', w:6, h:3, say:{ en:'Look at its sides.', hi:'इसकी भुजाएँ देखो।' } }, { t:'figure', kind:'rectangle', w:6, h:3, ask:'sides' },
+        { t:'ask', q:{ en:'How many sides does this shape have?', hi:'इस आकृति की कितनी भुजाएँ हैं?' }, opts:['4','5'], hiOpts:['4','5'], correct:0 }, { t:'win', say:{ en:'Well done.', hi:'शाबाश।' } }] }, /teaching picture again/);
     bad('an intro that says the answer before a shape question is rejected',
       circ([{ t:'intro', say:{ en:'Fold lines meet at the centre.', hi:'तह की रेखाएँ केंद्र पर मिलती हैं।' } }, { t:'figure', kind:'circle', folds:2 }, { t:'figure', kind:'circle', folds:3, ask:'meet' }]), /say the answer "Centre"/);
     const named = clean(circ([{ t:'intro', say:{ en:'Let us fold a plate.', hi:'आओ प्लेट मोड़ें।' } }, { t:'figure', kind:'circle', folds:2, say:{ en:'The folds meet in the middle. This is the centre.', hi:'तह बीच में मिलती हैं। यह केंद्र है।' } }, { t:'figure', kind:'circle', folds:3, ask:'meet' }]));
@@ -323,7 +330,24 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     const silent = { ...clone(READ), title:{ en:'Rectangles', hi:'आयत' }, skill:'shapes2d', beats:[{ t:'intro', say:{ en:'Look.', hi:'देखो।' } },
       { t:'figure', kind:'rectangle', w:6, h:3 }, { t:'figure', kind:'rectangle', w:5, h:3, ask:'sides' },
       { t:'ask', q:{ en:'How many sides does this shape have?', hi:'इस आकृति की कितनी भुजाएँ हैं?' }, opts:['3','4'], hiOpts:['3','4'], correct:1 }, { t:'win', say:{ en:'Well done.', hi:'शाबाश।' } }] };
-    bad("a teaching picture without words gets what Munni will really say — so its \"4 sides\" before \"how many sides?\" is caught", silent, /say the answer "4"/);
+    const silentT = clean(silent), silentQ = silentT.lesson && silentT.lesson.beats.find(b => b.t === 'ask');
+    check("a teaching picture without words: what Munni will say over it (\"4 sides\") counts — so \"how many sides?\" moves to the shape whose answer is the other option (a triangle, 3)",
+      silentT.ok && silentT.lesson.beats.find(b => b.t === 'figure' && b.ask === 'sides').kind === 'triangle' && silentQ.opts[silentQ.correct] === '3', JSON.stringify([silentT.errors, silentQ]));
+    bad('…and where both counts were said, nothing can be moved, so it is still sent back',
+      { ...silent, beats:[{ t:'intro', say:{ en:'Triangles have three sides.', hi:'त्रिभुज की तीन भुजाएँ होती हैं।' } }].concat(silent.beats.slice(1)) }, /say the answer "4" \(in beat 1's words\)|say the answer "3"/);
+    // the sixth run (13 Nov, evening): every lesson taught a fact, then asked it — the repair changed only the size
+    const SIX = { ...clone(READ), title:{ en:'Square and Rectangle', hi:'वर्ग और आयत' }, skill:'shapes2d', beats:[
+      { t:'intro', say:{ en:'Squares and rectangles have sides and corners. Let us look at them.', hi:'वर्ग और आयत की भुजाएँ और कोने होते हैं। आओ इन्हें देखें।' } },
+      { t:'figure', kind:'square', s:4, say:{ en:'A square has four equal sides and four corners.', hi:'एक वर्ग की चार बराबर भुजाएँ और चार कोने होते हैं।' } },
+      { t:'figure', kind:'rectangle', w:6, h:2, ask:'sides' },
+      { t:'ask', q:{ en:'How many sides does this shape have?', hi:'इस आकृति की कितनी भुजाएँ हैं?' }, opts:['4','3'], hiOpts:['4','3'], correct:0,
+        why:{ en:'Children confuse rectangles with triangles.', hi:'बच्चे आयत को त्रिभुज समझते हैं।' } },
+      { t:'win', say:{ en:'Count every side once.', hi:'हर भुजा एक बार गिनो।' } }] };
+    const six = clean(SIX), sixQ = six.lesson && six.lesson.beats.find(b => b.t === 'ask'), sixPic = six.lesson && six.lesson.beats.find(b => b.ask === 'sides');
+    check('the sixth run\'s lesson — "a square has four sides", then "how many sides?" of a rectangle — is moved onto a triangle: 3 right, 4 (what the child just heard) the wrong answer, and the teacher\'s note says so (EN/HI)',
+      six.ok && sixPic.kind === 'triangle' && sixQ.opts[sixQ.correct] === '3' && sixQ.opts.includes('4') && /"4"/.test(sixQ.why.en) && /"4"/.test(sixQ.why.hi), JSON.stringify([six.errors, sixPic, sixQ]));
+    bad('a question that names a shape is never moved — and "how many sides does this triangle have?" over a rectangle is sent back as naming a shape',
+      { ...SIX, beats: SIX.beats.map(b => b.t === 'ask' ? { ...b, q:{ en:'How many sides does this triangle have?', hi:'इस त्रिभुज की कितनी भुजाएँ हैं?' } } : b) }, /names the shape/);
     const silentOk = clean({ ...silent, beats: silent.beats.map((b, k) => k === 1 ? { t:'figure', kind:'triangle', sides:[5,5,5] } : b) });
     check('…teach one kind and count another, and it passes — with the narration written in for the teacher to read',
       silentOk.ok && /triangle/i.test(silentOk.lesson.beats[1].say.en) && /त्रिभुज/.test(silentOk.lesson.beats[1].say.hi), JSON.stringify(silentOk.errors));
@@ -438,6 +462,11 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     check('try-syllabus: the report names the verdicts, why each failed, the aims kept and the marked answer — and the key is in neither file',
       /1 passed first time · 1 fixed by the repair round · 1 not used/.test(md) && /Why it failed/.test(md) && /Aims kept/.test(md) && /\*\*25 ✓\*\*/.test(md)
         && !md.includes('gk-tool-secret') && !raw.includes('gk-tool-secret'), md.slice(0, 400));
+    check('try-syllabus: every model\'s outcome is kept in raw.json and shown in the report', Array.isArray(res.tried) && res.tried.length >= 1 && /Models for the draft: \S+ ok \(\d+ s\)/.test(md), JSON.stringify(res.tried));
+    // --recheck: the saved drafts through today's checker, no Gemini
+    const before = seen.length, again = tool.recheck(JSON.parse(raw));
+    check('try-syllabus --recheck: a saved run checked again by today\'s checker — the same verdicts here, no call to Gemini, and the report says it was checked again',
+      again.drafts.map(x => x.verdict).join() === 'passed,repaired,not used' && seen.length === before && /Checked again on/.test(tool.report(again)), again.drafts.map(x => x.verdict).join());
     let msg = '';
     try{ await tool.run({ text: pdfFile, env: { GEMINI_API_KEY: '', GOOGLE_API_KEY: '' } }, stand); }catch(e){ msg = e.message; }
     check('try-syllabus: with no key it says where the key goes, and calls nobody', /voice\/\.env/.test(msg) && seen.length === 2, msg);

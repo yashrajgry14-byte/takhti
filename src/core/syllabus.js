@@ -176,7 +176,72 @@ function sylTidy(beats){
     if(x.t === 'figure' && x.ask !== 'perimeter') fillRect(x);
     if(x.t === 'figures' && Array.isArray(x.items)) x.items = x.items.map(it => { if(!it || typeof it !== 'object') return it; const c = { ...it }; fillRect(c); return c; });
   });
+  sylAskAnother(out);
   return out;
+}
+/* Teach on one shape, ask on another — moved into place when the draft
+   didn't. The sixth live run: all four lessons taught a fact ("a square has
+   four sides", "this is a square corner") and then asked it of the same kind
+   of shape, or of the teaching picture itself, and Gemini's repair changed
+   only the picture's size. When the question's picture is the teaching
+   picture again, or the lines before it say its count, the picture becomes
+   the shape whose answer is the question's OTHER option: teach a square's 4
+   sides, ask a triangle's — 3 is right, and 4 (what the child just heard) is
+   the tempting wrong answer, the real mistake. The answer is still read off
+   the new drawing by validateLesson(); a question that names a shape is left
+   alone (it would name the wrong one). A circle asked where its folds meet
+   just gets a different number of folds (the answer, the centre, is the same
+   from 2 up). */
+const SYL_ASK_ANOTHER = {
+  count: [{ kind:'triangle', sides:[4,5,6] }, { kind:'rectangle', w:6, h:3 }, { kind:'square', s:4 }],
+  name:  [{ kind:'square', s:4 }, { kind:'rectangle', w:6, h:3 }, { kind:'triangle', sides:[4,5,6] }, { kind:'circle', folds:0 }],
+  kind:  [{ deg:45 }, { deg:90 }, { deg:135 }]
+};
+function sylAskAnother(out){
+  const teach = [];
+  let lead = [];
+  out.forEach((x, i) => {
+    if(!x || typeof x !== 'object') return;
+    if(x.t === 'ask'){ lead = []; return; }
+    if(x.t === 'intro'){ if(x.say) lead.push(x.say); return; }
+    if(!['figure', 'corner', 'figures'].includes(x.t)) return;
+    if(x.ask == null && x.find == null){
+      teach.push(geoSig(x));
+      const w = x.say || (x.t !== 'figures' && geoSayBoth(x));     // a silent picture: the words Munni will say over it
+      if(w) lead.push(w);
+      return;
+    }
+    const q = out[i + 1];
+    if(x.t === 'figures' || !q || q.t !== 'ask' || !Array.isArray(q.opts) || q.opts.length !== 2 || ![0, 1].includes(q.correct)) return;
+    const fam = x.t === 'corner' ? (x.ask === 'kind' ? 'kind' : null)
+      : ['sides', 'corners'].includes(x.ask) ? 'count' : x.ask === 'name' ? 'name' : x.ask === 'meet' && x.kind === 'circle' ? 'meet' : null;
+    const want = fam && geoExpect(x);
+    if(want == null) return;
+    const same = teach.includes(geoSig(x));
+    const said = typeof want === 'number' && lead.some(s => sylSaysIt(s.en, want) || sylSaysIt(s.hi, want));
+    if(!same && !said) return;
+    if(fam === 'meet'){
+      const f = [3, 2, 4].find(n => !teach.includes(geoSig({ ...x, folds: n })));
+      if(f) x.folds = f;
+      return;
+    }
+    const qt = `${(q.q && q.q.en) || ''} ${(q.q && q.q.hi) || ''}`;
+    if(GEO_KINDS.some(k => GEO_WORDS[k].some(r => r.test(qt)))) return;
+    const w = 1 - q.correct, hi = Array.isArray(q.hiOpts) && q.hiOpts.length === 2 ? q.hiOpts : q.opts;
+    for(const c of SYL_ASK_ANOTHER[fam]){
+      const y = { t: x.t, ask: x.ask, ...c }, v = geoExpect(y);
+      if(v == null || !geoSays(q.opts[w], v) || !geoSays(hi[w], v) || geoSays(q.opts[q.correct], v) || teach.includes(geoSig(y))) continue;
+      if(typeof v === 'number' && lead.some(s => sylSaysIt(s.en, v) || sylSaysIt(s.hi, v))) continue;   // that count was said too
+      const old = q.opts[q.correct], oldHi = hi[q.correct];
+      for(const k of ['kind', 's', 'w', 'h', 'sides', 'folds', 'deg']) delete x[k];
+      Object.assign(x, JSON.parse(JSON.stringify(c)));
+      q.correct = w;
+      // the teacher's note: the mistake this question now really catches
+      q.why = { en: `Children repeat what they just saw or heard ("${old}") instead of looking at this picture.`,
+                hi: `बच्चे इस चित्र को देखने के बजाय अभी देखा या सुना जवाब ("${oldHi}") दोहरा देते हैं।` };
+      return;
+    }
+  });
 }
 /* Only the fields this kind of shape has, and only where they're missing:
    "folds 2" / "2 folds", "6 × 3", "side 4", "sides 3, 4, 5", "60°". */
@@ -356,7 +421,7 @@ function sylClean(raw, opts){
          && /fold|meet|cent(re|er)|तह|मिल|केंद्र|केन्द्र/i.test(g.beat.say.en + ' ' + g.beat.say.hi))
         errs.push(`beat ${i}: the picture doesn't show the folds its narration talks about — give the circle folds: 2 or more`);
       // remember whether this picture teaches or is a question's picture
-      if(g.beat.say) lead.push({ ...g.beat.say, pic: t !== 'figures' && g.beat.ask == null ? 'teach' : 'question' });
+      if(g.beat.say) lead.push({ ...g.beat.say, pic: t !== 'figures' && g.beat.ask == null ? 'teach' : 'question', at: i });
       les.beats.push(g.beat); lastShown = t; shown = g.beat;
       if(t !== 'figures' && g.beat.ask == null) taught = true;           // a teaching picture
       return;
@@ -418,8 +483,9 @@ function sylClean(raw, opts){
         checks.push('shape');                          // validateLesson() reads the answer off the drawing
         // "Are all sides equal in this square?" — the question mustn't name the shape it asks about;
         // nor "How many sides does this triangle have?" — the name gives the count, so nobody counts
-        if(shown && shown.t === 'figure' && ['name', 'equal', 'sides', 'corners'].includes(shown.ask) && GEO_WORDS[shown.kind]
-           && out.q && GEO_WORDS[shown.kind].some(r => r.test(out.q.en) || r.test(out.q.hi)))
+        const names = k => GEO_WORDS[k] && out.q && GEO_WORDS[k].some(r => r.test(out.q.en) || r.test(out.q.hi));
+        if(shown && shown.t === 'figure' && (['name', 'equal'].includes(shown.ask) && names(shown.kind)
+           || ['sides', 'corners'].includes(shown.ask) && GEO_KINDS.some(names)))
           errs.push(`beat ${i}: the question names the shape it asks about — let the child work it out`);
       } else if(lastShown && SYL_READ.includes(lastShown)){
         out.derived = true;
@@ -437,14 +503,16 @@ function sylClean(raw, opts){
       // said there ("it has 4 sides") still gives a count away
       const geoQ = lastShown && GEO_TYPES.includes(lastShown);
       const said = geoQ ? lead.filter(s => s.pic !== 'teach' || /^\d+$/.test(String(right))) : lead;
-      if(right != null && !opts.every(o => /^(yes|no)$/i.test(o)) && said.some(s => sylSaysIt(s.en, right) || sylSaysIt(s.hi, hiOpts[out.correct])))
-        errs.push(`beat ${i}: the lines just before this question say the answer "${right}" — let the child work it out`);
+      // named where it was said, so the repair round changes that line (the
+      // sixth live run's repair rewrote the teaching words and left the intro's)
+      const gave = right != null && !opts.every(o => /^(yes|no)$/i.test(o)) && said.find(s => sylSaysIt(s.en, right) || sylSaysIt(s.hi, hiOpts[out.correct]));
+      if(gave) errs.push(`beat ${i}: the lines just before this question say the answer "${right}" (${gave.at === 'intro' ? 'in the intro' : `in beat ${gave.at}'s words`}) — let the child work it out`);
       lead = [];
     } else if(t !== 'intro' && t !== 'win'){
       lastShown = t; shown = out;
       if(SYL_READ.includes(t)) readText = [out.p && out.p.en, out.p && out.p.hi, out.w, out.text].filter(Boolean).join(' ');
     }
-    if(t !== 'ask' && out.say) lead.push({ ...out.say });
+    if(t !== 'ask' && out.say) lead.push({ ...out.say, at: t === 'intro' ? 'intro' : i });
     if(t !== 'ask' && t !== 'intro' && t !== 'win') taught = true;          // a worked example or a passage
     les.beats.push(out);
   });
