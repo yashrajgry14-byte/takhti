@@ -365,8 +365,12 @@ child sees.
   figure or corner followed by a question but missing its `ask` gets it from
   the question's own words (`sylInferAsk()`: "How many sides?" → sides) —
   a wrong reading fails against the drawing — and a rectangle given only its
-  width gets a height half as long, except for a perimeter question, where a
-  made-up side would change the answer. Then: something must teach (a
+  width gets a height half as long (in a row too), except for a perimeter
+  question, where a made-up side would change the answer; a row missing its
+  `find` gets it from a question that names exactly one shape
+  (`sylInferFind()`); a size written as a note ("folds 2", "6 × 3", "60°")
+  goes into its own field, never over one that was given
+  (`sylSizesFromText()`). Then: something must teach (a
   teaching picture, a worked example or a passage) before the first
   question; a shape question mustn't name the shape it asks about; the Hindi
   answers are in Devanagari unless they are numbers. Every lesson carries its
@@ -1178,7 +1182,11 @@ Honest edges of what's built:
    beat's type, so it sent a question with no answers and two lessons with
    no question at all, and the repair returned them unchanged — the reason
    for the lesson shape with every field required, the unchanged-repair
-   mark and the full-Flash fallback before the lite one. A fair verdict on
+   mark and the full-Flash fallback before the lite one. In the fourth
+   (13 Nov), the repair did change its lessons and fixed the said-the-answer
+   and same-picture faults, but left a row's rectangle without `h`, a row
+   without `find` and "folds 2" written as text — the reason for the field
+   descriptions in the schema and the three extra tidy steps. A fair verdict on
    3.8-flash still needs a quieter hour.
 
 ## Style
