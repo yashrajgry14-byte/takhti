@@ -62,12 +62,35 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     await lib.buildBook(dir, { import: { ch: 'ch5', file: path.join(root, 'library/ncert-maths-mela-3/ch5.raw.json') } });
     check('--recheck checks the saved drafts again and --import turns a try-syllabus run into a chapter — neither calls Gemini',
       calls === c0 && re.length === 1 && JSON.parse(fs.readFileSync(path.join(dir, 'ch5.json'), 'utf8')).lessons.length === 4, calls - c0);
+    // a whole book: --scan lists every chapter PDF in order, leaving front matter and answers out
+    const whole = path.join(tmp, 'whole');
+    fs.mkdirSync(whole);
+    fs.writeFileSync(path.join(whole, 'book.json'), JSON.stringify({ id:'whole', title:{ en:'Maths Mela', hi:'गणित मेला' }, cls:'c3', chapters:[{ id:'ch2', n:2, file:'old-two.pdf', title:{ en:'Toy Joy', hi:'खिलौने' }, count:3 }] }));
+    fs.writeFileSync(path.join(whole, 'ch2.json'), JSON.stringify({ id:'ch2', lessons:[], notUsed:[] }));
+    for(const n of ['cemm1ps.pdf', 'cemm110.pdf', 'cemm102.pdf', 'cemm101.pdf', 'cemm1an.pdf']) fs.writeFileSync(path.join(whole, n), Buffer.from('%PDF-1.4 ' + 'x'.repeat(400)));
+    const sc = lib.scan(whole), wb = lib.readBook(whole);
+    check('--scan lists a whole book\'s chapter PDFs in their order (01, 02, 10 — not 01, 10, 02), leaving the front matter and answers out',
+      wb.chapters.map(c => `${c.id}:${c.file}`).join() === 'ch1:cemm101.pdf,ch2:cemm102.pdf,ch3:cemm110.pdf' && sc.left.join() === 'cemm1an.pdf,cemm1ps.pdf', JSON.stringify([wb.chapters, sc.left]));
+    check('…a chapter already listed keeps its title and count, and one already built from another file is warned about, never silently kept',
+      wb.chapters[1].title.en === 'Toy Joy' && wb.chapters[1].count === 3 && sc.warn.length === 1 && /ch2 was built from old-two\.pdf.*--only ch2 --force/.test(sc.warn[0]), JSON.stringify([wb.chapters[1], sc.warn]));
+    // one chapter Gemini can't do doesn't stop the book
+    let n2 = 0;
+    const flaky = async (url, o) => { n2++; return { ok: false, status: 503, json: async () => ({ error:{ message:'overloaded' } }) }; };
+    const said2 = [];
+    fs.unlinkSync(path.join(whole, 'ch2.json'));
+    const got = await lib.buildBook(whole, { env, retryMs: 0, say: s => said2.push(s) }, flaky);
+    const sum = fs.readFileSync(path.join(whole, 'summary.md'), 'utf8');
+    check('a chapter Gemini can\'t do is said and left for the next run, and the book carries on to the next chapter — every chapter tried',
+      got.length === 0 && said2.filter(x => /not built — .*carries on from here/.test(x)).length === 3, said2.join(' | '));
+    check('…and summary.md lists every chapter in order with what it has (here: not built, and why)',
+      /0 of 3 chapters built · 0 lessons ready/.test(sum) && (sum.match(/not built:/g) || []).length === 3 && /\| 2 \| ch2 \| Toy Joy \|/.test(sum), sum);
     let msg = '';
     fs.writeFileSync(path.join(tmp, 'bad.json'), '{}');
     try{ fs.mkdirSync(path.join(tmp, 'bad')); fs.writeFileSync(path.join(tmp, 'bad', 'book.json'), JSON.stringify({ id:'Bad Book', cls:'class3', chapters:[] })); lib.readBook(path.join(tmp, 'bad')); }catch(e){ msg = e.message; }
     check('a book.json with a bad id, class or no chapters is refused, each fault said plainly', /id: lower-case/.test(msg) && /cls: kg or c1/.test(msg) && /chapters: a list/.test(msg) && /title/.test(msg), msg);
     // the bundle
     fs.rmSync(path.join(tmp, 'bad'), { recursive: true });
+    fs.rmSync(whole, { recursive: true });
     const outFile = path.join(tmp, 'library.js'), b = lib.bundle(tmp, outFile), src = fs.readFileSync(outFile, 'utf8');
     const ctx = {}; vm.createContext(ctx); vm.runInContext(src + ';this.L = LIBRARY;', ctx);
     check('the bundle is one script defining LIBRARY: the book, every chapter in order (one not built yet, with no lessons), only the kept lessons — no raw drafts, no reports',

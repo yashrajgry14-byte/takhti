@@ -19,6 +19,12 @@
      node tools/build-library.mjs --book library/ncert-maths-mela-3 --recheck
      node tools/build-library.mjs --bundle
 
+     node tools/build-library.mjs --book library/ncert-maths-mela-3 --scan
+
+   --scan            list every chapter PDF in the folder in book.json, in
+                     order (a whole book downloaded as one PDF per chapter);
+                     front matter and answer files are left out, and a
+                     chapter already listed keeps its title, count and note
    --pdfs <folder>   where the chapter PDFs are (default: the book's folder)
    --only <ch>       just that chapter        --force  build it again
    --import <ch> <raw.json>   a try-syllabus run becomes that chapter (no Gemini)
@@ -87,7 +93,7 @@ function saveChapter(dir, meta, r){
 /* Every chapter of a book, drafted (or imported, or checked again). */
 export async function buildBook(dirArg, opts = {}, fetchImpl){
   const dir = bookDir(dirArg), book = readBook(dir), say = opts.say || (() => {});
-  const out = [];
+  const out = [], failed = [];
   for(const meta of book.chapters){
     if(opts.only && meta.id !== opts.only) continue;
     const done = path.join(dir, `${meta.id}.json`), raw = path.join(dir, `${meta.id}.raw.json`);
@@ -109,13 +115,65 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
     if(!meta.file){ say(`${meta.id}: no file in book.json — skipped`); continue; }
     const file = path.resolve(opts.pdfs || dir, meta.file);
     if(!fs.existsSync(file)){ say(`${meta.id}: ${file} not found — skipped`); continue; }
+    const mb = fs.statSync(file).size / 1048576;
+    if(mb > 12){ say(`${meta.id}: ${path.basename(file)} is ${mb.toFixed(1)} MB — over the 12 MB a draft can take; split it — skipped`); failed.push({ id: meta.id, why: 'file over 12 MB' }); continue; }
     say(`${meta.id}: drafting from ${path.basename(file)}…`);
-    const r = await run({ file, cls: book.cls, count: meta.count || 4, note: meta.note || '', env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
-    const ch = saveChapter(dir, meta, r);
-    say(`${meta.id}: ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
-    out.push(ch);
+    // a whole book is a long run: one chapter Gemini can't do (busy, quota,
+    // a file it can't read) is said and left for the next run, which picks
+    // it up because it has no <ch>.json yet — the rest carry on
+    try{
+      const r = await run({ file, cls: book.cls, count: meta.count || 4, note: meta.note || '', env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
+      const ch = saveChapter(dir, meta, r);
+      say(`${meta.id}: ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
+      out.push(ch);
+    }catch(e){
+      if(/no Gemini key/.test(e.message)) throw e;            // nothing else can work either
+      say(`${meta.id}: not built — ${e.message}. Run the same command again later; it carries on from here.`);
+      failed.push({ id: meta.id, why: e.message });
+    }
   }
+  summary(dir, book, failed);
   return out;
+}
+
+/* One page for the whole book: every chapter, in the term's order, what it
+   has — read this first, then a chapter's own report. */
+export function summary(dir, book, failed = []){
+  const rows = book.chapters.map(meta => {
+    const f = path.join(dir, `${meta.id}.json`), ch = fs.existsSync(f) ? readJSON(f) : null;
+    const why = failed.find(x => x.id === meta.id);
+    const title = (ch && ch.title && ch.title.en) || (meta.title && meta.title.en) || '—';
+    const state = ch ? `${ch.lessons.length} kept · ${ch.notUsed.length} not used` : why ? `not built: ${why.why.slice(0, 80)}` : 'not built yet';
+    return `| ${meta.n || ''} | ${meta.id} | ${title} | ${state} |`;
+  });
+  const kept = book.chapters.reduce((s, meta) => { const f = path.join(dir, `${meta.id}.json`); return s + (fs.existsSync(f) ? readJSON(f).lessons.length : 0); }, 0);
+  const built = book.chapters.filter(meta => fs.existsSync(path.join(dir, `${meta.id}.json`))).length;
+  fs.writeFileSync(path.join(dir, 'summary.md'), [`# ${book.title.en} — ${book.cls}`, '',
+    `${built} of ${book.chapters.length} chapters built · ${kept} lessons ready`, '',
+    '| # | chapter | title | lessons |', '|---|---|---|---|', ...rows, ''].join('\n'));
+}
+
+/* Every chapter PDF in the folder → book.json, in order. NCERT's book
+   download is one PDF per chapter (…01.pdf, …02.pdf), plus front matter
+   (…ps.pdf) and sometimes answers (…an.pdf) — those two are left out. */
+export function scan(dirArg, pdfDir){
+  const dir = bookDir(dirArg), f = path.join(dir, 'book.json'), book = readJSON(f);
+  const from = pdfDir ? path.resolve(pdfDir) : dir;
+  const skip = n => /^[a-z]{3,5}\d{0,2}(ps|an|a1|a2)\.pdf$/i.test(n) || /prelim|contents|answer|index|cover/i.test(n);
+  const nat = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+  const all = fs.readdirSync(from).filter(n => /\.pdf$/i.test(n)).sort(nat);
+  const pdfs = all.filter(n => !skip(n)), left = all.filter(skip);
+  const old = new Map((book.chapters || []).map(c => [c.id, c])), warn = [];
+  book.chapters = pdfs.map((file, i) => {
+    const id = `ch${i + 1}`, was = old.get(id) || {}, rel = path.relative(dir, path.join(from, file)).split(path.sep).join('/');
+    // a chapter already built from another file: its lessons may be another
+    // chapter's now — said, never silently kept or thrown away
+    if(was.file && was.file !== rel && fs.existsSync(path.join(dir, `${id}.json`)))
+      warn.push(`${id} was built from ${was.file}${was.title ? ' (' + was.title.en + ')' : ''}; it is now ${rel}. If that is the same chapter, nothing to do; if not, build it again: --only ${id} --force`);
+    return { ...was, id, n: i + 1, file: rel, count: was.count || 4 };
+  });
+  writeJSON(f, book);
+  return { chapters: book.chapters.map(c => `${c.id} ← ${c.file}${c.title ? ' (' + c.title.en + ')' : ''}`), left, warn };
 }
 
 /* Every book in library/ → src/content/library.js, the app's offline copy.
@@ -160,6 +218,7 @@ function args(argv){
     else if(k === '--force') o.force = true;
     else if(k === '--recheck') o.recheck = true;
     else if(k === '--bundle') o.bundleOnly = true;
+    else if(k === '--scan') o.scan = true;
     else if(k === '--import'){ o.import = { ch: argv[++i], file: argv[++i] }; }
     else if(k === '--help' || k === '-h') o.help = true;
   }
@@ -168,11 +227,20 @@ function args(argv){
 if(process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)){
   const o = args(process.argv.slice(2));
   if(o.help || (!o.book && !o.bundleOnly)){
+    console.log('node tools/build-library.mjs --book library/<book> --scan          (list every chapter PDF in the folder)');
     console.log('node tools/build-library.mjs --book library/<book> [--pdfs folder] [--only ch] [--force] [--recheck] [--import ch raw.json]');
     console.log('node tools/build-library.mjs --bundle');
     process.exit(o.help ? 0 : 1);
   }
   (async () => {
+    if(o.book && o.scan){
+      const r = scan(o.book, o.pdfs);
+      console.log(`book.json now lists ${r.chapters.length} chapter(s), in this order — check it matches the book's contents:\n  ` + r.chapters.join('\n  '));
+      if(r.left.length) console.log(`Left out (front matter / answers): ${r.left.join(', ')}`);
+      for(const w of r.warn) console.log('⚠ ' + w);
+      console.log('\nThen build:  node tools/build-library.mjs --book ' + o.book);
+      return;
+    }
     if(o.book) await buildBook(o.book, { ...o, say: s => console.log('· ' + s) });
     const b = bundle();
     console.log(`\nsrc/content/library.js: ${b.books} book(s), ${b.lessons} lesson(s). Bump CACHE in sw.js before you ship it.`);
