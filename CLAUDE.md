@@ -338,8 +338,11 @@ child sees.
   `h`, a circle without `folds`; the fields that live runs left out or wrote
   as text carry descriptions; one retry with the older field names, and
   the old all-optional schema only if the API refuses the strict one).
-  Google saying the model is busy (503/429) gets one more try a moment
-  later, then each `GEMINI_FALLBACK_MODEL` in turn (a comma list, default
+  Every teaching picture should carry its `say` (what to look at — never
+  a number or name a question then asks for; the prompt says so, and a
+  silent one gets Munni's own words, below). Google saying the model is
+  busy (503) gets one more try a moment later; a 429 (the key's quota)
+  none — then each `GEMINI_FALLBACK_MODEL` in turn (a comma list, default
   `gemini-3.7-flash,gemini-3.5-flash-lite`; `none` switches them off),
   which a 404 also moves to; all busy → "Gemini is busy right now" (a 429
   is said as the key's own limit, not as busy). Every model's outcome and
@@ -383,7 +386,16 @@ child sees.
   `find` gets it from a question that names exactly one shape
   (`sylInferFind()`); a size written as a note ("folds 2", "6 × 3", "60°")
   goes into its own field, never over one that was given
-  (`sylSizesFromText()`). Then: something must teach (a
+  (`sylSizesFromText()`); a shape written beside a row's items goes in at
+  the end; a circle with no folds gets them where they're needed (3 on a
+  "where do they meet?" circle, 2 on a teaching circle that talks about
+  folds — the answer, the centre, is the same for any number from 2, and
+  a number given is never changed); and in a row with one look-alike (the
+  square when finding the rectangle, the corner nearest square) the wrong
+  answer becomes the look-alike's number, its `why` the mix-up it really
+  is (`sylLookAlike()`). A teaching picture with no words gets the words
+  Munni will really say over it (`geoSayBoth()`: "A rectangle: 4 sides…"),
+  written in for the teacher and heard by the giveaway check. Then: something must teach (a
   teaching picture, a worked example or a passage) before the first
   question; a shape question mustn't name the shape it asks about (for
   sides and corners too: "this triangle" gives the count away); a teaching
@@ -424,8 +436,9 @@ child sees.
   the whole lesson folded underneath — every line, the right answer marked,
   how each answer was checked, the `why` notes, never shown to a child; a
   shape aim no question checks — "find a shape with 3 sides" with no row —
-  is flagged under the aims, `sylAimGaps()`, a warning read from the aim's
-  key words, not a rejection): `sylApprove()`
+  is flagged under the aims, on a lesson that isn't used too, and so is an
+  aim a screen can't check ("fold a round paper") — `sylAimGaps()`, a
+  warning read from the aim's key words, not a rejection): `sylApprove()`
   / `sylApproveAll()` / `sylRemove()` write `_lessons {items, at}` (≤ 12)
   into the class mirror; with *Keep this class synced* on, the class sync
   carries them to every synced phone (teacher's key only; shape- and
@@ -1424,8 +1437,16 @@ Honest edges of what's built:
    then the number words and centre/center; the run after that, 4 of 4
    usable with nothing given away. The two lines of work were combined on
    13 Nov: the per-type schema (it gave the 4 of 4), with the lesson-shape
-   branch's checks, tidy steps, fallbacks and resting models. A fair verdict
-   on 3.8-flash still needs a quieter hour.
+   branch's checks, tidy steps, fallbacks and resting models. The fifth
+   lesson-shape run (13 Nov, evening, before the combining) logged every
+   model's answer and showed the "busy" was the key's quota:
+   `gemini-3.8-flash` and `gemini-3.7-flash` both answer 429, so flash-lite
+   drafted everything; 4 of its 6 lessons passed, all after the repair
+   round. Its reading led to the last tidy steps above (folds, the stray
+   row shape, the look-alike), Munni's own words on a silent teaching
+   picture (a silent rectangle would have said "4 sides" before "how many
+   sides?") and no retry on a 429. A verdict on 3.8-flash needs a key whose
+   quota allows it.
 14. **Teach Munni is new and untested on real children.** The judge (Gemini
    on a transcript) is tested against a stand-in; whether it judges a
    seven-year-old's Hinglish fairly needs real recordings first (try ten

@@ -288,7 +288,7 @@ function sylDraftHTML(d, i, approved, badge){
         ${les.aims.map(a => `<div style="font-size:12.5px;margin:3px 0 3px 10px">${T(a.short)}: "${T(a.forget)}"</div>`).join('')}</details></div>` : ''}
     ${(d.aimErrors || []).length ? `<div style="font-size:12px;opacity:.7;margin-top:2px">${hi ? 'छोड़े गए उद्देश्य' : 'Aims left out'}: ${d.aimErrors.slice(0, 2).map(attr).join('; ')}</div>` : ''}
     ${(d.aimFixes || []).length ? `<div style="font-size:12px;opacity:.7;margin-top:2px">${hi ? 'बदला गया संकेत' : 'Hint replaced'}: ${d.aimFixes.slice(0, 2).map(attr).join('; ')}</div>` : ''}
-    ${d.ok && sylAimGaps(les).length ? `<div class="retry" style="font-size:12.5px;margin-top:4px">⚠ ${hi ? 'इस उद्देश्य को कोई प्रश्न नहीं जाँचता' : 'No question checks this aim'}: ${sylAimGaps(les).map(a => T(a.point || a)).join('; ')}</div>` : ''}
+    ${sylAimGaps(les).length ? `<div class="retry" style="font-size:12.5px;margin-top:4px">⚠ ${hi ? 'इस उद्देश्य को कोई प्रश्न नहीं जाँचता' : 'No question checks this aim'}: ${sylAimGaps(les).map(a => T(a.point || a)).join('; ')}</div>` : ''}
     <details style="margin-top:4px"><summary style="font-size:12.5px;cursor:pointer">${hi ? 'पूरा पाठ पढ़ें' : 'Read the whole lesson'}</summary>${lines}</details>
     ${d.ok
       ? (isIn ? `<div class="muted" style="font-size:12.5px;margin-top:4px">✓ ${hi ? 'कक्षा के लिए मंज़ूर' : 'Approved for the class'}</div>`

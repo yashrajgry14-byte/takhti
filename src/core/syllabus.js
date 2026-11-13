@@ -117,12 +117,49 @@ function sylTidy(beats){
   }
   // a size written into a note ("folds 2") instead of its own field
   out.forEach(x => { if(x && (x.t === 'figure' || x.t === 'corner')) { sylSizesFromText(x); delete x.text; } });
+  // a shape written beside a row's items instead of in them (the fifth live
+  // run: {t:'figures', kind:'square', s:3, items:[…]}) goes in at the end —
+  // the numbers of the shapes already there don't change
+  out.forEach(x => {
+    if(!x || x.t !== 'figures' || !Array.isArray(x.items) || !x.kind) return;
+    const it = { kind: x.kind };
+    for(const k of ['s', 'w', 'h', 'sides', 'folds', 'deg']) if(x[k] != null) it[k] = x[k];
+    if(x.items.length < 4) x.items = x.items.concat([it]);
+    for(const k of ['kind', 's', 'w', 'h', 'sides', 'folds', 'deg', 'text']) delete x[k];
+  });
   out.forEach((x, i) => {
     const next = out[i + 1];
     if(!x || !next || next.t !== 'ask') return;
     if(x.t === 'corner' && x.ask == null) x.ask = 'kind';
     if(x.t === 'figure' && x.ask == null) x.ask = sylInferAsk(x, next);
     if(x.t === 'figures' && x.find == null) x.find = sylInferFind(next);
+  });
+  // folds a circle needs: "where do the folds meet?" can't be asked without
+  // two or more, and a teaching circle whose words are about folds must show
+  // them. The answer (the centre) is the same for any number from 2, so they
+  // are drawn: 2 on a teaching circle, 3 on the question's (a different
+  // picture, never the teaching one again). A number given is never changed.
+  const foldTalk = s => !!s && /fold|meet|cent(re|er)|तह|मोड़|मिल|केंद्र|केन्द्र/i.test(`${s.en || ''} ${s.hi || ''}`);
+  out.forEach((x, i) => {
+    if(!x || x.t !== 'figure' || x.kind !== 'circle' || x.folds != null) return;
+    const asks = out[i + 1] && out[i + 1].t === 'ask';
+    if(x.ask === 'meet') x.folds = 3;
+    else if(!asks && x.ask == null && foldTalk(x.say)) x.folds = 2;
+  });
+  // a row's wrong answer points at the look-alike when the row has one (the
+  // square when finding the rectangle — the mix-up children really make; the
+  // fifth live run's rows put it at a number no answer could reach)
+  out.forEach((x, i) => {
+    const q = out[i + 1];
+    if(!x || x.t !== 'figures' || !q || q.t !== 'ask' || !Array.isArray(x.items) || !Array.isArray(q.opts) || q.opts.length !== 2) return;
+    const like = sylLookAlike(x);
+    if(like == null) return;
+    const right = Number(q.opts[q.correct]), wrongAt = q.correct === 0 ? 1 : 0, num = String(like + 1);
+    if(!/^\d+$/.test(String(q.opts[q.correct])) || !/^\d+$/.test(String(q.opts[wrongAt])) || right === like + 1) return;
+    q.opts = q.opts.slice(); q.opts[wrongAt] = num;
+    if(Array.isArray(q.hiOpts) && q.hiOpts.length === 2 && q.hiOpts.every(o => /^\d+$/.test(String(o)))){ q.hiOpts = q.hiOpts.slice(); q.hiOpts[wrongAt] = num; }
+    // the teacher's note was about the old wrong answer: say the mix-up this one really is
+    q.why = SYL_LOOKALIKE_WHY[x.find];
   });
   // a rectangle with only one side given: give it the other, half as long
   // (never equal, so it stays a rectangle) — unless the question is its
@@ -160,6 +197,29 @@ function sylSizesFromText(x){
     const m = t.match(/(\d+)\s*,\s*(\d+)\s*(?:,|and)\s*(\d+)/);
     if(m) x.sides = [m[1], m[2], m[3]].map(Number);
   }
+}
+const SYL_LOOKALIKE_WHY = {
+  rectangle: { en:'A square has 4 sides and square corners too, so children take it for a rectangle without comparing the sides.',
+               hi:'वर्ग की भी 4 भुजाएँ और चौकोर कोने होते हैं, इसलिए बच्चे भुजाओं की तुलना किए बिना उसे आयत मान लेते हैं।' },
+  square:    { en:'A rectangle has 4 sides and square corners too, so children take it for a square without checking that all sides are equal.',
+               hi:'आयत की भी 4 भुजाएँ और चौकोर कोने होते हैं, इसलिए बच्चे सारी भुजाएँ बराबर हैं या नहीं, देखे बिना उसे वर्ग मान लेते हैं।' },
+  squarecorner: { en:'A corner a little off square looks square by eye; children don\'t check it against a book\'s corner.',
+               hi:'चौकोर से थोड़ा अलग कोना देखने में चौकोर लगता है; बच्चे उसे किताब के कोने से मिलाकर नहीं देखते।' }
+};
+/* The one picture in a row a child mistakes for the one asked for: a square
+   when finding a rectangle (and back), the corner nearest a square corner.
+   Its index, or null when there isn't exactly one. */
+function sylLookAlike(row){
+  const items = row.items || [];
+  const one = idx => idx.length === 1 ? idx[0] : null;
+  const where = kind => items.map((it, k) => it && it.kind === kind ? k : -1).filter(k => k >= 0);
+  if(row.find === 'rectangle') return one(where('square'));
+  if(row.find === 'square') return one(where('rectangle'));
+  if(row.find === 'squarecorner' && items.every(it => it && it.kind === 'corner')){
+    const off = items.map((it, k) => ({ k, d: Math.abs(it.deg - 90) })).filter(o => o.d > 0).sort((a, b) => a.d - b.d);
+    return off.length && (off.length === 1 || off[0].d < off[1].d) ? off[0].k : null;
+  }
+  return null;
 }
 /* Which shape a row's question looks for, when it names exactly one;
    a wrong reading fails against the drawing like any other answer. */
@@ -202,10 +262,11 @@ function sylAimGaps(les){
   });
   const need = en => {
     const t = String(en || '').toLowerCase();
-    if(/\bfind|\bpick|\bspot|which one/.test(t)) return ['row'];
+    if(/\b(fold|cut|tear|draw|trace)\b\s+(a|an|the|it|this|round|paper)|\bpaper\b/.test(t)) return ['(a screen can\'t check this)'];
     if(/perimeter|distance round|all the way round/.test(t)) return ['perimeter'];
     if(/square corner|right angle/.test(t)) return ['kind'];
     if(/cent(re|er)|fold/.test(t)) return ['meet'];
+    if(/\bfind|\bpick|\bspot|which one/.test(t)) return ['row'];
     if(/corner/.test(t)) return ['corners'];
     if(/side/.test(t) && /equal|same length/.test(t)) return ['equal'];
     if(/side/.test(t)) return ['sides'];
@@ -284,6 +345,11 @@ function sylClean(raw, opts){
       const g = geoClean(x);
       g.errors.forEach(e => errs.push(`beat ${i}: ${e}`));
       if(x.say){ const s = bi(x.say, `beat ${i}'s narration`, 200); if(s) g.beat.say = s; }
+      // a teaching picture with no words: Munni says the shape's facts herself
+      // ("A rectangle: 4 sides and 4 square corners") — write them in, so the
+      // teacher reads what the child will hear and the giveaway check hears it too
+      // (the fifth live run passed two lessons whose counting answer she'd have said)
+      if(!g.beat.say && t !== 'figures' && g.beat.ask == null){ const o = geoSayBoth(g.beat); if(o) g.beat.say = { en: o.en, hi: o.hi }; }
       // a teaching circle that talks about its folds must draw them (the fourth
       // live run: "the point where fold lines meet is the centre" over a plain circle)
       if(g.beat.kind === 'circle' && g.beat.ask == null && g.beat.say && !(g.beat.folds >= 2)
