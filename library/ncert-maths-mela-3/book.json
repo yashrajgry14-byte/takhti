@@ -1,0 +1,12 @@
+{
+  "id": "ncert-maths-mela-3",
+  "board": "NCERT",
+  "title": { "en": "Maths Mela", "hi": "गणित मेला" },
+  "edition": "2024-25",
+  "cls": "c3",
+  "subject": "maths",
+  "chapters": [
+    { "id": "ch5", "n": 5, "file": "ch5.pdf", "count": 4,
+      "title": { "en": "Fun with Shapes", "hi": "आकृतियों के साथ मज़ा" } }
+  ]
+}

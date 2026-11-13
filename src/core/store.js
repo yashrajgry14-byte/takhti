@@ -10,7 +10,7 @@
    state and are never persisted.
    ================================================================== */
 const STORE_KEY = 'takhti.progress.v2';   // v2: multi-child profiles
-const DEVICE_FIELDS = ['profiles','activeProfile','parentPin','syncClasses','syncAt','syncKeys','mistakeRules'];
+const DEVICE_FIELDS = ['profiles','activeProfile','parentPin','syncClasses','syncAt','syncKeys','libPlan','mistakeRules'];
 
 function todayStamp(){ return new Date().toDateString(); }
 

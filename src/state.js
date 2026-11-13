@@ -82,6 +82,7 @@ const S = {
   syncClasses: [],       // class codes this phone's teacher view keeps synced, see core/class-sync.js
   syncAt: {},            // class code -> time of its last successful sync
   syncKeys: {},          // class code -> this phone's teacher key, see core/class-sync.js (never shown, never shared)
+  libPlan: {},           // class code -> { book, order, week }: the school's book and its term, see core/library.js
   camOk:   false,        // camera permission granted this session (device-wide)
   eleph:   null,         // Munni's mood on the ask screen, see ui/elephant.js
   lesson:  null,         // in-progress arithmetic story, see ui/lesson-player.js

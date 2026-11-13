@@ -202,8 +202,8 @@ function toggleClassSync(code){
 
 /* ---------- the school's own syllabus → this week's lessons ---------- */
 function syllabusHTML(code){
-  const hi = S.lang === 'hi', c = S.ctx, res = c.sylRes, approved = sylApproved(code);
-  const cls = sylClass(c.sylCls || 'c2');
+  const hi = S.lang === 'hi', c = S.ctx, res = c.sylRes, approved = sylApproved(code), plan = libPlan(code);
+  const cls = sylClass(c.sylCls || (plan && plan.book.cls) || 'c2');
   const badge = k => ({ sum: hi ? '✓ जवाब गणित से जाँचा' : '✓ answer checked by the arithmetic',
                         text: hi ? '✓ जवाब पाठ में मिला' : '✓ answer found in the passage',
                         shape: hi ? '✓ जवाब चित्र से जाँचा' : '✓ answer checked against the drawing',
@@ -222,6 +222,8 @@ function syllabusHTML(code){
         ${[2,3,4,5].map(n => `<option value="${n}" ${n === (c.sylCount || 3) ? 'selected' : ''}>${n} ${hi ? 'पाठ' : 'lessons'}</option>`).join('')}
       </select>
     </div>
+    ${libraryHTML(code, cls)}
+    <div class="kicker2" style="margin-top:12px">${libBooks(cls.id).length ? (hi ? 'या किसी अध्याय से अभी बनाएँ' : 'OR DRAFT FROM A CHAPTER NOW') : (hi ? 'किसी अध्याय से बनाएँ' : 'DRAFT FROM A CHAPTER')}</div>
     <label class="btn ghost" style="margin-top:8px;display:block;text-align:center;cursor:pointer">
       📎 ${c.sylFile ? attr(c.sylFile.name) : (hi ? 'PDF या फ़ोटो चुनें' : 'Choose a PDF or photo')}
       <input type="file" accept="application/pdf,image/png,image/jpeg,image/webp" style="display:none" onchange="sylPickFile(this)">
@@ -238,8 +240,8 @@ function syllabusHTML(code){
 
     ${res ? `<div style="margin-top:12px">
       <div style="font-size:12.5px;opacity:.8">${hi
-        ? `"${attr(res.chapter || 'अध्याय')}" से ${res.drafts.length} पाठ · ${res.drafts.filter(d => d.ok).length} जाँच में पास${res.drafts.some(d => d.repaired) ? ` (${res.drafts.filter(d => d.repaired).length} Gemini ने जाँच के कारण पढ़कर ठीक किए)` : ''}`
-        : `${res.drafts.length} lesson(s) from "${attr(res.chapter || 'the chapter')}" · ${res.drafts.filter(d => d.ok).length} passed the check${res.drafts.some(d => d.repaired) ? ` (${res.drafts.filter(d => d.repaired).length} fixed by Gemini from the checker's reasons)` : ''}`}</div>
+        ? `${res.library ? '📗 ' : ''}"${attr(res.chapter || 'अध्याय')}" से ${res.drafts.length} पाठ · ${res.drafts.filter(d => d.ok).length} जाँच में पास${res.drafts.some(d => d.repaired) ? ` (${res.drafts.filter(d => d.repaired).length} Gemini ने जाँच के कारण पढ़कर ठीक किए)` : ''}`
+        : `${res.library ? '📗 ' : ''}${res.drafts.length} lesson(s) from "${attr(res.chapter || 'the chapter')}" · ${res.drafts.filter(d => d.ok).length} passed the check${res.drafts.some(d => d.repaired) ? ` (${res.drafts.filter(d => d.repaired).length} fixed by Gemini from the checker's reasons)` : ''}`}</div>
       ${res.drafts.map((d, i) => sylDraftHTML(d, i, approved, badge)).join('')}
       ${res.drafts.filter(d => d.ok && !approved.some(a => a.id === d.lesson.id)).length > 1
         ? `<button class="btn leaf" style="margin-top:8px" onclick="sylApproveAll()">${hi ? 'सभी जाँचे हुए पाठों के उद्देश्य मंज़ूर करें' : "Approve all the checked lessons' aims"}</button>` : ''}
@@ -253,6 +255,54 @@ function syllabusHTML(code){
         ? (hi ? 'इस फ़ोन के बच्चों को और सिंक वाले हर फ़ोन को मिलते हैं — हर फ़ोन इन्हें दिखाने से पहले फिर जाँचता है।' : 'Children on this phone get them, and so does every synced phone — each one checks them again before showing them.')
         : (hi ? 'इस फ़ोन के बच्चों को मिलते हैं। दूसरे फ़ोनों तक भेजने के लिए ऊपर "कक्षा को सिंक रखो" चालू करें।' : 'Children on this phone get them. To reach other phones, switch on "Keep this class synced" above.')}</div>` : ''}
   </div>`;
+}
+
+/* ---------- the library: the school's book, its term, this week's chapter ----------
+   Lessons built ahead (core/library.js) open in the same card as a fresh
+   draft — approving them is the same tap, and none of it needs a network. */
+function libraryHTML(code, cls){
+  const hi = S.lang === 'hi', books = libBooks(cls.id), plan = libPlan(code);
+  const T = o => attr((o && (o[S.lang] || o.en)) || '');
+  if(!books.length) return `<div style="font-size:12.5px;opacity:.7;margin-top:10px">📗 ${hi
+    ? `तख़्ती की लाइब्रेरी में अभी ${cls.hi} की कोई किताब नहीं — नीचे किसी अध्याय से बनाएँ।`
+    : `No book for ${cls.en} in Takhti's library yet — draft from a chapter below.`}</div>`;
+  const mine = plan && plan.book.cls === cls.id ? plan : null;
+  const rows = mine ? mine.order.map((id, k) => {
+    const ch = libChapterOf(mine.book, id), now = id === mine.week, n = (ch.lessons || []).length;
+    return `<div class="metric" style="${now ? 'border-left:3px solid var(--leaf);padding-left:8px' : ''}"><div style="flex:1">
+        <b>${now ? '★ ' : ''}${ch.n ? ch.n + '. ' : ''}${T(ch.title)}</b>
+        <div style="font-size:12px;opacity:.7">${now ? (hi ? 'इस हफ़्ते · ' : 'This week · ') : ''}${n ? (hi ? `${n} पाठ तैयार` : `${n} lesson${n === 1 ? '' : 's'} ready`) : (hi ? 'अभी बना नहीं' : 'not built yet')}</div></div>
+      <button class="btn ghost" style="width:auto;padding:4px 9px" ${k === 0 ? 'disabled' : ''} onclick="libUp('${id}')" aria-label="${hi ? 'ऊपर' : 'Earlier'}">↑</button>
+      <button class="btn ghost" style="width:auto;padding:4px 9px" ${k === mine.order.length - 1 ? 'disabled' : ''} onclick="libDown('${id}')" aria-label="${hi ? 'नीचे' : 'Later'}">↓</button>
+      ${now ? '' : `<button class="btn ghost" style="width:auto;padding:4px 9px" onclick="libWeek('${id}')">${hi ? 'इस हफ़्ते' : 'This week'}</button>`}
+    </div>`;
+  }).join('') : '';
+  const week = mine && libChapterOf(mine.book, mine.week);
+  return `<div style="margin-top:10px">
+    <div class="kicker2">📗 ${hi ? 'लाइब्रेरी से — पहले से बने और जाँचे हुए, बिना इंटरनेट' : 'FROM THE LIBRARY — BUILT AHEAD, CHECKED, NO INTERNET NEEDED'}</div>
+    <select class="input" style="margin-top:6px" onchange="libChoose(this.value)">
+      <option value="">${hi ? 'आपके स्कूल की किताब…' : "Your school's book…"}</option>
+      ${books.map(b => `<option value="${b.id}" ${mine && mine.book.id === b.id ? 'selected' : ''}>${T(b.title)}${b.board ? ' · ' + attr(b.board) : ''}${b.edition ? ' · ' + attr(b.edition) : ''}</option>`).join('')}
+    </select>
+    ${mine ? `<div style="font-size:12px;opacity:.75;margin:6px 0 2px">${hi ? 'सत्र का क्रम — अपने स्कूल के कैलेंडर से मिलाने के लिए ↑ ↓' : "The term's order — move chapters ↑ ↓ to match your school's calendar"}</div>
+      ${rows}
+      ${week && (week.lessons || []).length
+        ? `<button class="btn leaf" style="margin-top:8px" onclick="libOpen()">${hi ? `इस हफ़्ते के पाठ खोलें — ${T(week.title)}` : `Open this week's lessons — ${T(week.title)}`}</button>`
+        : `<div style="font-size:12.5px;opacity:.7;margin-top:6px">${hi ? 'इस हफ़्ते का अध्याय अभी लाइब्रेरी में नहीं बना — नीचे उसका PDF देकर अभी बनाएँ।' : "This week's chapter isn't built in the library yet — give its PDF below to draft it now."}</div>`}
+      ${mine.order.indexOf(mine.week) < mine.order.length - 1 ? `<button class="btn ghost" style="margin-top:6px" onclick="libNext()">${hi ? 'अगला अध्याय अगले हफ़्ते →' : 'Next chapter for next week →'}</button>` : ''}` : ''}
+  </div>`;
+}
+function libChoose(bookId){ const code = teacherCode(); libSetBook(code, bookId); S.ctx.sylRes = null; log(0, `Library · class ${code} teaches from ${bookId || '(no book)'}`); render(); }
+function libUp(id){ libMove(teacherCode(), id, -1); render(); }
+function libDown(id){ libMove(teacherCode(), id, 1); render(); }
+function libWeek(id){ libSetWeek(teacherCode(), id); S.ctx.sylRes = null; render(); }
+function libNext(){ libNextWeek(teacherCode()); S.ctx.sylRes = null; render(); }
+function libOpen(){
+  const code = teacherCode(), p = libPlan(code), ch = p && libChapterOf(p.book, p.week);
+  if(!ch) return;
+  S.ctx.sylRes = libDrafts(p.book, ch); S.ctx.sylCls = p.book.cls; S.ctx.sylMsg = '';
+  log(0, `Library · ${p.book.id} ${ch.id} opened for class ${code} · ${S.ctx.sylRes.drafts.filter(d => d.ok).length}/${S.ctx.sylRes.drafts.length} lessons passed this phone's check · no network used`);
+  render();
 }
 
 /* One draft, as the teacher reads it: every line the child will hear or

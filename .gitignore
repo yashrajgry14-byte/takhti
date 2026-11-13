@@ -12,3 +12,6 @@ voice/agent/munni-parent.agent.json
 voice/agent/*.workflow.json
 voice/agent/*.agent.json
 syllabus-run/
+
+# the library: chapter PDFs are the publishers' — never committed
+library/**/*.pdf

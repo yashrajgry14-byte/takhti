@@ -1,0 +1,1377 @@
+{
+  "at": "2026-11-13T13:02:11.601Z",
+  "cls": "c3",
+  "band": "developing",
+  "rules": {
+    "band": "developing",
+    "ages": [
+      7,
+      8
+    ],
+    "maxNumber": 100,
+    "sayWords": 18,
+    "read": "developing"
+  },
+  "note": "",
+  "source": "ch5.pdf",
+  "model": "gemini-3.5-flash-lite",
+  "chapter": "Fun with Shapes",
+  "draftMs": 177805,
+  "tried": [
+    {
+      "model": "gemini-3.8-flash",
+      "outcome": 503,
+      "ms": 11456
+    },
+    {
+      "model": "gemini-3.8-flash",
+      "outcome": 503,
+      "ms": 44805
+    },
+    {
+      "model": "gemini-3.7-flash",
+      "outcome": 503,
+      "ms": 16679
+    },
+    {
+      "model": "gemini-3.7-flash",
+      "outcome": "hung",
+      "ms": 62433
+    },
+    {
+      "model": "gemini-3.5-flash-lite",
+      "outcome": 503,
+      "ms": 18290
+    },
+    {
+      "model": "gemini-3.5-flash-lite",
+      "outcome": "ok",
+      "ms": 19611,
+      "tokens": {
+        "in": 14365,
+        "out": 3144,
+        "total": 17509
+      }
+    }
+  ],
+  "repair": {
+    "status": 200,
+    "model": "gemini-3.5-flash-lite",
+    "error": "",
+    "ms": 4818,
+    "tried": [
+      {
+        "model": "gemini-3.5-flash-lite",
+        "outcome": "ok",
+        "ms": 4816,
+        "tokens": {
+          "in": 4170,
+          "out": 1603,
+          "total": 5773
+        }
+      }
+    ]
+  },
+  "drafts": [
+    {
+      "raw": {
+        "title": {
+          "en": "Square and Rectangle",
+          "hi": "वर्ग और आयत"
+        },
+        "sub": {
+          "en": "Sides and corners",
+          "hi": "भुजाएँ और कोने"
+        },
+        "ic": "🟦",
+        "skill": "shapes2d",
+        "source": "Page 51",
+        "aims": [
+          {
+            "short": {
+              "en": "Count sides",
+              "hi": "भुजाएँ गिनो"
+            },
+            "point": {
+              "en": "The child can count the sides of a rectangle.",
+              "hi": "बच्चा किसी आयत की भुजाएँ गिन सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How many sides does a rectangle have?",
+              "hi": "मैं भूल गई! आयत की कितनी भुजाएँ होती हैं?"
+            },
+            "hints": [
+              {
+                "en": "Put your finger on one corner and count each straight edge.",
+                "hi": "एक कोने पर उँगली रखो और हर सीधी भुजा को गिनो।"
+              },
+              {
+                "en": "How many straight edges do you go round?",
+                "hi": "तुम कितनी सीधी भुजाओं के चारों ओर घूमते हो?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "four straight sides",
+                "hi": "चार सीधी भुजाएँ",
+                "words": [
+                  "four sides",
+                  "char bhuja",
+                  "चार भुजाएँ",
+                  "four"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us look at a rectangle and count its sides.",
+              "hi": "आओ एक आयत देखें और उसकी भुजाएँ गिनें।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "rectangle",
+            "w": 5,
+            "h": 3,
+            "say": {
+              "en": "Count the four sides of this rectangle one by one.",
+              "hi": "इस आयत की चारों भुजाओं को एक-एक करके गिनो।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "rectangle",
+            "w": 6,
+            "h": 2,
+            "ask": "sides"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many sides does this shape have?",
+              "hi": "इस आकृति की कितनी भुजाएँ हैं?"
+            },
+            "opts": [
+              "4",
+              "3"
+            ],
+            "hiOpts": [
+              "4",
+              "3"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children sometimes confuse rectangles with triangles and pick 3.",
+              "hi": "बच्चे कभी-कभी आयत को त्रिभुज समझकर 3 चुन लेते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "A rectangle has four sides.",
+              "hi": "आयत की चार भुजाएँ होती हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🟦",
+          "title": {
+            "en": "Square and Rectangle",
+            "hi": "वर्ग और आयत"
+          },
+          "sub": {
+            "en": "Sides and corners",
+            "hi": "भुजाएँ और कोने"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 51",
+          "aims": [
+            {
+              "id": "s98n6j1.0",
+              "kind": "explain",
+              "short": {
+                "en": "Count sides",
+                "hi": "भुजाएँ गिनो"
+              },
+              "point": {
+                "en": "The child can count the sides of a rectangle.",
+                "hi": "बच्चा किसी आयत की भुजाएँ गिन सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How many sides does a rectangle have?",
+                "hi": "मैं भूल गई! आयत की कितनी भुजाएँ होती हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Put your finger on one corner and count each straight edge.",
+                  "hi": "एक कोने पर उँगली रखो और हर सीधी भुजा को गिनो।"
+                },
+                {
+                  "en": "How many straight edges do you go round?",
+                  "hi": "तुम कितनी सीधी भुजाओं के चारों ओर घूमते हो?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "four straight sides",
+                  "hi": "चार सीधी भुजाएँ",
+                  "words": [
+                    "four sides",
+                    "char bhuja",
+                    "चार भुजाएँ",
+                    "four"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us look at a rectangle and count its sides.",
+                "hi": "आओ एक आयत देखें और उसकी भुजाएँ गिनें।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "rectangle",
+              "w": 5,
+              "h": 3,
+              "say": {
+                "en": "Count the four sides of this rectangle one by one.",
+                "hi": "इस आयत की चारों भुजाओं को एक-एक करके गिनो।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "triangle",
+              "sides": [
+                4,
+                5,
+                6
+              ],
+              "ask": "sides"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many sides does this shape have?",
+                "hi": "इस आकृति की कितनी भुजाएँ हैं?"
+              },
+              "opts": [
+                "4",
+                "3"
+              ],
+              "hiOpts": [
+                "4",
+                "3"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children repeat what they just saw or heard (\"4\") instead of looking at this picture.",
+                "hi": "बच्चे इस चित्र को देखने के बजाय अभी देखा या सुना जवाब (\"4\") दोहरा देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "A rectangle has four sides.",
+                "hi": "आयत की चार भुजाएँ होती हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-98n6j1"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "repairRaw": null,
+      "second": null,
+      "verdict": "passed"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Square Corners",
+          "hi": "चौकोर कोने"
+        },
+        "sub": {
+          "en": "Finding square corners",
+          "hi": "चौकोर कोने ढूँढना"
+        },
+        "ic": "📐",
+        "skill": "shapes2d",
+        "source": "Page 55",
+        "aims": [
+          {
+            "short": {
+              "en": "Square corner",
+              "hi": "चौकोर कोना"
+            },
+            "point": {
+              "en": "The child can identify a square corner.",
+              "hi": "बच्चा चौकोर कोने को पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! What do we call this corner that stands straight like a square?",
+              "hi": "मैं भूल गई! जो कोना वर्ग की तरह सीधा होता है, उसे क्या कहते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Look at the corner of a book or a square shape.",
+                "hi": "किताब या वर्ग के कोने को देखो।"
+              },
+              {
+                "en": "It has the same name as the corner of a square.",
+                "hi": "इसका नाम वर्ग के कोने जैसा ही है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "square corner",
+                "hi": "चौकोर कोना",
+                "words": [
+                  "square corner",
+                  "chaukore kona",
+                  "चौकोर कोना"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us learn about square corners.",
+              "hi": "आओ चौकोर कोनों के बारे में जानें।"
+            }
+          },
+          {
+            "t": "corner",
+            "deg": 90,
+            "say": {
+              "en": "This is a square corner, just like on a square tile.",
+              "hi": "यह एक चौकोर कोना है, बिल्कुल वर्ग की टाइल जैसा।"
+            }
+          },
+          {
+            "t": "corner",
+            "deg": 90,
+            "ask": "kind"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What kind of corner is this?",
+              "hi": "यह किस तरह का कोना है?"
+            },
+            "opts": [
+              "Square corner",
+              "Smaller corner"
+            ],
+            "hiOpts": [
+              "चौकोर कोना",
+              "छोटा कोना"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might guess another size if they do not check carefully.",
+              "hi": "बच्चे ध्यान न दें तो कोई दूसरा माप अंदाज़े से चुन सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Squares and rectangles have square corners.",
+              "hi": "वर्ग और आयत में चौकोर कोने होते हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "📐",
+          "title": {
+            "en": "Square Corners",
+            "hi": "चौकोर कोने"
+          },
+          "sub": {
+            "en": "Finding square corners",
+            "hi": "चौकोर कोने ढूँढना"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 55",
+          "aims": [
+            {
+              "id": "s1nch8ms.0",
+              "kind": "explain",
+              "short": {
+                "en": "Square corner",
+                "hi": "चौकोर कोना"
+              },
+              "point": {
+                "en": "The child can identify a square corner.",
+                "hi": "बच्चा चौकोर कोने को पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! What do we call this corner that stands straight like a square?",
+                "hi": "मैं भूल गई! जो कोना वर्ग की तरह सीधा होता है, उसे क्या कहते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Look at the corner of a book or a square shape.",
+                  "hi": "किताब या वर्ग के कोने को देखो।"
+                },
+                {
+                  "en": "It has the same name as the corner of a square.",
+                  "hi": "इसका नाम वर्ग के कोने जैसा ही है।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "square corner",
+                  "hi": "चौकोर कोना",
+                  "words": [
+                    "chaukore kona",
+                    "चौकोर कोना"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us learn about square corners.",
+                "hi": "आओ चौकोर कोनों के बारे में जानें।"
+              }
+            },
+            {
+              "t": "corner",
+              "deg": 90,
+              "say": {
+                "en": "This is a square corner, just like on a square tile.",
+                "hi": "यह एक चौकोर कोना है, बिल्कुल वर्ग की टाइल जैसा।"
+              }
+            },
+            {
+              "t": "corner",
+              "deg": 45,
+              "ask": "kind"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What kind of corner is this?",
+                "hi": "यह किस तरह का कोना है?"
+              },
+              "opts": [
+                "Square corner",
+                "Smaller corner"
+              ],
+              "hiOpts": [
+                "चौकोर कोना",
+                "छोटा कोना"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children repeat what they just saw or heard (\"Square corner\") instead of looking at this picture.",
+                "hi": "बच्चे इस चित्र को देखने के बजाय अभी देखा या सुना जवाब (\"चौकोर कोना\") दोहरा देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Squares and rectangles have square corners.",
+                "hi": "वर्ग और आयत में चौकोर कोने होते हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1nch8ms"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "repairRaw": null,
+      "second": null,
+      "verdict": "passed"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Triangles",
+          "hi": "त्रिभुज"
+        },
+        "sub": {
+          "en": "Counting triangle sides",
+          "hi": "त्रिभुज की भुजाएँ गिनना"
+        },
+        "ic": "🔺",
+        "skill": "shapes2d",
+        "source": "Page 57",
+        "aims": [
+          {
+            "short": {
+              "en": "Triangle sides",
+              "hi": "त्रिभुज की भुजाएँ"
+            },
+            "point": {
+              "en": "The child can count the sides of a triangle.",
+              "hi": "बच्चा त्रिभुज की भुजाएँ गिन सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How many sides does a triangle have?",
+              "hi": "मैं भूल गई! त्रिभुज की कितनी भुजाएँ होती हैं?"
+            },
+            "hints": [
+              {
+                "en": "Count the three straight edges of the triangle.",
+                "hi": "त्रिभुज की तीन सीधी भुजाओं को गिनो।"
+              },
+              {
+                "en": "Trace round the triangle and count each edge.",
+                "hi": "त्रिभुज के चारों ओर घुमकर हर भुजा गिनो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "three sides",
+                "hi": "तीन भुजाएँ",
+                "words": [
+                  "three sides",
+                  "teen bhuja",
+                  "तीन भुजाएँ",
+                  "three"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us count the sides of a triangle.",
+              "hi": "आओ त्रिभुज की भुजाएँ गिनें।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "triangle",
+            "sides": [
+              4,
+              4,
+              5
+            ],
+            "say": {
+              "en": "See the triangle and count its three sides.",
+              "hi": "त्रिभुज को देखो और उसकी तीन भुजाएँ गिनो।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "triangle",
+            "sides": [
+              3,
+              4,
+              5
+            ],
+            "ask": "sides"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many sides does this triangle have?",
+              "hi": "इस त्रिभुज की कितनी भुजाएँ हैं?"
+            },
+            "opts": [
+              "3",
+              "4"
+            ],
+            "hiOpts": [
+              "3",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children often confuse triangles with squares and say 4.",
+              "hi": "बच्चे अक्सर त्रिभुज को वर्ग समझकर 4 कह देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "A triangle has three sides.",
+              "hi": "त्रिभुज की तीन भुजाएँ होती हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔺",
+          "title": {
+            "en": "Triangles",
+            "hi": "त्रिभुज"
+          },
+          "sub": {
+            "en": "Counting triangle sides",
+            "hi": "त्रिभुज की भुजाएँ गिनना"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 57",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us count the sides of a triangle.",
+                "hi": "आओ त्रिभुज की भुजाएँ गिनें।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "triangle",
+              "sides": [
+                4,
+                4,
+                5
+              ],
+              "say": {
+                "en": "See the triangle and count its three sides.",
+                "hi": "त्रिभुज को देखो और उसकी तीन भुजाएँ गिनो।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "triangle",
+              "sides": [
+                3,
+                4,
+                5
+              ],
+              "ask": "sides"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many sides does this triangle have?",
+                "hi": "इस त्रिभुज की कितनी भुजाएँ हैं?"
+              },
+              "opts": [
+                "3",
+                "4"
+              ],
+              "hiOpts": [
+                "3",
+                "4"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children often confuse triangles with squares and say 4.",
+                "hi": "बच्चे अक्सर त्रिभुज को वर्ग समझकर 4 कह देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "A triangle has three sides.",
+                "hi": "त्रिभुज की तीन भुजाएँ होती हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1byd065"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says \"three\"))",
+          "beat 3: the question names the shape it asks about — let the child work it out",
+          "beat 3: the lines just before this question say the answer \"3\" (in beat 1's words) — let the child work it out"
+        ],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"three\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Triangles",
+          "hi": "त्रिभुज"
+        },
+        "sub": {
+          "en": "Counting triangle sides",
+          "hi": "त्रिभुज की भुजाएँ गिनना"
+        },
+        "ic": "🔺",
+        "skill": "shapes2d",
+        "source": "Page 57",
+        "aims": [
+          {
+            "short": {
+              "en": "Triangle sides",
+              "hi": "त्रिभुज की भुजाएँ"
+            },
+            "point": {
+              "en": "The child can count the sides of a shape.",
+              "hi": "बच्चा किसी आकृति की भुजाएँ गिन सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How many sides does a shape have?",
+              "hi": "मैं भूल गई! किसी आकृति की कितनी भुजाएँ होती हैं?"
+            },
+            "hints": [
+              {
+                "en": "Count the straight edges of the shape one by one.",
+                "hi": "आकृति की सीधी भुजाओं को एक-एक करके गिनो।"
+              },
+              {
+                "en": "Trace round the shape and count each edge.",
+                "hi": "आकृति के चारों ओर घूमकर हर भुजा गिनो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "count each side",
+                "hi": "हर भुजा गिनो",
+                "words": [
+                  "count",
+                  "each side",
+                  "bhuja",
+                  "भुजा",
+                  "गिन"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us count the sides of shapes.",
+              "hi": "आओ आकृतियों की भुजाएँ गिनें।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "triangle",
+            "sides": [
+              4,
+              4,
+              5
+            ],
+            "say": {
+              "en": "See the shape and go round to count its straight edges.",
+              "hi": "आकृति को देखो और इसकी सीधी भुजाएँ गिनने के लिए घूमो।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "triangle",
+            "sides": [
+              3,
+              4,
+              5
+            ],
+            "ask": "sides"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many sides does this shape have?",
+              "hi": "इस आकृति की कितनी भुजाएँ हैं?"
+            },
+            "opts": [
+              "3",
+              "4"
+            ],
+            "hiOpts": [
+              "3",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children often confuse triangles with squares and say 4.",
+              "hi": "बच्चे अक्सर त्रिभुज को वर्ग समझकर 4 कह देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Go round once and count every side.",
+              "hi": "एक बार पूरा घूमो और हर भुजा गिनो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔺",
+          "title": {
+            "en": "Triangles",
+            "hi": "त्रिभुज"
+          },
+          "sub": {
+            "en": "Counting triangle sides",
+            "hi": "त्रिभुज की भुजाएँ गिनना"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 57",
+          "aims": [
+            {
+              "id": "s7q65yg.0",
+              "kind": "explain",
+              "short": {
+                "en": "Triangle sides",
+                "hi": "त्रिभुज की भुजाएँ"
+              },
+              "point": {
+                "en": "The child can count the sides of a shape.",
+                "hi": "बच्चा किसी आकृति की भुजाएँ गिन सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How many sides does a shape have?",
+                "hi": "मैं भूल गई! किसी आकृति की कितनी भुजाएँ होती हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Think back to the lesson. What did you do first?",
+                  "hi": "पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?"
+                },
+                {
+                  "en": "Show me with your finger, then tell me what you did.",
+                  "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "count each side",
+                  "hi": "हर भुजा गिनो",
+                  "words": [
+                    "count",
+                    "each side",
+                    "bhuja",
+                    "गिन"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us count the sides of shapes.",
+                "hi": "आओ आकृतियों की भुजाएँ गिनें।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "triangle",
+              "sides": [
+                4,
+                4,
+                5
+              ],
+              "say": {
+                "en": "See the shape and go round to count its straight edges.",
+                "hi": "आकृति को देखो और इसकी सीधी भुजाएँ गिनने के लिए घूमो।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "triangle",
+              "sides": [
+                3,
+                4,
+                5
+              ],
+              "ask": "sides"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many sides does this shape have?",
+                "hi": "इस आकृति की कितनी भुजाएँ हैं?"
+              },
+              "opts": [
+                "3",
+                "4"
+              ],
+              "hiOpts": [
+                "3",
+                "4"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children often confuse triangles with squares and say 4.",
+                "hi": "बच्चे अक्सर त्रिभुज को वर्ग समझकर 4 कह देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Go round once and count every side.",
+                "hi": "एक बार पूरा घूमो और हर भुजा गिनो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-7q65yg"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [],
+        "aimFixes": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"count\") — replaced with a general nudge"
+        ]
+      },
+      "verdict": "repaired"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Center of a Circle",
+          "hi": "वृत्त का केंद्र"
+        },
+        "sub": {
+          "en": "Where folds meet",
+          "hi": "जहाँ तह मिलती हैं"
+        },
+        "ic": "⭕",
+        "skill": "shapes2d",
+        "source": "Page 59",
+        "aims": [
+          {
+            "short": {
+              "en": "Circle center",
+              "hi": "वृत्त का केंद्र"
+            },
+            "point": {
+              "en": "The child can find where the fold lines meet in a circle.",
+              "hi": "बच्चा बता सकता है कि वृत्त में तह की रेखाएँ कहाँ मिलती हैं।"
+            },
+            "forget": {
+              "en": "I forgot! What is the meeting point of the folds in a circle called?",
+              "hi": "मैं भूल गई! वृत्त में तह मिलने वाले बिंदु को क्या कहते हैं?"
+            },
+            "hints": [
+              {
+                "en": "It is right in the middle of the circle.",
+                "hi": "यह वृत्त के बिल्कुल बीच में होता है।"
+              },
+              {
+                "en": "The word starts with C.",
+                "hi": "यह शब्द 'क' से शुरू होता है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "centre",
+                "hi": "केंद्र",
+                "words": [
+                  "centre",
+                  "center",
+                  "kendra",
+                  "केंद्र",
+                  "बीच"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us fold a circle paper and find its center.",
+              "hi": "आओ कागज़ के गोले को मोड़कर उसका केंद्र ढूँढें।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "circle",
+            "folds": 2,
+            "say": {
+              "en": "When we fold the circle, the lines meet at a point in the middle.",
+              "hi": "जब हम वृत्त को मोड़ते हैं, तो रेखाएँ बीच में एक बिंदु पर मिलती हैं।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "circle",
+            "folds": 2,
+            "ask": "meet"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Where do the fold lines meet?",
+              "hi": "तह की रेखाएँ कहाँ मिलती हैं?"
+            },
+            "opts": [
+              "Centre",
+              "Edge"
+            ],
+            "hiOpts": [
+              "केंद्र",
+              "किनारा"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might mistake the outer boundary for the meeting point.",
+              "hi": "बच्चे बाहरी सीमा को मिलने का बिंदु समझ सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "The point where fold lines meet is the centre.",
+              "hi": "जहाँ तह की रेखाएँ मिलती हैं, वह केंद्र है।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "⭕",
+          "title": {
+            "en": "Center of a Circle",
+            "hi": "वृत्त का केंद्र"
+          },
+          "sub": {
+            "en": "Where folds meet",
+            "hi": "जहाँ तह मिलती हैं"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 59",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us fold a circle paper and find its center.",
+                "hi": "आओ कागज़ के गोले को मोड़कर उसका केंद्र ढूँढें।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "circle",
+              "folds": 2,
+              "say": {
+                "en": "When we fold the circle, the lines meet at a point in the middle.",
+                "hi": "जब हम वृत्त को मोड़ते हैं, तो रेखाएँ बीच में एक बिंदु पर मिलती हैं।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "circle",
+              "folds": 3,
+              "ask": "meet"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Where do the fold lines meet?",
+                "hi": "तह की रेखाएँ कहाँ मिलती हैं?"
+              },
+              "opts": [
+                "Edge",
+                "Centre"
+              ],
+              "hiOpts": [
+                "किनारा",
+                "केंद्र"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might mistake the outer boundary for the meeting point.",
+                "hi": "बच्चे बाहरी सीमा को मिलने का बिंदु समझ सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "The point where fold lines meet is the centre.",
+                "hi": "जहाँ तह की रेखाएँ मिलती हैं, वह केंद्र है।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-xqj8da"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (hi) already gives the explanation (it says \"बीच\"))",
+          "beat 3: the lines just before this question say the answer \"Centre\" (in the intro) — let the child work it out"
+        ],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (hi) already gives the explanation (it says \"बीच\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Center of a Circle",
+          "hi": "वृत्त का केंद्र"
+        },
+        "sub": {
+          "en": "Where folds meet",
+          "hi": "जहाँ तह मिलती हैं"
+        },
+        "ic": "⭕",
+        "skill": "shapes2d",
+        "source": "Page 59",
+        "aims": [
+          {
+            "short": {
+              "en": "Circle center",
+              "hi": "वृत्त का केंद्र"
+            },
+            "point": {
+              "en": "The child can find where the fold lines meet in a circle.",
+              "hi": "बच्चा बता सकता है कि वृत्त में तह की रेखाएँ कहाँ मिलती हैं।"
+            },
+            "forget": {
+              "en": "I forgot! What is the meeting point of the folds in a circle called?",
+              "hi": "मैं भूल गई! वृत्त में तह मिलने वाले बिंदु को क्या कहते हैं?"
+            },
+            "hints": [
+              {
+                "en": "It is right where the creases cross inside.",
+                "hi": "यह अंदर वहाँ होता है जहाँ तहें एक-दूसरे को काटती हैं।"
+              },
+              {
+                "en": "The word starts with C.",
+                "hi": "यह शब्द 'क' से शुरू होता है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "centre",
+                "hi": "केंद्र",
+                "words": [
+                  "centre",
+                  "center",
+                  "kendra",
+                  "केंद्र"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us fold paper circles and look at the creases.",
+              "hi": "आओ कागज़ के गोलों को मोड़ें और तहों को देखें।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "circle",
+            "folds": 2,
+            "say": {
+              "en": "When we fold the circle, the lines cross each other.",
+              "hi": "जब हम वृत्त को मोड़ते हैं, तो रेखाएँ एक-दूसरे को पार करती हैं।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "circle",
+            "folds": 3,
+            "ask": "meet"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Where do the fold lines meet?",
+              "hi": "तह की रेखाएँ कहाँ मिलती हैं?"
+            },
+            "opts": [
+              "Centre",
+              "Edge"
+            ],
+            "hiOpts": [
+              "केंद्र",
+              "किनारा"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might mistake the outer boundary for the meeting point.",
+              "hi": "बच्चे बाहरी सीमा को मिलने का बिंदु समझ सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "The point where fold lines meet is the centre.",
+              "hi": "जहाँ तह की रेखाएँ मिलती हैं, वह केंद्र है।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "⭕",
+          "title": {
+            "en": "Center of a Circle",
+            "hi": "वृत्त का केंद्र"
+          },
+          "sub": {
+            "en": "Where folds meet",
+            "hi": "जहाँ तह मिलती हैं"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 59",
+          "aims": [
+            {
+              "id": "s1ce3p67.0",
+              "kind": "explain",
+              "short": {
+                "en": "Circle center",
+                "hi": "वृत्त का केंद्र"
+              },
+              "point": {
+                "en": "The child can find where the fold lines meet in a circle.",
+                "hi": "बच्चा बता सकता है कि वृत्त में तह की रेखाएँ कहाँ मिलती हैं।"
+              },
+              "forget": {
+                "en": "I forgot! What is the meeting point of the folds in a circle called?",
+                "hi": "मैं भूल गई! वृत्त में तह मिलने वाले बिंदु को क्या कहते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "It is right where the creases cross inside.",
+                  "hi": "यह अंदर वहाँ होता है जहाँ तहें एक-दूसरे को काटती हैं।"
+                },
+                {
+                  "en": "The word starts with C.",
+                  "hi": "यह शब्द 'क' से शुरू होता है।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "centre",
+                  "hi": "केंद्र",
+                  "words": [
+                    "centre",
+                    "center",
+                    "kendra",
+                    "केंद्र"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us fold paper circles and look at the creases.",
+                "hi": "आओ कागज़ के गोलों को मोड़ें और तहों को देखें।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "circle",
+              "folds": 2,
+              "say": {
+                "en": "When we fold the circle, the lines cross each other.",
+                "hi": "जब हम वृत्त को मोड़ते हैं, तो रेखाएँ एक-दूसरे को पार करती हैं।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "circle",
+              "folds": 3,
+              "ask": "meet"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Where do the fold lines meet?",
+                "hi": "तह की रेखाएँ कहाँ मिलती हैं?"
+              },
+              "opts": [
+                "Centre",
+                "Edge"
+              ],
+              "hiOpts": [
+                "केंद्र",
+                "किनारा"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children might mistake the outer boundary for the meeting point.",
+                "hi": "बच्चे बाहरी सीमा को मिलने का बिंदु समझ सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "The point where fold lines meet is the centre.",
+                "hi": "जहाँ तह की रेखाएँ मिलती हैं, वह केंद्र है।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1ce3p67"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    }
+  ],
+  "rechecked": "2026-11-13T13:33:24.746Z"
+}
