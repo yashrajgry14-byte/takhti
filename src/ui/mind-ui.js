@@ -79,6 +79,12 @@ function mindGoWay(skill, way){
   if(way === 'story'){ const id = mindStoryFor(skill); if(id){ go('lessons'); startLesson(id); return; } }
   if(way === 'cartoon' && mindHasCartoon(skill)){ go('theater'); startCartoonVideo(skill); return; }
   if(mindDomain(skill) === 'read'){ go('read'); return; }
+  if(mindDomain(skill) === 'shape'){
+    // the school's story lesson for it, else a built-in picture lesson
+    const sch = way === 'story' && typeof schoolLessons === 'function' ? schoolLessons().find(l => l.skillId === skill) : null;
+    const id = (sch && sch.id) || (typeof planBuiltin === 'function' && planBuiltin(skill));
+    if(id){ go('lessons'); startLesson(id); return; }
+  }
   S.mindFocus = skill; go('math');
 }
 
@@ -128,10 +134,10 @@ const MIND_TOPICS = ['add10', 'sub10', 'add2', 'carry', 'sub2', 'borrow', 'table
 function mindParentHTML(){
   const hi = S.lang === 'hi', n = attr(S.name || '');
   const m = mindOf();
-  const best = ['math', 'read'].map(d => [d, mindBest(d)]).filter(([, b]) => b);
+  const best = ['math', 'read', 'shape'].map(d => [d, mindBest(d)]).filter(([, b]) => b);
   const plans = Object.entries(m.plan).filter(([sk]) => mindDomain(sk)).slice(0, 6);
   const fmtDate = iso => String(iso || '').slice(0, 10);
-  const subj = d => d === 'math' ? (hi ? 'गणित' : 'Maths') : (hi ? 'पढ़ना' : 'Reading');
+  const subj = d => d === 'math' ? (hi ? 'गणित' : 'Maths') : d === 'shape' ? (hi ? 'आकृतियाँ' : 'Shapes') : (hi ? 'पढ़ना' : 'Reading');
   const topics = MIND_TOPICS.filter(id => skillById(id)).concat(['read1', 'read2', 'read3', 'read4', 'read5', 'read6']);
   return `<div class="kicker2" style="margin-top:14px">${hi ? `${n} कैसे सीखते हैं` : `HOW ${n.toUpperCase()} LEARNS`}</div>
   <div style="font-size:12.5px;opacity:.75;line-height:1.5">${hi

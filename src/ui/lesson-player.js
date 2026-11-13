@@ -191,7 +191,11 @@ async function startLesson(id){
   S._lessonBusy = false;
   S.lesson = { id, data: les, i:0, right:0, asked:0, picked:null };
   // a story is a way of being taught (core/mind.js): the answers that follow tell whether it stuck
-  if(typeof mindTaught === 'function') for(const sk of [les.skillId].concat(CONCEPT_SKILLS[les.concept] || []).filter(x => x && mindDomain(x))) mindTaught(sk, 'story');
+  // (a shapes lesson: pictures or the school's story — or, after pictures, the check; core/planner.js)
+  if(typeof mindTaught === 'function') for(const sk of [les.skillId].concat(CONCEPT_SKILLS[les.concept] || []).filter((x, i, a) => x && mindDomain(x) && a.indexOf(x) === i)){
+    const way = typeof planMarkWay === 'function' ? planMarkWay(les, sk) : 'story';
+    if(way) mindTaught(sk, way);
+  }
   log(0, `Lesson "${id}" · ${les.beats.length} beats · rendered in ${gameById(S.game).en}`);
   render();
   lesNarrate();
@@ -425,12 +429,29 @@ function schoolLessonsHTML(){
   const mine = schoolLessons();
   if(!mine.length) return '';
   const hi = S.lang === 'hi', done = S.doneLessons || [];
+  // each lesson with this child's own path to its aims (core/planner.js)
+  const path = l => {
+    const p = typeof planFor === 'function' ? planFor(l) : null;
+    if(!p || p.steps.length < 2) return '';
+    return `<div class="planpath" style="display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 0 46px;font-size:12px">${p.steps.map(s =>
+      `<span class="planstep${s.done ? ' done' : s === p.next ? ' next' : ''}" title="${attr(L(s.why))}" style="padding:2px 7px;border-radius:10px;background:${s.done ? 'rgba(80,160,90,.18)' : s === p.next ? 'rgba(240,170,40,.25)' : 'rgba(0,0,0,.06)'}">${s.done ? '✓' : s === p.next ? '▶' : '○'} ${attr(L(s.label))}</span>`).join('')}</div>
+      ${p.next ? `<div style="margin:2px 0 0 46px;font-size:11.5px;opacity:.7">${hi ? 'मुन्नी की योजना' : "Munni's plan"}: ${attr(L(p.next.why))}</div>` : ''}`;
+  };
   return `<div class="card" style="margin:10px 0;padding:12px">
     <div class="kicker2">📚 ${hi ? 'तुम्हारे स्कूल से — इस हफ़्ते' : 'FROM YOUR SCHOOL — THIS WEEK'}</div>
-    ${mine.map(l => `<button class="lescard" style="margin-top:8px" onclick="startLesson('${l.id}')">
+    ${mine.map(l => `<button class="lescard" style="margin-top:8px" onclick="planGo('${l.id}')">
       <span class="lesic">${l.ic}</span>
       <span><b>${attr(L(l.title))}</b><small>${attr(L(l.sub))}</small></span>
       <span class="lesgo">${done.includes(l.id) ? '✓' : '▶'}</span>
-    </button>`).join('')}
+    </button>${path(l)}`).join('')}
   </div>`;
+}
+/* The next step of this child's path for a school lesson. */
+function planGo(id){
+  const les = schoolLessons().find(l => l.id === id);
+  if(!les) return;
+  const p = typeof planFor === 'function' ? planFor(les) : null, s = p && p.next;
+  log(0, `Plan · "${les.title.en}" for this child: ${p ? p.steps.map(x => (x.done ? '✓' : x === s ? '▶' : '·') + x.k + (x.k === 'gap' ? ' ' + x.skill : '')).join(' → ') : 'none'}${p && p.way ? ' · way: ' + p.way : ''}${p && p.knows ? ' · already knows it' : ''}`);
+  if(s && s.k === 'teach' && typeof teachStart === 'function'){ const u = teachUnitFor(les); if(u){ teachStart(u); return; } }
+  startLesson(s && (s.k === 'gap' || s.k === 'show') ? s.lesson : id);
 }

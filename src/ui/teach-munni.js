@@ -171,6 +171,7 @@ function teachRemedy(){
   const skill = gap && (gap.aim.skill || s.unit.skill);
   TEACH = null;
   if(skill && mindDomain(skill) === 'math'){ mindGoWay(skill, mindChoose(skill, mindMathWays(skill))); return; }
+  if(skill && mindDomain(skill) === 'shape'){ mindGoWay(skill, mindChoose(skill, typeof planBuiltin === 'function' && planBuiltin(skill) ? ['show', 'story'] : ['story'])); return; }
   if(s.unit.lessonId){ go('lessons'); startLesson(s.unit.lessonId); return; }
   go('lessons');
 }

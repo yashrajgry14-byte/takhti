@@ -47,8 +47,15 @@ const WAYS = {
     model:  { en: 'hearing it first, then reading',  hi: 'पहले सुनकर, फिर पढ़कर' },
     chunks: { en: 'breaking words into pieces',      hi: 'शब्दों को टुकड़ों में तोड़कर' },
     solo:   { en: 'reading on their own first',      hi: 'पहले ख़ुद पढ़कर' }
+  },
+  // shapes (content/geometry.js): the built-in drawn lessons, or the school's
+  // own story lesson — the two ways a school's shapes chapter can be taught
+  shape: {
+    show:  { en: 'looking at drawings first',        hi: 'पहले चित्र देखकर' },
+    story: { en: 'through the school’s story',       hi: 'स्कूल की कहानी से' }
   }
 };
+const MIND_SHAPES = ['shapes2d', 'angles', 'perimeter'];
 const MIND_DAY = 864e5;
 const MIND_WHY = {
   twoMisses: { en: "two rounds taught this way didn't stick", hi: 'इस तरीक़े से दो बार सिखाया, पर बात नहीं बनी' },
@@ -65,6 +72,7 @@ function mindOf(c){
 
 function mindDomain(skill){
   if(/^read\d$/.test(skill)) return 'read';
+  if(MIND_SHAPES.includes(skill)) return 'shape';
   if(typeof SKILL_OPS !== 'undefined' && SKILL_OPS[skill]) return 'math';
   return null;
 }
