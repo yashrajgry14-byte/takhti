@@ -325,9 +325,11 @@ async function sylDraft(input){
       (r.lessons || []).forEach((raw, k) => {
         const again = sylClean(raw, { band: cls.band, skills }), at = drafts.indexOf(failed[k]);
         if(at < 0) return;
-        drafts[at] = again.ok ? { raw, ...again, repaired: true } : { ...drafts[at], repairErrors: again.errors };
+        // a "fix" that came back exactly as sent is said so, not counted as a second try
+        const same = JSON.stringify(sylTidy(raw.beats || [])) === JSON.stringify(sylTidy(failed[k].raw.beats || []));
+        drafts[at] = again.ok ? { raw, ...again, repaired: true } : { ...drafts[at], repairErrors: again.errors, unchanged: same };
       });
-      log(2, `Syllabus · ${failed.length} sent back to Gemini with the checker's reasons · ${drafts.filter(x => x.repaired).length} fixed and passed`);
+      log(2, `Syllabus · ${failed.length} sent back to Gemini with the checker's reasons · ${drafts.filter(x => x.repaired).length} fixed and passed${drafts.some(x => x.unchanged) ? ` · ${drafts.filter(x => x.unchanged).length} came back unchanged` : ''}`);
     }catch(e){ log(2, `Syllabus · repair round not reached (${e.message}) — the failures stay unused`); }
   }
   return { chapter: d.chapter || '', model: d.model || '', cls: cls.id, drafts };

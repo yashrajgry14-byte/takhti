@@ -81,7 +81,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v46` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v47` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -318,14 +318,23 @@ child sees.
   the beat types the player can draw and their limits, the arithmetic rule,
   both languages, the class's skill ids, the note — and asks Gemini
   (`GEMINI_API_KEY`, `GEMINI_MODEL`, default `gemini-3.8-flash`) for JSON in
-  Takhti's lesson schema (structured output; one retry with the older field
-  names). Google saying the model is busy (503/429) gets one more try a
-  moment later, then the lighter `GEMINI_FALLBACK_MODEL`
-  (`gemini-3.5-flash-lite`; `none` switches it off), which a 404 also moves
-  to; all busy → "Gemini is busy right now". A model that just hung or said
+  a **lesson shape** (structured output; one retry with the older field
+  names): `intro`, 1–4 `teach` pictures, 1–2 `questions` — each a `show`
+  picture, the `ask` (what is asked about a figure, or `none`), `q`,
+  exactly two `opts`/`hiOpts`, `correct`, `why`, every field required — and
+  `remember`. A question can't arrive without its answers, and a lesson
+  can't arrive without a question. The server turns that shape into the
+  player's beats (`toBeats()`: intro, the pictures, each question's picture
+  carrying its `ask`, an ask beat, a win beat), so everything after it
+  checks beats as before; the repair round sends the lesson back in the
+  same shape (`fromBeats()`). Google saying the model is busy (503/429)
+  gets one more try a moment later, then each `GEMINI_FALLBACK_MODEL` in
+  turn (a comma list, default `gemini-3.7-flash,gemini-3.5-flash-lite`;
+  `none` switches them off), which a 404 also moves to; all busy →
+  "Gemini is busy right now". A model that just hung or said
   busy rests for five minutes (`TAKHTI_GEMINI_REST_MS`), so the repair round
-  and the next chapter go straight to the fallback. One model gets at most 60% of
-  the time limit (55 s serverless, 180 s on the voice server), so a model
+  and the next chapter go straight to the fallback. Every model but the last gets at most 60% of
+  the time left (55 s serverless, 180 s on the voice server), so a model
   that hangs leaves time for the fallback. The draft and the repair prompt
   share one description of the beats and the rules (`beatsText()`,
   `rulesText()`) — what each shape `ask` means, the school's Hindi words
@@ -335,7 +344,9 @@ child sees.
   schema (a rectangle's `w` is a number). The class's skills offered are its
   own grade first, then the grades around it (a Class 3 shapes chapter
   reaches `shapes2d`, `angles`, `perimeter`). A PDF or photo goes as `inline_data`. `mode:'repair'` sends
-  rejected lessons back with the checker's reasons. Drafts only; the key
+  rejected lessons back with the checker's reasons; a repair that comes
+  back the same as what was sent is marked, and the teacher card says
+  "Gemini's fix changed nothing". Drafts only; the key
   never leaves the server; `TAKHTI_SYLLABUS_KEY` (optional school password)
   and a per-address hourly limit.
 - **The checks, on the phone** (`sylClean()`, then `validateLesson()`):
@@ -1162,7 +1173,12 @@ Honest edges of what's built:
    3.8-flash hung or was busy every time) passed 2 of 3, but both passing
    lessons asked about their own teaching picture and one intro said the
    answer — the reason for the same-picture rule, the wider "said it" check,
-   the resting model and the rectangle's inferred height. A fair verdict on
+   the resting model and the rectangle's inferred height. The third run
+   (flash-lite again) passed 0 of 3: the schema then required only a
+   beat's type, so it sent a question with no answers and two lessons with
+   no question at all, and the repair returned them unchanged — the reason
+   for the lesson shape with every field required, the unchanged-repair
+   mark and the full-Flash fallback before the lite one. A fair verdict on
    3.8-flash still needs a quieter hour.
 
 ## Style

@@ -50,7 +50,7 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
 (async () => {
   /* ---------- 1. the server ---------- */
   const { pathToFileURL } = require('url');                   // a bare C:\ path isn't an import specifier on Windows
-  const { draftCore } = await import(pathToFileURL(path.join(root, 'api/syllabus.mjs')).href);
+  const { draftCore, toBeats } = await import(pathToFileURL(path.join(root, 'api/syllabus.mjs')).href);
   const calls = [];
   const gemini = reply => async (url, o) => {
     const body = JSON.parse(o.body);
@@ -69,7 +69,7 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
       && !JSON.stringify(c1.body).includes('gk-secret') && c1.body.contents[0].parts[0].inline_data.mime_type === 'application/pdf', JSON.stringify(r1).slice(0, 300));
   const sys = c1.body.systemInstruction.parts[0].text;
   check("…with Takhti's lesson schema and the band's own rules: the number ceiling, the word limit, the arithmetic rule, both languages, the skills, the teacher's note",
-    JSON.stringify(c1.body.generationConfig).includes('"beats"') && /at most 100/.test(sys) && /at most 18 words/.test(sys) && /bar → a−b/.test(sys) && /Devanagari/.test(sys) && /sub2 \(Two-digit subtraction\)/.test(sys) && /borrowing/.test(sys), sys.slice(0, 300));
+    JSON.stringify(c1.body.generationConfig).includes('"questions"') && /at most 100/.test(sys) && /at most 18 words/.test(sys) && /bar → a−b/.test(sys) && /Devanagari/.test(sys) && /sub2 \(Two-digit subtraction\)/.test(sys) && /borrowing/.test(sys), sys.slice(0, 300));
   calls.length = 0;
   const old = async (url, o) => { const b = JSON.parse(o.body); calls.push(b); return b.generationConfig.responseFormat
     ? { ok:false, status:400, json: async () => ({ error:{ message:'Unknown name "responseFormat"' } }) }
@@ -81,15 +81,15 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     ? { ok:false, status:503, json: async () => ({ error:{ message:'The model is overloaded' } }) }
     : { ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[MATH] }) }] } }] }) }; };
   const rb = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.8', busyThen);
-  check('Google says the model is busy (503): one more try, then the lighter fallback model answers', rb.status === 200 && rb.json.model === 'gemini-3.5-flash-lite'
-    && calls.filter(c => /gemini-test:/.test(c.url)).length === 2 && /flash-lite:/.test(calls[calls.length - 1].url), JSON.stringify(calls.map(c => c.url.split('/').pop())));
+  check('Google says the model is busy (503): one more try, then the next model in the chain (a full Flash before the lite one) answers', rb.status === 200 && rb.json.model === 'gemini-3.7-flash'
+    && calls.filter(c => /gemini-test:/.test(c.url)).length === 2 && /3\.7-flash:/.test(calls[calls.length - 1].url), JSON.stringify(calls.map(c => c.url.split('/').pop())));
   calls.length = 0;
   const hangs = (url, o) => { calls.push({ url }); return /gemini-test:/.test(url)
     ? new Promise((_, no) => o.signal.addEventListener('abort', () => no(new Error('aborted'))))
     : Promise.resolve({ ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[READ] }) }] } }] }) }); };
   const t0 = Date.now();
   const rh = await draftCore({ chapter:{ text:'Chapter 6. Kites. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_TIMEOUT_MS: 4000 }, '1.1.1.7', hangs);
-  check('a model that hangs is given up on in time for the fallback to answer (no retry of a hang)', rh.status === 200 && rh.json.model === 'gemini-3.5-flash-lite'
+  check('a model that hangs is given up on in time for the fallback to answer (no retry of a hang)', rh.status === 200 && rh.json.model === 'gemini-3.7-flash'
     && calls.filter(c => /gemini-test:/.test(c.url)).length === 1 && Date.now() - t0 < 4000, `${rh.status} ${JSON.stringify(rh.json).slice(0, 80)} ${Date.now() - t0}ms`);
   const allBusy = async () => ({ ok:false, status:503, json: async () => ({}) });
   const rz = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.9', allBusy);
@@ -103,7 +103,13 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   const firstCalls = calls.length; calls.length = 0;
   const again = await draftCore({ mode:'repair', repair:[{ lesson: WRONG_SUM, errors:['x'] }], rules }, restEnv, '1.1.3.2', restFake);
   check('a model that just said "busy" rests: the next request (the repair round) goes straight to the fallback, no waiting',
-    firstCalls === 3 && calls.length === 1 && /flash-lite:/.test(calls[0].url) && again.json.model === 'gemini-3.5-flash-lite', `${firstCalls} then ${JSON.stringify(calls.map(c => c.url.split('/').pop()))}`);
+    firstCalls === 3 && calls.length === 1 && /3\.7-flash:/.test(calls[0].url) && again.json.model === 'gemini-3.7-flash', `${firstCalls} then ${JSON.stringify(calls.map(c => c.url.split('/').pop()))}`);
+  calls.length = 0;
+  const twoBusy = async (url) => { calls.push({ url }); return /gemini-test:|3\.7-flash:/.test(url)
+    ? { ok:false, status:503, json: async () => ({}) }
+    : { ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[MATH] }) }] } }] }) }; };
+  const r3m = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.3.3', twoBusy);
+  check('…and when that one is busy too, the lite model is last', r3m.status === 200 && r3m.json.model === 'gemini-3.5-flash-lite', JSON.stringify(calls.map(c => c.url.split('/').pop())));
   check('…and when every model is busy, an honest "busy right now"', rz.status === 502 && /busy right now/.test(rz.json.error), JSON.stringify(rz));
   const big = Buffer.alloc(5 * 1024 * 1024, 7).toString('base64');
   const r413 = await draftCore({ chapter:{ file: big, mime:'application/pdf' }, rules }, env, '1.1.2.1', gemini({ lessons:[] }));
@@ -120,16 +126,41 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   calls.length = 0;
   const r3 = await draftCore({ mode:'repair', repair:[{ lesson: WRONG_SUM, errors:['beat 2: marked 35 right, but the picture before it shows 25'] }], rules }, env, '1.1.1.6', gemini({ lessons:[MATH] }));
   const rsys = calls[0].body.systemInstruction.parts[0].text;
-  check('…and the repair round is told what every beat is, what a shape ask may be, and how to read the reasons', /figure \{kind/.test(rsys) && /ask is exactly one of/.test(rsys) && /must say what is asked \(ask\)" → set the figure's ask/.test(rsys) && /TEACH, THEN ASK/.test(rsys), rsys.slice(0, 200));
+  check('…and the repair round is told what every beat is, what a shape ask may be, and how to read the reasons', /figure \{kind/.test(rsys) && /"ask" says what is asked about a figure \(name/.test(rsys) && /must say what is asked \(ask\)" → set that question's ask/.test(rsys) && /needs exactly 2 answers/.test(rsys) && /TEACH, THEN ASK/.test(rsys), rsys.slice(0, 200));
   check("the repair round sends the lesson back with the checker's own reasons, and returns the fix", r3.status === 200 && r3.json.lessons.length === 1
     && JSON.stringify(calls[0].body.contents).includes('shows 25') && /rejected by Takhti's checker/.test(calls[0].body.systemInstruction.parts[0].text), JSON.stringify(r3).slice(0, 200));
   check('the model is told it only drafts from THIS chapter (nothing from outside it)', /nothing from outside it/.test(sys), '');
+  // from the third live run: flash-lite sent a question with no answers, and lessons with no question
+  const sch = c1.body.generationConfig.responseFormat.text.schema.properties.lessons.items;
+  const qs = sch.properties.questions, qn = qs.items;
+  check("the answer format is shaped like a lesson: intro, things that teach, 1–2 questions each with its own picture, exactly two answers, the right one's index and a teacher's note — all required",
+    ['aims','intro','teach','questions','remember'].every(k => sch.required.includes(k)) && qs.minItems === 1 && qs.maxItems === 2
+      && ['show','ask','q','opts','hiOpts','correct','why'].every(k => qn.required.includes(k)) && qn.properties.opts.minItems === 2 && qn.properties.opts.maxItems === 2
+      && JSON.stringify(qn.properties.correct.enum) === '[0,1]' && sch.properties.teach.minItems === 1, JSON.stringify(sch.required));
+  const shaped = { title:MATH.title, sub:MATH.sub, ic:'🥭', skill:'sub2', aims:MATH.aims, intro:MATH.beats[0].say,
+    teach:[{ t:'bar', a:30, b:10, say:{ en:'30 in all, 10 of them here.', hi:'कुल 30, इनमें से 10 यहाँ।' } }],
+    questions:[{ show:{ t:'bar', a:45, b:20 }, ask:'none', q:MATH.beats[2].q, opts:['25','65'], hiOpts:['25','65'], correct:0, why:MATH.beats[2].why }],
+    remember:MATH.beats[3].say };
+  const conv = toBeats(shaped);
+  check("toBeats(): Gemini's lesson shape becomes Takhti's beats — intro, teaching picture, the question's picture, the question, the closing line",
+    conv.beats.map(b => b.t).join(',') === 'intro,bar,bar,ask,win' && conv.beats[3].opts[0] === '25' && !('questions' in conv), JSON.stringify(conv.beats.map(b => b.t)));
+  const shapeQ = toBeats({ ...shaped, teach:[{ t:'figure', kind:'square', s:4 }], questions:[{ show:{ t:'figure', kind:'triangle', sides:[3,4,5] }, ask:'sides', q:{ en:'How many sides?', hi:'कितनी भुजाएँ?' }, opts:['3','4'], hiOpts:['3','4'], correct:0, why:MATH.beats[2].why },
+    { show:{ t:'corner', deg:45 }, ask:'none', q:{ en:'What kind of corner?', hi:'कैसा कोना?' }, opts:['Smaller corner','Square corner'], hiOpts:['छोटा कोना','चौकोर कोना'], correct:0, why:MATH.beats[2].why }] });
+  check("…a question's ask goes onto its figure, a corner always asks its kind, and a lesson already in beats passes through unchanged",
+    shapeQ.beats[2].ask === 'sides' && shapeQ.beats[4].ask === 'kind' && !('ask' in shapeQ.beats[1]) && toBeats(MATH) === MATH, JSON.stringify(shapeQ.beats.slice(1, 5)));
+  calls.length = 0;
+  const rs = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, env, '1.1.4.1', gemini({ chapter:'Subtraction', lessons:[shaped] }));
+  check('the server hands the phone beats, whatever shape Gemini answered in', rs.status === 200 && Array.isArray(rs.json.lessons[0].beats) && rs.json.lessons[0].beats.length === 5, JSON.stringify(rs.json).slice(0, 200));
+  calls.length = 0;
+  await draftCore({ mode:'repair', repair:[{ lesson: MATH, errors:['x'] }], rules }, env, '1.1.4.2', gemini({ lessons:[shaped] }));
+  const sentRepair = JSON.parse(calls[0].body.contents[0].parts[0].text).lessons[0].lesson;
+  check('the repair round shows Gemini the lesson in the same shape it must answer in', Array.isArray(sentRepair.questions) && sentRepair.questions[0].opts[0] === '25' && sentRepair.intro && !sentRepair.beats, JSON.stringify(sentRepair).slice(0, 200));
   check('…teach before asking, the school words (चौकोर कोना…), a why that names the real mistake, Hindi answers in Devanagari, and what each shape ask means',
-    /TEACH, THEN ASK/.test(sys) && /चौकोर कोना/.test(sys) && /names the real misconception/.test(sys) && /हाँ\/नहीं/.test(sys) && /ask is exactly one of: name/.test(sys), '');
-  const beatSchema = c1.body.generationConfig.responseFormat.text.schema.properties.lessons.items.properties.beats.items.properties;
+    /TEACH, THEN ASK/.test(sys) && /चौकोर कोना/.test(sys) && /names the misconception/.test(sys) && /हाँ\/नहीं/.test(sys) && /"ask" says what is asked about a figure \(name/.test(sys), '');
+  const beatSchema = c1.body.generationConfig.responseFormat.text.schema.properties.lessons.items.properties.teach.items.properties;
   check("the schema no longer has two different w's: a word beat's word is \"word\", a rectangle's w a number", beatSchema.word.type === 'string' && beatSchema.w.type === 'integer', JSON.stringify([beatSchema.word, beatSchema.w]));
   check('…to start every lesson with aims the teacher can approve, each one taught and checked, a note on why children pick the wrong answer, and never गुणा for "by"',
-    /AIMS/.test(sys) && /Every aim is taught in the beats AND checked by a question/.test(sys) && /why/.test(sys) && /गुणा/.test(sys) && c1.body.generationConfig && JSON.stringify(c1.body.generationConfig).includes('"aims"'), sys.slice(0, 200));
+    /AIMS/.test(sys) && /Every aim is taught AND checked by a question/.test(sys) && /why/.test(sys) && /गुणा/.test(sys) && c1.body.generationConfig && JSON.stringify(c1.body.generationConfig).includes('"aims"'), sys.slice(0, 200));
 
   // the voice server hosts the same function (no serverless time limit)
   const { createServer } = require('../voice/server.js');
@@ -221,7 +252,7 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     check('a word beat sent as "word" (the schema\'s name) works', wordL.ok && wordL.lesson.beats[0].w === 'पतंग', JSON.stringify(wordL.errors));
     // (line endings normalised: a Windows checkout has \r\n)
     const exSrc = fs.readFileSync(path.join(root, 'api/syllabus.mjs'), 'utf8').replace(/\r\n/g, '\n').match(/An example of one good lesson[^\n]*\n([\s\S]*?)`;\n}/)[1];
-    const ex = JSON.parse(E(`JSON.stringify(sylClean(${exSrc}, { band:'early', skills: sylSkills(sylClass('c1')) }))`));
+    const ex = JSON.parse(E(`JSON.stringify(sylClean(${JSON.stringify(toBeats(JSON.parse(exSrc)))}, { band:'early', skills: sylSkills(sylClass('c1')) }))`));
     check("the example lesson in Gemini's prompt passes Takhti's own checker (so the example and the rules can't drift apart) — two questions, the second on a new example", ex.ok && ex.checks.length === 2 && ex.checks.every(c => c === 'shape'), JSON.stringify(ex.errors));
     // from the second live run: the question's picture was the teaching picture again, and the intro said the answer
     const circ = (beats) => ({ ...clone(READ), title:{ en:'The centre', hi:'केंद्र' }, skill:'shapes2d', beats:[...beats,
@@ -260,6 +291,7 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     check('four drafts: two pass at once; the wrong sum goes back to Gemini with its reason and comes back fixed; the ungrounded one stays "not used"',
       drafts.length === 4 && drafts.filter(d => d.ok).length === 3 && drafts[2].repaired && !drafts[3].ok && toServer.length === 2 && toServer[1].body.mode === 'repair'
         && toServer[1].body.repair.length === 2 && /shows 25/.test(toServer[1].body.repair[0].errors.join(' ')), JSON.stringify(drafts));
+    check('…and a "fix" that came back exactly as sent is said so to the teacher', E(`S.ctx.sylRes.drafts[3].unchanged`) === true && /fix changed nothing/.test(screen()), E(`JSON.stringify(S.ctx.sylRes.drafts.map(d => !!d.unchanged))`));
     const t = screen();
     check('the teacher reads every lesson: the lines, the right answer marked, how each answer was checked, and why one is not used',
       /Ravi had 45 mangoes/.test(t) && /✓ 25/.test(t) && /answer checked by the arithmetic/.test(t) && /answer found in the passage/.test(t) && /Not used — it didn't pass the check/.test(t) && /isn't in the passage/.test(t), t.slice(-1200));

@@ -26,8 +26,8 @@
    → { lessons:[…raw drafts…], chapter, model }
 
    Keys stay here: GEMINI_API_KEY (or GOOGLE_API_KEY), GEMINI_MODEL
-   (default gemini-3.8-flash; GEMINI_FALLBACK_MODEL, default
-   gemini-3.5-flash-lite, when that one is busy). TAKHTI_SYLLABUS_KEY, if set, is a school
+   (default gemini-3.8-flash; GEMINI_FALLBACK_MODEL, a comma list tried in
+   turn when that one is busy, default gemini-3.7-flash,gemini-3.5-flash-lite). TAKHTI_SYLLABUS_KEY, if set, is a school
    password the teacher view must send. Works as a Netlify function
    (Request → Response), with the Vercel-style (req, res) signature
    api/ask.js uses, and inside the voice server (voice/server.js,
@@ -74,6 +74,41 @@ function cleanRules(r){
 
 /* The shape Gemini must answer in — Takhti's lesson format, flattened. */
 const bi = { type:'object', properties:{ en:{ type:'string' }, hi:{ type:'string' } }, required:['en','hi'] };
+/* What Gemini must answer in. Not a free list of beats: the third live run
+   (flash-lite) sent a question with no answers and two lessons with no
+   question at all, because a flat beat schema could only require a beat's
+   type. So a lesson is SHAPED like a lesson — an intro, 1–4 things that
+   teach, 1–2 questions each with its own picture, exactly two answers, the
+   right one's index and a teacher's note, all required — and toBeats()
+   turns it into Takhti's beats. The checker still checks everything. */
+const PIC_TYPES = BEAT_TYPES.filter(t => !['intro', 'ask', 'win'].includes(t));
+const PIC = {
+  type:'object',
+  properties:{
+    t:{ type:'string', enum: PIC_TYPES },
+    say: bi, a:{ type:'integer' }, b:{ type:'integer' }, n:{ type:'integer' }, hops:{ type:'integer' },
+    p: bi, art:{ type:'string' }, word:{ type:'string' }, text:{ type:'string' },
+    kind:{ type:'string', enum:['square','rectangle','triangle','circle'] }, s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' },
+    sides:{ type:'array', items:{ type:'integer' } }, folds:{ type:'integer' }, deg:{ type:'integer' },
+    items:{ type:'array', items:{ type:'object', properties:{ kind:{ type:'string', enum:['square','rectangle','triangle','circle','corner'] },
+      s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' }, sides:{ type:'array', items:{ type:'integer' } }, deg:{ type:'integer' } }, required:['kind'] } },
+    find:{ type:'string', enum:['square','rectangle','triangle','circle','squarecorner','odd'] }
+  },
+  required:['t']
+};
+const answers = { type:'array', items:{ type:'string' }, minItems:2, maxItems:2 };
+const QUESTION = {
+  type:'object',
+  properties:{
+    show: { ...PIC, description:'The picture this question is about — a different example from the teaching pictures.' },
+    ask:{ type:'string', enum:['name','sides','corners','perimeter','equal','meet','kind','none'],
+          description:'For a figure: what is asked about it. For a corner: kind. Anything else (sums, a passage, a numbered row): none.' },
+    q: bi, opts: answers, hiOpts: answers,
+    correct:{ type:'integer', enum:[0, 1] },
+    why: { ...bi, description:'For the teacher only: the misconception behind the wrong answer.' }
+  },
+  required:['show','ask','q','opts','hiOpts','correct','why']
+};
 const SCHEMA = {
   type:'object',
   properties:{
@@ -86,37 +121,68 @@ const SCHEMA = {
         skill:{ type:'string', description:'One id from the skill list, or "".' },
         source:{ type:'string', description:'Where in the chapter this comes from (page, heading, exercise).' },
         aims:{ type:'array', minItems:1, maxItems:4, items: bi, description:'What the child will be able to do — 3 short points a teacher approves.' },
-        beats:{ type:'array', items:{
-          type:'object',
-          properties:{
-            t:{ type:'string', enum: BEAT_TYPES },
-            say: bi, a:{ type:'integer' }, b:{ type:'integer' }, n:{ type:'integer' }, hops:{ type:'integer' },
-            p: bi, art:{ type:'string' }, word:{ type:'string' }, text:{ type:'string' },
-            q: bi, opts:{ type:'array', items:{ type:'string' } }, hiOpts:{ type:'array', items:{ type:'string' } },
-            correct:{ type:'integer' },
-            why: { ...bi, description:'For the teacher only: why children pick the wrong answer.' },
-            kind:{ type:'string', enum:['square','rectangle','triangle','circle'] }, s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' },
-            sides:{ type:'array', items:{ type:'integer' } }, folds:{ type:'integer' }, deg:{ type:'integer' },
-            ask:{ type:'string', enum:['name','sides','corners','perimeter','equal','meet','kind'] },
-            items:{ type:'array', items:{ type:'object', properties:{ kind:{ type:'string', enum:['square','rectangle','triangle','circle','corner'] },
-              s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' }, sides:{ type:'array', items:{ type:'integer' } }, deg:{ type:'integer' } }, required:['kind'] } },
-            find:{ type:'string', enum:['square','rectangle','triangle','circle','squarecorner','odd'] }
-          },
-          required:['t']
-        } }
+        intro: { ...bi, description:'The opening line. Never the answer.' },
+        teach:{ type:'array', minItems:1, maxItems:4, items: PIC, description:'Teaching pictures and worked examples, before any question.' },
+        questions:{ type:'array', minItems:1, maxItems:2, items: QUESTION },
+        remember: { ...bi, description:'The closing line — the one idea to remember.' }
       },
-      required:['title','sub','aims','beats']
+      required:['title','sub','aims','intro','teach','questions','remember']
     } }
   },
   required:['lessons']
 };
 
+/* Gemini's lesson shape → Takhti's beats (and back, for the repair round).
+   A lesson already in beats passes through unchanged. */
+const FIG_ASKS = ['name','sides','corners','perimeter','equal','meet'];
+export function toBeats(l){
+  if(!l || typeof l !== 'object' || Array.isArray(l.beats) || !Array.isArray(l.questions)) return l;
+  const { intro, teach, questions, remember, ...rest } = l;
+  const beats = [];
+  if(intro) beats.push({ t:'intro', say: intro });
+  for(const x of Array.isArray(teach) ? teach : []) if(x && typeof x === 'object'){ const { ask, ...pic } = x; beats.push(pic); }
+  for(const qn of questions){
+    if(!qn || typeof qn !== 'object') continue;
+    const show = qn.show && typeof qn.show === 'object' ? { ...qn.show } : null;
+    if(show){
+      delete show.ask;
+      if(show.t === 'figure' && FIG_ASKS.includes(qn.ask)) show.ask = qn.ask;
+      if(show.t === 'corner') show.ask = 'kind';
+      beats.push(show);
+    }
+    beats.push({ t:'ask', q: qn.q, opts: qn.opts, hiOpts: qn.hiOpts, correct: qn.correct, why: qn.why });
+  }
+  if(remember) beats.push({ t:'win', say: remember });
+  return { ...rest, beats };
+}
+function fromBeats(l){
+  if(!l || !Array.isArray(l.beats)) return l;
+  const { beats, ...rest } = l, out = { ...rest, intro: null, teach: [], questions: [], remember: null };
+  beats.forEach((b, i) => {
+    if(!b || typeof b !== 'object') return;
+    if(b.t === 'intro') out.intro = out.intro || b.say;
+    else if(b.t === 'win') out.remember = b.say;
+    else if(b.t === 'ask'){
+      const prev = beats[i - 1] && beats[i - 1].t !== 'ask' && beats[i - 1].t !== 'intro' ? beats[i - 1] : null;
+      if(prev && out.teach[out.teach.length - 1] === prev) out.teach.pop();
+      const { ask, ...show } = prev || {};
+      out.questions.push({ show: prev ? show : null, ask: prev && prev.t === 'corner' ? 'kind' : (ask || 'none'), q: b.q, opts: b.opts, hiOpts: b.hiOpts, correct: b.correct, why: b.why });
+    } else out.teach.push(b);
+  });
+  return out;
+}
+
 /* What Takhti can draw, and the rules its checker holds a lesson to —
    one text, used by the draft AND the repair round (the first live run's
    repair fixed nothing: it was told "add ask" without being told what ask is). */
 function beatsText(){
-  return `Every lesson is a list of "beats" the app draws on screen with the child's favourite game pieces, and narrates aloud. Use ONLY these beat types and fields:
-- intro {say}: an opening line.
+  return `Every lesson has this shape (the schema enforces it):
+- intro: the opening line (never the answer);
+- teach: 1–4 pictures or worked examples that TEACH, before any question;
+- questions: TWO questions (at least one). Each has its own picture "show" — a DIFFERENT example from the teaching pictures — then q, exactly two answers (opts in English, hiOpts the same in Hindi), correct (0 or 1), and why (for the teacher: the misconception behind the wrong answer). "ask" says what is asked about a figure (name | sides | corners | perimeter | equal | meet), "kind" for a corner, "none" for anything else;
+- remember: the closing line — the one idea to remember.
+
+The pictures (for teach and for each question's show) — use ONLY these:
 - count {n}: n objects appear (n ≤ 20).
 - add {a,b}: a objects, then b more arrive (a,b ≤ 10).
 - take {a,b}: a objects, b go away (a ≤ 20, b ≤ a).
@@ -129,43 +195,37 @@ function beatsText(){
 - passage {p, art}: a short text to read (3–5 short sentences), art is one emoji.
 - word {word, art}: one word to read.
 - readline {text}: one sentence for the child to read aloud.
-- ask {q, opts, hiOpts, correct, why}: a question with exactly 2 options; correct is the index of the right one; why (for the teacher only, never shown to the child) names the real misconception behind the wrong option.
-- figure {kind, s | w,h | sides, folds, ask}: Takhti draws ONE shape — a square (s = its side), a rectangle (w AND h, both needed, different numbers), a triangle (sides = [a,b,c], three numbers that make a triangle) or a circle (folds = 0–4 fold lines through the middle). Side lengths are labelled on the drawing.
-    · A figure WITHOUT ask is a teaching picture: its corners are marked and Munni says what it is.
-    · A figure WITH ask is a question picture, and the VERY NEXT beat must be the ask about it. ask is exactly one of: name (which shape is it?) | sides (how many sides?) | corners (how many corners?) | perimeter (all the way round — add every side) | equal (are all its sides equal? answers Yes / No) | meet (where do the folds meet? answer Centre — the circle needs folds ≥ 2).
-- corner {deg, ask}: Takhti draws one corner of deg degrees (20–160; 90 is a square corner). Without ask it is a teaching picture. With ask:"kind" the next beat asks what kind it is, and the answers are two of "Square corner" / "Smaller corner" / "Bigger corner" (Hindi: चौकोर कोना / छोटा कोना / बड़ा कोना).
-- figures {items, find}: 2–4 shapes or corners in a row, numbered 1–4 (an item is {kind, s | w,h | sides} or {kind:"corner", deg}). find = square | rectangle | triangle | circle | squarecorner | odd; exactly ONE item must match, and the next beat asks which number — its answers are numbers like "2".
-- win {say}: the closing line — the one idea to remember.
-Never repeat a beat. A figure, corner or figures beat never carries a why — notes go on the ask.
-The teaching picture and the question picture are DIFFERENT examples (a different shape or size), so the child applies what they saw.
+- figure {kind, s | w,h | sides, folds}: Takhti draws ONE shape — a square (s = its side), a rectangle (w AND h, both needed, different numbers), a triangle (sides = [a,b,c], three numbers that make a triangle) or a circle (folds = 0–4 fold lines through the middle). Side lengths are labelled. In teach it is a teaching picture (corners marked, Munni says what it is). As a question's show, its "ask" says what is asked: name (which shape?) | sides | corners | perimeter (add every side) | equal (are all its sides equal? Yes / No) | meet (where do the folds meet? Centre — needs folds ≥ 2).
+- corner {deg}: one corner of deg degrees (20–160; 90 is a square corner). As a show, ask is "kind" and the answers are two of "Square corner" / "Smaller corner" / "Bigger corner" (Hindi: चौकोर कोना / छोटा कोना / बड़ा कोना).
+- figures {items, find}: 2–4 shapes or corners in a row, numbered 1–4 (an item is {kind, s | w,h | sides} or {kind:"corner", deg}). find = square | rectangle | triangle | circle | squarecorner | odd; exactly ONE item must match; the answers are numbers like "2"; ask is "none".
+A picture can carry a short say (what Munni says while it shows). Never put a why on a picture.
 
 An example of one good lesson (the shape of it, not its content):
 {"title":{"en":"Sides and corners","hi":"भुजाएँ और कोने"},"sub":{"en":"Go round the shape","hi":"आकृति के चारों ओर"},"ic":"🔷","skill":"shapes2d","source":"Page 61",
  "aims":[{"en":"The child can count the sides of a shape.","hi":"बच्चा किसी आकृति की भुजाएँ गिन सकता है।"},{"en":"The child can find the shape with 3 sides.","hi":"बच्चा 3 भुजाओं वाली आकृति ढूँढ सकता है।"}],
- "beats":[{"t":"intro","say":{"en":"Shapes have sides. Let us count them.","hi":"आकृतियों की भुजाएँ होती हैं। आओ गिनें।"}},
-  {"t":"figure","kind":"square","s":4},
-  {"t":"figure","kind":"triangle","sides":[5,5,5],"ask":"sides"},
-  {"t":"ask","q":{"en":"How many sides does it have?","hi":"इसकी कितनी भुजाएँ हैं?"},"opts":["3","4"],"hiOpts":["3","4"],"correct":0,
+ "intro":{"en":"Shapes have sides. Let us count them.","hi":"आकृतियों की भुजाएँ होती हैं। आओ गिनें।"},
+ "teach":[{"t":"figure","kind":"square","s":4}],
+ "questions":[
+  {"show":{"t":"figure","kind":"triangle","sides":[5,5,5]},"ask":"sides","q":{"en":"How many sides does it have?","hi":"इसकी कितनी भुजाएँ हैं?"},"opts":["3","4"],"hiOpts":["3","4"],"correct":0,
    "why":{"en":"Children who just saw the square expect every shape to have 4 sides.","hi":"वर्ग देखने के बाद बच्चे हर आकृति की 4 भुजाएँ मान लेते हैं।"}},
-  {"t":"figures","items":[{"kind":"rectangle","w":6,"h":3},{"kind":"triangle","sides":[3,4,5]},{"kind":"square","s":3}],"find":"triangle"},
-  {"t":"ask","q":{"en":"Which number has 3 sides?","hi":"किस नंबर वाली आकृति की 3 भुजाएँ हैं?"},"opts":["2","1"],"hiOpts":["2","1"],"correct":0,
-   "why":{"en":"Children pick the first shape they see without counting its sides.","hi":"बच्चे भुजाएँ गिने बिना पहली दिखी आकृति चुन लेते हैं।"}},
-  {"t":"win","say":{"en":"Go round once and count each side.","hi":"एक बार पूरा घूमो और हर भुजा गिनो।"}}]}`;
+  {"show":{"t":"figures","items":[{"kind":"rectangle","w":6,"h":3},{"kind":"triangle","sides":[3,4,5]},{"kind":"square","s":3}],"find":"triangle"},"ask":"none","q":{"en":"Which number has 3 sides?","hi":"किस नंबर वाली आकृति की 3 भुजाएँ हैं?"},"opts":["2","1"],"hiOpts":["2","1"],"correct":0,
+   "why":{"en":"Children pick the first shape they see without counting its sides.","hi":"बच्चे भुजाएँ गिने बिना पहली दिखी आकृति चुन लेते हैं।"}}],
+ "remember":{"en":"Go round once and count each side.","hi":"एक बार पूरा घूमो और हर भुजा गिनो।"}}`;
 }
 function rulesText(rules){
   return `Hard rules — Takhti's checker rejects any lesson that breaks one:
-1. 4 to 8 beats; start with intro, passage or a teaching picture; end with win; at least one ask.
-2. TEACH, THEN ASK: before the first question there must be something that teaches — a teaching picture (a figure or corner without ask, or a count/add/take/… beat), or a passage. Every aim is taught in the beats AND checked by a question.
-3. A maths ask comes right after the beat that shows it, and its right answer is a number equal to what that beat computes (count → n, add → a+b, take → a−b, group → a, array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Numbers as digits.
-4. A reading ask comes after a passage/word/readline, and its right answer uses the passage's own words.
-5. A shape ask comes right after the figure/corner/figures it is about (with its ask or find set), and its right answer is what that drawing shows. For anything about shapes, sides, corners or perimeter, USE the drawings — never describe a shape only in words.
+1. Short: 1–4 teaching pictures, then the questions.
+2. TEACH, THEN ASK: teach really teaches what the questions check. Every aim is taught AND checked by a question — and is something a child can show on a screen (count, name, find, pick): never "fold a paper" or "cut", and never empty ("find a rectangle with 4 sides" — every rectangle has 4).
+3. A maths question's show is the picture it is about, and its right answer is a number equal to what that picture computes (count → n, add → a+b, take → a−b, group → a, array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Numbers as digits.
+4. A reading question's show is the passage, word or line, and its right answer uses the passage's own words.
+5. A shape question's show is the figure/corner/figures it is about, and its right answer is what that drawing shows. For anything about shapes, sides, corners or perimeter, USE the drawings — never describe a shape only in words.
 6. Never say the answer in the lines just before a question (the intro counts), and never name it in the question itself ("Are all sides equal in this square?" gives it away — ask "Are all its sides equal?").
-6b. TEACH ON ONE SHAPE, ASK ON ANOTHER: the question's picture is never the teaching picture again (a teaching picture marks the answer). Teach with a 6 × 3 rectangle, ask about a 4 × 2 one; teach a square corner, ask about a smaller or bigger corner; teach a circle with 2 folds, ask with 3.
+6b. TEACH ON ONE SHAPE, ASK ON ANOTHER: a question's show is never a teaching picture again (a teaching picture marks the answer). Teach with a 6 × 3 rectangle, ask about a 4 × 2 one; teach a square corner, ask about a smaller or bigger corner; teach a circle with 2 folds, ask with 3.
 6c. Ask TWO questions per lesson: the first to recognise, the second about a NEW example (another shape, a numbered row, an odd one out).
 7. The wrong option is a mistake a child really makes — never silly, never equal to the right one. Its why names the misconception behind it ("children judge a corner by how long its arms are", "children count only the top two corners"), never "they might guess" or "they might confuse it".
 8. Every number a child meets is at most ${rules.maxNumber}.
 9. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; speak to the child as "तुम", never "आप"; never scold, never the word "wrong".
-10. title, sub, say, q, p, aims and why are objects with natural English "en" AND natural Hindi "hi" in Devanagari (not transliteration). opts are English; hiOpts are the same answers in Hindi, in Devanagari unless the answer is a number (Yes/No → हाँ/नहीं).
+10. title, sub, intro, remember, say, q, p, aims and why are objects with natural English "en" AND natural Hindi "hi" in Devanagari (not transliteration). opts are English; hiOpts are the same answers in Hindi, in Devanagari unless the answer is a number (Yes/No → हाँ/नहीं).
 11. Use the words Indian schools use: वर्ग (square), आयत (rectangle), त्रिभुज (triangle), वृत्त (circle), भुजा (side), कोना (corner), चौकोर कोना (square corner), केंद्र (centre), परिमाप (perimeter), तह / तह की रेखा (fold / fold line), ढूँढो (find). Sizes are written "6 × 3" or "sides 6 and 3" — in Hindi never translate "by" as गुणा.
 12. Plain text only: no markup, no brackets of code, no links. ic and art are a single emoji.`;
 }
@@ -186,8 +246,8 @@ Answer with JSON only, in the given schema.`;
 }
 
 function repairInstructions(rules){
-  return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Return each lesson fixed — same topic, same format, same aims, every reason addressed — and change nothing else.
-How to read the reasons: "must say what is asked (ask)" → set the figure's ask to what the next question asks (sides, corners, name…); "a rectangle needs w and h" → give both; "say the answer" → change the narration or ask about a new example, not the answer; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "the teaching picture again" → change the QUESTION's picture to a different size or shape (and its answer, if that changes); "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi.
+  return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Each lesson is given in the lesson shape below; return it fixed in the same shape — same topic, same aims, every reason addressed — and change nothing else. The reasons count the lesson's steps in order (intro, teaching pictures, then each question's picture and the question itself, then remember).
+How to read the reasons: "must say what is asked (ask)" → set that question's ask to what it asks (sides, corners, name…); "needs exactly 2 answers" / "no checkpoint" → give the question both answers / add a question; "a rectangle needs w and h" → give both; "say the answer" → change the narration or ask about a new example, not the answer; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "the teaching picture again" → change the QUESTION's picture to a different size or shape (and its answer, if that changes); "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi.
 
 ${beatsText()}
 
@@ -207,8 +267,11 @@ async function callGemini(parts, system, env, fetchImpl){
   // the chosen model, then a lighter one when Google says it's busy (503/429)
   // or doesn't know the model (404) — GEMINI_FALLBACK_MODEL, 'none' to switch off
   const primary = env.GEMINI_MODEL || 'gemini-3.8-flash';
-  const fallback = env.GEMINI_FALLBACK_MODEL === 'none' ? null : (env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite');
-  const all = [primary].concat(fallback && fallback !== primary ? [fallback] : []);
+  // the fallbacks, in order — a full Flash model before the lite one (the
+  // third live run: flash-lite left out whole questions); a comma list
+  const fallbacks = env.GEMINI_FALLBACK_MODEL === 'none' ? []
+    : String(env.GEMINI_FALLBACK_MODEL || 'gemini-3.7-flash,gemini-3.5-flash-lite').split(',').map(x => x.trim()).filter(Boolean);
+  const all = [primary].concat(fallbacks.filter((m, i) => m !== primary && fallbacks.indexOf(m) === i));
   const now = Date.now(), awake = all.filter(m => !(RESTING.get(m) > now));
   const models = awake.length ? awake : all.slice(-1);               // all resting: the last one still tries
   const urlFor = m => `${env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(m)}:generateContent`;
@@ -224,14 +287,15 @@ async function callGemini(parts, system, env, fetchImpl){
   // still leaves time for the fallback (the first live run's health check hung for 55 s)
   const total = Number(env.TAKHTI_SYLLABUS_TIMEOUT_MS || 55000), started = Date.now();
   const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), total);
-  const perModel = Math.max(2000, Math.floor(total * (models.length > 1 ? 0.6 : 1)));
+  // each model may take 60% of what is left while another one waits behind it
+  const shareFor = m => { const left = total - (Date.now() - started); return Math.max(2000, Math.floor(left * (models.indexOf(m) < models.length - 1 ? 0.6 : 1))); };
   try{
     let res, d, model;
     const busy = s => s === 503 || s === 429;
     models: for(model of models){
       for(const shape of shapes){
         for(let attempt = 0; attempt < 2; attempt++){
-          const one = new AbortController(), left = Math.min(perModel, total - (Date.now() - started));
+          const one = new AbortController(), left = Math.min(shareFor(model), total - (Date.now() - started));
           const stop = () => one.abort(), t1 = setTimeout(stop, Math.max(1000, left));
           ctl.signal.addEventListener('abort', stop);
           try{
@@ -277,9 +341,9 @@ export async function draftCore(body, env, ip, fetchImpl){
       .filter(x => x && typeof x.lesson === 'object' && JSON.stringify(x.lesson).length < 12000)
       .map(x => ({ lesson: x.lesson, errors: (Array.isArray(x.errors) ? x.errors : []).slice(0, 8).map(e => plain(e, 200)) }));
     if(!items.length) return { status:400, json:{ error:'nothing to repair' } };
-    const r = await callGemini([{ text: JSON.stringify({ lessons: items }) }], repairInstructions(rules), env, fetchImpl);
+    const r = await callGemini([{ text: JSON.stringify({ lessons: items.map(x => ({ lesson: fromBeats(x.lesson), errors: x.errors })) }) }], repairInstructions(rules), env, fetchImpl);
     if(r.error) return { status: r.status, json:{ error: r.error } };
-    return { status:200, json:{ lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, items.length), model: r.model } };
+    return { status:200, json:{ lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, items.length).map(toBeats), model: r.model } };
   }
 
   const ch = body.chapter || {};
@@ -307,7 +371,7 @@ export async function draftCore(body, env, ip, fetchImpl){
   if(r.error) return { status: r.status, json:{ error: r.error } };
   return { status:200, json:{
     chapter: plain(r.out.chapter, 80),
-    lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, count),
+    lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, count).map(toBeats),
     model: r.model
   } };
 }

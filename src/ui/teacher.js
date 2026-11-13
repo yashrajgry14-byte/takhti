@@ -286,7 +286,7 @@ function sylDraftHTML(d, i, approved, badge){
     ${d.ok
       ? (isIn ? `<div class="muted" style="font-size:12.5px;margin-top:4px">✓ ${hi ? 'कक्षा के लिए मंज़ूर' : 'Approved for the class'}</div>`
               : `<button class="btn ghost" style="margin-top:6px" onclick="sylApprove(${i})">${hi ? 'ये उद्देश्य मंज़ूर करें' : 'Approve these aims'}</button>`)
-      : `<div class="retry" style="font-size:12.5px;margin-top:4px">${hi ? 'उपयोग नहीं होगा — जाँच में नहीं पास हुआ' : "Not used — it didn't pass the check"}: ${why.map(attr).join('; ')}</div>`}
+      : `<div class="retry" style="font-size:12.5px;margin-top:4px">${hi ? 'उपयोग नहीं होगा — जाँच में नहीं पास हुआ' : "Not used — it didn't pass the check"}: ${why.map(attr).join('; ')}${d.unchanged ? (hi ? ' (Gemini के सुधार में कुछ नहीं बदला)' : " (Gemini's fix changed nothing)") : ''}</div>`}
   </div>`;
 }
 
