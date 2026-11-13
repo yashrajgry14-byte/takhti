@@ -163,6 +163,15 @@ export function scan(dirArg, pdfDir){
   const nat = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
   const all = fs.readdirSync(from).filter(n => /\.pdf$/i.test(n)).sort(nat);
   const pdfs = all.filter(n => !skip(n)), left = all.filter(skip);
+  // nothing found: say where it looked and leave book.json as it is (the
+  // first real scan found an empty folder and emptied the chapter list)
+  if(!pdfs.length){
+    const subs = fs.readdirSync(from, { withFileTypes: true }).filter(d => d.isDirectory()
+      && fs.readdirSync(path.join(from, d.name)).some(n => /\.pdf$/i.test(n))).map(d => d.name);
+    throw new Error(`no chapter PDFs in ${from} — book.json is unchanged.` + (subs.length
+      ? ` There are PDFs in the subfolder "${subs[0]}": move them up, or add  --pdfs "${path.join(from, subs[0])}"`
+      : ' Copy the chapter PDFs into that folder (unzip the book first), then scan again.'));
+  }
   const old = new Map((book.chapters || []).map(c => [c.id, c])), warn = [];
   book.chapters = pdfs.map((file, i) => {
     const id = `ch${i + 1}`, was = old.get(id) || {}, rel = path.relative(dir, path.join(from, file)).split(path.sep).join('/');

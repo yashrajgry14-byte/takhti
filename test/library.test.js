@@ -68,6 +68,13 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     fs.writeFileSync(path.join(whole, 'book.json'), JSON.stringify({ id:'whole', title:{ en:'Maths Mela', hi:'गणित मेला' }, cls:'c3', chapters:[{ id:'ch2', n:2, file:'old-two.pdf', title:{ en:'Toy Joy', hi:'खिलौने' }, count:3 }] }));
     fs.writeFileSync(path.join(whole, 'ch2.json'), JSON.stringify({ id:'ch2', lessons:[], notUsed:[] }));
     for(const n of ['cemm1ps.pdf', 'cemm110.pdf', 'cemm102.pdf', 'cemm101.pdf', 'cemm1an.pdf']) fs.writeFileSync(path.join(whole, n), Buffer.from('%PDF-1.4 ' + 'x'.repeat(400)));
+    const emptyDir = path.join(tmp, 'empty'); fs.mkdirSync(path.join(emptyDir, 'unzipped'), { recursive: true });
+    const keep = JSON.stringify({ id:'empty', title:{ en:'B', hi:'ब' }, cls:'c3', chapters:[{ id:'ch5', n:5, file:'ch5.pdf' }] });
+    fs.writeFileSync(path.join(emptyDir, 'book.json'), keep); fs.writeFileSync(path.join(emptyDir, 'unzipped', 'a01.pdf'), '%PDF');
+    let emsg = ''; try{ lib.scan(emptyDir); }catch(e){ emsg = e.message; }
+    check('--scan on a folder with no PDFs refuses, leaves book.json untouched, and points at a subfolder that has them',
+      /no chapter PDFs/.test(emsg) && /subfolder "unzipped"/.test(emsg) && fs.readFileSync(path.join(emptyDir, 'book.json'), 'utf8') === keep, emsg);
+    fs.rmSync(emptyDir, { recursive: true });
     const sc = lib.scan(whole), wb = lib.readBook(whole);
     check('--scan lists a whole book\'s chapter PDFs in their order (01, 02, 10 — not 01, 10, 02), leaving the front matter and answers out',
       wb.chapters.map(c => `${c.id}:${c.file}`).join() === 'ch1:cemm101.pdf,ch2:cemm102.pdf,ch3:cemm110.pdf' && sc.left.join() === 'cemm1an.pdf,cemm1ps.pdf', JSON.stringify([wb.chapters, sc.left]));
