@@ -204,6 +204,28 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     const m = clean(MATH), rd = clean(READ);
     check('a good maths lesson passes — its answer checked by the arithmetic — and keeps its skill', m.ok && m.checks[0] === 'sum' && m.lesson.skillId === 'sub2' && m.lesson.school && /^sch-/.test(m.lesson.id), JSON.stringify(m.errors));
     check('a good reading lesson passes — its answer found in the passage', rd.ok && rd.checks[0] === 'text' && rd.lesson.subject === 'read', JSON.stringify(rd.errors));
+    // the 13 Nov live run's own lessons (Maths Mela Class 3): valid, but the answer given away
+    const AIM1 = MATH.aims[0];
+    const TRI = { title:{ en:'Triangle sides', hi:'त्रिभुज की भुजाएँ' }, sub:{ en:'Count', hi:'गिनो' }, ic:'🔺', skill:'shapes2d', aims:[AIM1],
+      beats:[{ t:'intro', say:{ en:'A triangle has three straight sides.', hi:'त्रिभुज की तीन सीधी भुजाएँ होती हैं।' } }, { t:'figure', kind:'square', s:4 },
+             { t:'figure', kind:'triangle', sides:[5,4,6], ask:'sides' }, { t:'ask', q:{ en:'How many sides does it have?', hi:'इसकी कितनी भुजाएँ हैं?' }, opts:['4','3'], hiOpts:['4','3'], correct:1,
+               why:{ en:'Children who just saw the square say four.', hi:'वर्ग देखकर बच्चे चार कहते हैं।' } }, { t:'win', say:{ en:'Count every side once.', hi:'हर भुजा एक बार गिनो।' } }] };
+    const tri = clean(TRI), triOk = clean({ ...TRI, beats:[{ t:'intro', say:{ en:'Shapes have straight sides. Let us count them.', hi:'आकृतियों की सीधी भुजाएँ होती हैं। आओ गिनें।' } }].concat(TRI.beats.slice(1)) });
+    check('"A triangle has three straight sides" before "how many sides?" gives the answer away — a number word counts like a digit (and in Hindi, तीन)',
+      !tri.ok && tri.errors.some(e => /say the answer "3"/.test(e)) && triOk.ok, JSON.stringify([tri.errors, triOk.errors]));
+    const SQC = { ...TRI, title:{ en:'Square corners', hi:'चौकोर कोने' }, skill:'angles',
+      beats:[{ t:'intro', say:{ en:'Look at this corner.', hi:'इस कोने को देखो।' } }, { t:'corner', deg:90 }, { t:'corner', deg:90, ask:'kind' },
+             { t:'ask', q:{ en:'What kind of corner is this?', hi:'यह किस तरह का कोना है?' }, opts:['Square corner','Smaller corner'], hiOpts:['चौकोर कोना','छोटा कोना'], correct:0,
+               why:{ en:'Children call any corner square.', hi:'बच्चे हर कोने को चौकोर कहते हैं।' } }, { t:'win', say:{ en:'Check it with a book corner.', hi:'किताब के कोने से मिलाओ।' } }] };
+    const sqc = clean(SQC), sqcOk = clean({ ...SQC, beats: SQC.beats.map((b, k) => k === 1 ? { t:'corner', deg:60 } : b) });
+    check('teach on one example, ask on another: the teaching corner asked about again is sent back; a different teaching corner passes',
+      !sqc.ok && sqc.errors.some(e => /same as the teaching picture/.test(e)) && sqcOk.ok, JSON.stringify([sqc.errors, sqcOk.errors]));
+    const CIR = { ...TRI, title:{ en:'Centre', hi:'केंद्र' },
+      beats:[{ t:'intro', say:{ en:'Fold a circle plate to find its center.', hi:'गोल प्लेट को मोड़ो।' } }, { t:'figure', kind:'circle', folds:0 }, { t:'figure', kind:'circle', folds:2, ask:'meet' },
+             { t:'ask', q:{ en:'Where do the folds meet?', hi:'मोड़ कहाँ मिलते हैं?' }, opts:['Side','Centre'], hiOpts:['भुजा','केंद्र'], correct:1,
+               why:{ en:'Children point at the edge.', hi:'बच्चे किनारे की ओर इशारा करते हैं।' } }, { t:'win', say:{ en:'Folds meet in the middle.', hi:'मोड़ बीच में मिलते हैं।' } }] };
+    const cir = clean(CIR);
+    check('"find its center" before an answer "Centre" gives it away — US and UK spelling are the same word', !cir.ok && cir.errors.some(e => /say the answer "Centre"/.test(e)), JSON.stringify(cir.errors));
     const bad = (name, x, re, band) => { const r = clean(x, band); check(name, !r.ok && r.errors.some(e => re.test(e)), JSON.stringify(r.errors)); };
     bad('a wrong sum is rejected, with why', WRONG_SUM, /marked 35 right, but the picture before it shows 25/);
     bad('an answer that is not in the passage is rejected', NOT_IN_TEXT, /isn't in the passage/);

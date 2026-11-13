@@ -137,12 +137,23 @@ function sylInferAsk(fig, q){
 
 /* Does a line of narration already say this answer? A number as a whole
    number; words when every content word of the answer is there. */
+/* number words up to twenty, so "three" and "तीन" say 3 as surely as "3" does
+   (the 13 Nov live run: "A triangle has three straight sides" — then "how many sides?") */
+const SYL_NUM_EN = ['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
+const SYL_NUM_HI = ['शून्य','एक','दो','तीन','चार','पाँच','छह','सात','आठ','नौ','दस','ग्यारह','बारह','तेरह','चौदह','पंद्रह','सोलह','सत्रह','अठारह','उन्नीस','बीस'];
 function sylSaysIt(text, answer){
   if(!text || answer == null) return false;
   const a = String(answer).trim();
-  if(/^\d+$/.test(a)) return new RegExp(`(^|[^\\d])${a}([^\\d]|$)`).test(text);
+  if(/^\d+$/.test(a)){
+    if(new RegExp(`(^|[^\\d])${a}([^\\d]|$)`).test(text)) return true;
+    const n = Number(a), words = sylWords(text).map(w => w.replace(/^[०-९]+$/, d => String(Number([...d].map(c => '०१२३४५६७८९'.indexOf(c)).join('')))));
+    if(words.includes(String(n))) return true;
+    if(n === 1) return false;                             // "one" and "एक" are mostly "a"
+    return n <= 20 && (words.includes(SYL_NUM_EN[n]) || words.includes(SYL_NUM_HI[n]) || (n === 6 && words.includes('छः')) || (n === 5 && words.includes('पांच')));
+  }
   const stop = /^(the|and|for|with|its|that|this|are|was|का|की|के|है|हैं|में|पर|से|को|और|एक)$/i;
-  const want = sylWords(a).filter(w => !stop.test(w)), have = sylWords(text);
+  const uk = w => w.replace(/tre$/, 'ter').replace(/tres$/, 'ters');          // centre / center
+  const want = sylWords(a).filter(w => !stop.test(w)).map(uk), have = sylWords(text).map(uk);
   return want.length > 0 && want.every(w => have.some(h => h === w || (w.length >= 4 && h.length >= 4 && h.slice(0, 4) === w.slice(0, 4))));
 }
 
@@ -181,6 +192,7 @@ function sylClean(raw, opts){
   const beats = sylTidy(Array.isArray(raw.beats) ? raw.beats.slice(0, 12) : []);
   if(beats.length > 10) errs.push('more than 10 beats — keep a lesson short');
   let lastShown = null, shown = null, readText = '', lead = [], taught = false, asked = false;   // lead: what Munni said since the last question
+  let pics = [];                                          // teaching pictures since the last question
   const checks = [];
 
   beats.forEach((x, i) => {
@@ -193,6 +205,13 @@ function sylClean(raw, opts){
       g.errors.forEach(e => errs.push(`beat ${i}: ${e}`));
       if(x.say){ const s = bi(x.say, `beat ${i}'s narration`, 200); if(s) g.beat.say = s; }
       if(g.beat.say) lead.push(g.beat.say);
+      // teach on one example, ask on another: a question picture that is the
+      // teaching picture again only asks the child to remember (13 Nov live run:
+      // a square corner taught, then the same square corner asked about)
+      const picKey = b => JSON.stringify([b.t, b.kind, b.s, b.w, b.h, b.sides, b.folds, b.deg, b.items]);
+      if(t !== 'figures' && g.beat.ask != null && pics.includes(picKey(g.beat)))
+        errs.push(`beat ${i}: the question picture is the same as the teaching picture — ask about a different example (another size or another shape)`);
+      if(t !== 'figures' && g.beat.ask == null) pics.push(picKey(g.beat));
       les.beats.push(g.beat); lastShown = t; shown = g.beat;
       if(t !== 'figures' && g.beat.ask == null) taught = true;           // a teaching picture
       return;
@@ -265,12 +284,13 @@ function sylClean(raw, opts){
       } else {
         errs.push(`beat ${i}: a question must come after something to look at or read`);
       }
-      // the child works the answer out: Munni mustn't have just said it (for a
-      // shape, the picture is new — only its own narration counts)
-      const said = lastShown && GEO_TYPES.includes(lastShown) ? (shown && shown.say ? [shown.say] : []) : lead;
+      // the child works the answer out: Munni mustn't have just said it — every
+      // line written since the last question, a shape's own picture included
+      // ("A triangle has three straight sides" before "How many sides?")
+      const said = lead;
       if(right != null && !opts.every(o => /^(yes|no)$/i.test(o)) && said.some(s => sylSaysIt(s.en, right) || sylSaysIt(s.hi, hiOpts[out.correct])))
         errs.push(`beat ${i}: the lines just before this question say the answer "${right}" — let the child work it out`);
-      lead = [];
+      lead = []; pics = [];
     } else if(t !== 'intro' && t !== 'win'){
       lastShown = t; shown = out;
       if(SYL_READ.includes(t)) readText = [out.p && out.p.en, out.p && out.p.hi, out.w, out.text].filter(Boolean).join(' ');

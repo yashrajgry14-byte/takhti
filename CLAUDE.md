@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v47` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v48` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -381,8 +381,10 @@ child sees.
   (`TEACH_NUDGES`, checked again, shown to the teacher as "Hint replaced") — and each
   question may carry a teacher-only `why` (why children pick the wrong
   answer); a question whose answer Munni has just said (`sylSaysIt()` over
-  the narration since the last question — for a shape, its own picture's
-  narration) is rejected, so the child works it out. A failure goes back to
+  every line written since the last question, a shape's picture included;
+  a number as a digit or a word — "three", "तीन" — and centre/center alike)
+  is rejected, so the child works it out, and so is a question picture
+  that is the teaching picture again (teach on one example, ask on another). A failure goes back to
   Gemini **once** with its reasons; still failing → shown as "not used",
   with why. The right answer is shuffled (stable, by content); the id is a
   hash of the content, so a lesson edited later gets a different id.
@@ -1314,8 +1316,13 @@ Honest edges of what's built:
    dropped (Munni's question naming the topic Gemini also listed as
    explanation words; hints that were the method). Hence the per-type
    schema, the topic words, the named giveaways and the nudge; re-checked
-   offline, the same drafts now keep all four aims. The beats need the next
-   live run.
+   offline, the same drafts now keep all four aims. The third run (13 Nov,
+   flash-lite): every beat valid first time, the hints fixed by the repair
+   round — 4 of 4 usable; but three of them gave the answer away in ways the
+   checker didn't yet see ("A triangle has three sides" before "how many
+   sides?", the teaching picture asked about again, "center" before
+   "Centre"), now rejected — the next run shows whether the repair round
+   fixes them.
 14. **Teach Munni is new and untested on real children.** The judge (Gemini
    on a transcript) is tested against a stand-in; whether it judges a
    seven-year-old's Hinglish fairly needs real recordings first (try ten
