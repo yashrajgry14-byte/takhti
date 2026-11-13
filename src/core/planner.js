@@ -126,6 +126,26 @@ function planFor(les, c){
   return { lesson: les.id, skill, knows, way, steps, next: steps.find((s, i) => i > last && !s.done) || null };
 }
 
+/* What the teacher sees of this child's path, per school lesson — ids and
+   short codes only, under the parent's sync consent (S.syncOn), with the
+   Teach Munni points: the way (pictures, the story, the cartoon, a reading
+   way), "already knew it", the skill underneath taken first, and steps done
+   of the whole. Never what was said or read, never the mind itself. */
+function planPathOf(les, c){
+  const p = planFor(les, c);
+  if(!p) return null;
+  const gap = p.steps.find(s => s.k === 'gap');
+  return { w: p.way || '', ...(p.knows ? { k: 1 } : {}), ...(gap ? { g: gap.skill } : {}),
+    d: p.steps.filter(s => s.done).length, n: p.steps.length };
+}
+function planPathsOf(c){
+  const ch = c || S, paths = {};
+  try{
+    for(const les of (typeof schoolLessons === 'function' ? schoolLessons(ch) : []).slice(0, 12)){ const x = planPathOf(les, ch); if(x) paths[les.id] = x; }
+  }catch(e){ /* a path is a bonus for the teacher, never a dependency */ }
+  return Object.keys(paths).length ? { paths } : {};
+}
+
 /* How a lesson being opened counts as teaching (core/mind.js):
    · a built-in shape lesson is "pictures first";
    · a school reading lesson is taught the plan's reading way, inside it;

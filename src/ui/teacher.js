@@ -132,6 +132,7 @@ function teacherHTML(){
   </div>
 
   ${code ? syllabusHTML(code) : ''}
+  ${code ? planTeacherHTML(code) : ''}
   ${code && typeof teachTeacherHTML === 'function' ? teachTeacherHTML(code) : ''}
 
   <div class="paper" style="margin-top:12px">
@@ -357,3 +358,52 @@ function sylRemove(id){
 }
 
 if(typeof VIEWS !== 'undefined') VIEWS.teacher = teacherHTML;
+
+
+/* ==================================================================
+   HOW EACH CHILD IS TAKING THIS WEEK'S LESSONS (core/planner.js)
+
+   The same approved aims, a different path per child — from the paths the
+   children's phones keep in the class mirror and carry with the class sync
+   (ids and short codes only, under the parent's consent). Grouped the way a
+   teacher would ask: who already knew it, who is being taken back to
+   something underneath first, and which way each of the others is being
+   taught. Never compared, never ranked: a path is how, not how well.
+   ================================================================== */
+const PLAN_TEACHER_WAY = {
+  show:    { en: 'Pictures first',                   hi: 'पहले चित्र' },
+  cartoon: { en: 'The cartoon first',                hi: 'पहले कार्टून' },
+  story:   { en: 'Straight into the school’s lesson', hi: 'सीधे स्कूल का पाठ' },
+  model:   { en: 'Munni reads it to them first',     hi: 'मुन्नी पहले पढ़कर सुनाती है' },
+  chunks:  { en: 'Hard words in pieces',             hi: 'कठिन शब्द टुकड़ों में' },
+  solo:    { en: 'They read it first',               hi: 'पहले ख़ुद पढ़ते हैं' },
+  '':      { en: 'The school’s lesson',              hi: 'स्कूल का पाठ' }
+};
+function planTeacherHTML(code){
+  const lessons = sylApproved(code), all = readClassShared(code), hi = S.lang === 'hi';
+  const T = o => attr((o && (o[S.lang] || o.en)) || '');
+  const kids = Object.entries(all).filter(([id, c]) => !id.startsWith('_') && c && c.paths);
+  const cards = lessons.map(les => {
+    const groups = {};
+    for(const [, c] of kids){
+      const p = c.paths[les.id];
+      if(!p) continue;
+      const sk = p.g && typeof skillById === 'function' ? skillById(p.g) : null;
+      const key = p.k ? 'k' : p.g ? 'g:' + p.g : 'w:' + (p.w || '');
+      const label = p.k ? (hi ? 'पहले से आता था — दिखाते हैं, फिर मुन्नी को सिखाते हैं' : 'Already knew it — shows it, then teaches Munni')
+        : p.g ? (hi ? `पहले नीचे की बात: ${sk ? sk.hi || sk.en : p.g}` : `Something underneath first: ${sk ? sk.en : p.g}`)
+        : T(PLAN_TEACHER_WAY[p.w] || PLAN_TEACHER_WAY['']);
+      (groups[key] = groups[key] || { label, kids: [] }).kids.push(`${attr(c.childName || '?')} <small style="opacity:.6">${p.d}/${p.n}</small>`);
+    }
+    const rows = Object.values(groups);
+    if(!rows.length) return '';
+    return `<div style="margin-top:8px"><b style="font-size:13.5px">${T(les.title)}</b>
+      ${rows.map(g => `<div class="planrow" style="font-size:12.5px;margin-top:3px">• ${g.label}: ${g.kids.join(', ')}</div>`).join('')}</div>`;
+  }).filter(Boolean);
+  if(!cards.length) return '';
+  return `<div class="paper" style="margin-top:12px">
+    <div class="kicker2">🧭 ${hi ? 'इस हफ़्ते के पाठ — हर बच्चे का अपना रास्ता' : 'HOW EACH CHILD IS TAKING THIS WEEK’S LESSONS'}</div>
+    <div style="font-size:12.5px;opacity:.75">${hi ? 'उद्देश्य वही जो आपने मंज़ूर किए; हर बच्चे का तरीक़ा मुन्नी उसी के रिकॉर्ड से चुनती है। अंक = पूरे हुए क़दम।' : 'The same aims you approved; Munni picks each child’s way from what has worked for them. The numbers are steps done.'}</div>
+    ${cards.join('')}
+  </div>`;
+}

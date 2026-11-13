@@ -2,7 +2,7 @@
    CLASS SYNC — Tier 2. One small record per class code, so a teacher's
    phone and every consenting child's phone see the same class.
 
-   POST { code, children:{ id:{childName, skillHistory, explained?, at} }, homework, lessons, teacherKey }
+   POST { code, children:{ id:{childName, skillHistory, explained?, paths?, at} }, homework, lessons, teacherKey }
    → merges what the phone sent into the stored class (newest wins, per
    child and for the homework) and answers with what that phone may see.
 
@@ -48,7 +48,16 @@ function cleanChild(c){
   const explained = {};
   for(const [id, v] of Object.entries(c.explained && typeof c.explained === 'object' ? c.explained : {}).slice(0, 60))
     if(/^[a-z0-9.-]{1,32}$/.test(id) && ['c', 'p', 'g'].includes(v)) explained[id] = v;
-  return { childName: String(c.childName || '?').slice(0, 40), skillHistory, ...(Object.keys(explained).length ? { explained } : {}), at: int(c.at, 9e15) };
+  // the child's path through each school lesson (core/planner.js): short codes only
+  const paths = {};
+  for(const [id, p] of Object.entries(c.paths && typeof c.paths === 'object' ? c.paths : {}).slice(0, MAX_LESSONS)){
+    if(!/^sch-[a-z0-9]{1,24}$/.test(id) || !p || typeof p !== 'object') continue;
+    const w = ['', 'show', 'story', 'cartoon', 'model', 'chunks', 'solo'].includes(p.w) ? p.w : '';
+    const n = int(p.n, 6);
+    paths[id] = { w, ...(p.k ? { k: 1 } : {}), ...(SKILL.test(p.g || '') ? { g: p.g } : {}), d: Math.min(n, int(p.d, 6)), n };
+  }
+  return { childName: String(c.childName || '?').slice(0, 40), skillHistory, ...(Object.keys(explained).length ? { explained } : {}),
+    ...(Object.keys(paths).length ? { paths } : {}), at: int(c.at, 9e15) };
 }
 function cleanHomework(h){
   if(!h || typeof h !== 'object') return null;

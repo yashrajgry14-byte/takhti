@@ -138,6 +138,13 @@ check('reading: three children, the same approved passage, three ways — Munni 
     && /munni reads it first/.test(V(`rm.steps[0].label.en`)) && /टुकड़ों/.test(V(`rc.steps[0].label.hi`)) && /you read it first/.test(V(`rs.steps[0].label.en`)), V(`[rm.steps[0], rc.steps[0], rs.steps[0]]`));
 check('…and opening the school\'s reading lesson counts as that way for the mind', V(`[planMarkWay(RLES, 'read5', rk('model')), planMarkWay(RLES, 'read5', rk('chunks'))]`).join() === 'model,chunks', '');
 
+// what travels to the teacher: the path, in ids and short codes only
+check('a child\'s path for the teacher is short codes only — the way, knew-it, the gap underneath, steps done of how many — and two children differ',
+  V(`[planPathOf(LES, asha), planPathOf(LES, kabir), planPathOf(RLES, rk('chunks'))]`).map(x => x.w + '/' + x.n + (x.d <= x.n ? '' : '!')).join(' | ')
+    === 'show/3 | story/2 | chunks/2', JSON.stringify(V(`[planPathOf(LES, asha), planPathOf(LES, kabir), planPathOf(RLES, rk('chunks'))]`)));
+check('…with nothing in it a child said, read or wrote (only the keys w, k, g, d, n)',
+  V(`[planPathOf(LES, asha), planPathOf(RLES, rk('solo'))]`).every(x => Object.keys(x).every(k => ['w','k','g','d','n'].includes(k))), '');
+
 /* ---------- 2. the app ---------- */
 (async () => {
   const MIME = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css', '.json':'application/json', '.svg':'image/svg+xml', '.webmanifest':'application/manifest+json' };
@@ -147,6 +154,19 @@ check('…and opening the school\'s reading lesson counts as that way for the mi
     fs.readFile(full, (err, data) => { if(err){ res.statusCode = 404; return res.end(); } res.setHeader('Content-Type', MIME[path.extname(full)] || 'application/octet-stream'); res.end(data); });
   });
   await new Promise(r => appServer.listen(0, '127.0.0.1', r));
+  {
+    const { syncCore } = await import(require('url').pathToFileURL(path.join(root, 'api/class-sync.mjs')).href);
+    const blobs = new Map(), store = { get: async k => blobs.has(k) ? JSON.parse(blobs.get(k)) : null, setJSON: async (k, v) => { blobs.set(k, JSON.stringify(v)); } };
+    await syncCore(store, { code:'PTH001', teacherKey:'t'.repeat(32), children:{} });
+    await syncCore(store, { code:'PTH001', children:{ kid1:{ childName:'Asha', skillHistory:{}, at: 5, paths:{
+      'sch-abc123': { w:'show', d:1, n:3 }, 'sch-def456': { w:'cartoon', k:1, g:'add2', d:9, n:4, said:'hello' },
+      'sch-bad': { w:'whatever', d:0, n:2 }, 'not-a-lesson': { w:'story', d:0, n:2 }, 'sch-ghi789': { w:'story', g:'<b>', d:0, n:2 } } } } });
+    const back = (await syncCore(store, { code:'PTH001', teacherKey:'t'.repeat(32), children:{} } )).json;
+    const p = back && back.children && back.children.kid1 && back.children.kid1.paths;
+    check('the class sync server keeps a well-formed path and drops the rest — a non-lesson id, a bad skill, any other field; an unknown way becomes none, steps over the total are capped',
+      !!p && JSON.stringify(p['sch-abc123']) === '{"w":"show","d":1,"n":3}' && !p['not-a-lesson'] && p['sch-bad'].w === '' && !p['sch-ghi789'].g
+        && !p['sch-def456'].said && p['sch-def456'].d === 4 && p['sch-def456'].g === 'add2', JSON.stringify(back));
+  }
   const vc = new VirtualConsole(), jsErrors = [];
   vc.on('jsdomError', e => { if(!/Not implemented|Could not load link/.test(e.message)) jsErrors.push(e.message); });
   const dom = new JSDOM(html, { virtualConsole: vc, url: `http://127.0.0.1:${appServer.address().port}/index.html`, runScripts:'dangerously', resources:'usable', pretendToBeVisual: true,
@@ -210,6 +230,28 @@ check('…and opening the school\'s reading lesson counts as that way for the mi
     win.document.querySelector('.lescard[onclick^="planGo"]').click();
     await wait(30);
     check('…and the button opens that skill\'s cartoon in the Picture Hut', E(`S.screen`) === 'theater' && E(`S.activeVideo && S.activeVideo.data.skillId`) === 'sub2', E(`JSON.stringify([S.screen, S.activeVideo && S.activeVideo.data.skillId])`));
+    // the teacher sees which path each child is taking
+    E(`endLesson(); sylSave('CLS001', [sylClean(${JSON.stringify(CIRCLE)}, { band: 'developing' }).lesson]);
+       S.mind = { v: 1, arms: { angles: { show: { a: 12, b: 0 }, story: { a: 0, b: 12 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} };
+       mirrorToClassNow(S)`);
+    const mine = E(`JSON.stringify(readClassShared('CLS001')[S.id])`);
+    check('this phone\'s class mirror carries the child\'s path for the school lesson (the way only)', /"paths":\{"sch-[a-z0-9]+":\{"w":"show","d":\d,"n":3\}\}/.test(mine), mine);
+    E(`(() => { const id = schoolLessons()[0].id, all = readClassShared('CLS001');
+        all.kabir1 = { childName: 'Kabir', skillHistory: {}, paths: { [id]: { w: 'story', d: 1, n: 2 } }, at: Date.now() };
+        all.meena1 = { childName: 'Meena', skillHistory: {}, paths: { [id]: { w: '', g: 'add2', d: 0, n: 3 } }, at: Date.now() };
+        all.ravi1 = { childName: 'Ravi', skillHistory: {}, paths: { [id]: { w: '', k: 1, d: 0, n: 2 } }, at: Date.now() };
+        localStorage.setItem(classMirrorKey('CLS001'), JSON.stringify(all)); })(); S.ctx.tcode = 'CLS001'; go('teacher')`);
+    await wait(20);
+    const rows = [...win.document.querySelectorAll('.planrow')].map(x => x.textContent.trim());
+    check('the teacher view groups the class by path for this week\'s lesson: pictures first (Asha), straight into the school\'s lesson (Kabir), something underneath first (Meena), already knew it (Ravi)',
+      /HOW EACH CHILD IS TAKING THIS WEEK/.test(screen()) && rows.length === 4
+        && rows.some(r => /Pictures first: Asha/.test(r)) && rows.some(r => /Straight into the school’s lesson: Kabir 1\/2/.test(r))
+        && rows.some(r => /Something underneath first: Two-digit addition: Meena 0\/3/.test(r)) && rows.some(r => /Already knew it.*Ravi/.test(r)), JSON.stringify(rows));
+    E(`S.lang = 'hi'; render()`);
+    check('…in Hindi too', /हर बच्चे का अपना रास्ता/.test(screen()) && /पहले चित्र: Asha/.test(screen()) && /पहले से आता था/.test(screen()), screen().slice(0, 400));
+    E(`S.lang = 'en'; render()`);
+    E(`go('parent')`); await wait(10);
+    check('the parent\'s sync notice says the way each school lesson is taught goes with the sync', /the way each school lesson is being taught/.test(E(`(typeof syncNoticeHTML === 'function' ? '' : '') + document.body.innerHTML`)) || /the way each school lesson is being taught/.test(E(`VIEWS.parent ? VIEWS.parent() : ''`)), '');
     check('no uncaught script errors', jsErrors.length === 0, jsErrors.join(' | '));
   }catch(e){ check('the app run finished', false, e.stack); }
   appServer.close();

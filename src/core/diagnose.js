@@ -121,7 +121,7 @@ function mirrorToClassNow(child){
     const key = classMirrorKey(c.classCode);
     const raw = localStorage.getItem(key);
     const all = raw ? JSON.parse(raw) : {};
-    all[c.id] = { childName: c.name, skillHistory: c.skillHistory || {}, ...teachExplainedOf(c), at: Date.now() };   // at: newest-wins merging, see core/class-sync.js
+    all[c.id] = { childName: c.name, skillHistory: c.skillHistory || {}, ...teachExplainedOf(c), ...(typeof planPathsOf === 'function' ? planPathsOf(c) : {}), at: Date.now() };   // at: newest-wins merging, see core/class-sync.js
     localStorage.setItem(key, JSON.stringify(all));
   }catch(e){ /* mirroring is a bonus, never a dependency */ }
 }

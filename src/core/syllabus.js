@@ -448,10 +448,11 @@ function sylSave(code, items){
 }
 
 /* What this child's class has, each lesson checked again on this phone. */
-function schoolLessons(){
-  if(!S.classCode) return [];
+function schoolLessons(child){
+  const code = (child || S).classCode;           // another child on this phone, for their path (core/planner.js)
+  if(!code) return [];
   const out = [];
-  for(const les of sylApproved(S.classCode)){
+  for(const les of sylApproved(code)){
     const k = JSON.stringify(les);
     if(!SYL_CHECKED.has(k)){
       const c = sylClean(les, { band: les.band });
