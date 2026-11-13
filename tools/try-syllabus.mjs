@@ -166,9 +166,13 @@ export function report(r){
     `Draft took ${(r.draftMs / 1000).toFixed(0)} s` + (r.repair ? ` · repair ${r.repair.status === 200 ? 'took ' + (r.repair.ms / 1000).toFixed(0) + ' s (' + r.repair.model + ')' : 'failed: ' + r.repair.error}` : ''), ''
   ];
   // which models answered, and how — a 429 is the key's quota, not Google being busy
-  const tl = a => (a || []).map(x => `${x.model} ${x.outcome} (${(x.ms / 1000).toFixed(0)} s)`).join(' → ');
+  const tl = a => (a || []).map(x => `${x.model} ${x.outcome} (${(x.ms / 1000).toFixed(0)} s${x.tokens ? `, ${x.tokens.in} in / ${x.tokens.out} out tokens` : ''})`).join(' → ');
   if(r.tried && r.tried.length) L.push(`Models for the draft: ${tl(r.tried)}  `);
   if(r.repair && r.repair.tried && r.repair.tried.length) L.push(`Models for the repair: ${tl(r.repair.tried)}  `);
+  // what the run used, per model — price it from the model's page (prices change; none are written here)
+  const used = {};
+  for(const x of [...(r.tried || []), ...((r.repair && r.repair.tried) || [])]) if(x.tokens){ const u = used[x.model] = used[x.model] || { in: 0, out: 0 }; u.in += x.tokens.in; u.out += x.tokens.out; }
+  if(Object.keys(used).length) L.push(`Tokens used: ${Object.entries(used).map(([m, u]) => `${m} ${u.in} in / ${u.out} out`).join('; ')}  `);
   if(r.rechecked) L.push(`_Checked again on ${r.rechecked} by today's checker (the same drafts, no new call to Gemini)._  `);
   L.push('');
   const why = {};

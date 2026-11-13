@@ -308,7 +308,10 @@ async function callGemini(parts, system, env, fetchImpl){
             if(ctl.signal.aborted) throw e;                               // the whole request is out of time
             res = { ok:false, status:503, hung:true }; d = {};            // this model hung: straight to the next one
           }finally{ clearTimeout(t1); ctl.signal.removeEventListener('abort', stop); }
-          tried.push({ model, outcome: res.hung ? 'hung' : res.ok ? 'ok' : res.status, ms: Date.now() - t0 });
+          // the tokens Gemini says it used (usageMetadata), so a run can say what it cost
+          const u = (res.ok && d && d.usageMetadata) || null, n = v => Number.isFinite(v) ? v : 0;
+          tried.push({ model, outcome: res.hung ? 'hung' : res.ok ? 'ok' : res.status, ms: Date.now() - t0,
+            ...(u ? { tokens:{ in: n(u.promptTokenCount), out: n(u.candidatesTokenCount) + n(u.thoughtsTokenCount), total: n(u.totalTokenCount) } } : {}) });
           // a 429 is the key's quota, not a moment's overload: retrying only waits
           // (the fifth live run: ~6 s a model) — straight on to the next model
           if(res.hung || res.status !== 503) break;
@@ -321,7 +324,7 @@ async function callGemini(parts, system, env, fetchImpl){
         if(res.status !== 400) break models;                                          // 400: the other request shape
       }
     }
-    if(env.TAKHTI_SYLLABUS_LOG !== '0') console.log('[syllabus] models:', tried.map(x => `${x.model} ${x.outcome} ${(x.ms / 1000).toFixed(1)}s`).join(' → '));
+    if(env.TAKHTI_SYLLABUS_LOG !== '0') console.log('[syllabus] models:', tried.map(x => `${x.model} ${x.outcome} ${(x.ms / 1000).toFixed(1)}s${x.tokens ? ` ${x.tokens.in} in / ${x.tokens.out} out tokens` : ''}`).join(' → '));
     // 429 is the key's own limit (requests a minute or a day), not Google being busy
     if(!res.ok) return res.hung ? { error:'Gemini did not answer in time', status: 504, tried }
                                 : { error: res.status === 429 ? "this Gemini key's limit is used up for now — try again later, or check the key's quota in AI Studio"

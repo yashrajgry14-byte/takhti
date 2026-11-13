@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v54` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v55` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -346,7 +346,9 @@ child sees.
   `gemini-3.7-flash,gemini-3.5-flash-lite`; `none` switches them off),
   which a 404 also moves to; all busy → "Gemini is busy right now" (a 429
   is said as the key's own limit, not as busy). Every model's outcome and
-  time (`ok`, `hung`, 503, 429…) come back as `tried` and are logged
+  time (`ok`, `hung`, 503, 429…) — and, for an answer, the tokens Gemini
+  says it used (`usageMetadata`: in, out with thinking, total) — come back
+  as `tried` and are logged; `tools/try-syllabus.mjs` totals them per model
   (`TAKHTI_SYLLABUS_LOG=0` silences it). A model that just hung or said
   busy rests for five minutes (`TAKHTI_GEMINI_REST_MS`), so the repair round
   and the next chapter go straight to the fallback. Every model but the last gets at most 60% of

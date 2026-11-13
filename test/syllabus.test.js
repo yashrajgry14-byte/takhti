@@ -124,6 +124,11 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   // the fourth live run couldn't tell a hang from "busy" from a quota: every model's outcome and time comes back
   check("each model's outcome and time come back with the answer — a hang, then the fallback's answer",
     Array.isArray(rh.json.tried) && rh.json.tried[0].model === 'gemini-test' && rh.json.tried[0].outcome === 'hung' && rh.json.tried.slice(-1)[0].outcome === 'ok' && rh.json.tried.every(x => Number.isFinite(x.ms)), JSON.stringify(rh.json.tried));
+  const usage = async () => ({ ok:true, status:200, json: async () => ({ usageMetadata:{ promptTokenCount: 5100, candidatesTokenCount: 900, thoughtsTokenCount: 300, totalTokenCount: 6300 },
+    candidates:[{ content:{ parts:[{ text: JSON.stringify({ chapter:'x', lessons:[] }) }] } }] }) });
+  const ru = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, env, '1.1.3.9', usage);
+  check("the tokens Gemini says it used come back with the model (in, out with thinking, total) — so a run can say what it cost",
+    JSON.stringify(ru.json.tried[0].tokens) === JSON.stringify({ in: 5100, out: 1200, total: 6300 }), JSON.stringify(ru.json.tried));
   check('…busy twice, then the next model', rb.json.tried.filter(x => x.model === 'gemini-test').map(x => x.outcome).join() === '503,503' && rz.json.tried.length >= 3, JSON.stringify(rb.json.tried));
   const quota = async () => ({ ok:false, status:429, json: async () => ({ error:{ message:'Quota exceeded' } }) });
   const rq = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.3.4', quota);
