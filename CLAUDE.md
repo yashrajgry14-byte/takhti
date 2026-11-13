@@ -1466,7 +1466,11 @@ Honest edges of what's built:
    naming where an answer was said. Checked again with `--recheck`, the same
    drafts give 3 of 4; the fourth's intro ("let us … find its centre")
    still names the answer to "where do the folds meet?", and stays sent
-   back.
+   back. The seventh run (13 Nov, evening, with `sylAskAnother()`; every
+   faster model answered 503 or hung, so flash-lite again, 178 s) gave
+   **4 of 4 usable**: two passed first time (one only because its question
+   was moved onto a triangle), and the repair round, told *where* each
+   answer was said, rewrote the intro and the teaching line it named.
 14. **Teach Munni is new and untested on real children.** The judge (Gemini
    on a transcript) is tested against a stand-in; whether it judges a
    seven-year-old's Hinglish fairly needs real recordings first (try ten
