@@ -209,7 +209,7 @@ function rulesText(rules){
 6. Never say the answer in the lines just before a question — not as a digit, not as a word ("three", "तीन") — and never name it in the question itself ("Are all sides equal in this square?" gives it away — ask "Are all its sides equal?"; "How many sides does this triangle have?" too — ask "How many sides does this shape have?" so the child counts). Where you can, ask two questions: one to recognise, one to apply to something new.
 6b. TEACH ON ONE SHAPE, ASK ON ANOTHER: a question's picture is never a teaching picture again (a teaching picture marks the answer). Teach with a 6 × 3 rectangle, ask about a 4 × 2 one; teach a square corner, ask about a smaller or bigger corner; teach a circle with 2 folds, ask with 3. A teaching circle that talks about folds draws them (folds 2 or more).
 6d. Teach one kind, count another: after teaching a rectangle, count a triangle's sides (not another rectangle's — what Munni said about the first is the answer).
-6c. Ask TWO questions per lesson where you can: the first to recognise, the second about a NEW example (another shape, a numbered row, an odd one out).
+6c. Ask TWO questions per lesson: the first to recognise, the second about a NEW example (another shape, a numbered row, an odd one out). With two answers each, one question alone is a coin toss — the teacher is shown that. For "are all its sides equal?", ask it of one shape whose answer is Yes AND one whose answer is No (a square and a rectangle): a child who always says Yes must not pass.
 7. The wrong option is a mistake a child really makes — never silly, never equal to the right one. Its why names that mistake ("children count only the top two corners"), not "they might guess". For "where do the folds meet?" the real wrong answer is Edge (किनारा). In a row, put a look-alike next to the right shape (a square among rectangles, a thin triangle like 2-6-7) and make the wrong answer the look-alike's number — not a picture nobody would pick.
 8. Every number a child meets is at most ${rules.maxNumber}.
 9. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; speak to the child as "तुम", never "आप"; never scold, never the word "wrong".
@@ -285,8 +285,14 @@ async function callGemini(parts, system, env, fetchImpl){
   // still leaves time for the fallback (the first live run's health check hung for 55 s)
   const total = Number(env.TAKHTI_SYLLABUS_TIMEOUT_MS || 55000), started = Date.now();
   const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), total);
-  // each model may take 60% of what is left while another one waits behind it
-  const shareFor = m => { const left = total - (Date.now() - started); return Math.max(2000, Math.floor(left * (models.indexOf(m) < models.length - 1 ? 0.6 : 1))); };
+  // each model may take 60% of what is left while another one waits behind
+  // it — and never the last model's reserve (40% of the limit, at most 45 s,
+  // TAKHTI_SYLLABUS_LAST_MS): on the eighth live run two full Flash models
+  // used 151 of 180 s, flash-lite got 29 s and nothing came back, while
+  // flash-lite alone drafted 3 of 3. A model's retries share its one budget.
+  const leftNow = () => total - (Date.now() - started);
+  const reserve = Math.min(Number(env.TAKHTI_SYLLABUS_LAST_MS || 45000), Math.floor(total * 0.4));
+  const budgetFor = m => { const left = leftNow(); return models.indexOf(m) === models.length - 1 ? left : Math.floor(Math.min(left * 0.6, left - reserve)); };
   // what each model said and how long it took (the live runs couldn't tell a
   // hang from "busy" from a key's quota) — returned with the answer, and logged
   const tried = [];
@@ -294,10 +300,19 @@ async function callGemini(parts, system, env, fetchImpl){
     let res, d, model;
     const busy = s => s === 503 || s === 429;
     models: for(model of models){
+      const budget = budgetFor(model);
+      // too little left before the last model's reserve: this one waits its turn out
+      if(budget < 1500){ tried.push({ model, outcome: 'no time', ms: 0 }); continue models; }
+      const modelEnd = Date.now() + budget;
       for(const shape of shapes){
         for(let attempt = 0; attempt < 2; attempt++){
-          const one = new AbortController(), left = Math.min(shareFor(model), total - (Date.now() - started));
-          const stop = () => one.abort(), t1 = setTimeout(stop, Math.max(1000, left));
+          const left = Math.min(modelEnd - Date.now(), leftNow());
+          if(attempt > 0 && left < 3000) break;                            // no time left for this model's retry
+          const one = new AbortController();
+          // (the last model's own timer runs a little past the whole limit, so a
+          // try the limit cuts off is recorded as cut, not as hung)
+          const last = models.indexOf(model) === models.length - 1;
+          const stop = () => one.abort(), t1 = setTimeout(stop, Math.max(1000, left) + (last ? 250 : 0));
           ctl.signal.addEventListener('abort', stop);
           const t0 = Date.now();
           try{
@@ -305,7 +320,11 @@ async function callGemini(parts, system, env, fetchImpl){
               headers:{ 'content-type':'application/json', 'x-goog-api-key': key }, body: JSON.stringify({ ...base, ...shape }) });
             d = await res.json().catch(() => ({}));
           }catch(e){
-            if(ctl.signal.aborted) throw e;                               // the whole request is out of time
+            if(ctl.signal.aborted){                                       // the whole request is out of time:
+              tried.push({ model, outcome: 'cut', ms: Date.now() - t0 });  // say so, and which models never had a turn
+              models.slice(models.indexOf(model) + 1).forEach(m => tried.push({ model: m, outcome: 'no time', ms: 0 }));
+              throw e;
+            }
             res = { ok:false, status:503, hung:true }; d = {};            // this model hung: straight to the next one
           }finally{ clearTimeout(t1); ctl.signal.removeEventListener('abort', stop); }
           // the tokens Gemini says it used (usageMetadata), so a run can say what it cost
@@ -334,6 +353,7 @@ async function callGemini(parts, system, env, fetchImpl){
     try{ out = JSON.parse(text); }catch(e){ return { error:'Gemini did not answer in the lesson format', status: 502, tried }; }
     return { out, model, tried };
   }catch(e){
+    if(env.TAKHTI_SYLLABUS_LOG !== '0') console.log('[syllabus] models:', tried.map(x => `${x.model} ${x.outcome} ${(x.ms / 1000).toFixed(1)}s`).join(' → '));
     return { error:'Gemini did not answer in time', status: 504, tried };
   }finally{ clearTimeout(to); }
 }

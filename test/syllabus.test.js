@@ -97,10 +97,22 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   const hangs = (url, o) => { calls.push({ url }); return /gemini-test:/.test(url)
     ? new Promise((_, no) => o.signal.addEventListener('abort', () => no(new Error('aborted'))))
     : Promise.resolve({ ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[READ] }) }] } }] }) }); };
+  // the eighth live run: both full Flash models hung, used 151 of 180 s, and flash-lite never had a fair turn
+  const twoHang = (url, o) => { calls.push({ url }); return /gemini-test:|3\.7-flash:/.test(url)
+    ? new Promise((_, no) => o.signal.addEventListener('abort', () => no(new Error('aborted'))))
+    : new Promise(ok => setTimeout(() => ok({ ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[READ] }) }] } }] }) }), 1200)); };
+  const r2h = await draftCore({ chapter:{ text:'Chapter 6. Kites. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_TIMEOUT_MS: 6000, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.6', twoHang);
+  check("when the faster models hang, the last one still gets its reserved share (40% of the limit) and answers",
+    r2h.status === 200 && r2h.json.model === 'gemini-3.5-flash-lite' && /^hung,(hung|no time),ok$/.test(r2h.json.tried.map(x => x.outcome).join()), JSON.stringify(r2h.json.tried || r2h.json));
+  const allHang = (url, o) => new Promise((_, no) => o.signal.addEventListener('abort', () => no(new Error('aborted'))));
+  const rah = await draftCore({ chapter:{ text:'Chapter 6. Kites. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_TIMEOUT_MS: 4000, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.5', allHang);
+  check("…and a try the whole limit cuts off is said so in the tried list (the eighth run's last try was invisible)",
+    rah.status === 504 && rah.json.tried.length === 3 && rah.json.tried[2].outcome === 'cut', JSON.stringify(rah.json.tried));
+  calls.length = 0;
   const t0 = Date.now();
   const rh = await draftCore({ chapter:{ text:'Chapter 6. Kites. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_TIMEOUT_MS: 4000 }, '1.1.1.7', hangs);
-  check('a model that hangs is given up on in time for the fallback to answer (no retry of a hang)', rh.status === 200 && rh.json.model === 'gemini-3.7-flash'
-    && calls.filter(c => /gemini-test:/.test(c.url)).length === 1 && Date.now() - t0 < 4000, `${rh.status} ${JSON.stringify(rh.json).slice(0, 80)} ${Date.now() - t0}ms`);
+  check('a model that hangs is given up on in time for a fallback to answer (no retry of a hang)', rh.status === 200 && rh.json.model !== 'gemini-test'
+    && calls.filter(c => /gemini-test:/.test(c.url)).length === 1 && Date.now() - t0 < 4000, `${rh.status} ${JSON.stringify(rh.json.tried)} ${calls.map(c => c.url.split("/").pop()).join()} ${Date.now() - t0}ms`);
   const allBusy = async () => ({ ok:false, status:503, json: async () => ({}) });
   const rz = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.9', allBusy);
   // a model that just failed rests: the next request (the repair round) goes straight to the fallback
@@ -357,9 +369,14 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     check('…teach one kind and count another, and it passes — with the narration written in for the teacher to read',
       silentOk.ok && /triangle/i.test(silentOk.lesson.beats[1].say.en) && /त्रिभुज/.test(silentOk.lesson.beats[1].say.hi), JSON.stringify(silentOk.errors));
     // a shape beside a row's items goes in; a row's wrong answer points at the look-alike
-    const stray = JSON.parse(E(`JSON.stringify(sylTidy([{ t:'figures', kind:'square', s:3, items:[{ kind:'triangle', sides:[3,4,5] }, { kind:'circle' }], find:'squarecorner' }]))`));
-    check('a shape written beside a row\'s items is put in at the end (the numbers already there stay), the stray fields gone',
+    const rowAsk = right => ({ t:'ask', q:{ en:'Which number?', hi:'कौन सा नंबर?' }, opts:[right, '1'], hiOpts:[right, '1'], correct:0 });
+    const stray = JSON.parse(E(`JSON.stringify(sylTidy([{ t:'figures', kind:'square', s:3, items:[{ kind:'triangle', sides:[4,4,4] }, { kind:'circle' }], find:'squarecorner' }, ${JSON.stringify(rowAsk('3'))}]))`));
+    check('a shape written beside a row\'s items goes in where the row then answers as marked (here the end: 3), the stray fields gone',
       stray[0].items.length === 3 && stray[0].items[2].kind === 'square' && stray[0].items[2].s === 3 && !('kind' in stray[0]) && !('s' in stray[0]), JSON.stringify(stray));
+    // the eighth run: put in blindly, a stray rectangle became the row's second rectangle
+    const stray2 = JSON.parse(E(`JSON.stringify(sylTidy([{ t:'figures', kind:'rectangle', w:5, items:[{ kind:'triangle', sides:[3,4,5] }, { kind:'rectangle', w:6, h:3 }, { kind:'square', s:3 }], find:'rectangle' }, ${JSON.stringify(rowAsk('2'))}]))`));
+    check("…but a stray that would make a second match (or disagree with the marked answer) is dropped, and the row that was right stays right",
+      stray2[0].items.length === 3 && !('kind' in stray2[0]) && E(`geoExpect(${JSON.stringify(stray2[0])})`) === 2, JSON.stringify(stray2));
     const lk = JSON.parse(E(`JSON.stringify(sylTidy([{ t:'figures', items:[{ kind:'triangle', sides:[3,4,5] }, { kind:'rectangle', w:6, h:3 }, { kind:'square', s:3 }], find:'rectangle' },
       { t:'ask', q:{ en:'Which number is a rectangle?', hi:'किस नंबर पर आयत है?' }, opts:['1','2'], hiOpts:['1','2'], correct:1 }]))`));
     check("a row's wrong answer is moved to the look-alike (the square when finding the rectangle); the right answer stays",
@@ -376,6 +393,12 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     check("…the example lesson's aims are all checked", JSON.parse(E(`JSON.stringify(sylAimGaps(${JSON.stringify(ex.lesson)}))`)).length === 0, '');
     const paper = JSON.parse(E(`JSON.stringify(sylAimGaps({ beats:[{ t:'figure', kind:'circle', folds:3, ask:'meet' }, { t:'ask' }], aims:[{ en:'The child can fold a round paper to find lines.', hi:'x' }, { en:'The child can find the centre.', hi:'x' }] }))`));
     check('an aim a screen can\'t check ("fold a round paper") is flagged; "find the centre" is checked by the centre question', paper.length === 1 && /paper/.test(paper[0].en), JSON.stringify(paper));
+    // the eighth run's teacher reading: one coin-toss question; a square asked "all sides equal?" is always Yes
+    const eqL = clean(shapeL({ en:'Are all its sides equal?', hi:'क्या इसकी सारी भुजाएँ बराबर हैं?' }, ['No','Yes'], ['नहीं','हाँ'], { ask:'equal' }));
+    const warns = JSON.parse(E(`JSON.stringify(sylLessonWarnings(${JSON.stringify(eqL.lesson)}).map(w => w.en))`));
+    check('the teacher is told when a lesson has one question (a coin toss) and when every "all sides equal?" answer is the same — in both languages, not a rejection',
+      eqL.ok && warns.length === 2 && /half the time/.test(warns[0]) && /always says No/.test(warns[1]), JSON.stringify(warns));
+    check("…and the example lesson in Gemini's prompt gets no warning but the coin toss it really has", JSON.parse(E(`JSON.stringify(sylLessonWarnings(${JSON.stringify(ex.lesson)}).map(w => w.en))`)).length <= 1, '');
     const c3 = JSON.parse(E(`JSON.stringify(sylSkills(sylClass('c3')).map(s => s.id))`));
     check('a Class 3 chapter may name the shape skills — flat shapes (Class 1), angles and perimeter (Class 4) — Class 3 skills first', ['shapes2d','angles','perimeter'].every(id => c3.includes(id)) && c3.length <= 60, JSON.stringify(c3));
     bad('a maths question needs a number for its answer', (() => { const x = clone(MATH); x.beats[2].opts = ['twenty-five','65']; return x; })(), /must be a number/);

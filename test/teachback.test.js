@@ -33,6 +33,8 @@
       not in the child's words not given; a 3–4 year old sees no button.
    ================================================================== */
 const fs = require('fs'), os = require('os'), path = require('path'), http = require('http'), vm = require('vm');
+// import() needs a file URL: a Windows path (c:\…) is read as a URL scheme and refused
+const { pathToFileURL } = require('url');
 const { JSDOM, VirtualConsole } = require('jsdom');
 
 const root = path.resolve(__dirname, '..');
@@ -179,7 +181,7 @@ function box(){
   check('…and its unit is the teacher\'s points', E(`(() => { const u = teachUnitFor(SC.lesson); return u && u.id === SC.lesson.id && u.aims.length === 1 && u.aims[0].kind === 'explain'; })()`), '');
 
   /* ================= 2. the judge ================= */
-  const { judgeCore, grounded } = await import(path.join(root, 'api/teachback.mjs'));
+  const { judgeCore, grounded } = await import(pathToFileURL(path.join(root, 'api/teachback.mjs')).href);
   const calls = [];
   const gemini = reply => async (url, o) => {
     const body = JSON.parse(o.body); calls.push({ url, headers: o.headers, body });
@@ -336,7 +338,7 @@ function box(){
     const tv = app.screen();
     check('the teacher view: what the class could explain, point by point (the hardest first)',
       /WHAT THE CLASS COULD EXPLAIN/.test(tv) && /Knows to borrow when the top ones digit is smaller/.test(tv) && /1 explained · 0 partly · 1 still to come/.test(tv) && !!app.$('.teachbar'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 400));
-    const { syncCore } = await import(path.join(root, 'api/class-sync.mjs'));
+    const { syncCore } = await import(pathToFileURL(path.join(root, 'api/class-sync.mjs')).href);
     const mem = new Map(), st = { get: async k => mem.get(k) || null, setJSON: async (k, v) => mem.set(k, JSON.parse(JSON.stringify(v))) };
     const sy = await syncCore(st, { code: 'CLS777', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.when': 'c', 'Bad Id!': 'c', 'borrow.ten': 'yes' }, at: 5, said: 'x' } } });
     check('the class sync keeps only well-formed point ids and c/p/g — nothing the child said', JSON.stringify(sy.json.children['c-1'].explained) === '{"borrow.when":"c"}' && !sy.json.children['c-1'].said, JSON.stringify(sy.json));

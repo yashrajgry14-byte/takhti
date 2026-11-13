@@ -118,13 +118,14 @@ function sylTidy(beats){
   // a size written into a note ("folds 2") instead of its own field
   out.forEach(x => { if(x && (x.t === 'figure' || x.t === 'corner')) { sylSizesFromText(x); delete x.text; } });
   // a shape written beside a row's items instead of in them (the fifth live
-  // run: {t:'figures', kind:'square', s:3, items:[…]}) goes in at the end —
-  // the numbers of the shapes already there don't change
+  // run: {t:'figures', kind:'square', s:3, items:[…]}) is set aside here and
+  // placed after the row's find is known (below)
+  const strays = new Map();
   out.forEach(x => {
     if(!x || x.t !== 'figures' || !Array.isArray(x.items) || !x.kind) return;
     const it = { kind: x.kind };
     for(const k of ['s', 'w', 'h', 'sides', 'folds', 'deg']) if(x[k] != null) it[k] = x[k];
-    if(x.items.length < 4) x.items = x.items.concat([it]);
+    strays.set(x, it);
     for(const k of ['kind', 's', 'w', 'h', 'sides', 'folds', 'deg', 'text']) delete x[k];
   });
   out.forEach((x, i) => {
@@ -175,6 +176,20 @@ function sylTidy(beats){
     if(!x) return;
     if(x.t === 'figure' && x.ask !== 'perimeter') fillRect(x);
     if(x.t === 'figures' && Array.isArray(x.items)) x.items = x.items.map(it => { if(!it || typeof it !== 'object') return it; const c = { ...it }; fillRect(c); return c; });
+  });
+  // …it goes into the row only where the row then answers the question as
+  // marked (at the end, or wherever that is); otherwise it is dropped — on the
+  // eighth run, put in blindly, it became a second rectangle or square corner
+  // and broke rows that were right without it
+  strays.forEach((it0, x) => {
+    const it = { ...it0 }; fillRect(it);
+    const q = out[out.indexOf(x) + 1];
+    const right = q && q.t === 'ask' && Array.isArray(q.opts) ? Number(q.opts[q.correct]) : NaN;
+    if(x.items.length >= 4 || !Number.isInteger(right)) return;
+    for(let at = x.items.length; at >= 0; at--){
+      const items = x.items.slice(0, at).concat([it], x.items.slice(at));
+      if(geoExpect({ t:'figures', items, find: x.find }) === right){ x.items = items; return; }
+    }
   });
   sylAskAnother(out);
   return out;
@@ -340,6 +355,24 @@ function sylAimGaps(les){
   };
   // an aim is a structured Teach Munni aim (its point is what the child can do); an older plain {en, hi} point still reads
   return (les.aims || []).filter(a => { const n = need(a && (a.point ? a.point.en : a.en)); return n && !n.some(k => asked.has(k)); });
+}
+
+/* What the teacher should know about how much a lesson can tell (not a
+   rejection): one question with two answers is a coin toss, and "are all
+   its sides equal?" asked only where the answer is Yes is passed by a child
+   who always says Yes (the eighth live run's square lesson). */
+function sylLessonWarnings(les){
+  const beats = (les && les.beats) || [], out = [];
+  const asks = beats.filter(b => b && b.t === 'ask').length;
+  if(asks === 1) out.push({ en:'Only one question — with two answers, a child who guesses is right half the time.',
+                            hi:'केवल एक प्रश्न — दो उत्तरों में अंदाज़ा लगाने वाला बच्चा आधी बार सही होगा।' });
+  const eq = beats.filter((b, i) => b && b.t === 'figure' && b.ask === 'equal' && beats[i + 1] && beats[i + 1].t === 'ask').map(b => geoExpect(b));
+  if(eq.length && new Set(eq).size === 1) out.push(eq[0] === 'yes'
+    ? { en:'Every "are all its sides equal?" answer is Yes — a child who always says Yes passes. A rectangle (No) would test it.',
+        hi:'"क्या सारी भुजाएँ बराबर हैं?" का हर उत्तर हाँ है — हमेशा हाँ कहने वाला बच्चा पास हो जाएगा। एक आयत (नहीं) से जाँच होगी।' }
+    : { en:'Every "are all its sides equal?" answer is No — a child who always says No passes. A square (Yes) would test it.',
+        hi:'"क्या सारी भुजाएँ बराबर हैं?" का हर उत्तर नहीं है — हमेशा नहीं कहने वाला बच्चा पास हो जाएगा। एक वर्ग (हाँ) से जाँच होगी।' });
+  return out;
 }
 
 /* number words up to twenty, so "three" and "तीन" say 3 as surely as "3" does

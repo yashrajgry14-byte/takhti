@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v56` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v57` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -356,8 +356,12 @@ child sees.
   (`TAKHTI_SYLLABUS_LOG=0` silences it). A model that just hung or said
   busy rests for five minutes (`TAKHTI_GEMINI_REST_MS`), so the repair round
   and the next chapter go straight to the fallback. Every model but the last gets at most 60% of
-  the time left (55 s serverless, 180 s on the voice server), so a model
-  that hangs leaves time for the fallback. The draft and the repair prompt
+  the time left (55 s serverless, 180 s on the voice server), and never the
+  last model's reserve (40% of the limit, at most 45 s,
+  `TAKHTI_SYLLABUS_LAST_MS`): a model with too little left before it is
+  skipped (`no time` in `tried`), a model's retries share its one budget,
+  and a try the whole limit cuts off is recorded as `cut` — so a model
+  that hangs still leaves the last one a fair turn. The draft and the repair prompt
   share one description of the beats and the rules (`beatsText()`,
   `rulesText()`) — what each shape `ask` means, the school's Hindi words
   (चौकोर कोना, वर्ग…), teach-then-ask, a `why` that names the real mistake —
@@ -392,8 +396,9 @@ child sees.
   `find` gets it from a question that names exactly one shape
   (`sylInferFind()`); a size written as a note ("folds 2", "6 × 3", "60°")
   goes into its own field, never over one that was given
-  (`sylSizesFromText()`); a shape written beside a row's items goes in at
-  the end; a circle with no folds gets them where they're needed (3 on a
+  (`sylSizesFromText()`); a shape written beside a row's items goes in
+  only where the row then answers as marked, else it is dropped (never a
+  second match); a circle with no folds gets them where they're needed (3 on a
   "where do they meet?" circle, 2 on a teaching circle that talks about
   folds — the answer, the centre, is the same for any number from 2, and
   a number given is never changed); and in a row with one look-alike (the
@@ -454,7 +459,10 @@ child sees.
   shape aim no question checks — "find a shape with 3 sides" with no row —
   is flagged under the aims, on a lesson that isn't used too, and so is an
   aim a screen can't check ("fold a round paper") — `sylAimGaps()`, a
-  warning read from the aim's key words, not a rejection): `sylApprove()`
+  warning read from the aim's key words, not a rejection; so is a lesson
+  with one question — a coin toss with two answers — and one whose every
+  "are all its sides equal?" answer is the same, `sylLessonWarnings()`):
+  `sylApprove()`
   / `sylApproveAll()` / `sylRemove()` write `_lessons {items, at}` (≤ 12)
   into the class mirror; with *Keep this class synced* on, the class sync
   carries them to every synced phone (teacher's key only; shape- and
@@ -1516,7 +1524,15 @@ Honest edges of what's built:
    faster model answered 503 or hung, so flash-lite again, 178 s) gave
    **4 of 4 usable**: two passed first time (one only because its question
    was moved onto a triangle), and the repair round, told *where* each
-   answer was said, rewrote the intro and the teaching line it named.
+   answer was said, rewrote the intro and the teaching line it named. The
+   eighth (13 Nov, evening, the first on a paid key: no 429 any more) got
+   nothing: `gemini-3.8-flash` answered 503 or hung on every try, even for
+   a 70-word text, and the default chain spent 151 of 180 s on the two full
+   Flash models before flash-lite — the reason for the last model's
+   reserve, the shared retry budget and `cut`/`no time` in `tried`. Its
+   re-check found the stray-row step adding a second match (now placed only
+   where the row answers as marked) and its teacher reading the coin-toss
+   and always-Yes lessons (now warned about).
 14. **Teach Munni is new and untested on real children.** The judge (Gemini
    on a transcript) is tested against a stand-in; whether it judges a
    seven-year-old's Hinglish fairly needs real recordings first (try ten
