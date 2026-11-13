@@ -104,6 +104,11 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   const r2h = await draftCore({ chapter:{ text:'Chapter 6. Kites. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_TIMEOUT_MS: 6000, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.6', twoHang);
   check("when the faster models hang, the last one still gets its reserved share (40% of the limit) and answers",
     r2h.status === 200 && r2h.json.model === 'gemini-3.5-flash-lite' && /^hung,(hung|no time),ok$/.test(r2h.json.tried.map(x => x.outcome).join()), JSON.stringify(r2h.json.tried || r2h.json));
+  // the ninth run: a hanging 3.8-flash held the teacher 108 s; each model before the last is capped
+  const tc = Date.now();
+  const rcap = await draftCore({ chapter:{ text:'Chapter 6. Kites. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_TIMEOUT_MS: 20000, TAKHTI_SYLLABUS_MODEL_MS: 1500, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.4', twoHang);
+  check('a model before the last is given at most TAKHTI_SYLLABUS_MODEL_MS (a minute by default), not 60% of the limit',
+    rcap.status === 200 && rcap.json.tried[0].outcome === 'hung' && rcap.json.tried[0].ms < 2500 && Date.now() - tc < 8000, JSON.stringify(rcap.json.tried));
   const allHang = (url, o) => new Promise((_, no) => o.signal.addEventListener('abort', () => no(new Error('aborted'))));
   const rah = await draftCore({ chapter:{ text:'Chapter 6. Kites. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_TIMEOUT_MS: 4000, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.5', allHang);
   check("…and a try the whole limit cuts off is said so in the tried list (the eighth run's last try was invisible)",
@@ -399,6 +404,13 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     check('the teacher is told when a lesson has one question (a coin toss) and when every "all sides equal?" answer is the same — in both languages, not a rejection',
       eqL.ok && warns.length === 2 && /half the time/.test(warns[0]) && /always says No/.test(warns[1]), JSON.stringify(warns));
     check("…and the example lesson in Gemini's prompt gets no warning but the coin toss it really has", JSON.parse(E(`JSON.stringify(sylLessonWarnings(${JSON.stringify(ex.lesson)}).map(w => w.en))`)).length <= 1, '');
+    // the ninth run's reading: "by folding" can't be checked on a screen; 4 and 4; झुकाओ for fold
+    const fold = JSON.parse(E(`JSON.stringify(sylAimGaps({ beats:[{ t:'figure', kind:'circle', folds:3, ask:'meet' }, { t:'ask' }], aims:[{ point:{ en:'The child can find the centre of a circle by folding.', hi:'x' } }, { point:{ en:'The child can see where two fold lines meet.', hi:'x' } }] }).map(a => a.point.en))`));
+    check('"…by folding" is flagged as something a screen can\'t check; "where two fold lines meet" is not', fold.length === 1 && /by folding/.test(fold[0]), JSON.stringify(fold));
+    const same = JSON.parse(E(`JSON.stringify(sylLessonWarnings({ beats:[{ t:'figure', kind:'rectangle', w:5, h:2, ask:'sides', say:{ en:'x', hi:'आयत को झुकाओ' } }, { t:'ask', opts:['3','4'], correct:1 }, { t:'figure', kind:'rectangle', w:4, h:2, ask:'corners' }, { t:'ask', opts:['5','4'], correct:1 }],
+      aims:[{ point:{ en:'x', hi:'y' }, forget:{ en:'How?', hi:'मैं कैसे पता चलूँ?' }, hints:[{ en:'a', hi:'b' }, { en:'c', hi:'d' }] }] }).map(w => w.en))`));
+    check('the teacher is told when every question has the same right answer, and about Hindi a draft gets wrong here (झुकाओ for fold, पता चलूँ) — in Munni\'s lines too',
+      same.length === 3 && /same|"4"/.test(same[0]) && /मोड़/.test(same[1]) && /पता करूँ/.test(same[2]), JSON.stringify(same));
     const c3 = JSON.parse(E(`JSON.stringify(sylSkills(sylClass('c3')).map(s => s.id))`));
     check('a Class 3 chapter may name the shape skills — flat shapes (Class 1), angles and perimeter (Class 4) — Class 3 skills first', ['shapes2d','angles','perimeter'].every(id => c3.includes(id)) && c3.length <= 60, JSON.stringify(c3));
     bad('a maths question needs a number for its answer', (() => { const x = clone(MATH); x.beats[2].opts = ['twenty-five','65']; return x; })(), /must be a number/);

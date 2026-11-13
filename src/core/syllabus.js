@@ -342,7 +342,8 @@ function sylAimGaps(les){
   });
   const need = en => {
     const t = String(en || '').toLowerCase();
-    if(/\b(fold|cut|tear|draw|trace)\b\s+(a|an|the|it|this|round|paper)|\bpaper\b/.test(t)) return ['(a screen can\'t check this)'];
+    // (the ninth run: "find the centre … by folding" — the question checks where folds meet, not the folding)
+    if(/\b(fold|cut|tear|draw|trace)\b\s+(a|an|the|it|this|round|paper)|\bpaper\b|\b(by\s+)?folding\b(?!\s+lines?)|\bcut(ting)?\s+out\b|\bcutting\b/.test(t)) return ['(a screen can\'t check this)'];
     if(/perimeter|distance round|all the way round/.test(t)) return ['perimeter'];
     if(/square corner|right angle/.test(t)) return ['kind'];
     if(/cent(re|er)|fold/.test(t)) return ['meet'];
@@ -372,8 +373,23 @@ function sylLessonWarnings(les){
         hi:'"क्या सारी भुजाएँ बराबर हैं?" का हर उत्तर हाँ है — हमेशा हाँ कहने वाला बच्चा पास हो जाएगा। एक आयत (नहीं) से जाँच होगी।' }
     : { en:'Every "are all its sides equal?" answer is No — a child who always says No passes. A square (Yes) would test it.',
         hi:'"क्या सारी भुजाएँ बराबर हैं?" का हर उत्तर नहीं है — हमेशा नहीं कहने वाला बच्चा पास हो जाएगा। एक वर्ग (हाँ) से जाँच होगी।' });
+  // every question with the same right answer (the ninth run: 4 sides, then 4 corners)
+  const rights = beats.filter(b => b && b.t === 'ask' && Array.isArray(b.opts)).map(b => String(b.opts[b.correct]).trim().toLowerCase());
+  if(rights.length >= 2 && new Set(rights).size === 1) out.push({ en:`Every question's right answer is "${rights[0]}" — a child who learnt that one answer passes them all.`,
+    hi:`हर प्रश्न का सही उत्तर "${rights[0]}" है — एक ही उत्तर याद रखने वाला बच्चा सब में पास हो जाएगा।` });
+  // Hindi words drafts get wrong in this setting (a short list from the live runs, for the teacher to look at — never changed by Takhti)
+  const hiText = [];
+  const walk = v => { if(!v) return; if(typeof v === 'string') hiText.push(v); else if(Array.isArray(v)) v.forEach(walk); else if(typeof v === 'object'){ if(typeof v.hi === 'string') hiText.push(v.hi); for(const k of ['hints', 'hiOpts']) if(v[k]) walk(v[k]); } };
+  beats.forEach(b => { if(!b) return; walk(b.say); walk(b.q); walk(b.p); walk(b.hiOpts); });
+  ((les && les.aims) || []).forEach(a => { if(!a) return; walk(a.point); walk(a.short); walk(a.forget); walk(a.hints); });
+  const all = hiText.join(' \n ');
+  for(const w of SYL_HI_WATCH) if(w.re.test(all)) out.push({ en: w.en, hi: w.hi });
   return out;
 }
+const SYL_HI_WATCH = [
+  { re: /झुका/, en:'The Hindi says झुकाना (to tilt) — for folding paper, the word is मोड़ना / मोड़ो.', hi:'हिंदी में झुकाना (टेढ़ा करना) लिखा है — कागज़ मोड़ने के लिए शब्द मोड़ना / मोड़ो है।' },
+  { re: /पता\s*चलूँ/, en:'The Hindi says "पता चलूँ" — it should be "पता करूँ" (how do I find out).', hi:'हिंदी में "पता चलूँ" लिखा है — "पता करूँ" होना चाहिए।' }
+];
 
 /* number words up to twenty, so "three" and "तीन" say 3 as surely as "3" does
    (the 13 Nov live run: "A triangle has three straight sides" — then "how many sides?") */

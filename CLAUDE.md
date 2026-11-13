@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v57` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v58` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -358,7 +358,8 @@ child sees.
   and the next chapter go straight to the fallback. Every model but the last gets at most 60% of
   the time left (55 s serverless, 180 s on the voice server), and never the
   last model's reserve (40% of the limit, at most 45 s,
-  `TAKHTI_SYLLABUS_LAST_MS`): a model with too little left before it is
+  `TAKHTI_SYLLABUS_LAST_MS`), and at most a minute each
+  (`TAKHTI_SYLLABUS_MODEL_MS`): a model with too little left before it is
   skipped (`no time` in `tried`), a model's retries share its one budget,
   and a try the whole limit cuts off is recorded as `cut` — so a model
   that hangs still leaves the last one a fair turn. The draft and the repair prompt
@@ -461,7 +462,10 @@ child sees.
   aim a screen can't check ("fold a round paper") — `sylAimGaps()`, a
   warning read from the aim's key words, not a rejection; so is a lesson
   with one question — a coin toss with two answers — and one whose every
-  "are all its sides equal?" answer is the same, `sylLessonWarnings()`):
+  "are all its sides equal?" answer is the same, or whose questions all
+  share one right answer, or whose Hindi uses a word drafts get wrong here
+  (`SYL_HI_WATCH`: झुकाओ for fold, "पता चलूँ"), `sylLessonWarnings()`;
+  "by folding", "cut out" are aims a screen can't check):
   `sylApprove()`
   / `sylApproveAll()` / `sylRemove()` write `_lessons {items, at}` (≤ 12)
   into the class mirror; with *Keep this class synced* on, the class sync
@@ -1539,7 +1543,13 @@ Honest edges of what's built:
    reserve, the shared retry budget and `cut`/`no time` in `tried`. Its
    re-check found the stray-row step adding a second match (now placed only
    where the row answers as marked) and its teacher reading the coin-toss
-   and always-Yes lessons (now warned about).
+   and always-Yes lessons (now warned about). The ninth (13 Nov, evening)
+   gave **3 of 3 usable** in the default chain: `gemini-3.8-flash` hung
+   108 s, `gemini-3.7-flash` was busy, and flash-lite had its reserved turn
+   (14,421 + 5,150 tokens in, 3,081 + 3,070 out, for draft and repair).
+   Its reading led to the per-model cap (a minute), "by folding" as an aim
+   a screen can't check, and warnings for one right answer everywhere and
+   for Hindi words drafts get wrong.
 14. **Teach Munni is new and untested on real children.** The judge (Gemini
    on a transcript) is tested against a stand-in; whether it judges a
    seven-year-old's Hinglish fairly needs real recordings first (try ten
