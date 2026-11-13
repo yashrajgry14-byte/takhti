@@ -42,6 +42,7 @@ function newProfile(name){
     gameBest: {},          // shellKind -> this child's own best score, see src/games/game-core.js's gameEnd()
     muted: false,          // per child, not per device — see core/speech.js's speak()/ui/elephant.js's trumpet()
     avatar: null,          // the animal a child taps to say who they are, see ui/onboarding.js
+    demo: false,           // a demo child (core/demo.js): plainly named, never synced, removed as a pair
     ob: null,              // in-progress onboarding step ('who'|'age'), see ui/onboarding.js's onboardHTML()
     srs: {},               // Spaced Repetition Memory Engine records (itemId -> SRS item)
     talkMunni: false,      // a parent turned on Talking Munni (voice goes to the voice service while talking) — see ui/talk-munni.js

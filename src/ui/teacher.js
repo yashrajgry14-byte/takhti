@@ -150,8 +150,27 @@ function teacherHTML(){
     ${queue.length ? `
       <div class="kicker2" style="margin-top:12px">${hi?'अभी नहीं सिखा सकते':'NOT TAUGHT YET'}</div>
       ${queue.map(q => `<div style="font-size:12.5px;opacity:.8">${q.grade} · ${STRAND_NAME[q.strand][hi?'hi':'en']} · ${attr(q.en)}${q.blocks ? (hi?` · ${q.blocks} कौशल इस पर टिके`:` · ${q.blocks} skill(s) build on it`) : ''}</div>`).join('')}` : ''}
+  </div>
+  ${code ? demoHTML() : ''}`;
+}
+
+/* ---------- the demo class (core/demo.js) ---------- */
+function demoHTML(){
+  const hi = S.lang === 'hi', have = demoKids(), full = S.profiles.length + DEMO_KIDS.length > MAX_PROFILES;
+  return `<div class="paper" style="margin-top:12px">
+    <div class="kicker2">🎬 ${hi ? 'डेमो कक्षा' : 'DEMO CLASS'}</div>
+    <div style="font-size:12.5px;opacity:.8">${hi
+      ? 'नए बच्चे का कोई रिकॉर्ड नहीं होता, इसलिए हर नए बच्चे को एक-सा रास्ता मिलता है। यह दो डेमो बच्चे जोड़ता है जिनके रिकॉर्ड अलग हैं — आशा को चित्र और कार्टून से समझ आता है, कबीर को कहानी से — ताकि एक ही मंज़ूर पाठ पर दो अलग रास्ते दिखें। ये असली बच्चे नहीं हैं, कभी सिंक नहीं होते, और एक टैप में हट जाते हैं।'
+      : "A new child has no record, so every new child gets the same path. This adds two demo children whose records differ — pictures and cartoons stick for Asha, the story for Kabir — so one approved lesson shows two different paths. They aren't real children, are never synced, and go in one tap."}</div>
+    ${have.length
+      ? `<div style="font-size:13px;margin-top:6px">✓ ${have.map(p => attr(p.name)).join(', ')} — ${hi ? 'ऊपर नक़्शे पर बच्चा बदलकर देखें' : 'switch child on the map to see each one'}</div>
+         <button class="btn ghost" style="margin-top:6px" onclick="demoOff()">${hi ? 'डेमो बच्चे हटाएँ' : 'Remove the demo children'}</button>`
+      : full ? `<div class="retry" style="font-size:12.5px;margin-top:6px">${hi ? `इस फ़ोन पर ${MAX_PROFILES} बच्चों की जगह है — डेमो के लिए दो जगह खाली चाहिए।` : `This phone holds ${MAX_PROFILES} children — the demo needs two free places.`}</div>`
+      : `<button class="btn ghost" style="margin-top:6px" onclick="demoOn()">${hi ? 'दो डेमो बच्चे जोड़ें' : 'Add two demo children'}</button>`}
   </div>`;
 }
+function demoOn(){ demoAdd(teacherCode()); render(); }
+function demoOff(){ demoRemove(); render(); }
 
 function teacherSetCode(v){
   const code = (v || '').trim().toUpperCase();
@@ -385,11 +404,19 @@ async function sylGo(){
   render();
 }
 
+/* The approved list changed: every child of this class on this phone gets
+   their path for it into the mirror now (not only whoever plays next), so
+   the teacher's path card is right straight away. */
+function sylRemirror(code){
+  syncProfileOut();
+  for(const p of S.profiles || []) if(p && p.classCode === code) mirrorToClassNow(p);
+}
 function sylApprove(i){
   const code = teacherCode(), d = S.ctx.sylRes && S.ctx.sylRes.drafts[i];
   if(!code || !d || !d.ok) return;
   sylSave(code, sylApproved(code).filter(l => l.id !== d.lesson.id).concat(d.lesson));
   log(0, `Syllabus · teacher approved "${d.lesson.title.en}" for class ${code}`);
+  sylRemirror(code);
   teacherSyncIfOn(code);
 }
 function sylApproveAll(){
@@ -398,6 +425,7 @@ function sylApproveAll(){
   const add = res.drafts.filter(d => d.ok).map(d => d.lesson);
   sylSave(code, sylApproved(code).filter(l => !add.some(a => a.id === l.id)).concat(add));
   log(0, `Syllabus · teacher approved ${add.length} lesson(s) for class ${code}`);
+  sylRemirror(code);
   teacherSyncIfOn(code);
 }
 function sylRemove(id){
@@ -405,6 +433,7 @@ function sylRemove(id){
   if(!code) return;
   sylSave(code, sylApproved(code).filter(l => l.id !== id));
   log(0, `Syllabus · teacher removed a lesson from class ${code}`);
+  sylRemirror(code);
   teacherSyncIfOn(code);
 }
 

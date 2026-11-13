@@ -47,7 +47,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 42 test suites (see Testing)
+npm test           # all 43 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -76,7 +76,7 @@ core/srs.js, core/sfx.js, games/game-core.js
 content/anim.js, content/copy.js, content/competencies.js
 core/log.js, core/store.js, core/profiles.js
 core/voice.js, core/speech.js, core/matcher.js
-core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js, core/tier1.js, core/explain.js, core/mind.js, core/twin.js, core/lang-mistakes.js, content/teach.js, core/teachback.js, core/planner.js
+core/adaptive.js, core/daily-engine.js, core/mathgen.js, core/readability.js, core/tier1.js, core/explain.js, core/mind.js, core/twin.js, core/lang-mistakes.js, content/teach.js, core/teachback.js, core/planner.js, core/demo.js
 ui/mascot.js, ui/readback.js, ui/elephant.js, ui/lesson-player.js, ui/anim-celebrate.js, ui/cards.js
 ui/views.js, ui/opening.js
 ui/arrival.js, ui/onboarding.js, ui/jungle-map.js, ui/video-player.js, ui/teacher.js
@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v57` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v58` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -141,6 +141,7 @@ src/
     teachback.js            Teach Munni's engine: the aim checker, the offline judge, the quote check, Munni's mistake, the session, what is kept
     library.js              the library on the phone: the class's book and its term (S.libPlan), this week's chapter's lessons checked again → the teacher's approval card
     planner.js              this week's school lessons, this child's way: knows it / a gap underneath / the way that works (the mind) → the school's lesson → Teach Munni; planFor(), planMarkWay()
+    demo.js                 the demo class: two labelled demo children whose records differ (written by the mind's and twin's own functions), so one approved lesson shows two paths; demoAdd()/demoRemove()
   games/
     game-core.js            shared round lifecycle + GAME_SHELLS registry
     runner, pop, tower, match, sort, archer   the six game shells
@@ -572,6 +573,24 @@ knew it, the gap's skill id, steps done, steps) in the class mirror
 *Sync automatically* consent; the server keeps only lesson ids `sch-…`, a
 known way, a real skill id and d ≤ n ≤ 6. A path is how, not how well —
 never compared or ranked.
+
+## The demo class — `core/demo.js`, `DEMO.md`
+
+A new child has no record, so every new child gets the same path. The
+teacher view's **Demo class** card (`demoHTML()`, behind the PIN) adds two
+children — *Asha (demo)* and *Kabir (demo)*, flagged `demo`, age 8, linked to
+the open class — whose records differ and are written by the app's own
+functions, not set by hand: settled `mindTaught()`/`mindAttempt()` rounds
+(pictures, the cartoon and hard-words-in-pieces stick for Asha; the story
+and Munni-reads-first for Kabir) and, for Kabir, `twinAnswer()` twice on two
+different borrowing sums with the smaller digit taken from the bigger, so
+`twinHabit('borrow')` is real and Teach Munni's Munni makes his mistake.
+Never synced (`syncOn` stays off); needs two free profile places and says so
+when there aren't; `demoRemove()` deletes exactly the flagged children from
+the phone and this phone's class mirror. When the approved lessons change
+(`sylApprove()`…), `sylRemirror()` writes every class child on this phone
+into the mirror, so the teacher's path card is right at once. `DEMO.md` is
+the step-by-step script, with what is real and what is staged.
 
 ## Shapes — `content/geometry.js`
 
@@ -1312,7 +1331,7 @@ app is a client of it, and only when a parent says so.
 
 ## Testing
 
-`npm test` runs 42 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 43 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -1357,6 +1376,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `speech-provider` | vm + HTTP + jsdom + child processes | one stand-in for Gemini (hearing, TTS, Batch API) and Sarvam: the switch both ways (unset/gemini → Gemini; sarvam → Sarvam only, Gemini never called); Gemini's request (the model, key in a header, inline audio, structured output, "write what you hear"); the answer's shape; the passage only from the server's own lines; Gemini failing or slow → Sarvam inside the budget; neither → skipped at once; sarvam set and down → skipped, no Gemini; live `/reading/tts` never Gemini; per-address limit; Teach Munni hears the same way; nothing kept in the data folder; Gemini TTS (model, voice, WAV, PCM wrapped, the older voice field after a 400); `tools/build-audio.mjs` through the Batch API (WAV without ffmpeg, mp3 with it, carries on where it stopped, `--provider sarvam`); on the phone: pack → live backup → device voice, a `.wav` pack, v2 terms send nothing, a skipped check never blocks (message, typing, the line comes back, no recording kept); `tools/compare-speech.mjs` names the slip Gemini missed and advises switching back, or keeping Gemini |
 | `planner` | vm + jsdom | two children, the same approved shapes aims, two different paths from their own records (pictures first / the school's story), each step's why in EN/HI, the plan held; maths: the cartoon first or the school's story, the cartoon done once watched, the school's lesson after it the check, a skipped step not coming back; reading: three children, three ways inside the same lesson (Munni reads first / pieces / you first), each counted as that way; already knows it → show it, teach Munni; a gap underneath first (perimeter → add2) with a built-in lesson; status from what the child really did; labelling (pictures, the story, the check labels nothing), the answers settling it, two misses switching the way and the plan following; in the app: the Story Fire's path and why (EN/HI), the button starting the next step, then the school lesson as the check; a reading lesson's passage in pieces, or read aloud by Munni first; a maths lesson's button opening the cartoon (seeded sampling, so every run is the same); what goes to the teacher (short codes only, the mirror carrying it, the server keeping a well-formed path and dropping the rest), the teacher's card grouping four children by path (EN/HI), the parent's notice naming it |
 | `library` | Node + jsdom | the builder against a stand-in Gemini with the seventh live run's own drafts: only passing lessons kept, the failure named with why, the title from the chapter, a missing PDF skipped and said, raw and report written, the key in no file, a built chapter skipped (no call), `--force --only`, `--recheck` and `--import` with no call; `--scan` (a whole book's PDFs in natural order, front matter and answers left out, a listed chapter's title kept, a built chapter now on another file warned about); a chapter Gemini can't do doesn't stop the book, and `summary.md` says so; a bad book.json refused with each fault; the bundle (every chapter in order, one not built yet with no lessons, no raw drafts); the shipped `src/content/library.js` exactly what `library/` builds; PDFs ignored; in the app, offline: no book for Class 2 said, Maths Mela offered for Class 3, the term laid out with this week's chapter, the plan kept on the phone, this week's lessons in the approval card (every one checked again, no network), approved into the class, the child's "From your school" with their path; a chapter added later at the end, ↑ ↓, a not-built week said, next week; a lesson edited after it was built not offered; Hindi; no fetch at all |
+| `demo` | jsdom | the demo card says what it is; two labelled demo children join the class with sync off; their records come from the mind's own rounds and a real twin habit for Kabir (none for Asha); the library's chapter approved → two different paths for the same lesson; the teacher's path card names both; switching to each goes to the map and shows their own Story Fire; removal deletes exactly them (phone and mirror) and restores the real child; no room → said, none added; Hindi |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
