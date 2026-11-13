@@ -60,7 +60,7 @@ export function phoneChecker(){
     cls: id => call(`sylClass(${JSON.stringify(id)})`),
     rules: band => call(`sylRules(${JSON.stringify(band)})`),
     skills: id => call(`sylSkills(sylClass(${JSON.stringify(id)}))`),
-    clean: (raw, band, skills) => call(`sylClean(${JSON.stringify(raw)}, { band: ${JSON.stringify(band)}, skills: ${JSON.stringify(skills)} })`)
+    clean: (raw, band, skills, mend) => call(`sylClean(${JSON.stringify(raw)}, { band: ${JSON.stringify(band)}, skills: ${JSON.stringify(skills)}, mendHints: ${!!mend} })`)
   };
 }
 
@@ -85,7 +85,15 @@ export async function run(opts, fetchImpl){
   const say = opts.say || (() => {});
   const t0 = Date.now();
   say(`Asking ${env.GEMINI_MODEL || 'gemini-3.8-flash'} for ${opts.count || 4} lesson(s) for ${cls.en}…`);
-  const d = await draftCore({ mode:'draft', chapter, rules, count: opts.count || 4, skills, note: opts.note || '' }, env, 'try-syllabus', fetchImpl);
+  // Google's busy spells come and go (the first live run hit one): a busy or
+  // timed-out draft is tried once more after a pause, as a person would
+  let d = await draftCore({ mode:'draft', chapter, rules, count: opts.count || 4, skills, note: opts.note || '' }, env, 'try-syllabus', fetchImpl);
+  if(d.status === 502 && /busy/.test(d.json.error || '') || d.status === 504){
+    const pause = Number(opts.retryMs != null ? opts.retryMs : 60000);
+    say(`${d.json.error} — trying once more in ${Math.round(pause / 1000)} s…`);
+    await new Promise(r => setTimeout(r, pause));
+    d = await draftCore({ mode:'draft', chapter, rules, count: opts.count || 4, skills, note: opts.note || '' }, env, 'try-syllabus', fetchImpl);
+  }
   const draftMs = Date.now() - t0;
   if(d.status !== 200) throw new Error(`Gemini's draft failed (${d.status}): ${d.json.error}`);
   const raws = d.json.lessons || [];
@@ -96,9 +104,9 @@ export async function run(opts, fetchImpl){
   let repair = null;
   if(failed.length){
     const t1 = Date.now();
-    const r = await draftCore({ mode:'repair', repair: failed.map(x => ({ lesson: x.raw, errors: x.first.errors.slice(0, 8) })), rules }, env, 'try-syllabus', fetchImpl);
+    const r = await draftCore({ mode:'repair', repair: failed.map(x => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })), rules }, env, 'try-syllabus', fetchImpl);
     repair = { status: r.status, model: r.json.model || '', error: r.json.error || '', ms: Date.now() - t1 };
-    if(r.status === 200) (r.json.lessons || []).forEach((raw, k) => { if(failed[k]){ failed[k].repairRaw = raw; failed[k].second = ph.clean(raw, cls.band, skills); } });
+    if(r.status === 200) (r.json.lessons || []).forEach((raw, k) => { if(failed[k]){ failed[k].repairRaw = raw; failed[k].second = ph.clean(raw, cls.band, skills, true); } });
     say(`Sent ${failed.length} back with the checker's reasons · ${failed.filter(x => x.second && x.second.ok).length} fixed`);
   }
   const result = {
@@ -127,6 +135,7 @@ function lessonBlock(les, check, label){
   const out = [`*${label}*`];
   if(!check.ok) out.push('', '**Why it failed:**', ...check.errors.map(e => `- ${e}`));
   if(check.aimErrors && check.aimErrors.length) out.push('', '**Aims dropped:**', ...check.aimErrors.map(e => `- ${e}`));
+  if(check.aimFixes && check.aimFixes.length) out.push('', '**Hints replaced:**', ...check.aimFixes.map(e => `- ${e}`));
   const aims = (check.lesson && check.lesson.aims) || [];
   if(aims.length) out.push('', '**Aims kept (what the teacher approves):**', ...aims.map(a => `- ${t(a.point)}  \n  Munni forgets: "${t(a.forget)}"`));
   const beats = (check.ok ? check.lesson.beats : les.beats) || [];

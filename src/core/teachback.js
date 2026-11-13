@@ -116,18 +116,28 @@ function teachCheckAim(a){
       e.push('each idea needs 2–40 short words that show it');
   }
   if(e.length) return e;
-  // never the answer: nothing Munni says may already pass as the explanation
+  // never the answer: nothing Munni says may already pass as the explanation.
+  // The reason names the words it said, so Gemini's repair round knows what to change.
+  const said = text => { const w = []; ideas.forEach(i => { const x = (i.words || []).find(v => teachHit(text, [v])); if(x) w.push(x); }); return w.length ? ` (it says "${w.join('", "')}")` : ''; };
   for(const lang of ['en', 'hi']){
-    if(teachRubric(ideas, a.forget[lang]).verdict === 'covered') e.push(`Munni's question (${lang}) already gives the explanation`);
-    a.hints.forEach((h, k) => { if(teachRubric(ideas, h[lang]).verdict === 'covered') e.push(`hint ${k + 1} (${lang}) already gives the explanation`); });
+    if(teachRubric(ideas, a.forget[lang]).verdict === 'covered') e.push(`Munni's question (${lang}) already gives the explanation${said(a.forget[lang])}`);
+    a.hints.forEach((h, k) => { if(teachRubric(ideas, h[lang]).verdict === 'covered') e.push(`hint ${k + 1} (${lang}) already gives the explanation${said(h[lang])}`); });
   }
   return e;
 }
 
 /* Aims that came from Gemini with a school lesson (core/syllabus.js):
    the usable ones, with ids made from the lesson's own id. */
-function teachCleanAims(raw, lessonId){
-  const aims = [], errors = [];
+/* The last resort for a drafted hint that gives the explanation away, after
+   Gemini's repair round has had its chance (sylClean's mendHints): a general
+   nudge that names no method — checked again like any hint, and shown to the
+   teacher as replaced. Losing a whole lesson over one hint helps nobody. */
+const TEACH_NUDGES = [
+  { en: 'Think back to the lesson. What did you do first?', hi: 'पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?' },
+  { en: 'Show me with your finger, then tell me what you did.', hi: 'उँगली से दिखाओ, फिर बताओ तुमने क्या किया।' }
+];
+function teachCleanAims(raw, lessonId, opts){
+  const aims = [], errors = [], fixes = [];
   (Array.isArray(raw) ? raw : []).slice(0, 4).forEach((r, k) => {
     r = r && typeof r === 'object' ? r : {};
     const pick = o => o && typeof o === 'object' ? { en: String(o.en || '').trim(), hi: String(o.hi || '').trim() } : null;
@@ -139,14 +149,34 @@ function teachCleanAims(raw, lessonId){
         en: String(i.en || '').trim(), hi: String(i.hi || '').trim(),
         words: (Array.isArray(i.words) ? i.words : []).slice(0, 40).map(w => String(w || '').trim()).filter(Boolean) } : null).filter(Boolean)
     };
+    // A word that both Munni's question and the aim's own point say is the
+    // TOPIC ("find the centre of a circle"), not the explanation, so it can't
+    // show the child understood. Gemini listed such words as explanation words
+    // in every aim of the first live run, and every aim was dropped for it.
+    // Only topic words: a question that says the ANSWER ("Does she fly it on
+    // the roof?" — roof isn't in the point) still fails the check below.
+    // word by word, so "square corner" is found in "square corners", and कोना in
+    // कोने (Hindi words change their last vowel sign: कोना, कोने, कोनों)
+    const stem = t => t.replace(/[ािीुूेैोौंँ]+$/, '').replace(/(es|s)$/, '');
+    const says = (o, w) => !!o && teachTokens(w).length > 0 && ['en', 'hi'].some(l => {
+      const have = teachTokens(o[l]).map(stem);
+      return teachTokens(w).every(t => have.includes(stem(t)) || teachHit(o[l], [t]));
+    });
+    if(a.forget) a.ideas.forEach(i => { i.words = i.words.filter(w => !(says(a.forget, w) && (says(a.point, w) || says(a.short, w)))); });
     a.id = 's0.' + aims.length;          // a valid id while it is checked
-    const errs = teachCheckAim(a);
+    let errs = teachCheckAim(a);
+    if(errs.length && opts && opts.mendHints && errs.every(e => /^hint \d/.test(e))){
+      const was = errs[0];
+      a.hints = a.hints.map((h, j) => ['en', 'hi'].some(l => teachRubric(a.ideas, h[l]).verdict === 'covered') ? { ...TEACH_NUDGES[j] } : h);
+      errs = teachCheckAim(a);
+      if(!errs.length) fixes.push(`aim ${k + 1}: ${was} — replaced with a general nudge`);
+    }
     if(errs.length) errors.push(`aim ${k + 1}: ${errs[0]}`);
     else aims.push(a);
   });
   // ids by place among the usable ones, so checking a checked lesson changes nothing
   aims.forEach((a, k) => { a.id = ('s' + String(lessonId || '').replace(/^sch-/, '') + '.' + k).slice(0, 32); });
-  return { aims, errors };
+  return { aims, errors, fixes };
 }
 
 /* ---------- 'fix': Munni's mistake ---------- */

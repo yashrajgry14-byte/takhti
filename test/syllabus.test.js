@@ -125,8 +125,19 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   check('the model is told it only drafts from THIS chapter (nothing from outside it)', /nothing from outside it/.test(sys), '');
   check('…teach before asking, the school words (चौकोर कोना…), a why that names the real mistake, Hindi answers in Devanagari, and what each shape ask means',
     /TEACH, THEN ASK/.test(sys) && /चौकोर कोना/.test(sys) && /names the real misconception/.test(sys) && /हाँ\/नहीं/.test(sys) && /ask is exactly one of: name/.test(sys), '');
-  const beatSchema = c1.body.generationConfig.responseFormat.text.schema.properties.lessons.items.properties.beats.items.properties;
-  check("the schema no longer has two different w's: a word beat's word is \"word\", a rectangle's w a number", beatSchema.word.type === 'string' && beatSchema.w.type === 'integer', JSON.stringify([beatSchema.word, beatSchema.w]));
+  // one beat schema per beat type, each with its own required fields: the first live run (flash-lite, Maths Mela
+  // Class 3) answered a flat all-optional beat with questions that had no answers and rectangles with no height
+  const variants = c1.body.generationConfig.responseFormat.text.schema.properties.lessons.items.properties.beats.items.anyOf;
+  const vt = (t, kind) => variants.find(v => v.properties.t.enum[0] === t && (!kind || v.properties.kind.enum[0] === kind));
+  check('the schema has one beat per type, each with its own required fields: a question can\'t come without its two answers and the right one, a rectangle without w and h, a circle without folds',
+    vt('ask') && ['q','opts','hiOpts','correct'].every(f => vt('ask').required.includes(f)) && vt('ask').properties.opts.minItems === 2 && vt('ask').properties.opts.maxItems === 2
+      && ['w','h'].every(f => vt('figure','rectangle').required.includes(f)) && vt('figure','circle').required.includes('folds') && vt('figure','triangle').properties.sides.minItems === 3
+      && vt('word').properties.word.type === 'string' && vt('figure','rectangle').properties.w.type === 'integer', JSON.stringify(variants.map(v => v.properties.t.enum[0])));
+  const flat = []; const refuse = async (url, o) => { const b = JSON.parse(o.body); flat.push(b);
+    return JSON.stringify(b.generationConfig).includes('anyOf') ? { ok:false, status:400, json: async () => ({ error:{ message:'schema too complex' } }) }
+      : { ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ chapter:'x', lessons:[MATH] }) }] } }] }) }; };
+  const rf = await draftCore({ mode:'draft', chapter:{ text:'Subtraction' }, rules, count:1 }, env, '1.1.1.8', refuse);
+  check('an API that refuses the strict schema (400) still gets the old flat one, last', rf.status === 200 && flat.length === 3 && !JSON.stringify(flat[2].generationConfig).includes('anyOf'), JSON.stringify(rf).slice(0, 200));
   check('…to start every lesson with aims the teacher can approve, each one taught and checked, a note on why children pick the wrong answer, and never गुणा for "by"',
     /AIMS/.test(sys) && /Every aim is taught in the beats AND checked by a question/.test(sys) && /why/.test(sys) && /गुणा/.test(sys) && c1.body.generationConfig && JSON.stringify(c1.body.generationConfig).includes('"aims"'), sys.slice(0, 200));
 
@@ -314,6 +325,11 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     let msg = '';
     try{ await tool.run({ text: pdfFile, env: { GEMINI_API_KEY: '', GOOGLE_API_KEY: '' } }, stand); }catch(e){ msg = e.message; }
     check('try-syllabus: with no key it says where the key goes, and calls nobody', /voice\/\.env/.test(msg) && seen.length === 2, msg);
+    let busy = 0;
+    const flaky = async (url, o) => (busy++ < 2 ? { ok:false, status:503, json: async () => ({}) } : stand(url, o));
+    n = 0; const said = [];
+    const rb = await tool.run({ file: pdfFile, cls: 'c3', count: 3, retryMs: 0, say: x => said.push(x), env: { GEMINI_API_KEY: 'gk-tool-secret', GEMINI_MODEL: 'gemini-test', GEMINI_FALLBACK_MODEL: 'none', TAKHTI_SYLLABUS_RETRY_MS: 1 } }, flaky);
+    check('try-syllabus: Gemini busy → it says so and tries once more by itself', rb.drafts.length === 3 && said.some(x => /busy right now.*trying once more/.test(x)), said.join(' | '));
   }catch(e){ check('try-syllabus ran', false, e.stack); }
   appServer.close();
   win.close();

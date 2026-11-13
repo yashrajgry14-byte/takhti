@@ -72,9 +72,65 @@ function cleanRules(r){
   return { band, ages, maxNumber: clamp(r.maxNumber, 5, 10000, 100), sayWords: clamp(r.sayWords, 6, 30, 18), read: BANDS.includes(r.read) ? r.read : band };
 }
 
-/* The shape Gemini must answer in — Takhti's lesson format, flattened. */
+/* The shape Gemini must answer in — Takhti's lesson format.
+
+   One beat schema PER BEAT TYPE (anyOf), each with its own required fields.
+   The first live run on a real chapter (13 Nov 2026, Maths Mela Class 3,
+   flash-lite) answered a single flattened beat with every field optional:
+   all 4 lessons had questions with no options, no Hindi options and no right
+   answer, rectangles with no height and circles with no folds — and junk
+   s:0 / w:0 / word on every beat. Optional fields are optional to the model.
+   Here an ask can't arrive without its two answers, a rectangle without w
+   and h, a circle without folds. BEAT_SCHEMA_FLAT (the old one) is only the
+   last resort, for an API that refuses the strict schema (400). */
 const bi = { type:'object', properties:{ en:{ type:'string' }, hi:{ type:'string' } }, required:['en','hi'] };
-const SCHEMA = {
+const int = { type:'integer' };
+const beat = (t, props, req) => ({ type:'object', properties:{ t:{ type:'string', enum:[t] }, ...props }, required:['t', ...req] });
+const SHAPE_ASK = { type:'string', enum:['name','sides','corners','perimeter','equal','meet'],
+  description:'Only on a question picture (the very next beat is the ask about it); leave it out on a teaching picture.' };
+const BEAT_SCHEMA = { anyOf: [
+  beat('intro',   { say: bi }, ['say']),
+  beat('count',   { n: int, say: bi }, ['n']),
+  ...['add', 'take', 'array', 'share', 'bar'].map(t => beat(t, { a: int, b: int, say: bi }, ['a', 'b'])),
+  beat('line',    { a: int, b: int, hops: int, say: bi }, ['a', 'b', 'hops']),
+  beat('group',   { a: int, say: bi }, ['a']),
+  beat('frac',    { b: int, say: bi }, ['b']),
+  beat('passage', { p: bi, art:{ type:'string' } }, ['p', 'art']),
+  beat('word',    { word:{ type:'string' }, art:{ type:'string' }, say: bi }, ['word', 'art']),
+  beat('readline',{ text:{ type:'string' }, say: bi }, ['text']),
+  beat('ask',     { q: bi, opts:{ type:'array', items:{ type:'string' }, minItems:2, maxItems:2 }, hiOpts:{ type:'array', items:{ type:'string' }, minItems:2, maxItems:2 },
+                    correct:{ type:'integer', minimum:0, maximum:1 }, why:{ ...bi, description:'For the teacher only: the real mistake behind the wrong option.' } },
+                  ['q', 'opts', 'hiOpts', 'correct', 'why']),
+  { ...beat('figure', { kind:{ type:'string', enum:['square'] }, s: int, ask: SHAPE_ASK, say: bi }, ['kind', 's']), description:'A square: s is its side.' },
+  { ...beat('figure', { kind:{ type:'string', enum:['rectangle'] }, w: int, h: int, ask: SHAPE_ASK, say: bi }, ['kind', 'w', 'h']), description:'A rectangle: w and h, two different numbers.' },
+  { ...beat('figure', { kind:{ type:'string', enum:['triangle'] }, sides:{ type:'array', items: int, minItems:3, maxItems:3 }, ask: SHAPE_ASK, say: bi }, ['kind', 'sides']), description:'A triangle: three side lengths that make a triangle.' },
+  { ...beat('figure', { kind:{ type:'string', enum:['circle'] }, folds:{ type:'integer', minimum:0, maximum:4 }, ask: SHAPE_ASK, say: bi }, ['kind', 'folds']), description:'A circle: 0–4 fold lines through the middle; a "meet" question needs 2 or more.' },
+  beat('corner',  { deg: int, ask:{ type:'string', enum:['kind'], description:'Only when the next beat asks what kind of corner it is.' }, say: bi }, ['deg']),
+  beat('figures', { items:{ type:'array', minItems:2, maxItems:4, items:{ type:'object', properties:{ kind:{ type:'string', enum:['square','rectangle','triangle','circle','corner'] },
+                      s: int, w: int, h: int, sides:{ type:'array', items: int }, deg: int }, required:['kind'] } },
+                    find:{ type:'string', enum:['square','rectangle','triangle','circle','squarecorner','odd'] }, say: bi }, ['items', 'find']),
+  beat('win',     { say: bi }, ['say'])
+] };
+/* the old flattened beat: every field optional — only if the strict schema is refused */
+const BEAT_SCHEMA_FLAT = {
+  type:'object',
+  properties:{
+    t:{ type:'string', enum: BEAT_TYPES },
+    say: bi, a: int, b: int, n: int, hops: int,
+    p: bi, art:{ type:'string' }, word:{ type:'string' }, text:{ type:'string' },
+    q: bi, opts:{ type:'array', items:{ type:'string' } }, hiOpts:{ type:'array', items:{ type:'string' } },
+    correct: int,
+    why: { ...bi, description:'For the teacher only: why children pick the wrong answer.' },
+    kind:{ type:'string', enum:['square','rectangle','triangle','circle'] }, s: int, w: int, h: int,
+    sides:{ type:'array', items: int }, folds: int, deg: int,
+    ask:{ type:'string', enum:['name','sides','corners','perimeter','equal','meet','kind'] },
+    items:{ type:'array', items:{ type:'object', properties:{ kind:{ type:'string', enum:['square','rectangle','triangle','circle','corner'] },
+      s: int, w: int, h: int, sides:{ type:'array', items: int }, deg: int }, required:['kind'] } },
+    find:{ type:'string', enum:['square','rectangle','triangle','circle','squarecorner','odd'] }
+  },
+  required:['t']
+};
+const lessonsSchema = beatSchema => ({
   type:'object',
   properties:{
     chapter:{ type:'string', description:'The chapter or topic, in a few words.' },
@@ -87,33 +143,18 @@ const SCHEMA = {
         source:{ type:'string', description:'Where in the chapter this comes from (page, heading, exercise).' },
         aims:{ type:'array', minItems:1, maxItems:4, description:'What the child will be able to do — the points a teacher approves, and that Munni later "forgets" for the child to explain back (Teach Munni).', items:{
           type:'object',
-          properties:{ short: bi, point: bi, forget: bi, hints:{ type:'array', items: bi },
-            ideas:{ type:'array', items:{ type:'object', properties:{ en:{ type:'string' }, hi:{ type:'string' }, words:{ type:'array', items:{ type:'string' } } }, required:['en','hi','words'] } } },
+          properties:{ short: bi, point: bi, forget: bi, hints:{ type:'array', items: bi, minItems:2, maxItems:2 },
+            ideas:{ type:'array', minItems:1, maxItems:2, items:{ type:'object', properties:{ en:{ type:'string' }, hi:{ type:'string' }, words:{ type:'array', items:{ type:'string' } } }, required:['en','hi','words'] } } },
           required:['short','point','forget','hints','ideas'] } },
-        beats:{ type:'array', items:{
-          type:'object',
-          properties:{
-            t:{ type:'string', enum: BEAT_TYPES },
-            say: bi, a:{ type:'integer' }, b:{ type:'integer' }, n:{ type:'integer' }, hops:{ type:'integer' },
-            p: bi, art:{ type:'string' }, word:{ type:'string' }, text:{ type:'string' },
-            q: bi, opts:{ type:'array', items:{ type:'string' } }, hiOpts:{ type:'array', items:{ type:'string' } },
-            correct:{ type:'integer' },
-            why: { ...bi, description:'For the teacher only: why children pick the wrong answer.' },
-            kind:{ type:'string', enum:['square','rectangle','triangle','circle'] }, s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' },
-            sides:{ type:'array', items:{ type:'integer' } }, folds:{ type:'integer' }, deg:{ type:'integer' },
-            ask:{ type:'string', enum:['name','sides','corners','perimeter','equal','meet','kind'] },
-            items:{ type:'array', items:{ type:'object', properties:{ kind:{ type:'string', enum:['square','rectangle','triangle','circle','corner'] },
-              s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' }, sides:{ type:'array', items:{ type:'integer' } }, deg:{ type:'integer' } }, required:['kind'] } },
-            find:{ type:'string', enum:['square','rectangle','triangle','circle','squarecorner','odd'] }
-          },
-          required:['t']
-        } }
+        beats:{ type:'array', items: beatSchema }
       },
-      required:['title','sub','aims','beats']
+      required:['title','sub','ic','skill','source','aims','beats']
     } }
   },
-  required:['lessons']
-};
+  required:['chapter','lessons']
+});
+const SCHEMA = lessonsSchema(BEAT_SCHEMA);
+const SCHEMA_FLAT = lessonsSchema(BEAT_SCHEMA_FLAT);
 
 /* What Takhti can draw, and the rules its checker holds a lesson to —
    one text, used by the draft AND the repair round (the first live run's
@@ -180,6 +221,7 @@ Every lesson starts with its AIMS: 1 to 4 (3 is best) points a teacher can appro
 - hints: exactly 2 gentle nudges, which also must NOT give the explanation;
 - ideas: 1–2 things a full explanation says, each with "words": 4–15 words or short phrases a child might use for it, in English, Hindi in Devanagari and romanised Hindi.
 Munni's lines are spoken to the child: warm, short, "तुम" in Hindi. An aim whose question or hints already give the explanation is dropped; a lesson with no usable aim is rejected.
+How to keep the explanation out of Munni's mouth: her question names the TOPIC ("How do I find out how many sides a shape has?"); the words are the METHOD the child says back ("go round", "count each side once") — words that appear in her question don't count, so don't rely on them. Each hint is a question that points the way WITHOUT using any of the words ("Put your finger on one corner. What do you do next?"), never an instruction that is the method ("Go round the shape" is the explanation itself).
 
 ${beatsText()}
 
@@ -192,7 +234,7 @@ Answer with JSON only, in the given schema.`;
 
 function repairInstructions(rules){
   return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Return each lesson fixed — same topic, same format, same aims, every reason addressed — and change nothing else.
-How to read the reasons: "must say what is asked (ask)" → set the figure's ask to what the next question asks (sides, corners, name…); "a rectangle needs w and h" → give both; "say the answer" → change the narration or ask about a new example, not the answer; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi.
+How to read the reasons: "must say what is asked (ask)" → set the figure's ask to what the next question asks (sides, corners, name…); "a rectangle needs w and h" → give both; "say the answer" → change the narration or ask about a new example, not the answer; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi; "a question needs exactly 2 answers" → give opts, hiOpts and correct; "needs a circle with 2 or more folds" → set folds to 2 or more; "already gives the explanation (it says …)" → rewrite that question or hint so it no longer uses those words (a hint asks, it doesn't tell), keeping the aim's words as they are.
 
 ${beatsText()}
 
@@ -212,9 +254,12 @@ async function callGemini(parts, system, env, fetchImpl){
   const base = { systemInstruction:{ parts:[{ text: system }] }, contents:[{ role:'user', parts }] };
   // the current structured-output field first; older deployments of the API
   // take responseMimeType/responseJsonSchema — one retry covers both
+  // a 400 moves to the next shape: the strict schema in both field names
+  // first, then the old flattened one (an API that refuses anyOf still works)
   const shapes = [
     { generationConfig:{ temperature:0.4, responseFormat:{ text:{ mimeType:'APPLICATION_JSON', schema: SCHEMA } } } },
-    { generationConfig:{ temperature:0.4, responseMimeType:'application/json', responseJsonSchema: SCHEMA } }
+    { generationConfig:{ temperature:0.4, responseMimeType:'application/json', responseJsonSchema: SCHEMA } },
+    { generationConfig:{ temperature:0.4, responseMimeType:'application/json', responseJsonSchema: SCHEMA_FLAT } }
   ];
   // the whole request has TAKHTI_SYLLABUS_TIMEOUT_MS (55 s on a serverless host, 180 s on the
   // voice server); one model may take at most 60% of it, so a model that hangs
@@ -271,7 +316,7 @@ export async function draftCore(body, env, ip, fetchImpl){
   if(body.mode === 'repair'){
     const items = (Array.isArray(body.repair) ? body.repair : []).slice(0, 5)
       .filter(x => x && typeof x.lesson === 'object' && JSON.stringify(x.lesson).length < 12000)
-      .map(x => ({ lesson: x.lesson, errors: (Array.isArray(x.errors) ? x.errors : []).slice(0, 8).map(e => plain(e, 200)) }));
+      .map(x => ({ lesson: x.lesson, errors: (Array.isArray(x.errors) ? x.errors : []).slice(0, 10).map(e => plain(e, 240)) }));
     if(!items.length) return { status:400, json:{ error:'nothing to repair' } };
     const r = await callGemini([{ text: JSON.stringify({ lessons: items }) }], repairInstructions(rules), env, fetchImpl);
     if(r.error) return { status: r.status, json:{ error: r.error } };

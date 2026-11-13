@@ -149,6 +149,24 @@ function box(){
   E(`var CA = teachCleanAims(${JSON.stringify([GOOD, LEAK])}, 'sch-abc123')`);
   check('a school lesson\'s points from Gemini: the good one kept (id from the lesson), the one whose question gives the answer dropped with the reason',
     E(`CA.aims.length === 1 && CA.aims[0].id === 'sabc123.0' && CA.errors.length === 1 && /already gives/.test(CA.errors[0])`), E(`JSON.stringify(CA)`));
+  // the first live run (13 Nov 2026): Munni's question names the topic, which Gemini also listed as an explanation word
+  const TOPIC = { short: { en: 'Find the centre', hi: 'केंद्र खोजो' }, point: { en: 'The child can find the centre of a circle by folding.', hi: 'बच्चा मोड़कर वृत्त का केंद्र खोज सकता है।' },
+    forget: { en: 'How do we find the centre of a circle?', hi: 'वृत्त का केंद्र कैसे मिलता है?' },
+    hints: [{ en: 'What could you do to a paper circle?', hi: 'कागज़ के वृत्त के साथ तुम क्या कर सकते हो?' }, { en: 'Do it twice. What do you see?', hi: 'दो बार करो। क्या दिखता है?' }],
+    ideas: [{ en: 'fold it in half twice; the folds cross at the centre', hi: 'दो बार आधा मोड़ो; मोड़ जहाँ मिलें वह केंद्र', words: ['centre', 'केंद्र', 'fold', 'half', 'cross', 'मोड़', 'आधा', 'मिल'] }] };
+  E(`var TP = teachCleanAims(${JSON.stringify([TOPIC])}, 'sch-t1')`);
+  check('a topic word Munni\'s question and the point both say (centre) is no explanation word: taken out, the aim kept — the method\'s words stay',
+    E(`TP.aims.length === 1 && !TP.aims[0].ideas[0].words.includes('centre') && !TP.aims[0].ideas[0].words.includes('केंद्र') && TP.aims[0].ideas[0].words.includes('half')`), E(`JSON.stringify(TP)`));
+  const TELLS = { ...TOPIC, short: { en: 'Fold', hi: 'मोड़ो' }, hints: [{ en: 'Fold the paper circle in half.', hi: 'कागज़ का वृत्त आधा मोड़ो।' }, TOPIC.hints[1]] };
+  E(`var TL = teachCleanAims(${JSON.stringify([TELLS])}, 'sch-t2'); var TM = teachCleanAims(${JSON.stringify([TELLS])}, 'sch-t2', { mendHints: true })`);
+  check('a hint that is the method ("Fold the paper circle in half") drops the aim, and the reason names the words it says — for the repair round',
+    E(`TL.aims.length === 0 && /hint 1 \\(en\\) already gives the explanation \\(it says "fold"/.test(TL.errors[0])`), E(`JSON.stringify(TL.errors)`));
+  check('…after the repair round (mendHints) that hint becomes a general nudge, checked again, and the teacher is told',
+    E(`TM.aims.length === 1 && TM.aims[0].hints[0].en === TEACH_NUDGES[0].en && TM.aims[0].hints[1].en === 'Do it twice. What do you see?' && /replaced with a general nudge/.test(TM.fixes[0])`), E(`JSON.stringify(TM)`));
+  E(`var TQ = teachCleanAims(${JSON.stringify([{ ...TELLS, forget: { en: 'Do I fold it in half to find the centre?', hi: 'क्या केंद्र के लिए आधा मोड़ूँ?' } }])}, 'sch-t3', { mendHints: true })`);
+  check('…but a question that gives the method away is never mended — only hints are', E(`TQ.aims.length === 0 && TQ.fixes.length === 0`), E(`JSON.stringify(TQ)`));
+  check('a failed lesson goes back to Gemini with why each aim was dropped too, each reason once',
+    E(`JSON.stringify(sylRepairReasons({ errors: ['beat 2: x', 'the lesson needs its aims (aim 1: y)'], aimErrors: ['aim 1: y', 'aim 2: z'] }))`) === JSON.stringify(['beat 2: x', 'the lesson needs its aims (aim 1: y)', 'aim 1: y', 'aim 2: z']), '');
   const READ = { title: { en: "Meena's kite", hi: 'मीना की पतंग' }, sub: { en: 'Read and answer', hi: 'पढ़ो और जवाब दो' }, ic: '🪁', skill: 'read5',
     beats: [{ t: 'passage', art: '🪁', p: { en: 'Meena has a red kite. She flies it on the roof. The wind is strong today.', hi: 'मीना के पास लाल पतंग है। वह छत पर उड़ाती है। आज हवा तेज़ है।' } },
             { t: 'ask', q: { en: 'Where does Meena fly the kite?', hi: 'मीना पतंग कहाँ उड़ाती है?' }, opts: ['On the roof', 'In the park'], hiOpts: ['छत पर', 'पार्क में'], correct: 0 },

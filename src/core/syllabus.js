@@ -174,7 +174,8 @@ function sylClean(raw, opts){
     beats: []
   };
   // an aim that fails its check is dropped and named (aimErrors); a lesson with none fails
-  const ta = typeof teachCleanAims === 'function' ? teachCleanAims(raw.aims, 'sch-tmp') : { aims: [], errors: ['the aim checker is not loaded'] };
+  // mendHints: the repaired draft's last chance — a hint that still gives it away becomes a general nudge (teachCleanAims)
+  const ta = typeof teachCleanAims === 'function' ? teachCleanAims(raw.aims, 'sch-tmp', { mendHints: !!(opts && opts.mendHints) }) : { aims: [], errors: ['the aim checker is not loaded'], fixes: [] };
   les.aims = ta.aims;
   if(!les.aims.length) errs.push('the lesson needs its aims — 1 to 4 things the child will be able to do' + (ta.errors.length ? ` (${ta.errors[0]})` : ''));
   const beats = sylTidy(Array.isArray(raw.beats) ? raw.beats.slice(0, 12) : []);
@@ -295,7 +296,14 @@ function sylClean(raw, opts){
   les.id = id;
   const v = validateLesson(les);
   const errors = errs.concat(v.errors);
-  return { lesson: les, ok: errors.length === 0, errors, checks, aimErrors: ta.errors };
+  return { lesson: les, ok: errors.length === 0, errors, checks, aimErrors: ta.errors, aimFixes: ta.fixes || [] };
+}
+
+/* What goes back to Gemini with a failed lesson: the checker's reasons, and
+   why each dropped aim was dropped (otherwise a lesson whose aims all failed
+   only says so for the first one), each reason once. */
+function sylRepairReasons(x){
+  return x.errors.concat(x.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10);
 }
 
 /* Ask the server for drafts, check them, send the failures back once. */
@@ -315,9 +323,9 @@ async function sylDraft(input){
   log(2, `Syllabus · Gemini (${d.model || '?'}) drafted ${raws.length} lesson(s) from "${d.chapter || 'the chapter'}" · ${drafts.length - failed.length} passed Takhti's checker`);
   if(failed.length){
     try{
-      const r = await post({ mode:'repair', repair: failed.map(x => ({ lesson: x.raw, errors: x.errors.slice(0, 8) })) });
+      const r = await post({ mode:'repair', repair: failed.map(x => ({ lesson: x.raw, errors: sylRepairReasons(x) })) });
       (r.lessons || []).forEach((raw, k) => {
-        const again = sylClean(raw, { band: cls.band, skills }), at = drafts.indexOf(failed[k]);
+        const again = sylClean(raw, { band: cls.band, skills, mendHints: true }), at = drafts.indexOf(failed[k]);
         if(at < 0) return;
         drafts[at] = again.ok ? { raw, ...again, repaired: true } : { ...drafts[at], repairErrors: again.errors };
       });
