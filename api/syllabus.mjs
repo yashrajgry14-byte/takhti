@@ -181,7 +181,11 @@ function beatsText(){
     · A figure WITH ask is a question picture, and the VERY NEXT beat must be the ask about it. ask is exactly one of: name (which shape is it?) | sides (how many sides?) | corners (how many corners?) | perimeter (all the way round — add every side) | equal (are all its sides equal? answers Yes / No) | meet (where do the folds meet? answer Centre — the circle needs folds ≥ 2).
 - corner {deg, ask}: Takhti draws one corner of deg degrees (20–160; 90 is a square corner). Without ask it is a teaching picture. With ask:"kind" the next beat asks what kind it is, and the answers are two of "Square corner" / "Smaller corner" / "Bigger corner" (Hindi: चौकोर कोना / छोटा कोना / बड़ा कोना).
 - figures {items, find}: 2–4 shapes or corners in a row, numbered 1–4 (an item is {kind, s | w,h | sides} or {kind:"corner", deg}). find = square | rectangle | triangle | circle | squarecorner | odd; exactly ONE item must match, and the next beat asks which number — its answers are numbers like "2".
+    · A square corner is in a corner of 90, a square, a rectangle, or a triangle with one (3-4-5, 6-8-10): find = squarecorner works on a row of shapes too, so only ONE item in the row may have a square corner (not a rectangle AND a 3-4-5 triangle). A triangle that only looks nearly square-cornered (e.g. 5-5-7) can't be in such a row.
+    · Put the shapes IN items — never a kind or size beside them on the row itself.
 - win {say}: the closing line — the one idea to remember.
+Every size is its own number field — s, w, h, sides, folds, deg — never written into text ("folds 2" in text is lost).
+Every teaching picture (a figure or corner without ask) MUST have a say — what to look at or do ("go round and count each side"), never a number or name a question after it asks for. A teaching picture without words isn't silent: Munni then says its facts ("A rectangle: 4 sides and 4 square corners"), which give away a counting question about the same kind of shape.
 Never repeat a beat. A figure, corner or figures beat never carries a why — notes go on the ask.
 The teaching picture and the question picture are DIFFERENT examples (a different shape or size), so the child applies what they saw.
 
@@ -189,7 +193,7 @@ An example of one good lesson (the shape of it, not its content):
 {"title":{"en":"Sides and corners","hi":"भुजाएँ और कोने"},"sub":{"en":"Go round the shape","hi":"आकृति के चारों ओर"},"ic":"🔷","skill":"shapes2d","source":"Page 61",
  "aims":[{"short":{"en":"Count the sides","hi":"भुजाएँ गिनो"},"point":{"en":"The child can count the sides of a shape.","hi":"बच्चा किसी आकृति की भुजाएँ गिन सकता है।"},"forget":{"en":"I forgot! How do I find out how many sides a shape has?","hi":"मैं भूल गई! किसी आकृति की कितनी भुजाएँ हैं, यह कैसे पता करूँ?"},"hints":[{"en":"Put your finger on one corner. What do you do next?","hi":"एक कोने पर उँगली रखो। फिर क्या करोगे?"},{"en":"How do you know when to stop?","hi":"कैसे पता चलेगा कि कब रुकना है?"}],"ideas":[{"en":"go round the shape and count each straight edge once","hi":"आकृति के चारों ओर घूमकर हर सीधी भुजा एक बार गिनो","words":["go round","count","each side","every side","one by one","once","घूम","गिन","हर भुजा","एक-एक","ek ek","ginti","ginna","एक बार"]}]}],
  "beats":[{"t":"intro","say":{"en":"Shapes have sides. Let us count them.","hi":"आकृतियों की भुजाएँ होती हैं। आओ गिनें।"}},
-  {"t":"figure","kind":"square","s":4},
+  {"t":"figure","kind":"square","s":4,"say":{"en":"Put your finger on one corner and go round, counting each side.","hi":"एक कोने पर उँगली रखो और हर भुजा गिनते हुए घूमो।"}},
   {"t":"figure","kind":"triangle","sides":[5,5,5],"ask":"sides"},
   {"t":"ask","q":{"en":"How many sides does it have?","hi":"इसकी कितनी भुजाएँ हैं?"},"opts":["3","4"],"hiOpts":["3","4"],"correct":0,
    "why":{"en":"Children who just saw the square expect every shape to have 4 sides.","hi":"वर्ग देखने के बाद बच्चे हर आकृति की 4 भुजाएँ मान लेते हैं।"}},
@@ -202,10 +206,11 @@ function rulesText(rules){
 3. A maths ask comes right after the beat that shows it, and its right answer is a number equal to what that beat computes (count → n, add → a+b, take → a−b, group → a, array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Numbers as digits.
 4. A reading ask comes after a passage/word/readline, and its right answer uses the passage's own words.
 5. A shape ask comes right after the figure/corner/figures it is about (with its ask or find set), and its right answer is what that drawing shows. For anything about shapes, sides, corners or perimeter, USE the drawings — never describe a shape only in words.
-6. Never say the answer in the lines just before a question — not as a digit, not as a word ("three", "तीन") — and never name it in the question itself ("Are all sides equal in this square?" gives it away — ask "Are all its sides equal?"). Where you can, ask two questions: one to recognise, one to apply to something new.
+6. Never say the answer in the lines just before a question — not as a digit, not as a word ("three", "तीन") — and never name it in the question itself ("Are all sides equal in this square?" gives it away — ask "Are all its sides equal?"; "How many sides does this triangle have?" too — ask "How many sides does this shape have?" so the child counts). Where you can, ask two questions: one to recognise, one to apply to something new.
 6b. TEACH ON ONE SHAPE, ASK ON ANOTHER: a question's picture is never a teaching picture again (a teaching picture marks the answer). Teach with a 6 × 3 rectangle, ask about a 4 × 2 one; teach a square corner, ask about a smaller or bigger corner; teach a circle with 2 folds, ask with 3. A teaching circle that talks about folds draws them (folds 2 or more).
+6d. Teach one kind, count another: after teaching a rectangle, count a triangle's sides (not another rectangle's — what Munni said about the first is the answer).
 6c. Ask TWO questions per lesson where you can: the first to recognise, the second about a NEW example (another shape, a numbered row, an odd one out).
-7. The wrong option is a mistake a child really makes — never silly, never equal to the right one. Its why names that mistake ("children count only the top two corners"), not "they might guess".
+7. The wrong option is a mistake a child really makes — never silly, never equal to the right one. Its why names that mistake ("children count only the top two corners"), not "they might guess". For "where do the folds meet?" the real wrong answer is Edge (किनारा). In a row, put a look-alike next to the right shape (a square among rectangles, a thin triangle like 2-6-7) and make the wrong answer the look-alike's number — not a picture nobody would pick.
 8. Every number a child meets is at most ${rules.maxNumber}.
 9. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; speak to the child as "तुम", never "आप"; never scold, never the word "wrong".
 10. title, sub, say, q, p, why and each aim's short, point, forget and hints are objects with natural English "en" AND natural Hindi "hi" in Devanagari (not transliteration). opts are English; hiOpts are the same answers in Hindi, in Devanagari unless the answer is a number (Yes/No → हाँ/नहीं).
@@ -237,7 +242,7 @@ Answer with JSON only, in the given schema.`;
 
 function repairInstructions(rules){
   return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Return each lesson fixed — same topic, same format, same aims, every reason addressed — and change nothing else.
-How to read the reasons: "must say what is asked (ask)" → set the figure's ask to what the next question asks (sides, corners, name…); "a rectangle needs w and h" → give both; "say the answer" → change the narration or ask about a new example, not the answer; "the same as the teaching picture" → change the question picture to another size or another shape; "say the answer" also counts number words (three, तीन) — teach the idea without the number; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi; "a question needs exactly 2 answers" → give opts, hiOpts and correct; "needs a circle with 2 or more folds" → set folds to 2 or more; "already gives the explanation (it says …)" → rewrite that question or hint so it no longer uses those words (a hint asks, it doesn't tell), keeping the aim's words as they are.
+How to read the reasons: "must say what is asked (ask)" → set the figure's ask to what the next question asks (sides, corners, name…); "a rectangle needs w and h" → give both; "say the answer" → change the narration or ask about a new example, not the answer; "the same as the teaching picture" → change the question picture to another size or another shape; "say the answer" also counts number words (three, तीन) — teach the idea without the number; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi; "a question needs exactly 2 answers" → give opts, hiOpts and correct; "needs a circle with 2 or more folds" / "doesn't show the folds" → set folds to 2 or more (a number, not text); "a row needs its find" → set find to the one shape the question looks for; "exactly one picture may have a square corner" → change the row so only one item has one; a teaching picture's say may tell what to look at, never the number or name asked for; "already gives the explanation (it says …)" → rewrite that question or hint so it no longer uses those words (a hint asks, it doesn't tell), keeping the aim's words as they are.
 
 ${beatsText()}
 
@@ -304,7 +309,9 @@ async function callGemini(parts, system, env, fetchImpl){
             res = { ok:false, status:503, hung:true }; d = {};            // this model hung: straight to the next one
           }finally{ clearTimeout(t1); ctl.signal.removeEventListener('abort', stop); }
           tried.push({ model, outcome: res.hung ? 'hung' : res.ok ? 'ok' : res.status, ms: Date.now() - t0 });
-          if(res.hung || !busy(res.status)) break;
+          // a 429 is the key's quota, not a moment's overload: retrying only waits
+          // (the fifth live run: ~6 s a model) — straight on to the next model
+          if(res.hung || res.status !== 503) break;
           // (a busy model gets one more try, a moment later)
           if(attempt === 0) await wait(Number(env.TAKHTI_SYLLABUS_RETRY_MS || 1500));   // once more, a moment later
         }

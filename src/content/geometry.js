@@ -307,14 +307,21 @@ const GEO_SAY = {
   small:     { en: 'This corner is smaller than a square corner.',  hi: 'यह कोना चौकोर कोने से छोटा है।' },
   big:       { en: 'This corner is bigger than a square corner.',   hi: 'यह कोना चौकोर कोने से बड़ा है।' }
 };
+/* What Munni says over a picture that has no words of its own, in both
+   languages — the player speaks it, and the syllabus checker reads it as
+   narration (so a teaching picture that says "4 sides" counts as saying 4). */
+function geoSayBoth(b){
+  if(!GEO_TYPES.includes(b.t)) return null;
+  if(b.t === 'figures') return GEO_SAY.lookAll;
+  if(b.t === 'corner') return b.ask ? GEO_SAY.lookCorner : b.deg === 90 ? GEO_SAY.sq : b.deg < 90 ? GEO_SAY.small : GEO_SAY.big;
+  if(b.ask) return b.ask === 'meet' ? GEO_SAY.lookFold : GEO_SAY.look;
+  if(b.kind === 'circle') return b.folds >= 2 ? GEO_SAY.fold2 : b.folds === 1 ? GEO_SAY.fold1 : GEO_SAY.circle;
+  return GEO_SAY[b.kind] || null;
+}
 function geoSay(b){
   if(!GEO_TYPES.includes(b.t) || b.say) return null;
-  const T = o => o[S.lang === 'hi' ? 'hi' : 'en'];
-  if(b.t === 'figures') return T(GEO_SAY.lookAll);
-  if(b.t === 'corner') return T(b.ask ? GEO_SAY.lookCorner : b.deg === 90 ? GEO_SAY.sq : b.deg < 90 ? GEO_SAY.small : GEO_SAY.big);
-  if(b.ask) return T(b.ask === 'meet' ? GEO_SAY.lookFold : GEO_SAY.look);
-  if(b.kind === 'circle') return T(b.folds >= 2 ? GEO_SAY.fold2 : b.folds === 1 ? GEO_SAY.fold1 : GEO_SAY.circle);
-  return T(GEO_SAY[b.kind]);
+  const o = geoSayBoth(b);
+  return o ? o[S.lang === 'hi' ? 'hi' : 'en'] : null;
 }
 /* Ask Munni on a shape question: how to look, never the answer. */
 const GEO_HINT = {
