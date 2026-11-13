@@ -11,3 +11,4 @@ voice/agent/munni.agent.json
 voice/agent/munni-parent.agent.json
 voice/agent/*.workflow.json
 voice/agent/*.agent.json
+syllabus-run/

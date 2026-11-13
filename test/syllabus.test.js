@@ -293,6 +293,28 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     check("the class sync sends the teacher's approved lessons with the homework", sync && sync.body.lessons && sync.body.lessons.items.length === 2, JSON.stringify(sync && sync.body).slice(0, 200));
     check('no uncaught script errors', jsErrors.length === 0, jsErrors.join(' | '));
   }catch(e){ check('the app run finished', false, e.stack); }
+
+  /* ---------- 5. tools/try-syllabus.mjs: one chapter through the whole pipeline, as the live run will ---------- */
+  try{
+    const tool = await import(pathToFileURL(path.join(root, 'tools/try-syllabus.mjs')).href);
+    const FIXED = clone(MATH); FIXED.title = { en:'Mangoes again', hi:'फिर से आम' };
+    const seen = []; let n = 0;
+    const stand = gemini(body => { seen.push(body); return n++ === 0 ? { chapter:'Subtraction', lessons:[MATH, WRONG_SUM, NOT_IN_TEXT] } : { lessons:[FIXED, NOT_IN_TEXT] }; });
+    const pdfFile = path.join(require('os').tmpdir(), 'takhti-try-chapter.pdf');
+    fs.writeFileSync(pdfFile, Buffer.from('%PDF-1.4 ' + 'x'.repeat(400)));
+    const res = await tool.run({ file: pdfFile, cls: 'c3', count: 3, env: { GEMINI_API_KEY: 'gk-tool-secret', GEMINI_MODEL: 'gemini-test' } }, stand);
+    const v = res.drafts.map(x => x.verdict);
+    check('try-syllabus: the chapter goes to Gemini, each draft through the phone\'s own checker, failures back once with the reasons — passed / repaired / not used',
+      v.join() === 'passed,repaired,not used' && seen.length === 2 && JSON.parse(seen[1].contents[0].parts[0].text).lessons.length === 2
+        && JSON.parse(seen[1].contents[0].parts[0].text).lessons[0].errors.length > 0 && seen[0].contents[0].parts[0].inline_data.mime_type === 'application/pdf', v.join());
+    const md = tool.report(res), raw = JSON.stringify(res);
+    check('try-syllabus: the report names the verdicts, why each failed, the aims kept and the marked answer — and the key is in neither file',
+      /1 passed first time · 1 fixed by the repair round · 1 not used/.test(md) && /Why it failed/.test(md) && /Aims kept/.test(md) && /\*\*25 ✓\*\*/.test(md)
+        && !md.includes('gk-tool-secret') && !raw.includes('gk-tool-secret'), md.slice(0, 400));
+    let msg = '';
+    try{ await tool.run({ text: pdfFile, env: { GEMINI_API_KEY: '', GOOGLE_API_KEY: '' } }, stand); }catch(e){ msg = e.message; }
+    check('try-syllabus: with no key it says where the key goes, and calls nobody', /voice\/\.env/.test(msg) && seen.length === 2, msg);
+  }catch(e){ check('try-syllabus ran', false, e.stack); }
   appServer.close();
   win.close();
   console.log(`\n${passes}/${passes + failures} checks passed`);
