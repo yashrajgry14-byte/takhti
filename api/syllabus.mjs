@@ -87,12 +87,16 @@ const PIC = {
   properties:{
     t:{ type:'string', enum: PIC_TYPES },
     say: bi, a:{ type:'integer' }, b:{ type:'integer' }, n:{ type:'integer' }, hops:{ type:'integer' },
-    p: bi, art:{ type:'string' }, word:{ type:'string' }, text:{ type:'string' },
-    kind:{ type:'string', enum:['square','rectangle','triangle','circle'] }, s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' },
-    sides:{ type:'array', items:{ type:'integer' } }, folds:{ type:'integer' }, deg:{ type:'integer' },
-    items:{ type:'array', items:{ type:'object', properties:{ kind:{ type:'string', enum:['square','rectangle','triangle','circle','corner'] },
-      s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer' }, sides:{ type:'array', items:{ type:'integer' } }, deg:{ type:'integer' } }, required:['kind'] } },
-    find:{ type:'string', enum:['square','rectangle','triangle','circle','squarecorner','odd'] }
+    p: bi, art:{ type:'string' }, word:{ type:'string' }, text:{ type:'string', description:'A reading passage only — never a shape\'s sizes or folds (those have their own number fields).' },
+    kind:{ type:'string', enum:['square','rectangle','triangle','circle'] },
+    s:{ type:'integer', description:'square: its side' }, w:{ type:'integer', description:'rectangle: its width (h is needed too)' },
+    h:{ type:'integer', description:'rectangle: its height — always give it, different from w' },
+    sides:{ type:'array', items:{ type:'integer' }, description:'triangle: its three sides' },
+    folds:{ type:'integer', description:'circle: how many fold lines, 0–4 (a number here, never in text)' },
+    deg:{ type:'integer', description:'corner: its size in degrees, 20–160' },
+    items:{ type:'array', description:'figures: the 2–4 shapes in the row', items:{ type:'object', properties:{ kind:{ type:'string', enum:['square','rectangle','triangle','circle','corner'] },
+      s:{ type:'integer' }, w:{ type:'integer' }, h:{ type:'integer', description:'rectangle: always give it, different from w' }, sides:{ type:'array', items:{ type:'integer' } }, folds:{ type:'integer' }, deg:{ type:'integer' } }, required:['kind'] } },
+    find:{ type:'string', enum:['square','rectangle','triangle','circle','squarecorner','odd'], description:'figures: which ONE item the question looks for — always give it' }
   },
   required:['t']
 };
@@ -198,6 +202,7 @@ The pictures (for teach and for each question's show) — use ONLY these:
 - figure {kind, s | w,h | sides, folds}: Takhti draws ONE shape — a square (s = its side), a rectangle (w AND h, both needed, different numbers), a triangle (sides = [a,b,c], three numbers that make a triangle) or a circle (folds = 0–4 fold lines through the middle). Side lengths are labelled. In teach it is a teaching picture (corners marked, Munni says what it is). As a question's show, its "ask" says what is asked: name (which shape?) | sides | corners | perimeter (add every side) | equal (are all its sides equal? Yes / No) | meet (where do the folds meet? Centre — needs folds ≥ 2).
 - corner {deg}: one corner of deg degrees (20–160; 90 is a square corner). As a show, ask is "kind" and the answers are two of "Square corner" / "Smaller corner" / "Bigger corner" (Hindi: चौकोर कोना / छोटा कोना / बड़ा कोना).
 - figures {items, find}: 2–4 shapes or corners in a row, numbered 1–4 (an item is {kind, s | w,h | sides} or {kind:"corner", deg}). find = square | rectangle | triangle | circle | squarecorner | odd; exactly ONE item must match; the answers are numbers like "2"; ask is "none".
+- Every size is its own number field — s, w, h, sides, folds, deg — never written into text ("folds 2" in text is lost). A rectangle always has BOTH w and h, in a row too; a row always has its find.
 A picture can carry a short say (what Munni says while it shows). Never put a why on a picture.
 
 An example of one good lesson (the shape of it, not its content):
@@ -247,7 +252,7 @@ Answer with JSON only, in the given schema.`;
 
 function repairInstructions(rules){
   return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Each lesson is given in the lesson shape below; return it fixed in the same shape — same topic, same aims, every reason addressed — and change nothing else. The reasons count the lesson's steps in order (intro, teaching pictures, then each question's picture and the question itself, then remember).
-How to read the reasons: "must say what is asked (ask)" → set that question's ask to what it asks (sides, corners, name…); "needs exactly 2 answers" / "no checkpoint" → give the question both answers / add a question; "a rectangle needs w and h" → give both; "say the answer" → change the narration or ask about a new example, not the answer; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "the teaching picture again" → change the QUESTION's picture to a different size or shape (and its answer, if that changes); "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi.
+How to read the reasons: "must say what is asked (ask)" → set that question's ask to what it asks (sides, corners, name…); "needs exactly 2 answers" / "no checkpoint" → give the question both answers / add a question; "a rectangle needs w and h" → give both, as numbers; "a row needs its find" → set find to the one shape the question looks for; "needs a circle with 2 or more folds" → set folds (its own number field, not text); "say the answer" → change the narration or ask about a new example, not the answer; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "the teaching picture again" → change the QUESTION's picture to a different size or shape (and its answer, if that changes); "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi.
 
 ${beatsText()}
 

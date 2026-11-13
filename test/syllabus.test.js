@@ -270,6 +270,20 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     const hFixed = clean(noH('sides', ['4','3']));
     check("a rectangle with only its width gets a height (half, so it stays a rectangle) when the question doesn't depend on it", hFixed.ok && hFixed.lesson.beats.find(b => b.kind === 'rectangle').h === 4, JSON.stringify(hFixed.errors));
     bad('…but never for a perimeter question, where a made-up side would change the answer', noH('perimeter', ['24','16']), /needs w and h/);
+    // from the fourth live run: the repair kept a row's rectangle without h, a row without find, and wrote "folds 2" as text
+    const row = (q, find, items) => ({ ...clone(READ), title:{ en:'Find it', hi:'ढूँढो' }, skill:'shapes2d', beats:[{ t:'intro', say:{ en:'Look at the shapes.', hi:'आकृतियाँ देखो।' } },
+      { t:'figure', kind:'square', s:4 }, { t:'figures', items: items || [{ kind:'triangle', sides:[3,4,5] }, { kind:'rectangle', w:6 }, { kind:'circle' }], ...(find ? { find } : {}) },
+      { t:'ask', q, opts:['2','1'], hiOpts:['2','1'], correct:0 }, { t:'win', say:{ en:'Well done.', hi:'शाबाश।' } }] });
+    const rowFixed = clean(row({ en:'Which number is a rectangle?', hi:'किस नंबर पर आयत है?' }));
+    const rb = rowFixed.lesson && rowFixed.lesson.beats.find(b => b.t === 'figures');
+    check("a row's rectangle with no h gets one, and a row with no find gets it from the question's words — then checked against the drawing",
+      rowFixed.ok && rb.find === 'rectangle' && rb.items[1].h === 3, JSON.stringify(rowFixed.errors));
+    bad('…a wrong reading still fails against the drawing (no square in that row)', row({ en:'Which number is a square?', hi:'किस नंबर पर वर्ग है?' }), /exactly one shape must be the square/);
+    bad("…and a question that names two shapes isn't guessed — the checker asks for find", row({ en:'Which is a rectangle and which a triangle?', hi:'आयत कौन सा है और त्रिभुज कौन सा?' }), /a row needs its find/);
+    const folded = clean(circ([{ t:'intro', say:{ en:'Let us fold a plate.', hi:'आओ प्लेट मोड़ें।' } }, { t:'figure', kind:'circle', text:'2 folds' }, { t:'figure', kind:'circle', text:'folds 3' }]));
+    check('sizes written as text ("folds 3", "2 folds") go into their own fields', folded.ok && folded.lesson.beats.filter(b => b.kind === 'circle').map(b => b.folds).join() === '2,3' && !folded.lesson.beats.some(b => 'text' in b), JSON.stringify(folded.errors));
+    const sizes = JSON.parse(E(`JSON.stringify(sylTidy([{ t:'figure', kind:'rectangle', text:'6 × 3' }, { t:'figure', kind:'triangle', text:'sides 3, 4 and 5' }, { t:'corner', text:'a 60° corner' }, { t:'figure', kind:'square', s:5, text:'side 9' }]))`));
+    check('…a rectangle "6 × 3", a triangle "3, 4 and 5", a corner "60°" — never over a field that was given', sizes[0].w === 6 && sizes[0].h === 3 && sizes[1].sides.join() === '3,4,5' && sizes[2].deg === 60 && sizes[3].s === 5, JSON.stringify(sizes));
     const c3 = JSON.parse(E(`JSON.stringify(sylSkills(sylClass('c3')).map(s => s.id))`));
     check('a Class 3 chapter may name the shape skills — flat shapes (Class 1), angles and perimeter (Class 4) — Class 3 skills first', ['shapes2d','angles','perimeter'].every(id => c3.includes(id)) && c3.length <= 60, JSON.stringify(c3));
     bad('a maths question needs a number for its answer', (() => { const x = clone(MATH); x.beats[2].opts = ['twenty-five','65']; return x; })(), /must be a number/);

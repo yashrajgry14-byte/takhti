@@ -115,22 +115,64 @@ function sylTidy(beats){
     if(prev && JSON.stringify(prev) === JSON.stringify(x)) continue;
     out.push(x);
   }
+  // a size written into a note ("folds 2") instead of its own field
+  out.forEach(x => { if(x && (x.t === 'figure' || x.t === 'corner')) { sylSizesFromText(x); delete x.text; } });
   out.forEach((x, i) => {
     const next = out[i + 1];
     if(!x || !next || next.t !== 'ask') return;
     if(x.t === 'corner' && x.ask == null) x.ask = 'kind';
     if(x.t === 'figure' && x.ask == null) x.ask = sylInferAsk(x, next);
+    if(x.t === 'figures' && x.find == null) x.find = sylInferFind(next);
   });
   // a rectangle with only one side given: give it the other, half as long
   // (never equal, so it stays a rectangle) — unless the question is its
   // perimeter, where the made-up side would change the answer
+  // (a row shows no side labels, so a rectangle in a row gets one too)
+  const ok = v => Number.isInteger(v) && v >= 1;
+  const fillRect = r => {
+    if(!r || r.kind !== 'rectangle') return;
+    if(ok(r.w) && !ok(r.h)) r.h = r.w >= 2 ? Math.max(1, Math.round(r.w / 2)) : 2;
+    else if(ok(r.h) && !ok(r.w)) r.w = r.h * 2;
+  };
   out.forEach(x => {
-    if(!x || x.t !== 'figure' || x.kind !== 'rectangle' || x.ask === 'perimeter') return;
-    const ok = v => Number.isInteger(v) && v >= 1;
-    if(ok(x.w) && !ok(x.h)) x.h = x.w >= 2 ? Math.max(1, Math.round(x.w / 2)) : 2;
-    else if(ok(x.h) && !ok(x.w)) x.w = x.h * 2;
+    if(!x) return;
+    if(x.t === 'figure' && x.ask !== 'perimeter') fillRect(x);
+    if(x.t === 'figures' && Array.isArray(x.items)) x.items = x.items.map(it => { if(!it || typeof it !== 'object') return it; const c = { ...it }; fillRect(c); return c; });
   });
   return out;
+}
+/* Only the fields this kind of shape has, and only where they're missing:
+   "folds 2" / "2 folds", "6 × 3", "side 4", "sides 3, 4, 5", "60°". */
+function sylSizesFromText(x){
+  if(typeof x.text !== 'string' || !x.text.trim()) return;
+  const t = x.text.toLowerCase().replace(/\s+/g, ' ');
+  const one = (...res) => { for(const re of res){ const m = t.match(re); if(m) return Number(m[1]); } return null; };
+  const fill = (k, v) => { if(x[k] == null && Number.isInteger(v)) x[k] = v; };
+  if(x.t === 'corner') return fill('deg', one(/(\d+)\s*(?:°|deg)/, /(?:deg\w*|angle|कोण)\s*[:=]?\s*(\d+)/));
+  if(x.kind === 'circle') fill('folds', one(/(\d+)\s*(?:fold|तह)/, /(?:folds?|fold lines?|तह)\s*[:=]?\s*(\d+)/));
+  if(x.kind === 'square') fill('s', one(/sides?\s*[:=]?\s*(\d+)/, /\bs\s*[:=]\s*(\d+)/));
+  if(x.kind === 'rectangle'){
+    const m = t.match(/(\d+)\s*[×x*]\s*(\d+)/);
+    if(m){ fill('w', Number(m[1])); fill('h', Number(m[2])); }
+    fill('w', one(/\b(?:w|width)\s*[:=]?\s*(\d+)/)); fill('h', one(/\b(?:h|height)\s*[:=]?\s*(\d+)/));
+  }
+  if(x.kind === 'triangle' && !Array.isArray(x.sides)){
+    const m = t.match(/(\d+)\s*,\s*(\d+)\s*(?:,|and)\s*(\d+)/);
+    if(m) x.sides = [m[1], m[2], m[3]].map(Number);
+  }
+}
+/* Which shape a row's question looks for, when it names exactly one;
+   a wrong reading fails against the drawing like any other answer. */
+function sylInferFind(q){
+  const text = [q.q && q.q.en, q.q && q.q.hi].filter(Boolean).join(' ').toLowerCase();
+  const right = (q.opts || [])[q.correct];
+  if(!/^\d+$/.test(String(right == null ? '' : right).trim())) return undefined;   // a row's answers are its numbers
+  if(/odd one|different|doesn.?t belong|not like the others|अलग/.test(text)) return 'odd';
+  if(/\bnot\b|नहीं/.test(text)) return undefined;
+  if(/square corner|right angle|चौकोर कोन|समकोण/.test(text)) return 'squarecorner';
+  const hits = [['triangle', /triangle|त्रिभुज|three sides|3 sides|तीन भुज|3 भुज/], ['rectangle', /rectangle|आयत/],
+    ['square', /square|वर्ग/], ['circle', /circle|वृत्त|गोल/]].filter(([, re]) => re.test(text)).map(([k]) => k);
+  return hits.length === 1 ? hits[0] : undefined;
 }
 function sylInferAsk(fig, q){
   const text = [q.q && q.q.en, q.q && q.q.hi].filter(Boolean).join(' ').toLowerCase();

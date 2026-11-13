@@ -71,7 +71,8 @@ function geoErrors(b, maxNumber){
   } else if(b.t === 'figures'){
     if(!Array.isArray(b.items) || b.items.length < 2 || b.items.length > 4) e.push('figures needs 2 to 4 shapes');
     else b.items.forEach((it, k) => geoItemErrors(it, true).forEach(x => e.push(`shape ${k + 1}: ${x}`)));
-    if(!GEO_FINDS.includes(b.find)) e.push(`figures can't find "${b.find}"`);
+    if(b.find == null) e.push('a row needs its find (which shape the question looks for)');
+    else if(!GEO_FINDS.includes(b.find)) e.push(`figures can't find "${b.find}"`);
     else if(!e.length && geoExpect(b) == null) e.push(b.find === 'odd' ? 'there must be exactly one odd one out' : `exactly one shape must be the ${b.find === 'squarecorner' ? 'square corner' : b.find}`);
   }
   if(maxNumber) for(const n of geoNumbers(b)) if(n > maxNumber) { e.push(`${n} is over the band ceiling of ${maxNumber}`); break; }
