@@ -1,0 +1,1404 @@
+{
+  "at": "2026-11-13T14:14:54.657Z",
+  "cls": "c3",
+  "band": "developing",
+  "rules": {
+    "band": "developing",
+    "ages": [
+      7,
+      8
+    ],
+    "maxNumber": 100,
+    "sayWords": 18,
+    "read": "developing"
+  },
+  "note": "",
+  "source": "cemm101.pdf",
+  "model": "gemini-3.5-flash-lite",
+  "chapter": "What's in a Name?",
+  "draftMs": 150872,
+  "tried": [
+    {
+      "model": "gemini-3.8-flash",
+      "outcome": 503,
+      "ms": 10720
+    },
+    {
+      "model": "gemini-3.8-flash",
+      "outcome": "hung",
+      "ms": 95780
+    },
+    {
+      "model": "gemini-3.7-flash",
+      "outcome": "hung",
+      "ms": 27004
+    },
+    {
+      "model": "gemini-3.5-flash-lite",
+      "outcome": "ok",
+      "ms": 15846,
+      "tokens": {
+        "in": 7941,
+        "out": 3052,
+        "total": 10993
+      }
+    }
+  ],
+  "repair": {
+    "status": 200,
+    "model": "gemini-3.5-flash-lite",
+    "error": "",
+    "ms": 6801,
+    "tried": [
+      {
+        "model": "gemini-3.5-flash-lite",
+        "outcome": "ok",
+        "ms": 6799,
+        "tokens": {
+          "in": 4674,
+          "out": 2251,
+          "total": 6925
+        }
+      }
+    ]
+  },
+  "drafts": [
+    {
+      "raw": {
+        "title": {
+          "en": "Counting Cows with Tally Marks",
+          "hi": "मिलान चिह्न से गायें गिनना"
+        },
+        "sub": {
+          "en": "Making marks on the wall",
+          "hi": "दीवार पर निशान लगाना"
+        },
+        "ic": "🐄",
+        "skill": "count20",
+        "source": "Page 1",
+        "aims": [
+          {
+            "short": {
+              "en": "Make tally marks",
+              "hi": "मिलान चिह्न बनाओ"
+            },
+            "point": {
+              "en": "The child can make tally marks for counted objects.",
+              "hi": "बच्चा गिनी गई वस्तुओं के लिए मिलान चिह्न बना सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we keep track of cows using marks on the wall?",
+              "hi": "मैं भूल गई! दीवार पर निशान लगाकर हम गायों का हिसाब कैसे रखते हैं?"
+            },
+            "hints": [
+              {
+                "en": "What do you do for each cow that goes out?",
+                "hi": "बाहर जाने वाली हर गाय के लिए तुम क्या करते हो?"
+              },
+              {
+                "en": "How do marks help when cows return?",
+                "hi": "गाय वापस आने पर निशान कैसे मदद करते हैं?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "make a mark for each cow going out and strike out when returning",
+                "hi": "बाहर जाने वाली हर गाय के लिए एक निशान बनाओ और लौटने पर काट दो",
+                "words": [
+                  "make a mark",
+                  "nishan",
+                  "strike out",
+                  "kaat do",
+                  "gate",
+                  "निशान बनाओ"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us count cows using tally marks on the wall.",
+              "hi": "आओ दीवार पर मिलान चिह्न लगाकर गायें गिनें।"
+            }
+          },
+          {
+            "t": "count",
+            "n": 5,
+            "say": {
+              "en": "Make a mark for each cow that leaves through the gate.",
+              "hi": "गेट से बाहर जाने वाली हर गाय के लिए एक निशान बनाओ।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many marks are made for five cows?",
+              "hi": "पाँच गायों के लिए कितने निशान बनाए जाते हैं?"
+            },
+            "opts": [
+              "5",
+              "10"
+            ],
+            "hiOpts": [
+              "5",
+              "10"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children may confuse the total count with double the number.",
+              "hi": "बच्चे कुल गिनती को दोगुनी संख्या से भ्रमित हो सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Make one mark for each cow!",
+              "hi": "हर गाय के लिए एक निशान बनाओ!"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🐄",
+          "title": {
+            "en": "Counting Cows with Tally Marks",
+            "hi": "मिलान चिह्न से गायें गिनना"
+          },
+          "sub": {
+            "en": "Making marks on the wall",
+            "hi": "दीवार पर निशान लगाना"
+          },
+          "skillId": "count20",
+          "source": "Page 1",
+          "aims": [
+            {
+              "id": "s1puidqx.0",
+              "kind": "explain",
+              "short": {
+                "en": "Make tally marks",
+                "hi": "मिलान चिह्न बनाओ"
+              },
+              "point": {
+                "en": "The child can make tally marks for counted objects.",
+                "hi": "बच्चा गिनी गई वस्तुओं के लिए मिलान चिह्न बना सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do we keep track of cows using marks on the wall?",
+                "hi": "मैं भूल गई! दीवार पर निशान लगाकर हम गायों का हिसाब कैसे रखते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "What do you do for each cow that goes out?",
+                  "hi": "बाहर जाने वाली हर गाय के लिए तुम क्या करते हो?"
+                },
+                {
+                  "en": "How do marks help when cows return?",
+                  "hi": "गाय वापस आने पर निशान कैसे मदद करते हैं?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "make a mark for each cow going out and strike out when returning",
+                  "hi": "बाहर जाने वाली हर गाय के लिए एक निशान बनाओ और लौटने पर काट दो",
+                  "words": [
+                    "make a mark",
+                    "nishan",
+                    "strike out",
+                    "kaat do",
+                    "gate",
+                    "निशान बनाओ"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us count cows using tally marks on the wall.",
+                "hi": "आओ दीवार पर मिलान चिह्न लगाकर गायें गिनें।"
+              }
+            },
+            {
+              "t": "count",
+              "say": {
+                "en": "Make a mark for each cow that leaves through the gate.",
+                "hi": "गेट से बाहर जाने वाली हर गाय के लिए एक निशान बनाओ।"
+              },
+              "n": 5
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many marks are made for five cows?",
+                "hi": "पाँच गायों के लिए कितने निशान बनाए जाते हैं?"
+              },
+              "opts": [
+                "5",
+                "10"
+              ],
+              "hiOpts": [
+                "5",
+                "10"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children may confuse the total count with double the number.",
+                "hi": "बच्चे कुल गिनती को दोगुनी संख्या से भ्रमित हो सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Make one mark for each cow!",
+                "hi": "हर गाय के लिए एक निशान बनाओ!"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1puidqx"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "repairRaw": null,
+      "second": null,
+      "verdict": "passed"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Animal Names and Letters",
+          "hi": "जानवरों के नाम और अक्षर"
+        },
+        "sub": {
+          "en": "Counting letters in names",
+          "hi": "नामों में अक्षर गिनना"
+        },
+        "ic": "🐅",
+        "skill": "read3",
+        "source": "Page 3",
+        "aims": [
+          {
+            "short": {
+              "en": "Count letters",
+              "hi": "अक्षर गिनो"
+            },
+            "point": {
+              "en": "The child can count letters in animal names.",
+              "hi": "बच्चा जानवरों के नामों में अक्षर गिन सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we find the longest name among animals?",
+              "hi": "मैं भूल गई! जानवरों में सबसे लंबा नाम कैसे ढूंढते हैं?"
+            },
+            "hints": [
+              {
+                "en": "What do we count in each animal's name?",
+                "hi": "हम हर जानवर के नाम में क्या गिनते हैं?"
+              },
+              {
+                "en": "How do you compare the letter counts?",
+                "hi": "अक्षरों की गिनती की तुलना कैसे करते हो?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "count the number of letters in the word",
+                "hi": "शब्द में अक्षरों की संख्या गिनो",
+                "words": [
+                  "count letters",
+                  "akshar",
+                  "gin",
+                  "longest name",
+                  "सबसे लंबा"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us count the letters in animal names.",
+              "hi": "आओ जानवरों के नामों में अक्षर गिनें।"
+            }
+          },
+          {
+            "t": "word",
+            "word": "tiger",
+            "art": "🐅",
+            "say": {
+              "en": "Read the animal name and count its letters.",
+              "hi": "जानवर का नाम पढ़ो और उसके अक्षर गिनो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many letters are in the word tiger?",
+              "hi": "tiger शब्द में कितने अक्षर हैं?"
+            },
+            "opts": [
+              "5",
+              "4"
+            ],
+            "hiOpts": [
+              "5",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might miscount letters due to vowel grouping.",
+              "hi": "बच्चे स्वर समूहीकरण के कारण गलत गिनती कर सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Count every letter in the name carefully.",
+              "hi": "नाम में हर अक्षर को ध्यान से गिनो।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🐅",
+          "title": {
+            "en": "Animal Names and Letters",
+            "hi": "जानवरों के नाम और अक्षर"
+          },
+          "sub": {
+            "en": "Counting letters in names",
+            "hi": "नामों में अक्षर गिनना"
+          },
+          "skillId": "read3",
+          "source": "Page 3",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us count the letters in animal names.",
+                "hi": "आओ जानवरों के नामों में अक्षर गिनें।"
+              }
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Read the animal name and count its letters.",
+                "hi": "जानवर का नाम पढ़ो और उसके अक्षर गिनो।"
+              },
+              "w": "tiger",
+              "art": "🐅"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many letters are in the word tiger?",
+                "hi": "tiger शब्द में कितने अक्षर हैं?"
+              },
+              "opts": [
+                "4",
+                "5"
+              ],
+              "hiOpts": [
+                "4",
+                "5"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might miscount letters due to vowel grouping.",
+                "hi": "बच्चे स्वर समूहीकरण के कारण गलत गिनती कर सकते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Count every letter in the name carefully.",
+                "hi": "नाम में हर अक्षर को ध्यान से गिनो।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-10h06gg"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"longest name\"))",
+          "beat 2: the right answer \"5\" isn't in the passage"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [
+          "aim 1: Munni's question (en) already gives the explanation (it says \"longest name\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Animal Names and Letters",
+          "hi": "जानवरों के नाम और अक्षर"
+        },
+        "sub": {
+          "en": "Counting letters in names",
+          "hi": "नामों में अक्षर गिनना"
+        },
+        "ic": "🐅",
+        "skill": "read3",
+        "source": "Page 3",
+        "aims": [
+          {
+            "short": {
+              "en": "Count letters",
+              "hi": "अक्षर गिनो"
+            },
+            "point": {
+              "en": "The child can count letters in animal names.",
+              "hi": "बच्चा जानवरों के नामों में अक्षर गिन सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we find the letter count among animals?",
+              "hi": "मैं भूल गई! जानवरों के नाम में अक्षर कैसे ढूंढते हैं?"
+            },
+            "hints": [
+              {
+                "en": "What do we count in each animal's name?",
+                "hi": "हम हर जानवर के नाम में क्या गिनते हैं?"
+              },
+              {
+                "en": "How do you compare the letter totals?",
+                "hi": "अक्षरों के योग की तुलना कैसे करते हो?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "count the number of letters in the word",
+                "hi": "शब्द में अक्षरों की संख्या गिनो",
+                "words": [
+                  "count letters",
+                  "akshar",
+                  "gin",
+                  "total",
+                  "कुल"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us count the letters in animal names.",
+              "hi": "आओ जानवरों के नामों में अक्षर गिनें।"
+            }
+          },
+          {
+            "t": "word",
+            "word": "tiger",
+            "art": "🐅",
+            "say": {
+              "en": "Read the animal name and count its letters.",
+              "hi": "जानवर का नाम पढ़ो और उसके अक्षर गिनो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many letters are in the word tiger?",
+              "hi": "tiger शब्द में कितने अक्षर हैं?"
+            },
+            "opts": [
+              "5",
+              "4"
+            ],
+            "hiOpts": [
+              "5",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might miscount letters due to vowel grouping.",
+              "hi": "बच्चे स्वर समूहीकरण के कारण गलत गिनती कर सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Count every letter in the name carefully.",
+              "hi": "नाम में हर अक्षर को ध्यान से गिनो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🐅",
+          "title": {
+            "en": "Animal Names and Letters",
+            "hi": "जानवरों के नाम और अक्षर"
+          },
+          "sub": {
+            "en": "Counting letters in names",
+            "hi": "नामों में अक्षर गिनना"
+          },
+          "skillId": "read3",
+          "source": "Page 3",
+          "aims": [
+            {
+              "id": "s1024bkz.0",
+              "kind": "explain",
+              "short": {
+                "en": "Count letters",
+                "hi": "अक्षर गिनो"
+              },
+              "point": {
+                "en": "The child can count letters in animal names.",
+                "hi": "बच्चा जानवरों के नामों में अक्षर गिन सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do we find the letter count among animals?",
+                "hi": "मैं भूल गई! जानवरों के नाम में अक्षर कैसे ढूंढते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "What do we count in each animal's name?",
+                  "hi": "हम हर जानवर के नाम में क्या गिनते हैं?"
+                },
+                {
+                  "en": "Show me with your finger, then tell me what you did.",
+                  "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "count the number of letters in the word",
+                  "hi": "शब्द में अक्षरों की संख्या गिनो",
+                  "words": [
+                    "akshar",
+                    "gin",
+                    "total",
+                    "कुल"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us count the letters in animal names.",
+                "hi": "आओ जानवरों के नामों में अक्षर गिनें।"
+              }
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Read the animal name and count its letters.",
+                "hi": "जानवर का नाम पढ़ो और उसके अक्षर गिनो।"
+              },
+              "w": "tiger",
+              "art": "🐅"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many letters are in the word tiger?",
+                "hi": "tiger शब्द में कितने अक्षर हैं?"
+              },
+              "opts": [
+                "5",
+                "4"
+              ],
+              "hiOpts": [
+                "5",
+                "4"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children might miscount letters due to vowel grouping.",
+                "hi": "बच्चे स्वर समूहीकरण के कारण गलत गिनती कर सकते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Count every letter in the name carefully.",
+                "hi": "नाम में हर अक्षर को ध्यान से गिनो।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-1024bkz"
+        },
+        "ok": false,
+        "errors": [
+          "beat 2: the right answer \"5\" isn't in the passage"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [],
+        "aimFixes": [
+          "aim 1: hint 2 (en) already gives the explanation (it says \"total\") — replaced with a general nudge"
+        ]
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Number Names and Letter Count",
+          "hi": "संख्या नाम और अक्षर गिनती"
+        },
+        "sub": {
+          "en": "Counting letters in number names",
+          "hi": "संख्या नामों में अक्षर गिनना"
+        },
+        "ic": "🔢",
+        "skill": "read3",
+        "source": "Page 5",
+        "aims": [
+          {
+            "short": {
+              "en": "Number name letters",
+              "hi": "संख्या नाम के अक्षर"
+            },
+            "point": {
+              "en": "The child can count letters in a number name.",
+              "hi": "बच्चा संख्या नाम में अक्षर गिन सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we know how many letters are in a number name?",
+              "hi": "मैं भूल गई! किसी संख्या नाम में कितने अक्षर होते हैं, यह कैसे जानें?"
+            },
+            "hints": [
+              {
+                "en": "Spell out the number word slowly.",
+                "hi": "संख्या शब्द को धीरे-धीरे बोलो।"
+              },
+              {
+                "en": "Count each letter one by one.",
+                "hi": "हर अक्षर को एक-एक करके गिनो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "spell the number name and count every letter",
+                "hi": "संख्या का नाम बोलकर हर अक्षर गिनो",
+                "words": [
+                  "number name",
+                  "letters",
+                  "gin",
+                  "ank",
+                  "गिनो"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us find how many letters are in number names.",
+              "hi": "आओ देखें संख्या नामों में कितने अक्षर हैं।"
+            }
+          },
+          {
+            "t": "word",
+            "word": "Seventeen",
+            "art": "🔟",
+            "say": {
+              "en": "Look at the number name and count its letters.",
+              "hi": "संख्या का नाम देखो और उसके अक्षर गिनो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many letters are in the word Seventeen?",
+              "hi": "Seventeen शब्द में कितने अक्षर हैं?"
+            },
+            "opts": [
+              "9",
+              "8"
+            ],
+            "hiOpts": [
+              "9",
+              "8"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children often miss double letters when counting.",
+              "hi": "बच्चे अक्सर गिनती करते समय दो बार आने वाले अक्षरों को छोड़ देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Count the letters in number names carefully.",
+              "hi": "संख्या नामों में अक्षर ध्यान से गिनो।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔢",
+          "title": {
+            "en": "Number Names and Letter Count",
+            "hi": "संख्या नाम और अक्षर गिनती"
+          },
+          "sub": {
+            "en": "Counting letters in number names",
+            "hi": "संख्या नामों में अक्षर गिनना"
+          },
+          "skillId": "read3",
+          "source": "Page 5",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us find how many letters are in number names.",
+                "hi": "आओ देखें संख्या नामों में कितने अक्षर हैं।"
+              }
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Look at the number name and count its letters.",
+                "hi": "संख्या का नाम देखो और उसके अक्षर गिनो।"
+              },
+              "w": "Seventeen",
+              "art": "🔟"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many letters are in the word Seventeen?",
+                "hi": "Seventeen शब्द में कितने अक्षर हैं?"
+              },
+              "opts": [
+                "8",
+                "9"
+              ],
+              "hiOpts": [
+                "8",
+                "9"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children often miss double letters when counting.",
+                "hi": "बच्चे अक्सर गिनती करते समय दो बार आने वाले अक्षरों को छोड़ देते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Count the letters in number names carefully.",
+                "hi": "संख्या नामों में अक्षर ध्यान से गिनो।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-1hycd9a"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 2 (hi) already gives the explanation (it says \"गिनो\"))",
+          "beat 2: the right answer \"9\" isn't in the passage"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [
+          "aim 1: hint 2 (hi) already gives the explanation (it says \"गिनो\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Number Names and Letter Count",
+          "hi": "संख्या नाम और अक्षर गिनती"
+        },
+        "sub": {
+          "en": "Counting letters in number names",
+          "hi": "संख्या नामों में अक्षर गिनना"
+        },
+        "ic": "🔢",
+        "skill": "read3",
+        "source": "Page 5",
+        "aims": [
+          {
+            "short": {
+              "en": "Number name letters",
+              "hi": "संख्या नाम के अक्षर"
+            },
+            "point": {
+              "en": "The child can count letters in a number name.",
+              "hi": "बच्चा संख्या नाम में अक्षर गिन सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we know how many letters are in a number name?",
+              "hi": "मैं भूल गई! किसी संख्या नाम में कितने अक्षर होते हैं, यह कैसे जानें?"
+            },
+            "hints": [
+              {
+                "en": "Spell out the number word slowly.",
+                "hi": "संख्या शब्द को धीरे-धीरे बोलो।"
+              },
+              {
+                "en": "Count each letter one by one.",
+                "hi": "हर अक्षर को एक-एक करके समझो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "spell the number name and count every letter",
+                "hi": "संख्या का नाम बोलकर हर अक्षर गिनो",
+                "words": [
+                  "number name",
+                  "letters",
+                  "ank",
+                  "संख्या"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us find how many letters are in number names.",
+              "hi": "आओ देखें संख्या नामों में कितने अक्षर हैं।"
+            }
+          },
+          {
+            "t": "word",
+            "word": "Seventeen",
+            "art": "🔟",
+            "say": {
+              "en": "Look at the number name and count its letters.",
+              "hi": "संख्या का नाम देखो और उसके अक्षर गिनो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many letters are in the word Seventeen?",
+              "hi": "Seventeen शब्द में कितने अक्षर हैं?"
+            },
+            "opts": [
+              "9",
+              "8"
+            ],
+            "hiOpts": [
+              "9",
+              "8"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children often miss double letters when counting.",
+              "hi": "बच्चे अक्सर गिनती करते समय दो बार आने वाले अक्षरों को छोड़ देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Count the letters in number names carefully.",
+              "hi": "संख्या नामों में अक्षर ध्यान से गिनो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔢",
+          "title": {
+            "en": "Number Names and Letter Count",
+            "hi": "संख्या नाम और अक्षर गिनती"
+          },
+          "sub": {
+            "en": "Counting letters in number names",
+            "hi": "संख्या नामों में अक्षर गिनना"
+          },
+          "skillId": "read3",
+          "source": "Page 5",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us find how many letters are in number names.",
+                "hi": "आओ देखें संख्या नामों में कितने अक्षर हैं।"
+              }
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Look at the number name and count its letters.",
+                "hi": "संख्या का नाम देखो और उसके अक्षर गिनो।"
+              },
+              "w": "Seventeen",
+              "art": "🔟"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many letters are in the word Seventeen?",
+                "hi": "Seventeen शब्द में कितने अक्षर हैं?"
+              },
+              "opts": [
+                "8",
+                "9"
+              ],
+              "hiOpts": [
+                "8",
+                "9"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children often miss double letters when counting.",
+                "hi": "बच्चे अक्सर गिनती करते समय दो बार आने वाले अक्षरों को छोड़ देते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Count the letters in number names carefully.",
+                "hi": "संख्या नामों में अक्षर ध्यान से गिनो।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-1hycd9a"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: each idea needs 2–40 short words that show it)",
+          "beat 2: the right answer \"9\" isn't in the passage"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [
+          "aim 1: each idea needs 2–40 short words that show it"
+        ],
+        "aimFixes": []
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Grouping Objects",
+          "hi": "वस्तुओं के समूह बनाना"
+        },
+        "sub": {
+          "en": "Things that need electricity",
+          "hi": "बिजली से चलने वाली चीजें"
+        },
+        "ic": "💡",
+        "skill": "e2-compre",
+        "source": "Page 7",
+        "aims": [
+          {
+            "short": {
+              "en": "Group by use",
+              "hi": "उपयोग के अनुसार समूह"
+            },
+            "point": {
+              "en": "The child can group objects based on whether they need electricity.",
+              "hi": "बच्चा वस्तुओं को इस आधार पर समूहबद्ध कर सकता है कि उन्हें बिजली चाहिए या नहीं।"
+            },
+            "forget": {
+              "en": "I forgot! How do we sort household objects into groups?",
+              "hi": "मैं भूल गई! घरेलू वस्तुओं को समूहों में कैसे छाँटते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Does the object need a plug or battery to work?",
+                "hi": "क्या वस्तु को काम करने के लिए प्लग या बैटरी की जरूरत है?"
+              },
+              {
+                "en": "Check if it runs on electricity.",
+                "hi": "देखें कि क्या यह बिजली से चलती है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "put things that need electricity in one group and others in another",
+                "hi": "बिजली से चलने वाली चीजें एक समूह में और बाकी दूसरी समूह में रखो",
+                "words": [
+                  "electricity",
+                  "bijli",
+                  "group",
+                  "samuh",
+                  "needs power"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us sort household objects into groups.",
+              "hi": "आओ घरेलू वस्तुओं को समूहों में छाँटें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "TV and lamp need electricity to work. Chair and pillow do not need electricity.",
+              "hi": "टीव्ही और लैंप को काम करने के लिए बिजली चाहिए। कुर्सी और तकिया को बिजली नहीं चाहिए।"
+            },
+            "art": "📺"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Does a TV need electricity?",
+              "hi": "क्या टीव्ही को बिजली की आवश्यकता होती है?"
+            },
+            "opts": [
+              "Yes",
+              "No"
+            ],
+            "hiOpts": [
+              "हाँ",
+              "नहीं"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might confuse display devices with non-electric furniture.",
+              "hi": "बच्चे डिस्प्ले उपकरणों को बिना बिजली के फर्नीचर से भ्रमित कर सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Group objects by what they need to work.",
+              "hi": "वस्तुओं को उनकी जरूरत के अनुसार समूह में रखो।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "💡",
+          "title": {
+            "en": "Grouping Objects",
+            "hi": "वस्तुओं के समूह बनाना"
+          },
+          "sub": {
+            "en": "Things that need electricity",
+            "hi": "बिजली से चलने वाली चीजें"
+          },
+          "skillId": "e2-compre",
+          "source": "Page 7",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us sort household objects into groups.",
+                "hi": "आओ घरेलू वस्तुओं को समूहों में छाँटें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "TV and lamp need electricity to work. Chair and pillow do not need electricity.",
+                "hi": "टीव्ही और लैंप को काम करने के लिए बिजली चाहिए। कुर्सी और तकिया को बिजली नहीं चाहिए।"
+              },
+              "art": "📺"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Does a TV need electricity?",
+                "hi": "क्या टीव्ही को बिजली की आवश्यकता होती है?"
+              },
+              "opts": [
+                "No",
+                "Yes"
+              ],
+              "hiOpts": [
+                "नहीं",
+                "हाँ"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might confuse display devices with non-electric furniture.",
+                "hi": "बच्चे डिस्प्ले उपकरणों को बिना बिजली के फर्नीचर से भ्रमित कर सकते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Group objects by what they need to work.",
+                "hi": "वस्तुओं को उनकी जरूरत के अनुसार समूह में रखो।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-amzw4"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 2 (en) already gives the explanation (it says \"electricity\"))"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [
+          "aim 1: hint 2 (en) already gives the explanation (it says \"electricity\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Grouping Objects",
+          "hi": "वस्तुओं के समूह बनाना"
+        },
+        "sub": {
+          "en": "Things that need power",
+          "hi": "बिजली से चलने वाली चीजें"
+        },
+        "ic": "💡",
+        "skill": "e2-compre",
+        "source": "Page 7",
+        "aims": [
+          {
+            "short": {
+              "en": "Group by use",
+              "hi": "उपयोग के अनुसार समूह"
+            },
+            "point": {
+              "en": "The child can group objects based on whether they need power.",
+              "hi": "बच्चा वस्तुओं को इस आधार पर समूहबद्ध कर सकता है कि उन्हें शक्ति चाहिए या नहीं।"
+            },
+            "forget": {
+              "en": "I forgot! How do we sort household objects into groups?",
+              "hi": "मैं भूल गई! घरेलू वस्तुओं को समूहों में कैसे छाँटते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Does the object need a plug or battery to work?",
+                "hi": "क्या वस्तु को काम करने के लिए प्लग या बैटरी की जरूरत है?"
+              },
+              {
+                "en": "Check if it runs on current.",
+                "hi": "देखें कि क्या यह करंट से चलती है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "put things that need power in one group and others in another",
+                "hi": "शक्ति से चलने वाली चीजें एक समूह में और बाकी दूसरी समूह में रखो",
+                "words": [
+                  "bijli",
+                  "group",
+                  "samuh",
+                  "needs power"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us sort household objects into groups.",
+              "hi": "आओ घरेलू वस्तुओं को समूहों में छाँटें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "TV and lamp need power to work. Chair and pillow do not need power.",
+              "hi": "टीव्ही और लैंप को काम करने के लिए शक्ति चाहिए। कुर्सी और तकिया को शक्ति नहीं चाहिए।"
+            },
+            "art": "📺"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Does a TV need power?",
+              "hi": "क्या टीव्ही को शक्ति की आवश्यकता होती है?"
+            },
+            "opts": [
+              "Yes",
+              "No"
+            ],
+            "hiOpts": [
+              "हाँ",
+              "नहीं"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might confuse display devices with non-electric furniture.",
+              "hi": "बच्चे डिस्प्ले उपकरणों को बिना शक्ति के फर्नीचर से भ्रमित कर सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Group objects by what they need to work.",
+              "hi": "वस्तुओं को उनकी जरूरत के अनुसार समूह में रखो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "💡",
+          "title": {
+            "en": "Grouping Objects",
+            "hi": "वस्तुओं के समूह बनाना"
+          },
+          "sub": {
+            "en": "Things that need power",
+            "hi": "बिजली से चलने वाली चीजें"
+          },
+          "skillId": "e2-compre",
+          "source": "Page 7",
+          "aims": [
+            {
+              "id": "s1gpkcba.0",
+              "kind": "explain",
+              "short": {
+                "en": "Group by use",
+                "hi": "उपयोग के अनुसार समूह"
+              },
+              "point": {
+                "en": "The child can group objects based on whether they need power.",
+                "hi": "बच्चा वस्तुओं को इस आधार पर समूहबद्ध कर सकता है कि उन्हें शक्ति चाहिए या नहीं।"
+              },
+              "forget": {
+                "en": "I forgot! How do we sort household objects into groups?",
+                "hi": "मैं भूल गई! घरेलू वस्तुओं को समूहों में कैसे छाँटते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Does the object need a plug or battery to work?",
+                  "hi": "क्या वस्तु को काम करने के लिए प्लग या बैटरी की जरूरत है?"
+                },
+                {
+                  "en": "Check if it runs on current.",
+                  "hi": "देखें कि क्या यह करंट से चलती है।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "put things that need power in one group and others in another",
+                  "hi": "शक्ति से चलने वाली चीजें एक समूह में और बाकी दूसरी समूह में रखो",
+                  "words": [
+                    "bijli",
+                    "samuh",
+                    "needs power"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us sort household objects into groups.",
+                "hi": "आओ घरेलू वस्तुओं को समूहों में छाँटें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "TV and lamp need power to work. Chair and pillow do not need power.",
+                "hi": "टीव्ही और लैंप को काम करने के लिए शक्ति चाहिए। कुर्सी और तकिया को शक्ति नहीं चाहिए।"
+              },
+              "art": "📺"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Does a TV need power?",
+                "hi": "क्या टीव्ही को शक्ति की आवश्यकता होती है?"
+              },
+              "opts": [
+                "No",
+                "Yes"
+              ],
+              "hiOpts": [
+                "नहीं",
+                "हाँ"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might confuse display devices with non-electric furniture.",
+                "hi": "बच्चे डिस्प्ले उपकरणों को बिना शक्ति के फर्नीचर से भ्रमित कर सकते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Group objects by what they need to work.",
+                "hi": "वस्तुओं को उनकी जरूरत के अनुसार समूह में रखो।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-1gpkcba"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    }
+  ]
+}

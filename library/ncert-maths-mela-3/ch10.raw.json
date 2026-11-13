@@ -1,0 +1,1676 @@
+{
+  "at": "2026-11-13T15:51:15.098Z",
+  "cls": "c3",
+  "band": "developing",
+  "rules": {
+    "band": "developing",
+    "ages": [
+      7,
+      8
+    ],
+    "maxNumber": 100,
+    "sayWords": 18,
+    "read": "developing"
+  },
+  "note": "",
+  "source": "cemm110.pdf",
+  "model": "gemini-3.5-flash-lite",
+  "chapter": "Fun at Class Party!",
+  "draftMs": 17955,
+  "tried": [
+    {
+      "model": "gemini-3.5-flash-lite",
+      "outcome": "ok",
+      "ms": 17936,
+      "tokens": {
+        "in": 9561,
+        "out": 3295,
+        "total": 12856
+      }
+    }
+  ],
+  "repair": {
+    "status": 200,
+    "model": "gemini-3.5-flash-lite",
+    "error": "",
+    "ms": 7801,
+    "tried": [
+      {
+        "model": "gemini-3.5-flash-lite",
+        "outcome": "ok",
+        "ms": 7800,
+        "tokens": {
+          "in": 5329,
+          "out": 3272,
+          "total": 8601
+        }
+      }
+    ]
+  },
+  "drafts": [
+    {
+      "raw": {
+        "title": {
+          "en": "Measuring with Hand Span",
+          "hi": "बालिश्त से नापना"
+        },
+        "sub": {
+          "en": "Use body parts to measure length",
+          "hi": "शरीर के अंगों से लंबाई नापो"
+        },
+        "ic": "✋",
+        "skill": "measure3",
+        "source": "Page 128",
+        "aims": [
+          {
+            "short": {
+              "en": "Use hand span",
+              "hi": "बालिश्त का प्रयोग"
+            },
+            "point": {
+              "en": "The child can use hand span to measure table length.",
+              "hi": "बच्चा मेज की लंबाई नापने के लिए बालिश्त का उपयोग कर सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we use our hand span to measure length?",
+              "hi": "मैं भूल गई! लंबाई नापने के लिए बालिश्त का उपयोग कैसे करते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Open your hand fully. Where do you place it first?",
+                "hi": "अपने हाथ को पूरा खोलो। इसे पहले कहाँ रखते हैं?"
+              },
+              {
+                "en": "What do you do after placing your hand once?",
+                "hi": "हाथ एक बार रखने के बाद क्या करते हो?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "stretch your hand and place it end to end along the object",
+                "hi": "अपना हाथ फैलाओ और वस्तु के साथ-साथ एक के बाद एक रखो",
+                "words": [
+                  "stretch",
+                  "hand span",
+                  "spread fingers",
+                  "फैलाओ",
+                  "हाथ",
+                  "बालिश्त",
+                  "ek ke baad ek"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us measure things using our hand span.",
+              "hi": "आओ अपने बालिश्त से चीजें नापें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Children use their hands to measure table length. Different hands give different numbers.",
+              "hi": "बच्चे मेज की लंबाई नापने के लिए हाथ का उपयोग करते हैं। अलग हाथों से अलग गिनती आती है।"
+            },
+            "art": "✋"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Do Leena and Adi get the same measurement using their hand spans?",
+              "hi": "क्या लीना और आदि को अपने बालिश्त से एक जैसी माप मिलती है?"
+            },
+            "opts": [
+              "No",
+              "Yes"
+            ],
+            "hiOpts": [
+              "नहीं",
+              "हाँ"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children think all hand spans are of the exact same length.",
+              "hi": "बच्चों को लगता है कि सभी के हाथ बिल्कुल एक लंबाई के होते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Different people have different hand span sizes.",
+              "hi": "अलग-अलग लोगों के बालिश्त का आकार अलग होता है।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "✋",
+          "title": {
+            "en": "Measuring with Hand Span",
+            "hi": "बालिश्त से नापना"
+          },
+          "sub": {
+            "en": "Use body parts to measure length",
+            "hi": "शरीर के अंगों से लंबाई नापो"
+          },
+          "skillId": "measure3",
+          "source": "Page 128",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us measure things using our hand span.",
+                "hi": "आओ अपने बालिश्त से चीजें नापें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Children use their hands to measure table length. Different hands give different numbers.",
+                "hi": "बच्चे मेज की लंबाई नापने के लिए हाथ का उपयोग करते हैं। अलग हाथों से अलग गिनती आती है।"
+              },
+              "art": "✋"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Do Leena and Adi get the same measurement using their hand spans?",
+                "hi": "क्या लीना और आदि को अपने बालिश्त से एक जैसी माप मिलती है?"
+              },
+              "opts": [
+                "Yes",
+                "No"
+              ],
+              "hiOpts": [
+                "हाँ",
+                "नहीं"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children think all hand spans are of the exact same length.",
+                "hi": "बच्चों को लगता है कि सभी के हाथ बिल्कुल एक लंबाई के होते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Different people have different hand span sizes.",
+                "hi": "अलग-अलग लोगों के बालिश्त का आकार अलग होता है।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-1xwqzl2"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (hi) already gives the explanation (it says \"हाथ\"))"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (hi) already gives the explanation (it says \"हाथ\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Measuring with Hand Span",
+          "hi": "बालिश्त से नापना"
+        },
+        "sub": {
+          "en": "Use body parts to measure length",
+          "hi": "शरीर के अंगों से लंबाई नापो"
+        },
+        "ic": "✋",
+        "skill": "measure3",
+        "source": "Page 128",
+        "aims": [
+          {
+            "short": {
+              "en": "Use hand span",
+              "hi": "बालिश्त का प्रयोग"
+            },
+            "point": {
+              "en": "The child can use hand span to measure table length.",
+              "hi": "बच्चा मेज की लंबाई नापने के लिए बालिश्त का उपयोग कर सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we use our hand span to measure length?",
+              "hi": "मैं भूल गई! लंबाई नापने के लिए बालिश्त का उपयोग कैसे करते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Open your fingers fully. Where do you place it first?",
+                "hi": "अपनी उँगलियों को पूरा खोलो। इसे पहले कहाँ रखते हैं?"
+              },
+              {
+                "en": "What do you do after placing your fingers once?",
+                "hi": "उँगलियाँ एक बार रखने के बाद क्या करते हो?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "stretch your fingers and place them end to end along the object",
+                "hi": "अपनी उँगलियाँ फैलाओ और वस्तु के साथ-साथ एक के बाद एक रखो",
+                "words": [
+                  "stretch",
+                  "hand span",
+                  "spread fingers",
+                  "फैलाओ",
+                  "बालिश्त",
+                  "ek ke baad ek"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us measure things using our hand span.",
+              "hi": "आओ अपने बालिश्त से चीजें नापें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Children use their hands to measure table length. Different hands give different numbers.",
+              "hi": "बच्चे मेज की लंबाई नापने के लिए हाथ का उपयोग करते हैं। अलग हाथों से अलग गिनती आती है।"
+            },
+            "art": "✋"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Do Leena and Adi get the same measurement using their hand spans?",
+              "hi": "क्या लीना और आदि को अपने बालिश्त से एक जैसी माप मिलती है?"
+            },
+            "opts": [
+              "No",
+              "Yes"
+            ],
+            "hiOpts": [
+              "नहीं",
+              "हाँ"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children think all hand spans are of the exact same length.",
+              "hi": "बच्चों को लगता है कि सभी के हाथ बिल्कुल एक लंबाई के होते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Different people have different hand span sizes.",
+              "hi": "अलग-अलग लोगों के बालिश्त का आकार अलग होता है।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "✋",
+          "title": {
+            "en": "Measuring with Hand Span",
+            "hi": "बालिश्त से नापना"
+          },
+          "sub": {
+            "en": "Use body parts to measure length",
+            "hi": "शरीर के अंगों से लंबाई नापो"
+          },
+          "skillId": "measure3",
+          "source": "Page 128",
+          "aims": [
+            {
+              "id": "slu62iy.0",
+              "kind": "explain",
+              "short": {
+                "en": "Use hand span",
+                "hi": "बालिश्त का प्रयोग"
+              },
+              "point": {
+                "en": "The child can use hand span to measure table length.",
+                "hi": "बच्चा मेज की लंबाई नापने के लिए बालिश्त का उपयोग कर सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do we use our hand span to measure length?",
+                "hi": "मैं भूल गई! लंबाई नापने के लिए बालिश्त का उपयोग कैसे करते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Open your fingers fully. Where do you place it first?",
+                  "hi": "अपनी उँगलियों को पूरा खोलो। इसे पहले कहाँ रखते हैं?"
+                },
+                {
+                  "en": "What do you do after placing your fingers once?",
+                  "hi": "उँगलियाँ एक बार रखने के बाद क्या करते हो?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "stretch your fingers and place them end to end along the object",
+                  "hi": "अपनी उँगलियाँ फैलाओ और वस्तु के साथ-साथ एक के बाद एक रखो",
+                  "words": [
+                    "stretch",
+                    "spread fingers",
+                    "फैलाओ",
+                    "ek ke baad ek"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us measure things using our hand span.",
+                "hi": "आओ अपने बालिश्त से चीजें नापें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Children use their hands to measure table length. Different hands give different numbers.",
+                "hi": "बच्चे मेज की लंबाई नापने के लिए हाथ का उपयोग करते हैं। अलग हाथों से अलग गिनती आती है।"
+              },
+              "art": "✋"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Do Leena and Adi get the same measurement using their hand spans?",
+                "hi": "क्या लीना और आदि को अपने बालिश्त से एक जैसी माप मिलती है?"
+              },
+              "opts": [
+                "Yes",
+                "No"
+              ],
+              "hiOpts": [
+                "हाँ",
+                "नहीं"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children think all hand spans are of the exact same length.",
+                "hi": "बच्चों को लगता है कि सभी के हाथ बिल्कुल एक लंबाई के होते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Different people have different hand span sizes.",
+                "hi": "अलग-अलग लोगों के बालिश्त का आकार अलग होता है।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-lu62iy"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "One Metre Long",
+          "hi": "एक मीटर लंबा"
+        },
+        "sub": {
+          "en": "Find things of one metre",
+          "hi": "एक मीटर की चीजें खोजो"
+        },
+        "ic": "📏",
+        "skill": "measure3",
+        "source": "Page 134",
+        "aims": [
+          {
+            "short": {
+              "en": "Understand metre",
+              "hi": "मीटर को समझो"
+            },
+            "point": {
+              "en": "The child can identify objects that are one metre long.",
+              "hi": "बच्चा उन वस्तुओं को पहचान सकता है जो एक मीटर लंबी हैं।"
+            },
+            "forget": {
+              "en": "I forgot! How do we know if something is one metre long?",
+              "hi": "मैं भूल गई! हमें कैसे पता चलता है कि कोई वस्तु एक मीटर लंबी है?"
+            },
+            "hints": [
+              {
+                "en": "What tool do shopkeepers use to measure cloth?",
+                "hi": "दुकानदार कपड़ा नापने के लिए किस औजार का उपयोग करते हैं?"
+              },
+              {
+                "en": "Can we use a metre rod or rope to check?",
+                "hi": "क्या हम जाँच के लिए मीटर छड़ या रस्सी का उपयोग कर सकते हैं?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "compare the object with a metre rod or metre rope",
+                "hi": "वस्तु की तुलना मीटर छड़ या मीटर रस्सी से करो",
+                "words": [
+                  "metre rod",
+                  "metre rope",
+                  "compare",
+                  "मीटर छड़",
+                  "रस्सी",
+                  "तुलना",
+                  "metre rod"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us learn about one metre length.",
+              "hi": "आओ एक मीटर लंबाई के बारे में जानें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Shopkeepers measure cloth with a metre rod. A metre is a standard length.",
+              "hi": "दुकानदार मीटर छड़ से कपड़ा नापते हैं। मीटर एक मानक लंबाई है।"
+            },
+            "art": "🧵"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What do shopkeepers use to measure cloth?",
+              "hi": "दुकानदार कपड़ा नापने के लिए क्या उपयोग करते हैं?"
+            },
+            "opts": [
+              "Metre rod",
+              "Pencil"
+            ],
+            "hiOpts": [
+              "मीटर छड़",
+              "पेंसिल"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might pick a pencil since they use pencils in class.",
+              "hi": "बच्चे पेंसिल चुन सकते हैं क्योंकि वे कक्षा में पेंसिल का उपयोग करते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "We use a metre rod to measure one metre.",
+              "hi": "हम एक मीटर नापने के लिए मीटर छड़ का उपयोग करते हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "📏",
+          "title": {
+            "en": "One Metre Long",
+            "hi": "एक मीटर लंबा"
+          },
+          "sub": {
+            "en": "Find things of one metre",
+            "hi": "एक मीटर की चीजें खोजो"
+          },
+          "skillId": "measure3",
+          "source": "Page 134",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us learn about one metre length.",
+                "hi": "आओ एक मीटर लंबाई के बारे में जानें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Shopkeepers measure cloth with a metre rod. A metre is a standard length.",
+                "hi": "दुकानदार मीटर छड़ से कपड़ा नापते हैं। मीटर एक मानक लंबाई है।"
+              },
+              "art": "🧵"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What do shopkeepers use to measure cloth?",
+                "hi": "दुकानदार कपड़ा नापने के लिए क्या उपयोग करते हैं?"
+              },
+              "opts": [
+                "Pencil",
+                "Metre rod"
+              ],
+              "hiOpts": [
+                "पेंसिल",
+                "मीटर छड़"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might pick a pencil since they use pencils in class.",
+                "hi": "बच्चे पेंसिल चुन सकते हैं क्योंकि वे कक्षा में पेंसिल का उपयोग करते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "We use a metre rod to measure one metre.",
+                "hi": "हम एक मीटर नापने के लिए मीटर छड़ का उपयोग करते हैं।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-10gwjxj"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 2 (en) already gives the explanation (it says \"metre rod\"))"
+        ],
+        "checks": [
+          "text"
+        ],
+        "aimErrors": [
+          "aim 1: hint 2 (en) already gives the explanation (it says \"metre rod\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "One Metre Long",
+          "hi": "एक मीटर लंबा"
+        },
+        "sub": {
+          "en": "Find things of one metre",
+          "hi": "एक मीटर की चीजें खोजो"
+        },
+        "ic": "📏",
+        "skill": "measure3",
+        "source": "Page 134",
+        "aims": [
+          {
+            "short": {
+              "en": "Understand metre",
+              "hi": "मीटर को समझो"
+            },
+            "point": {
+              "en": "The child can identify objects that are one metre long.",
+              "hi": "बच्चा उन वस्तुओं को पहचान सकता है जो एक मीटर लंबी हैं।"
+            },
+            "forget": {
+              "en": "I forgot! How do we know if something is one metre long?",
+              "hi": "मैं भूल गई! हमें कैसे पता चलता है कि कोई वस्तु एक मीटर लंबी है?"
+            },
+            "hints": [
+              {
+                "en": "What tool do shopkeepers use to measure cloth?",
+                "hi": "दुकानदार कपड़ा नापने के लिए किस औजार का उपयोग करते हैं?"
+              },
+              {
+                "en": "Can we use a long tool or rope to check?",
+                "hi": "क्या हम जाँच के लिए लंबी छड़ या रस्सी का उपयोग कर सकते हैं?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "compare the object with a metre rod or metre rope",
+                "hi": "वस्तु की तुलना मीटर छड़ या मीटर रस्सी से करो",
+                "words": [
+                  "metre rod",
+                  "metre rope",
+                  "compare",
+                  "मीटर छड़",
+                  "रस्सी",
+                  "तुलना"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us learn about one metre length.",
+              "hi": "आओ एक मीटर लंबाई के बारे में जानें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Shopkeepers measure cloth with a special long tool. A metre is a standard length.",
+              "hi": "दुकानदार एक विशेष लंबे औजार से कपड़ा नापते हैं। मीटर एक मानक लंबाई है।"
+            },
+            "art": "🧵"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What do shopkeepers use to measure cloth?",
+              "hi": "दुकानदार कपड़ा नापने के लिए क्या उपयोग करते हैं?"
+            },
+            "opts": [
+              "Metre rod",
+              "Pencil"
+            ],
+            "hiOpts": [
+              "मीटर छड़",
+              "पेंसिल"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might pick a pencil since they use pencils in class.",
+              "hi": "बच्चे पेंसिल चुन सकते हैं क्योंकि वे कक्षा में पेंसिल का उपयोग करते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "We use a metre rod to measure one metre.",
+              "hi": "हम एक मीटर नापने के लिए मीटर छड़ का उपयोग करते हैं।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "📏",
+          "title": {
+            "en": "One Metre Long",
+            "hi": "एक मीटर लंबा"
+          },
+          "sub": {
+            "en": "Find things of one metre",
+            "hi": "एक मीटर की चीजें खोजो"
+          },
+          "skillId": "measure3",
+          "source": "Page 134",
+          "aims": [
+            {
+              "id": "s1f5egig.0",
+              "kind": "explain",
+              "short": {
+                "en": "Understand metre",
+                "hi": "मीटर को समझो"
+              },
+              "point": {
+                "en": "The child can identify objects that are one metre long.",
+                "hi": "बच्चा उन वस्तुओं को पहचान सकता है जो एक मीटर लंबी हैं।"
+              },
+              "forget": {
+                "en": "I forgot! How do we know if something is one metre long?",
+                "hi": "मैं भूल गई! हमें कैसे पता चलता है कि कोई वस्तु एक मीटर लंबी है?"
+              },
+              "hints": [
+                {
+                  "en": "What tool do shopkeepers use to measure cloth?",
+                  "hi": "दुकानदार कपड़ा नापने के लिए किस औजार का उपयोग करते हैं?"
+                },
+                {
+                  "en": "Show me with your finger, then tell me what you did.",
+                  "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "compare the object with a metre rod or metre rope",
+                  "hi": "वस्तु की तुलना मीटर छड़ या मीटर रस्सी से करो",
+                  "words": [
+                    "metre rod",
+                    "metre rope",
+                    "compare",
+                    "मीटर छड़",
+                    "रस्सी",
+                    "तुलना"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us learn about one metre length.",
+                "hi": "आओ एक मीटर लंबाई के बारे में जानें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Shopkeepers measure cloth with a special long tool. A metre is a standard length.",
+                "hi": "दुकानदार एक विशेष लंबे औजार से कपड़ा नापते हैं। मीटर एक मानक लंबाई है।"
+              },
+              "art": "🧵"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What do shopkeepers use to measure cloth?",
+                "hi": "दुकानदार कपड़ा नापने के लिए क्या उपयोग करते हैं?"
+              },
+              "opts": [
+                "Metre rod",
+                "Pencil"
+              ],
+              "hiOpts": [
+                "मीटर छड़",
+                "पेंसिल"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children might pick a pencil since they use pencils in class.",
+                "hi": "बच्चे पेंसिल चुन सकते हैं क्योंकि वे कक्षा में पेंसिल का उपयोग करते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "We use a metre rod to measure one metre.",
+                "hi": "हम एक मीटर नापने के लिए मीटर छड़ का उपयोग करते हैं।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-1f5egig"
+        },
+        "ok": false,
+        "errors": [
+          "beat 2: the right answer \"Metre rod\" isn't in the passage"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [],
+        "aimFixes": [
+          "aim 1: hint 2 (hi) already gives the explanation (it says \"रस्सी\") — replaced with a general nudge"
+        ]
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Half and Quarter Metre",
+          "hi": "आधा और चौथाई मीटर"
+        },
+        "sub": {
+          "en": "Fold a metre rope",
+          "hi": "मीटर रस्सी को मोड़ो"
+        },
+        "ic": "✂️",
+        "skill": "fracunit",
+        "source": "Page 136",
+        "aims": [
+          {
+            "short": {
+              "en": "Make half metre",
+              "hi": "आधा मीटर बनाओ"
+            },
+            "point": {
+              "en": "The child can explain how to get a half metre from a metre rope.",
+              "hi": "बच्चा समझा सकता है कि मीटर रस्सी से आधा मीटर कैसे प्राप्त करें।"
+            },
+            "forget": {
+              "en": "I forgot! How do we get a half metre rope from a one metre rope?",
+              "hi": "मैं भूल गई! एक मीटर रस्सी से आधी मीटर रस्सी कैसे मिलती है?"
+            },
+            "hints": [
+              {
+                "en": "Bring the two ends of the rope together.",
+                "hi": "रस्सी के दोनों सिरों को एक साथ लाओ।"
+              },
+              {
+                "en": "What do you do to the rope after joining the ends?",
+                "hi": "सिरे मिलाने के बाद रस्सी के साथ क्या करते हो?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "fold the one metre rope in half",
+                "hi": "एक मीटर लंबी रस्सी को आधा मोड़ो",
+                "words": [
+                  "fold in half",
+                  "fold",
+                  "half",
+                  "मोड़ो",
+                  "आधा",
+                  "aadha",
+                  "fold karo"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us fold ropes to find half and quarter metres.",
+              "hi": "आधा और चौथाई मीटर पाने के लिए रस्सियाँ मोड़ें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Fold a one metre rope in half to get a half metre. Fold it in half again to get a quarter metre.",
+              "hi": "आधा मीटर पाने के लिए एक मीटर रस्सी को आधा मोड़ो। चौथाई मीटर पाने के लिए इसे फिर से आधा मोड़ो।"
+            },
+            "art": "🧶"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "If you fold a one metre rope in half, what do you get?",
+              "hi": "यदि तुम एक मीटर रस्सी को आधा मोड़ो, तो क्या मिलता है?"
+            },
+            "opts": [
+              "Half metre",
+              "Two metres"
+            ],
+            "hiOpts": [
+              "आधा मीटर",
+              "दो मीटर"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children get confused between folding to make smaller and making larger.",
+              "hi": "बच्चे छोटा करने और बड़ा करने के लिए मोड़ने में भ्रमित हो जाते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Folding a metre rope in half gives a half metre.",
+              "hi": "मीटर रस्सी को आधा मोड़ने पर आधा मीटर मिलता है।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "✂️",
+          "title": {
+            "en": "Half and Quarter Metre",
+            "hi": "आधा और चौथाई मीटर"
+          },
+          "sub": {
+            "en": "Fold a metre rope",
+            "hi": "मीटर रस्सी को मोड़ो"
+          },
+          "skillId": "fracunit",
+          "source": "Page 136",
+          "aims": [
+            {
+              "id": "s15tp9g9.0",
+              "kind": "explain",
+              "short": {
+                "en": "Make half metre",
+                "hi": "आधा मीटर बनाओ"
+              },
+              "point": {
+                "en": "The child can explain how to get a half metre from a metre rope.",
+                "hi": "बच्चा समझा सकता है कि मीटर रस्सी से आधा मीटर कैसे प्राप्त करें।"
+              },
+              "forget": {
+                "en": "I forgot! How do we get a half metre rope from a one metre rope?",
+                "hi": "मैं भूल गई! एक मीटर रस्सी से आधी मीटर रस्सी कैसे मिलती है?"
+              },
+              "hints": [
+                {
+                  "en": "Bring the two ends of the rope together.",
+                  "hi": "रस्सी के दोनों सिरों को एक साथ लाओ।"
+                },
+                {
+                  "en": "What do you do to the rope after joining the ends?",
+                  "hi": "सिरे मिलाने के बाद रस्सी के साथ क्या करते हो?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "fold the one metre rope in half",
+                  "hi": "एक मीटर लंबी रस्सी को आधा मोड़ो",
+                  "words": [
+                    "fold in half",
+                    "fold",
+                    "मोड़ो",
+                    "aadha",
+                    "fold karo"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us fold ropes to find half and quarter metres.",
+                "hi": "आधा और चौथाई मीटर पाने के लिए रस्सियाँ मोड़ें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Fold a one metre rope in half to get a half metre. Fold it in half again to get a quarter metre.",
+                "hi": "आधा मीटर पाने के लिए एक मीटर रस्सी को आधा मोड़ो। चौथाई मीटर पाने के लिए इसे फिर से आधा मोड़ो।"
+              },
+              "art": "🧶"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "If you fold a one metre rope in half, what do you get?",
+                "hi": "यदि तुम एक मीटर रस्सी को आधा मोड़ो, तो क्या मिलता है?"
+              },
+              "opts": [
+                "Two metres",
+                "Half metre"
+              ],
+              "hiOpts": [
+                "दो मीटर",
+                "आधा मीटर"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children get confused between folding to make smaller and making larger.",
+                "hi": "बच्चे छोटा करने और बड़ा करने के लिए मोड़ने में भ्रमित हो जाते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Folding a metre rope in half gives a half metre.",
+                "hi": "मीटर रस्सी को आधा मोड़ने पर आधा मीटर मिलता है।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-15tp9g9"
+        },
+        "ok": false,
+        "errors": [
+          "beat 2: the lines just before this question say the answer \"Half metre\" (in the intro) — let the child work it out"
+        ],
+        "checks": [
+          "text"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Half and Quarter Metre",
+          "hi": "आधा और चौथाई मीटर"
+        },
+        "sub": {
+          "en": "Fold a metre rope",
+          "hi": "मीटर रस्सी को मोड़ो"
+        },
+        "ic": "✂️",
+        "skill": "fracunit",
+        "source": "Page 136",
+        "aims": [
+          {
+            "short": {
+              "en": "Make half metre",
+              "hi": "आधा मीटर बनाओ"
+            },
+            "point": {
+              "en": "The child can explain how to get a half metre from a metre rope.",
+              "hi": "बच्चा समझा सकता है कि मीटर रस्सी से आधा मीटर कैसे प्राप्त करें।"
+            },
+            "forget": {
+              "en": "I forgot! How do we get a half metre rope from a one metre rope?",
+              "hi": "मैं भूल गई! एक मीटर रस्सी से आधी मीटर रस्सी कैसे मिलती है?"
+            },
+            "hints": [
+              {
+                "en": "Bring the two ends of the rope together.",
+                "hi": "रस्सी के दोनों सिरों को एक साथ लाओ।"
+              },
+              {
+                "en": "What do you do to the rope after joining the ends?",
+                "hi": "सिरे मिलाने के बाद रस्सी के साथ क्या करते हो?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "fold the one metre rope in half",
+                "hi": "एक मीटर लंबी रस्सी को आधा मोड़ो",
+                "words": [
+                  "fold in half",
+                  "fold",
+                  "half",
+                  "मोड़ो",
+                  "आधा",
+                  "aadha"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us fold ropes to find smaller parts.",
+              "hi": "छोटे हिस्से पाने के लिए रस्सियाँ मोड़ें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Fold a one metre rope to change its length. Bending it properly gives equal parts.",
+              "hi": "लंबाई बदलने के लिए एक मीटर रस्सी को मोड़ो। इसे ठीक से मोड़ने पर बराबर हिस्से मिलते हैं।"
+            },
+            "art": "🧶"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "If you fold a one metre rope in half, what do you get?",
+              "hi": "यदि तुम एक मीटर रस्सी को आधा मोड़ो, तो क्या मिलता है?"
+            },
+            "opts": [
+              "Half metre",
+              "Two metres"
+            ],
+            "hiOpts": [
+              "आधा मीटर",
+              "दो मीटर"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children get confused between folding to make smaller and making larger.",
+              "hi": "बच्चे छोटा करने और बड़ा करने के लिए मोड़ने में भ्रमित हो जाते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Folding a metre rope in half gives a half metre.",
+              "hi": "मीटर रस्सी को आधा मोड़ने पर आधा मीटर मिलता है।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "✂️",
+          "title": {
+            "en": "Half and Quarter Metre",
+            "hi": "आधा और चौथाई मीटर"
+          },
+          "sub": {
+            "en": "Fold a metre rope",
+            "hi": "मीटर रस्सी को मोड़ो"
+          },
+          "skillId": "fracunit",
+          "source": "Page 136",
+          "aims": [
+            {
+              "id": "sd5r1ge.0",
+              "kind": "explain",
+              "short": {
+                "en": "Make half metre",
+                "hi": "आधा मीटर बनाओ"
+              },
+              "point": {
+                "en": "The child can explain how to get a half metre from a metre rope.",
+                "hi": "बच्चा समझा सकता है कि मीटर रस्सी से आधा मीटर कैसे प्राप्त करें।"
+              },
+              "forget": {
+                "en": "I forgot! How do we get a half metre rope from a one metre rope?",
+                "hi": "मैं भूल गई! एक मीटर रस्सी से आधी मीटर रस्सी कैसे मिलती है?"
+              },
+              "hints": [
+                {
+                  "en": "Bring the two ends of the rope together.",
+                  "hi": "रस्सी के दोनों सिरों को एक साथ लाओ।"
+                },
+                {
+                  "en": "What do you do to the rope after joining the ends?",
+                  "hi": "सिरे मिलाने के बाद रस्सी के साथ क्या करते हो?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "fold the one metre rope in half",
+                  "hi": "एक मीटर लंबी रस्सी को आधा मोड़ो",
+                  "words": [
+                    "fold in half",
+                    "fold",
+                    "मोड़ो",
+                    "aadha"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us fold ropes to find smaller parts.",
+                "hi": "छोटे हिस्से पाने के लिए रस्सियाँ मोड़ें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Fold a one metre rope to change its length. Bending it properly gives equal parts.",
+                "hi": "लंबाई बदलने के लिए एक मीटर रस्सी को मोड़ो। इसे ठीक से मोड़ने पर बराबर हिस्से मिलते हैं।"
+              },
+              "art": "🧶"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "If you fold a one metre rope in half, what do you get?",
+                "hi": "यदि तुम एक मीटर रस्सी को आधा मोड़ो, तो क्या मिलता है?"
+              },
+              "opts": [
+                "Half metre",
+                "Two metres"
+              ],
+              "hiOpts": [
+                "आधा मीटर",
+                "दो मीटर"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children get confused between folding to make smaller and making larger.",
+                "hi": "बच्चे छोटा करने और बड़ा करने के लिए मोड़ने में भ्रमित हो जाते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Folding a metre rope in half gives a half metre.",
+                "hi": "मीटर रस्सी को आधा मोड़ने पर आधा मीटर मिलता है।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-d5r1ge"
+        },
+        "ok": false,
+        "errors": [
+          "beat 2: the right answer \"Half metre\" isn't in the passage"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Cutting Ropes",
+          "hi": "रस्सियाँ काटना"
+        },
+        "sub": {
+          "en": "Cuts and pieces",
+          "hi": "कट और टुकड़े"
+        },
+        "ic": "✂️",
+        "skill": "measure3",
+        "source": "Page 138",
+        "aims": [
+          {
+            "short": {
+              "en": "Cuts and pieces",
+              "hi": "कट और टुकड़े"
+            },
+            "point": {
+              "en": "The child can tell how many cuts are needed to make 4 equal pieces.",
+              "hi": "बच्चा बता सकता है कि 4 बराबर टुकड़े करने के लिए कितने कट लगाने होंगे।"
+            },
+            "forget": {
+              "en": "I forgot! How many cuts do we make to divide a rope into 4 equal pieces?",
+              "hi": "मैं भूल गई! किसी रस्सी को 4 बराबर टुकड़ों में बाँटने के लिए कितने कट लगाते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Think about cutting a strip step by step.",
+                "hi": "एक पट्टी को धीरे-धीरे काटने के बारे में सोचो।"
+              },
+              {
+                "en": "Count the number of snips you make with scissors.",
+                "hi": "कैंची से लगाए गए कटों की गिनती करो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "make 3 cuts to get 4 equal pieces",
+                "hi": "4 बराबर टुकड़े पाने के लिए 3 कट लगाओ",
+                "words": [
+                  "3 cuts",
+                  "three cuts",
+                  "3",
+                  "तीन कट",
+                  "teen kat",
+                  "cuts"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us count cuts and pieces of rope.",
+              "hi": "आओ रस्सी के कट और टुकड़े गिनें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Cutting a rope into pieces requires fewer cuts than the total number of pieces.",
+              "hi": "रस्सी को टुकड़ों में काटने के लिए कुल टुकड़ों से कम कट की आवश्यकता होती है।"
+            },
+            "art": "✂️"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many cuts did you make to cut a rope into 4 equal pieces?",
+              "hi": "रस्सी को 4 बराबर टुकड़ों में काटने के लिए तुमने कितने कट लगाए?"
+            },
+            "opts": [
+              "3",
+              "4"
+            ],
+            "hiOpts": [
+              "3",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children assume the number of cuts is equal to the number of pieces (4).",
+              "hi": "बच्चों को लगता है कि कटों की संख्या टुकड़ों की संख्या (4) के बराबर होती है।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "We make 3 cuts to get 4 equal pieces.",
+              "hi": "4 बराबर टुकड़े पाने के लिए हम 3 कट लगाते हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "✂️",
+          "title": {
+            "en": "Cutting Ropes",
+            "hi": "रस्सियाँ काटना"
+          },
+          "sub": {
+            "en": "Cuts and pieces",
+            "hi": "कट और टुकड़े"
+          },
+          "skillId": "measure3",
+          "source": "Page 138",
+          "aims": [
+            {
+              "id": "s34wxeh.0",
+              "kind": "explain",
+              "short": {
+                "en": "Cuts and pieces",
+                "hi": "कट और टुकड़े"
+              },
+              "point": {
+                "en": "The child can tell how many cuts are needed to make 4 equal pieces.",
+                "hi": "बच्चा बता सकता है कि 4 बराबर टुकड़े करने के लिए कितने कट लगाने होंगे।"
+              },
+              "forget": {
+                "en": "I forgot! How many cuts do we make to divide a rope into 4 equal pieces?",
+                "hi": "मैं भूल गई! किसी रस्सी को 4 बराबर टुकड़ों में बाँटने के लिए कितने कट लगाते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Think about cutting a strip step by step.",
+                  "hi": "एक पट्टी को धीरे-धीरे काटने के बारे में सोचो।"
+                },
+                {
+                  "en": "Count the number of snips you make with scissors.",
+                  "hi": "कैंची से लगाए गए कटों की गिनती करो।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "make 3 cuts to get 4 equal pieces",
+                  "hi": "4 बराबर टुकड़े पाने के लिए 3 कट लगाओ",
+                  "words": [
+                    "3 cuts",
+                    "three cuts",
+                    "3",
+                    "तीन कट",
+                    "teen kat"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us count cuts and pieces of rope.",
+                "hi": "आओ रस्सी के कट और टुकड़े गिनें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Cutting a rope into pieces requires fewer cuts than the total number of pieces.",
+                "hi": "रस्सी को टुकड़ों में काटने के लिए कुल टुकड़ों से कम कट की आवश्यकता होती है।"
+              },
+              "art": "✂️"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many cuts did you make to cut a rope into 4 equal pieces?",
+                "hi": "रस्सी को 4 बराबर टुकड़ों में काटने के लिए तुमने कितने कट लगाए?"
+              },
+              "opts": [
+                "4",
+                "3"
+              ],
+              "hiOpts": [
+                "4",
+                "3"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children assume the number of cuts is equal to the number of pieces (4).",
+                "hi": "बच्चों को लगता है कि कटों की संख्या टुकड़ों की संख्या (4) के बराबर होती है।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "We make 3 cuts to get 4 equal pieces.",
+                "hi": "4 बराबर टुकड़े पाने के लिए हम 3 कट लगाते हैं।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-34wxeh"
+        },
+        "ok": false,
+        "errors": [
+          "beat 2: the right answer \"3\" isn't in the passage"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Cutting Ropes",
+          "hi": "रस्सियाँ काटना"
+        },
+        "sub": {
+          "en": "Cuts and pieces",
+          "hi": "कट और टुकड़े"
+        },
+        "ic": "✂️",
+        "skill": "measure3",
+        "source": "Page 138",
+        "aims": [
+          {
+            "short": {
+              "en": "Cuts and pieces",
+              "hi": "कट और टुकड़े"
+            },
+            "point": {
+              "en": "The child can tell how many cuts are needed to make 4 equal pieces.",
+              "hi": "बच्चा बता सकता है कि 4 बराबर टुकड़े करने के लिए कितने कट लगाने होंगे।"
+            },
+            "forget": {
+              "en": "I forgot! How many cuts do we make to divide a rope into 4 equal pieces?",
+              "hi": "मैं भूल गई! किसी रस्सी को 4 बराबर टुकड़ों में बाँटने के लिए कितने कट लगाते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Think about cutting a strip step by step.",
+                "hi": "एक पट्टी को धीरे-धीरे काटने के बारे में सोचो।"
+              },
+              {
+                "en": "Count the number of snips you make with scissors.",
+                "hi": "कैंची से लगाए गए कटों की गिनती करो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "make 3 cuts to get 4 equal pieces",
+                "hi": "4 बराबर टुकड़े पाने के लिए 3 कट लगाओ",
+                "words": [
+                  "3 cuts",
+                  "three cuts",
+                  "3",
+                  "तीन कट",
+                  "teen kat",
+                  "cuts"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us count cuts and pieces of rope.",
+              "hi": "आओ रस्सी के कट और टुकड़े गिनें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Cutting a rope into 4 equal pieces requires 3 cuts with scissors.",
+              "hi": "रस्सी को 4 बराबर टुकड़ों में काटने के लिए कैंची से 3 कट लगाने पड़ते हैं।"
+            },
+            "art": "✂️"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many cuts did you make to cut a rope into 4 equal pieces?",
+              "hi": "रस्सी को 4 बराबर टुकड़ों में काटने के लिए तुमने कितने कट लगाए?"
+            },
+            "opts": [
+              "3",
+              "4"
+            ],
+            "hiOpts": [
+              "3",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children assume the number of cuts is equal to the number of pieces (4).",
+              "hi": "बच्चों को लगता है कि कटों की संख्या टुकड़ों की संख्या (4) के बराबर होती है।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "We make 3 cuts to get 4 equal pieces.",
+              "hi": "4 बराबर टुकड़े पाने के लिए हम 3 कट लगाते हैं।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "✂️",
+          "title": {
+            "en": "Cutting Ropes",
+            "hi": "रस्सियाँ काटना"
+          },
+          "sub": {
+            "en": "Cuts and pieces",
+            "hi": "कट और टुकड़े"
+          },
+          "skillId": "measure3",
+          "source": "Page 138",
+          "aims": [
+            {
+              "id": "s21ar5a.0",
+              "kind": "explain",
+              "short": {
+                "en": "Cuts and pieces",
+                "hi": "कट और टुकड़े"
+              },
+              "point": {
+                "en": "The child can tell how many cuts are needed to make 4 equal pieces.",
+                "hi": "बच्चा बता सकता है कि 4 बराबर टुकड़े करने के लिए कितने कट लगाने होंगे।"
+              },
+              "forget": {
+                "en": "I forgot! How many cuts do we make to divide a rope into 4 equal pieces?",
+                "hi": "मैं भूल गई! किसी रस्सी को 4 बराबर टुकड़ों में बाँटने के लिए कितने कट लगाते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Think about cutting a strip step by step.",
+                  "hi": "एक पट्टी को धीरे-धीरे काटने के बारे में सोचो।"
+                },
+                {
+                  "en": "Count the number of snips you make with scissors.",
+                  "hi": "कैंची से लगाए गए कटों की गिनती करो।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "make 3 cuts to get 4 equal pieces",
+                  "hi": "4 बराबर टुकड़े पाने के लिए 3 कट लगाओ",
+                  "words": [
+                    "3 cuts",
+                    "three cuts",
+                    "3",
+                    "तीन कट",
+                    "teen kat"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us count cuts and pieces of rope.",
+                "hi": "आओ रस्सी के कट और टुकड़े गिनें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Cutting a rope into 4 equal pieces requires 3 cuts with scissors.",
+                "hi": "रस्सी को 4 बराबर टुकड़ों में काटने के लिए कैंची से 3 कट लगाने पड़ते हैं।"
+              },
+              "art": "✂️"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many cuts did you make to cut a rope into 4 equal pieces?",
+                "hi": "रस्सी को 4 बराबर टुकड़ों में काटने के लिए तुमने कितने कट लगाए?"
+              },
+              "opts": [
+                "3",
+                "4"
+              ],
+              "hiOpts": [
+                "3",
+                "4"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children assume the number of cuts is equal to the number of pieces (4).",
+                "hi": "बच्चों को लगता है कि कटों की संख्या टुकड़ों की संख्या (4) के बराबर होती है।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "We make 3 cuts to get 4 equal pieces.",
+                "hi": "4 बराबर टुकड़े पाने के लिए हम 3 कट लगाते हैं।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-21ar5a"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "text"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    }
+  ]
+}

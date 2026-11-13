@@ -1,12 +1,101 @@
 {
   "id": "ncert-maths-mela-3",
   "board": "NCERT",
-  "title": { "en": "Maths Mela", "hi": "गणित मेला" },
+  "title": {
+    "en": "Maths Mela",
+    "hi": "गणित मेला"
+  },
   "edition": "2024-25",
   "cls": "c3",
   "subject": "maths",
   "chapters": [
-    { "id": "ch5", "n": 5, "file": "ch5.pdf", "count": 4,
-      "title": { "en": "Fun with Shapes", "hi": "आकृतियों के साथ मज़ा" } }
+    {
+      "id": "ch1",
+      "n": 1,
+      "file": "cemm101.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch2",
+      "n": 2,
+      "file": "cemm102.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch3",
+      "n": 3,
+      "file": "cemm103.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch4",
+      "n": 4,
+      "file": "cemm104.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch5",
+      "n": 5,
+      "file": "cemm105.pdf",
+      "count": 4,
+      "title": {
+        "en": "Fun with Shapes",
+        "hi": "आकृतियों के साथ मज़ा"
+      }
+    },
+    {
+      "id": "ch6",
+      "n": 6,
+      "file": "cemm106.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch7",
+      "n": 7,
+      "file": "cemm107.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch8",
+      "n": 8,
+      "file": "cemm108.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch9",
+      "n": 9,
+      "file": "cemm109.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch10",
+      "n": 10,
+      "file": "cemm110.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch11",
+      "n": 11,
+      "file": "cemm111.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch12",
+      "n": 12,
+      "file": "cemm112.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch13",
+      "n": 13,
+      "file": "cemm113.pdf",
+      "count": 4
+    },
+    {
+      "id": "ch14",
+      "n": 14,
+      "file": "cemm114.pdf",
+      "count": 4
+    }
   ]
 }

@@ -1,0 +1,1799 @@
+{
+  "at": "2026-11-13T14:15:59.890Z",
+  "cls": "c3",
+  "band": "developing",
+  "rules": {
+    "band": "developing",
+    "ages": [
+      7,
+      8
+    ],
+    "maxNumber": 100,
+    "sayWords": 18,
+    "read": "developing"
+  },
+  "note": "",
+  "source": "cemm102.pdf",
+  "model": "gemini-3.5-flash-lite",
+  "chapter": "Toy Joy",
+  "draftMs": 57229,
+  "tried": [
+    {
+      "model": "gemini-3.5-flash-lite",
+      "outcome": "ok",
+      "ms": 57213,
+      "tokens": {
+        "in": 7401,
+        "out": 3380,
+        "total": 10781
+      }
+    }
+  ],
+  "repair": {
+    "status": 200,
+    "model": "gemini-3.5-flash-lite",
+    "error": "",
+    "ms": 7734,
+    "tried": [
+      {
+        "model": "gemini-3.5-flash-lite",
+        "outcome": "ok",
+        "ms": 7732,
+        "tokens": {
+          "in": 5327,
+          "out": 3325,
+          "total": 8652
+        }
+      }
+    ]
+  },
+  "drafts": [
+    {
+      "raw": {
+        "title": {
+          "en": "Sides and Corners",
+          "hi": "भुजाएँ और कोने"
+        },
+        "sub": {
+          "en": "Count the shape parts",
+          "hi": "आकृति के भाग गिनो"
+        },
+        "ic": "🔷",
+        "skill": "shapes2d",
+        "source": "Page 9",
+        "aims": [
+          {
+            "short": {
+              "en": "Count sides",
+              "hi": "भुजाएँ गिनो"
+            },
+            "point": {
+              "en": "The child can count the sides of a shape.",
+              "hi": "बच्चा किसी आकृति की भुजाएँ गिन सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I find out how many sides a shape has?",
+              "hi": "मैं भूल गई! किसी आकृति की कितनी भुजाएँ हैं, यह कैसे पता करूँ?"
+            },
+            "hints": [
+              {
+                "en": "Put your finger on one corner. What do you do next?",
+                "hi": "एक कोने पर उँगली रखो। फिर क्या करोगे?"
+              },
+              {
+                "en": "How do you know when to stop counting?",
+                "hi": "कैसे पता चलेगा कि कब रुकना है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "go round the shape and count each straight edge once",
+                "hi": "आकृति के चारों ओर घूमकर हर सीधी भुजा एक बार गिनो",
+                "words": [
+                  "go round",
+                  "count",
+                  "each side",
+                  "every side",
+                  "एक-एक",
+                  "हर भुजा",
+                  "गिन"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Shapes have sides and corners. Let us look at them.",
+              "hi": "आकृतियों की भुजाएँ और कोने होते हैं। आओ इन्हें देखें।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "square",
+            "s": 4,
+            "say": {
+              "en": "Put your finger on one corner and go round, counting each side.",
+              "hi": "एक कोने पर उँगली रखो और हर भुजा गिनते हुए घूमो।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "triangle",
+            "sides": [
+              5,
+              5,
+              5
+            ],
+            "ask": "sides"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many sides does this shape have?",
+              "hi": "इस आकृति की कितनी भुजाएँ हैं?"
+            },
+            "opts": [
+              "3",
+              "4"
+            ],
+            "hiOpts": [
+              "3",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children who just saw the square expect every shape to have 4 sides.",
+              "hi": "वर्ग देखने के बाद बच्चे हर आकृति की 4 भुजाएँ मान लेते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Go round once and count every side.",
+              "hi": "एक बार पूरा घूमो और हर भुजा गिनो।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔷",
+          "title": {
+            "en": "Sides and Corners",
+            "hi": "भुजाएँ और कोने"
+          },
+          "sub": {
+            "en": "Count the shape parts",
+            "hi": "आकृति के भाग गिनो"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 9",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Shapes have sides and corners. Let us look at them.",
+                "hi": "आकृतियों की भुजाएँ और कोने होते हैं। आओ इन्हें देखें।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "square",
+              "s": 4,
+              "say": {
+                "en": "Put your finger on one corner and go round, counting each side.",
+                "hi": "एक कोने पर उँगली रखो और हर भुजा गिनते हुए घूमो।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "triangle",
+              "sides": [
+                5,
+                5,
+                5
+              ],
+              "ask": "sides"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many sides does this shape have?",
+                "hi": "इस आकृति की कितनी भुजाएँ हैं?"
+              },
+              "opts": [
+                "3",
+                "4"
+              ],
+              "hiOpts": [
+                "3",
+                "4"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children who just saw the square expect every shape to have 4 sides.",
+                "hi": "वर्ग देखने के बाद बच्चे हर आकृति की 4 भुजाएँ मान लेते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Go round once and count every side.",
+                "hi": "एक बार पूरा घूमो और हर भुजा गिनो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1tx9acu"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 2 (en) already gives the explanation (it says \"count\"))"
+        ],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [
+          "aim 1: hint 2 (en) already gives the explanation (it says \"count\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Sides and Corners",
+          "hi": "भुजाएँ और कोने"
+        },
+        "sub": {
+          "en": "Count the shape parts",
+          "hi": "आकृति के भाग गिनो"
+        },
+        "ic": "🔷",
+        "skill": "shapes2d",
+        "source": "Page 9",
+        "aims": [
+          {
+            "short": {
+              "en": "Count sides",
+              "hi": "भुजाएँ गिनो"
+            },
+            "point": {
+              "en": "The child can count the sides of a shape.",
+              "hi": "बच्चा किसी आकृति की भुजाएँ गिन सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I find out how many sides a shape has?",
+              "hi": "मैं भूल गई! किसी आकृति की कितनी भुजाएँ हैं, यह कैसे पता करूँ?"
+            },
+            "hints": [
+              {
+                "en": "Put your finger on one corner. What do you do next?",
+                "hi": "एक कोने पर उँगली रखो। फिर क्या करोगे?"
+              },
+              {
+                "en": "How do you know when to stop moving?",
+                "hi": "कैसे पता चलेगा कि कब रुकना है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "go round the shape and count each straight edge once",
+                "hi": "आकृति के चारों ओर घूमकर हर सीधी भुजा एक बार गिनो",
+                "words": [
+                  "go round",
+                  "every side",
+                  "एक-एक",
+                  "हर भुजा",
+                  "गिन"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Shapes have sides and corners. Let us look at them.",
+              "hi": "आकृतियों की भुजाएँ और कोने होते हैं। आओ इन्हें देखें।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "square",
+            "s": 4,
+            "say": {
+              "en": "Put your finger on one corner and go round.",
+              "hi": "एक कोने पर उँगली रखो और घूमो।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "triangle",
+            "sides": [
+              5,
+              5,
+              5
+            ],
+            "ask": "sides"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many sides does this shape have?",
+              "hi": "इस आकृति की कितनी भुजाएँ हैं?"
+            },
+            "opts": [
+              "3",
+              "4"
+            ],
+            "hiOpts": [
+              "3",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children who just saw the square expect every shape to have 4 sides.",
+              "hi": "वर्ग देखने के बाद बच्चे हर आकृति की 4 भुजाएँ मान लेते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Go round once and count every side.",
+              "hi": "एक बार पूरा घूमो और हर भुजा गिनो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔷",
+          "title": {
+            "en": "Sides and Corners",
+            "hi": "भुजाएँ और कोने"
+          },
+          "sub": {
+            "en": "Count the shape parts",
+            "hi": "आकृति के भाग गिनो"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 9",
+          "aims": [
+            {
+              "id": "syhssum.0",
+              "kind": "explain",
+              "short": {
+                "en": "Count sides",
+                "hi": "भुजाएँ गिनो"
+              },
+              "point": {
+                "en": "The child can count the sides of a shape.",
+                "hi": "बच्चा किसी आकृति की भुजाएँ गिन सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I find out how many sides a shape has?",
+                "hi": "मैं भूल गई! किसी आकृति की कितनी भुजाएँ हैं, यह कैसे पता करूँ?"
+              },
+              "hints": [
+                {
+                  "en": "Put your finger on one corner. What do you do next?",
+                  "hi": "एक कोने पर उँगली रखो। फिर क्या करोगे?"
+                },
+                {
+                  "en": "How do you know when to stop moving?",
+                  "hi": "कैसे पता चलेगा कि कब रुकना है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "go round the shape and count each straight edge once",
+                  "hi": "आकृति के चारों ओर घूमकर हर सीधी भुजा एक बार गिनो",
+                  "words": [
+                    "go round",
+                    "every side",
+                    "एक-एक",
+                    "हर भुजा",
+                    "गिन"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Shapes have sides and corners. Let us look at them.",
+                "hi": "आकृतियों की भुजाएँ और कोने होते हैं। आओ इन्हें देखें।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "square",
+              "s": 4,
+              "say": {
+                "en": "Put your finger on one corner and go round.",
+                "hi": "एक कोने पर उँगली रखो और घूमो।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "triangle",
+              "sides": [
+                5,
+                5,
+                5
+              ],
+              "ask": "sides"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many sides does this shape have?",
+                "hi": "इस आकृति की कितनी भुजाएँ हैं?"
+              },
+              "opts": [
+                "3",
+                "4"
+              ],
+              "hiOpts": [
+                "3",
+                "4"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children who just saw the square expect every shape to have 4 sides.",
+                "hi": "वर्ग देखने के बाद बच्चे हर आकृति की 4 भुजाएँ मान लेते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Go round once and count every side.",
+                "hi": "एक बार पूरा घूमो और हर भुजा गिनो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-yhssum"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Faces and Edges",
+          "hi": "सतह और किनारे"
+        },
+        "sub": {
+          "en": "Explore boxes and bottles",
+          "hi": "डिब्बों और बोतलों को देखो"
+        },
+        "ic": "📦",
+        "skill": "shapes2d",
+        "source": "Page 9",
+        "aims": [
+          {
+            "short": {
+              "en": "Count faces",
+              "hi": "सतह गिनो"
+            },
+            "point": {
+              "en": "The child can name shapes of boxes and bottles.",
+              "hi": "बच्चा डिब्बों और बोतलों के नाम बता सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I know if it is a cube or a cuboid?",
+              "hi": "मैं भूल गई! कैसे पता करूँ कि यह घन है या घनाभ?"
+            },
+            "hints": [
+              {
+                "en": "Look at the sides of the box. Are they all equal?",
+                "hi": "डिब्बे की भुजाओं को देखो। क्या वे सब बराबर हैं?"
+              },
+              {
+                "en": "Check if all faces look the same.",
+                "hi": "जाँच करो कि क्या सभी सतह एक जैसी दिखती हैं।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "check if all faces are equal squares or different rectangles",
+                "hi": "देखें कि क्या सभी सतह बराबर वर्ग हैं या अलग आयत हैं",
+                "words": [
+                  "equal faces",
+                  "square faces",
+                  "rectangle",
+                  "बराबर",
+                  "वर्ग",
+                  "आयत"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Boxes and cans have faces, edges and corners.",
+              "hi": "डिब्बों और डिब्बियों के सतह, किनारे और कोने होते हैं।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "square",
+            "s": 4,
+            "say": {
+              "en": "This box has equal square faces.",
+              "hi": "इस डिब्बे की सभी सतह बराबर वर्ग हैं।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "rectangle",
+            "w": 6,
+            "h": 3,
+            "ask": "sides"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many sides does this flat face have?",
+              "hi": "इस समतल सतह की कितनी भुजाएँ हैं?"
+            },
+            "opts": [
+              "4",
+              "3"
+            ],
+            "hiOpts": [
+              "4",
+              "3"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might miscount or confuse sides with corners.",
+              "hi": "बच्चे गिनती में गलती कर सकते हैं या भुजाओं को कोनों से मिला सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Boxes have flat faces and straight edges.",
+              "hi": "डिब्बों की समतल सतह और सीधे किनारे होते हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "📦",
+          "title": {
+            "en": "Faces and Edges",
+            "hi": "सतह और किनारे"
+          },
+          "sub": {
+            "en": "Explore boxes and bottles",
+            "hi": "डिब्बों और बोतलों को देखो"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 9",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Boxes and cans have faces, edges and corners.",
+                "hi": "डिब्बों और डिब्बियों के सतह, किनारे और कोने होते हैं।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "square",
+              "s": 4,
+              "say": {
+                "en": "This box has equal square faces.",
+                "hi": "इस डिब्बे की सभी सतह बराबर वर्ग हैं।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "rectangle",
+              "w": 6,
+              "h": 3,
+              "ask": "sides"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many sides does this flat face have?",
+                "hi": "इस समतल सतह की कितनी भुजाएँ हैं?"
+              },
+              "opts": [
+                "3",
+                "4"
+              ],
+              "hiOpts": [
+                "3",
+                "4"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might miscount or confuse sides with corners.",
+                "hi": "बच्चे गिनती में गलती कर सकते हैं या भुजाओं को कोनों से मिला सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Boxes have flat faces and straight edges.",
+                "hi": "डिब्बों की समतल सतह और सीधे किनारे होते हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-12snfld"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (hi) already gives the explanation (it says \"बराबर\"))"
+        ],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (hi) already gives the explanation (it says \"बराबर\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Faces and Edges",
+          "hi": "सतह और किनारे"
+        },
+        "sub": {
+          "en": "Explore boxes and bottles",
+          "hi": "डिब्बों और बोतलों को देखो"
+        },
+        "ic": "📦",
+        "skill": "shapes2d",
+        "source": "Page 9",
+        "aims": [
+          {
+            "short": {
+              "en": "Count faces",
+              "hi": "सतह गिनो"
+            },
+            "point": {
+              "en": "The child can name shapes of boxes and bottles.",
+              "hi": "बच्चा डिब्बों और बोतलों के नाम बता सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I know if it is a cube or a cuboid?",
+              "hi": "मैं भूल गई! कैसे पता करूँ कि यह घन है या घनाभ?"
+            },
+            "hints": [
+              {
+                "en": "Look at the sides of the box. Are they matched?",
+                "hi": "डिब्बे की भुजाओं को देखो। क्या वे मिलती हैं?"
+              },
+              {
+                "en": "Check if all faces look the same.",
+                "hi": "जाँच करो कि क्या सभी सतह एक जैसी दिखती हैं।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "check if all faces are equal squares or different rectangles",
+                "hi": "देखें कि क्या सभी सतह बराबर वर्ग हैं या अलग आयत हैं",
+                "words": [
+                  "square faces",
+                  "rectangle",
+                  "वर्ग",
+                  "आयत"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Boxes and cans have faces, edges and corners.",
+              "hi": "डिब्बों और डिब्बियों के सतह, किनारे और कोने होते हैं।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "square",
+            "s": 4,
+            "say": {
+              "en": "This box has flat square faces.",
+              "hi": "इस डिब्बे की समतल सतहें हैं।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "rectangle",
+            "w": 6,
+            "h": 3,
+            "ask": "sides"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many sides does this flat face have?",
+              "hi": "इस समतल सतह की कितनी भुजाएँ हैं?"
+            },
+            "opts": [
+              "4",
+              "3"
+            ],
+            "hiOpts": [
+              "4",
+              "3"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might miscount or confuse sides with corners.",
+              "hi": "बच्चे गिनती में गलती कर सकते हैं या भुजाओं को कोनों से मिला सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Boxes have flat faces and straight edges.",
+              "hi": "डिब्बों की समतल सतह और सीधे किनारे होते हैं।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "📦",
+          "title": {
+            "en": "Faces and Edges",
+            "hi": "सतह और किनारे"
+          },
+          "sub": {
+            "en": "Explore boxes and bottles",
+            "hi": "डिब्बों और बोतलों को देखो"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 9",
+          "aims": [
+            {
+              "id": "s1xj5wpf.0",
+              "kind": "explain",
+              "short": {
+                "en": "Count faces",
+                "hi": "सतह गिनो"
+              },
+              "point": {
+                "en": "The child can name shapes of boxes and bottles.",
+                "hi": "बच्चा डिब्बों और बोतलों के नाम बता सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I know if it is a cube or a cuboid?",
+                "hi": "मैं भूल गई! कैसे पता करूँ कि यह घन है या घनाभ?"
+              },
+              "hints": [
+                {
+                  "en": "Look at the sides of the box. Are they matched?",
+                  "hi": "डिब्बे की भुजाओं को देखो। क्या वे मिलती हैं?"
+                },
+                {
+                  "en": "Check if all faces look the same.",
+                  "hi": "जाँच करो कि क्या सभी सतह एक जैसी दिखती हैं।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "check if all faces are equal squares or different rectangles",
+                  "hi": "देखें कि क्या सभी सतह बराबर वर्ग हैं या अलग आयत हैं",
+                  "words": [
+                    "square faces",
+                    "rectangle",
+                    "वर्ग",
+                    "आयत"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Boxes and cans have faces, edges and corners.",
+                "hi": "डिब्बों और डिब्बियों के सतह, किनारे और कोने होते हैं।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "square",
+              "s": 4,
+              "say": {
+                "en": "This box has flat square faces.",
+                "hi": "इस डिब्बे की समतल सतहें हैं।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "rectangle",
+              "w": 6,
+              "h": 3,
+              "ask": "sides"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many sides does this flat face have?",
+                "hi": "इस समतल सतह की कितनी भुजाएँ हैं?"
+              },
+              "opts": [
+                "4",
+                "3"
+              ],
+              "hiOpts": [
+                "4",
+                "3"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children might miscount or confuse sides with corners.",
+                "hi": "बच्चे गिनती में गलती कर सकते हैं या भुजाओं को कोनों से मिला सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Boxes have flat faces and straight edges.",
+                "hi": "डिब्बों की समतल सतह और सीधे किनारे होते हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1xj5wpf"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Toy Shapes",
+          "hi": "खिलौनों की आकृतियाँ"
+        },
+        "sub": {
+          "en": "Find shapes in toys",
+          "hi": "खिलौनों में आकृतियाँ ढूँढो"
+        },
+        "ic": "🚂",
+        "skill": "shapes2d",
+        "source": "Page 10",
+        "aims": [
+          {
+            "short": {
+              "en": "Find cylinders",
+              "hi": "बेलन ढूँढो"
+            },
+            "point": {
+              "en": "The child can pick out a cylinder from toy parts.",
+              "hi": "बच्चा खिलौने के भागों में से बेलन पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I spot a cylinder?",
+              "hi": "मैं भूल गई! बेलन को कैसे पहचानूँ?"
+            },
+            "hints": [
+              {
+                "en": "Look for round curved faces like a bottle.",
+                "hi": "बोतल की तरह गोल और मुड़ी हुई सतह देखो।"
+              },
+              {
+                "en": "Check if it can roll easily.",
+                "hi": "देखो कि क्या यह आसानी से लुढ़क सकता है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "it has curved surface and flat round ends",
+                "hi": "इसकी मुड़ी हुई सतह और गोल सिरे होते हैं",
+                "words": [
+                  "curved surface",
+                  "round",
+                  "bottle",
+                  "गोल",
+                  "मुड़ी सतह"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Toys are made of different shapes like cylinders and cones.",
+              "hi": "खिलौने बेलन और शंकु जैसी आकृतियों से बनते हैं।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "circle",
+            "folds": 2,
+            "say": {
+              "en": "A cylinder has flat round ends and a curved body.",
+              "hi": "बेलन के गोल सिरे और मुड़ा हुआ शरीर होता है।"
+            }
+          },
+          {
+            "t": "figures",
+            "items": [
+              {
+                "kind": "rectangle",
+                "w": 5
+              },
+              {
+                "kind": "triangle",
+                "sides": [
+                  4,
+                  4,
+                  4
+                ]
+              },
+              {
+                "kind": "circle",
+                "folds": 0
+              }
+            ],
+            "find": "circle",
+            "say": {
+              "en": "Look at these shapes. Find the round one.",
+              "hi": "इन आकृतियों को देखो। गोल आकृति ढूंढो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Which number is the round shape?",
+              "hi": "गोल आकृति कौन से नंबर पर है?"
+            },
+            "opts": [
+              "3",
+              "1"
+            ],
+            "hiOpts": [
+              "3",
+              "1"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might pick the first rectangle by mistake.",
+              "hi": "बच्चे गलती से पहला आयत चुन सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Cylinders and spheres have curved surfaces.",
+              "hi": "बेलन और गोले की मुड़ी हुई सतह होती है।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🚂",
+          "title": {
+            "en": "Toy Shapes",
+            "hi": "खिलौनों की आकृतियाँ"
+          },
+          "sub": {
+            "en": "Find shapes in toys",
+            "hi": "खिलौनों में आकृतियाँ ढूँढो"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 10",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Toys are made of different shapes like cylinders and cones.",
+                "hi": "खिलौने बेलन और शंकु जैसी आकृतियों से बनते हैं।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "circle",
+              "folds": 2,
+              "say": {
+                "en": "A cylinder has flat round ends and a curved body.",
+                "hi": "बेलन के गोल सिरे और मुड़ा हुआ शरीर होता है।"
+              }
+            },
+            {
+              "t": "figures",
+              "items": [
+                {
+                  "kind": "rectangle",
+                  "w": 5,
+                  "h": 3
+                },
+                {
+                  "kind": "triangle",
+                  "sides": [
+                    4,
+                    4,
+                    4
+                  ]
+                },
+                {
+                  "kind": "circle",
+                  "folds": 0
+                }
+              ],
+              "find": "circle",
+              "say": {
+                "en": "Look at these shapes. Find the round one.",
+                "hi": "इन आकृतियों को देखो। गोल आकृति ढूंढो।"
+              }
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Which number is the round shape?",
+                "hi": "गोल आकृति कौन से नंबर पर है?"
+              },
+              "opts": [
+                "1",
+                "3"
+              ],
+              "hiOpts": [
+                "1",
+                "3"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might pick the first rectangle by mistake.",
+                "hi": "बच्चे गलती से पहला आयत चुन सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Cylinders and spheres have curved surfaces.",
+                "hi": "बेलन और गोले की मुड़ी हुई सतह होती है।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-10o5ses"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says \"round\"))"
+        ],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"round\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Toy Shapes",
+          "hi": "खिलौनों की आकृतियाँ"
+        },
+        "sub": {
+          "en": "Find shapes in toys",
+          "hi": "खिलौनों में आकृतियाँ ढूँढो"
+        },
+        "ic": "🚂",
+        "skill": "shapes2d",
+        "source": "Page 10",
+        "aims": [
+          {
+            "short": {
+              "en": "Find cylinders",
+              "hi": "बेलन ढूँढो"
+            },
+            "point": {
+              "en": "The child can pick out a cylinder from toy parts.",
+              "hi": "बच्चा खिलौने के भागों में से बेलन पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I spot a cylinder?",
+              "hi": "मैं भूल गई! बेलन को कैसे पहचानूँ?"
+            },
+            "hints": [
+              {
+                "en": "Look for curved surfaces like a bottle.",
+                "hi": "बोतल की तरह मुड़ी हुई सतह देखो।"
+              },
+              {
+                "en": "Check if it can roll easily.",
+                "hi": "देखो कि क्या यह आसानी से लुढ़क सकता है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "it has curved surface and flat round ends",
+                "hi": "इसकी मुड़ी हुई सतह और गोल सिरे होते हैं",
+                "words": [
+                  "curved surface",
+                  "bottle",
+                  "मुड़ी सतह"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Toys are made of different shapes like cylinders and cones.",
+              "hi": "खिलौने बेलन और शंकु जैसी आकृतियों से बनते हैं।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "circle",
+            "folds": 2,
+            "say": {
+              "en": "A cylinder has flat ends and a curved body.",
+              "hi": "बेलन के सिरे और मुड़ा हुआ शरीर होता है।"
+            }
+          },
+          {
+            "t": "figures",
+            "items": [
+              {
+                "kind": "rectangle",
+                "w": 5
+              },
+              {
+                "kind": "triangle",
+                "sides": [
+                  4,
+                  4,
+                  4
+                ]
+              },
+              {
+                "kind": "circle",
+                "folds": 0
+              }
+            ],
+            "find": "circle",
+            "say": {
+              "en": "Look at these shapes. Find the circular one.",
+              "hi": "इन आकृतियों को देखो। गोल आकृति ढूंढो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Which number is the circular shape?",
+              "hi": "गोल आकृति कौन से नंबर पर है?"
+            },
+            "opts": [
+              "3",
+              "1"
+            ],
+            "hiOpts": [
+              "3",
+              "1"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might pick the first rectangle by mistake.",
+              "hi": "बच्चे गलती से पहला आयत चुन सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Cylinders and spheres have curved surfaces.",
+              "hi": "बेलन और गोले की मुड़ी हुई सतह होती है।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🚂",
+          "title": {
+            "en": "Toy Shapes",
+            "hi": "खिलौनों की आकृतियाँ"
+          },
+          "sub": {
+            "en": "Find shapes in toys",
+            "hi": "खिलौनों में आकृतियाँ ढूँढो"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 10",
+          "aims": [
+            {
+              "id": "s1ccgogn.0",
+              "kind": "explain",
+              "short": {
+                "en": "Find cylinders",
+                "hi": "बेलन ढूँढो"
+              },
+              "point": {
+                "en": "The child can pick out a cylinder from toy parts.",
+                "hi": "बच्चा खिलौने के भागों में से बेलन पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I spot a cylinder?",
+                "hi": "मैं भूल गई! बेलन को कैसे पहचानूँ?"
+              },
+              "hints": [
+                {
+                  "en": "Think back to the lesson. What did you do first?",
+                  "hi": "पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?"
+                },
+                {
+                  "en": "Check if it can roll easily.",
+                  "hi": "देखो कि क्या यह आसानी से लुढ़क सकता है।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "it has curved surface and flat round ends",
+                  "hi": "इसकी मुड़ी हुई सतह और गोल सिरे होते हैं",
+                  "words": [
+                    "curved surface",
+                    "bottle",
+                    "मुड़ी सतह"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Toys are made of different shapes like cylinders and cones.",
+                "hi": "खिलौने बेलन और शंकु जैसी आकृतियों से बनते हैं।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "circle",
+              "folds": 2,
+              "say": {
+                "en": "A cylinder has flat ends and a curved body.",
+                "hi": "बेलन के सिरे और मुड़ा हुआ शरीर होता है।"
+              }
+            },
+            {
+              "t": "figures",
+              "items": [
+                {
+                  "kind": "rectangle",
+                  "w": 5,
+                  "h": 3
+                },
+                {
+                  "kind": "triangle",
+                  "sides": [
+                    4,
+                    4,
+                    4
+                  ]
+                },
+                {
+                  "kind": "circle",
+                  "folds": 0
+                }
+              ],
+              "find": "circle",
+              "say": {
+                "en": "Look at these shapes. Find the circular one.",
+                "hi": "इन आकृतियों को देखो। गोल आकृति ढूंढो।"
+              }
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Which number is the circular shape?",
+                "hi": "गोल आकृति कौन से नंबर पर है?"
+              },
+              "opts": [
+                "1",
+                "3"
+              ],
+              "hiOpts": [
+                "1",
+                "3"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might pick the first rectangle by mistake.",
+                "hi": "बच्चे गलती से पहला आयत चुन सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Cylinders and spheres have curved surfaces.",
+                "hi": "बेलन और गोले की मुड़ी हुई सतह होती है।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1ccgogn"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [],
+        "aimFixes": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"bottle\") — replaced with a general nudge"
+        ]
+      },
+      "verdict": "repaired"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Building Models",
+          "hi": "मॉडल बनाना"
+        },
+        "sub": {
+          "en": "Arrange shapes together",
+          "hi": "आकृतियों को साथ रखना"
+        },
+        "ic": "🏰",
+        "skill": "shapes2d",
+        "source": "Page 11",
+        "aims": [
+          {
+            "short": {
+              "en": "Describe order",
+              "hi": "क्रम बताओ"
+            },
+            "point": {
+              "en": "The child can describe what shape is on top or below.",
+              "hi": "बच्चा बता सकता है कि कौन सी आकृति ऊपर या नीचे है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I tell which shape is on top?",
+              "hi": "मैं भूल गई! कैसे बताऊँ कि कौन सी आकृति सबसे ऊपर है?"
+            },
+            "hints": [
+              {
+                "en": "Look at where the cone sits in the tower.",
+                "hi": "देखो कि मीनार में शंकु कहाँ रखा है।"
+              },
+              {
+                "en": "Check which object is resting above the other.",
+                "hi": "जाँच करो कि कौन सी वस्तु दूसरी के ऊपर रखी है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "look at the position and say it is on top",
+                "hi": "स्थिति देखो और कहो कि यह ऊपर है",
+                "words": [
+                  "on top",
+                  "above",
+                  "ऊपर",
+                  "पर"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "We can stack shapes to build towers and houses.",
+              "hi": "हम मीनारें और घर बनाने के लिए आकृतियों को जमा सकते हैं।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "square",
+            "s": 4,
+            "say": {
+              "en": "The cone is placed on top of the cylinder.",
+              "hi": "शंकु बेलन के ऊपर रखा गया है।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "triangle",
+            "sides": [
+              4,
+              4,
+              4
+            ],
+            "ask": "equal"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Are all the sides of this shape equal?",
+              "hi": "क्या इस आकृति की सभी भुजाएँ बराबर हैं?"
+            },
+            "opts": [
+              "Yes",
+              "No"
+            ],
+            "hiOpts": [
+              "हाँ",
+              "नहीं"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might guess without checking all sides.",
+              "hi": "बच्चे बिना सारी भुजाएँ देखे अंदाज़ा लगा सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "We can build wonderful models with shapes.",
+              "hi": "हम आकृतियों से सुंदर मॉडल बना सकते हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🏰",
+          "title": {
+            "en": "Building Models",
+            "hi": "मॉडल बनाना"
+          },
+          "sub": {
+            "en": "Arrange shapes together",
+            "hi": "आकृतियों को साथ रखना"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 11",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "We can stack shapes to build towers and houses.",
+                "hi": "हम मीनारें और घर बनाने के लिए आकृतियों को जमा सकते हैं।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "square",
+              "s": 4,
+              "say": {
+                "en": "The cone is placed on top of the cylinder.",
+                "hi": "शंकु बेलन के ऊपर रखा गया है।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "triangle",
+              "sides": [
+                4,
+                4,
+                4
+              ],
+              "ask": "equal"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Are all the sides of this shape equal?",
+                "hi": "क्या इस आकृति की सभी भुजाएँ बराबर हैं?"
+              },
+              "opts": [
+                "No",
+                "Yes"
+              ],
+              "hiOpts": [
+                "नहीं",
+                "हाँ"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might guess without checking all sides.",
+                "hi": "बच्चे बिना सारी भुजाएँ देखे अंदाज़ा लगा सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "We can build wonderful models with shapes.",
+                "hi": "हम आकृतियों से सुंदर मॉडल बना सकते हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-8c36ks"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 2 (en) already gives the explanation (it says \"above\"))"
+        ],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [
+          "aim 1: hint 2 (en) already gives the explanation (it says \"above\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Building Models",
+          "hi": "मॉडल बनाना"
+        },
+        "sub": {
+          "en": "Arrange shapes together",
+          "hi": "आकृतियों को साथ रखना"
+        },
+        "ic": "🏰",
+        "skill": "shapes2d",
+        "source": "Page 11",
+        "aims": [
+          {
+            "short": {
+              "en": "Describe order",
+              "hi": "क्रम बताओ"
+            },
+            "point": {
+              "en": "The child can describe what shape is on top or below.",
+              "hi": "बच्चा बता सकता है कि कौन सी आकृति ऊपर या नीचे है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I tell which shape is placed higher?",
+              "hi": "मैं भूल गई! कैसे बताऊँ कि कौन सी आकृति ऊपर है?"
+            },
+            "hints": [
+              {
+                "en": "Look at where the cone sits in the tower.",
+                "hi": "देखो कि मीनार में शंकु कहाँ रखा है।"
+              },
+              {
+                "en": "Check which object is resting over the other.",
+                "hi": "जाँच करो कि कौन सी वस्तु दूसरी के ऊपर रखी है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "look at the position and say it is placed higher",
+                "hi": "स्थिति देखो और कहो कि यह ऊपर है",
+                "words": [
+                  "on top",
+                  "ऊपर",
+                  "पर"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "We can stack shapes to build towers and houses.",
+              "hi": "हम मीनारें और घर बनाने के लिए आकृतियों को जमा सकते हैं।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "square",
+            "s": 4,
+            "say": {
+              "en": "The cone is placed on top of the cylinder.",
+              "hi": "शंकु बेलन के ऊपर रखा गया है।"
+            }
+          },
+          {
+            "t": "figure",
+            "kind": "triangle",
+            "sides": [
+              4,
+              4,
+              4
+            ],
+            "ask": "equal"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Are all the sides of this shape equal?",
+              "hi": "क्या इस आकृति की सभी भुजाएँ बराबर हैं?"
+            },
+            "opts": [
+              "Yes",
+              "No"
+            ],
+            "hiOpts": [
+              "हाँ",
+              "नहीं"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might guess without checking all sides.",
+              "hi": "बच्चे बिना सारी भुजाएँ देखे अंदाज़ा लगा सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "We can build wonderful models with shapes.",
+              "hi": "हम आकृतियों से सुंदर मॉडल बना सकते हैं।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🏰",
+          "title": {
+            "en": "Building Models",
+            "hi": "मॉडल बनाना"
+          },
+          "sub": {
+            "en": "Arrange shapes together",
+            "hi": "आकृतियों को साथ रखना"
+          },
+          "skillId": "shapes2d",
+          "source": "Page 11",
+          "aims": [
+            {
+              "id": "scmm6cb.0",
+              "kind": "explain",
+              "short": {
+                "en": "Describe order",
+                "hi": "क्रम बताओ"
+              },
+              "point": {
+                "en": "The child can describe what shape is on top or below.",
+                "hi": "बच्चा बता सकता है कि कौन सी आकृति ऊपर या नीचे है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I tell which shape is placed higher?",
+                "hi": "मैं भूल गई! कैसे बताऊँ कि कौन सी आकृति ऊपर है?"
+              },
+              "hints": [
+                {
+                  "en": "Look at where the cone sits in the tower.",
+                  "hi": "देखो कि मीनार में शंकु कहाँ रखा है।"
+                },
+                {
+                  "en": "Check which object is resting over the other.",
+                  "hi": "जाँच करो कि कौन सी वस्तु दूसरी के ऊपर रखी है।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "look at the position and say it is placed higher",
+                  "hi": "स्थिति देखो और कहो कि यह ऊपर है",
+                  "words": [
+                    "on top",
+                    "पर"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "We can stack shapes to build towers and houses.",
+                "hi": "हम मीनारें और घर बनाने के लिए आकृतियों को जमा सकते हैं।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "square",
+              "s": 4,
+              "say": {
+                "en": "The cone is placed on top of the cylinder.",
+                "hi": "शंकु बेलन के ऊपर रखा गया है।"
+              }
+            },
+            {
+              "t": "figure",
+              "kind": "triangle",
+              "sides": [
+                4,
+                4,
+                4
+              ],
+              "ask": "equal"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Are all the sides of this shape equal?",
+                "hi": "क्या इस आकृति की सभी भुजाएँ बराबर हैं?"
+              },
+              "opts": [
+                "No",
+                "Yes"
+              ],
+              "hiOpts": [
+                "नहीं",
+                "हाँ"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might guess without checking all sides.",
+                "hi": "बच्चे बिना सारी भुजाएँ देखे अंदाज़ा लगा सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "We can build wonderful models with shapes.",
+                "hi": "हम आकृतियों से सुंदर मॉडल बना सकते हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-cmm6cb"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "shape"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    }
+  ]
+}

@@ -1,0 +1,1252 @@
+{
+  "at": "2026-11-13T15:57:32.630Z",
+  "cls": "c3",
+  "band": "developing",
+  "rules": {
+    "band": "developing",
+    "ages": [
+      7,
+      8
+    ],
+    "maxNumber": 100,
+    "sayWords": 18,
+    "read": "developing"
+  },
+  "note": "",
+  "source": "cemm113.pdf",
+  "model": "gemini-3.5-flash-lite",
+  "chapter": "Time Goes On",
+  "draftMs": 131178,
+  "tried": [
+    {
+      "model": "gemini-3.7-flash",
+      "outcome": "hung",
+      "ms": 108006
+    },
+    {
+      "model": "gemini-3.5-flash-lite",
+      "outcome": 503,
+      "ms": 9603
+    },
+    {
+      "model": "gemini-3.5-flash-lite",
+      "outcome": "ok",
+      "ms": 12051,
+      "tokens": {
+        "in": 10101,
+        "out": 3251,
+        "total": 13352
+      }
+    }
+  ],
+  "repair": {
+    "status": 200,
+    "model": "gemini-3.5-flash-lite",
+    "error": "",
+    "ms": 3602,
+    "tried": [
+      {
+        "model": "gemini-3.5-flash-lite",
+        "outcome": "ok",
+        "ms": 3600,
+        "tokens": {
+          "in": 4285,
+          "out": 1020,
+          "total": 5305
+        }
+      }
+    ]
+  },
+  "drafts": [
+    {
+      "raw": {
+        "title": {
+          "en": "Reading the Clock",
+          "hi": "घड़ी पढ़ना"
+        },
+        "sub": {
+          "en": "Hour and minute hands",
+          "hi": "घंटे और मिनट की सुई"
+        },
+        "ic": "⏰",
+        "skill": "time2",
+        "source": "Page 171",
+        "aims": [
+          {
+            "short": {
+              "en": "Hour hand",
+              "hi": "घंटे की सुई"
+            },
+            "point": {
+              "en": "The child can identify the short hour hand on a clock.",
+              "hi": "बच्चा घड़ी पर छोटी घंटे की सुई पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! Which hand on the clock tells us the hour?",
+              "hi": "मैं भूल गई! घड़ी में कौन सी सुई हमें घंटे बताती है?"
+            },
+            "hints": [
+              {
+                "en": "Look at the two hands. Which one is shorter?",
+                "hi": "दोनों सुइयों को देखो। कौन सी छोटी है?"
+              },
+              {
+                "en": "Does the shorter hand move slowly to show hours?",
+                "hi": "क्या छोटी सुई घंटे दिखाने के लिए धीरे चलती है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the short hand is the hour hand",
+                "hi": "छोटी सुई घंटे की सुई होती है",
+                "words": [
+                  "short hand",
+                  "choti sui",
+                  "hour hand",
+                  "घंटे की सुई",
+                  "छोटी"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us look at the clock and its hands.",
+              "hi": "आओ घड़ी और उसकी सुइयों को देखें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "A clock has an hour hand and a minute hand. The short hand is the hour hand.",
+              "hi": "घड़ी में घंटे की सुई और मिनट की सुई होती है। छोटी सुई घंटे की सुई है।"
+            },
+            "art": "⏰"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Which hand is the hour hand?",
+              "hi": "घंटे की सुई कौन सी है?"
+            },
+            "opts": [
+              "Short hand",
+              "Long hand"
+            ],
+            "hiOpts": [
+              "छोटी सुई",
+              "लंबी सुई"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children sometimes confuse the hour hand with the minute hand because both move.",
+              "hi": "बच्चे कभी-कभी घंटे और मिनट की सुई में भ्रमित हो जाते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "The short hand is the hour hand.",
+              "hi": "छोटी सुई घंटे की सुई होती है।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "⏰",
+          "title": {
+            "en": "Reading the Clock",
+            "hi": "घड़ी पढ़ना"
+          },
+          "sub": {
+            "en": "Hour and minute hands",
+            "hi": "घंटे और मिनट की सुई"
+          },
+          "skillId": "time2",
+          "source": "Page 171",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us look at the clock and its hands.",
+                "hi": "आओ घड़ी और उसकी सुइयों को देखें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "A clock has an hour hand and a minute hand. The short hand is the hour hand.",
+                "hi": "घड़ी में घंटे की सुई और मिनट की सुई होती है। छोटी सुई घंटे की सुई है।"
+              },
+              "art": "⏰"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Which hand is the hour hand?",
+                "hi": "घंटे की सुई कौन सी है?"
+              },
+              "opts": [
+                "Short hand",
+                "Long hand"
+              ],
+              "hiOpts": [
+                "छोटी सुई",
+                "लंबी सुई"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children sometimes confuse the hour hand with the minute hand because both move.",
+                "hi": "बच्चे कभी-कभी घंटे और मिनट की सुई में भ्रमित हो जाते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "The short hand is the hour hand.",
+                "hi": "छोटी सुई घंटे की सुई होती है।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-78x83r"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (hi) already gives the explanation (it says \"छोटी\"))"
+        ],
+        "checks": [
+          "text"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (hi) already gives the explanation (it says \"छोटी\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Reading the Clock",
+          "hi": "घड़ी पढ़ना"
+        },
+        "sub": {
+          "en": "Hour and minute hands",
+          "hi": "घंटे और मिनट की सुई"
+        },
+        "ic": "⏰",
+        "skill": "time2",
+        "source": "Page 171",
+        "aims": [
+          {
+            "short": {
+              "en": "Hour hand",
+              "hi": "घंटे की सुई"
+            },
+            "point": {
+              "en": "The child can identify the short hour hand on a clock.",
+              "hi": "बच्चा घड़ी पर छोटी घंटे की सुई पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! Which hand on the clock tells us the hour?",
+              "hi": "मैं भूल गई! घड़ी में कौन सी सुई हमें घंटे बताती है?"
+            },
+            "hints": [
+              {
+                "en": "Look at the two hands on the clock face.",
+                "hi": "घड़ी के डायल पर दोनों सुइयों को देखो।"
+              },
+              {
+                "en": "Does the hand move slowly to show time?",
+                "hi": "क्या यह सुई समय दिखाने के लिए धीरे चलती है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the short hand is the hour hand",
+                "hi": "छोटी सुई घंटे की सुई होती है",
+                "words": [
+                  "short hand",
+                  "choti sui",
+                  "hour hand",
+                  "घंटे की सुई",
+                  "छोटी"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us look at the clock and its hands.",
+              "hi": "आओ घड़ी और उसकी सुइयों को देखें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "A clock has an hour hand and a minute hand. The short hand is the hour hand.",
+              "hi": "घड़ी में घंटे की सुई और मिनट की सुई होती है। छोटी सुई घंटे की सुई है।"
+            },
+            "art": "⏰"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Which hand is the hour hand?",
+              "hi": "घंटे की सुई कौन सी है?"
+            },
+            "opts": [
+              "Short hand",
+              "Long hand"
+            ],
+            "hiOpts": [
+              "छोटी सुई",
+              "लंबी सुई"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children sometimes confuse the hour hand with the minute hand because both move.",
+              "hi": "बच्चे कभी-कभी घंटे और मिनट की सुई में भ्रमित हो जाते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "The short hand is the hour hand.",
+              "hi": "छोटी सुई घंटे की सुई होती है।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "⏰",
+          "title": {
+            "en": "Reading the Clock",
+            "hi": "घड़ी पढ़ना"
+          },
+          "sub": {
+            "en": "Hour and minute hands",
+            "hi": "घंटे और मिनट की सुई"
+          },
+          "skillId": "time2",
+          "source": "Page 171",
+          "aims": [
+            {
+              "id": "sqzwwl7.0",
+              "kind": "explain",
+              "short": {
+                "en": "Hour hand",
+                "hi": "घंटे की सुई"
+              },
+              "point": {
+                "en": "The child can identify the short hour hand on a clock.",
+                "hi": "बच्चा घड़ी पर छोटी घंटे की सुई पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! Which hand on the clock tells us the hour?",
+                "hi": "मैं भूल गई! घड़ी में कौन सी सुई हमें घंटे बताती है?"
+              },
+              "hints": [
+                {
+                  "en": "Look at the two hands on the clock face.",
+                  "hi": "घड़ी के डायल पर दोनों सुइयों को देखो।"
+                },
+                {
+                  "en": "Does the hand move slowly to show time?",
+                  "hi": "क्या यह सुई समय दिखाने के लिए धीरे चलती है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the short hand is the hour hand",
+                  "hi": "छोटी सुई घंटे की सुई होती है",
+                  "words": [
+                    "short hand",
+                    "choti sui",
+                    "घंटे की सुई",
+                    "छोटी"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us look at the clock and its hands.",
+                "hi": "आओ घड़ी और उसकी सुइयों को देखें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "A clock has an hour hand and a minute hand. The short hand is the hour hand.",
+                "hi": "घड़ी में घंटे की सुई और मिनट की सुई होती है। छोटी सुई घंटे की सुई है।"
+              },
+              "art": "⏰"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Which hand is the hour hand?",
+                "hi": "घंटे की सुई कौन सी है?"
+              },
+              "opts": [
+                "Short hand",
+                "Long hand"
+              ],
+              "hiOpts": [
+                "छोटी सुई",
+                "लंबी सुई"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children sometimes confuse the hour hand with the minute hand because both move.",
+                "hi": "बच्चे कभी-कभी घंटे और मिनट की सुई में भ्रमित हो जाते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "The short hand is the hour hand.",
+                "hi": "छोटी सुई घंटे की सुई होती है।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-qzwwl7"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "text"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Time Taken",
+          "hi": "लगा समय"
+        },
+        "sub": {
+          "en": "Minutes for breakfast",
+          "hi": "नाश्ते में लगे मिनट"
+        },
+        "ic": "🍳",
+        "skill": "time2",
+        "source": "Page 171",
+        "aims": [
+          {
+            "short": {
+              "en": "Find minutes",
+              "hi": "मिनट निकालो"
+            },
+            "point": {
+              "en": "The child can find the number of minutes between 7 o'clock and 7:15.",
+              "hi": "बच्चा 7 बजे और 7:15 के बीच के मिनट बता सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we count the minutes from 7 o'clock to 7:15?",
+              "hi": "मैं भूल गई! 7 बजे से 7:15 तक मिनट कैसे गिनते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Look at where the minute hand moves from 12 to 3.",
+                "hi": "देखो मिनट की सुई 12 से 3 पर कैसे जाती है।"
+              },
+              {
+                "en": "Count by fives for each number on the clock face.",
+                "hi": "घड़ी के हर अंक पर पाँच-पाँच करके गिनो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "count five minutes for each number the minute hand crosses",
+                "hi": "मिनट की सुई जितने अंक पार करे, हर एक के लिए पाँच मिनट गिनो",
+                "words": [
+                  "count",
+                  "five minutes",
+                  "paanch minute",
+                  "गिनो",
+                  "पाँच"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Hetal took some time to eat breakfast from 7:00 to 7:15.",
+              "hi": "हेतल ने 7:00 से 7:15 तक नाश्ता किया।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "She started at 7 o'clock and finished at 7:15 in the morning.",
+              "hi": "उसने सुबह 7 बजे शुरू किया और 7:15 पर खत्म किया।"
+            },
+            "art": "🥣"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many minutes did she take?",
+              "hi": "उसे कितने मिनट लगे?"
+            },
+            "opts": [
+              "15 minutes",
+              "60 minutes"
+            ],
+            "hiOpts": [
+              "15 मिनट",
+              "60 मिनट"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might confuse the minute mark 15 with 60 minutes in an hour.",
+              "hi": "बच्चे 15 मिनट को एक घंटे के 60 मिनट से मिला सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Count by fives to find the minutes passed.",
+              "hi": "बीते हुए मिनट जानने के लिए पाँच-पाँच गिनो।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🍳",
+          "title": {
+            "en": "Time Taken",
+            "hi": "लगा समय"
+          },
+          "sub": {
+            "en": "Minutes for breakfast",
+            "hi": "नाश्ते में लगे मिनट"
+          },
+          "skillId": "time2",
+          "source": "Page 171",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Hetal took some time to eat breakfast from 7:00 to 7:15.",
+                "hi": "हेतल ने 7:00 से 7:15 तक नाश्ता किया।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "She started at 7 o'clock and finished at 7:15 in the morning.",
+                "hi": "उसने सुबह 7 बजे शुरू किया और 7:15 पर खत्म किया।"
+              },
+              "art": "🥣"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many minutes did she take?",
+                "hi": "उसे कितने मिनट लगे?"
+              },
+              "opts": [
+                "15 minutes",
+                "60 minutes"
+              ],
+              "hiOpts": [
+                "15 मिनट",
+                "60 मिनट"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children might confuse the minute mark 15 with 60 minutes in an hour.",
+                "hi": "बच्चे 15 मिनट को एक घंटे के 60 मिनट से मिला सकते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Count by fives to find the minutes passed.",
+                "hi": "बीते हुए मिनट जानने के लिए पाँच-पाँच गिनो।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-17d1rtk"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"count\"))",
+          "beat 2: the right answer \"15 minutes\" isn't in the passage"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [
+          "aim 1: Munni's question (en) already gives the explanation (it says \"count\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Time Taken",
+          "hi": "लगा समय"
+        },
+        "sub": {
+          "en": "Minutes for breakfast",
+          "hi": "नाश्ते में लगे मिनट"
+        },
+        "ic": "🍳",
+        "skill": "time2",
+        "source": "Page 171",
+        "aims": [
+          {
+            "short": {
+              "en": "Find minutes",
+              "hi": "मिनट निकालो"
+            },
+            "point": {
+              "en": "The child can find the number of minutes between 7 o'clock and 7:15.",
+              "hi": "बच्चा 7 बजे और 7:15 के बीच के मिनट बता सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we know the minutes from 7 o'clock to 7:15?",
+              "hi": "मैं भूल गई! 7 बजे से 7:15 तक के मिनट कैसे पता चलते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Look at where the minute hand moves from 12 to 3.",
+                "hi": "देखो मिनट की सुई 12 से 3 पर कैसे जाती है।"
+              },
+              {
+                "en": "Use fives for each number on the clock face.",
+                "hi": "घड़ी के हर अंक पर पाँच-पाँच का उपयोग करो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "count five minutes for each number the minute hand crosses",
+                "hi": "मिनट की सुई जितने अंक पार करे, हर एक के लिए पाँच मिनट गिनो",
+                "words": [
+                  "count",
+                  "five minutes",
+                  "paanch minute",
+                  "गिनो",
+                  "पाँच"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Hetal took some time to eat breakfast from 7:00 to 7:15.",
+              "hi": "हेतल ने 7:00 से 7:15 तक नाश्ता किया।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "She started at 7 o'clock and finished at 7:15 in the morning. It took 15 minutes.",
+              "hi": "उसने सुबह 7 बजे शुरू किया और 7:15 पर खत्म किया। इसमें 15 मिनट लगे।"
+            },
+            "art": "🥣"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many minutes did she take?",
+              "hi": "उसे कितने मिनट लगे?"
+            },
+            "opts": [
+              "15 minutes",
+              "60 minutes"
+            ],
+            "hiOpts": [
+              "15 मिनट",
+              "60 मिनट"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might confuse the minute mark 15 with 60 minutes in an hour.",
+              "hi": "बच्चे 15 मिनट को एक घंटे के 60 मिनट से मिला सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Count by fives to find the minutes passed.",
+              "hi": "बीते हुए मिनट जानने के लिए पाँच-पाँच गिनो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🍳",
+          "title": {
+            "en": "Time Taken",
+            "hi": "लगा समय"
+          },
+          "sub": {
+            "en": "Minutes for breakfast",
+            "hi": "नाश्ते में लगे मिनट"
+          },
+          "skillId": "time2",
+          "source": "Page 171",
+          "aims": [
+            {
+              "id": "swu9lyv.0",
+              "kind": "explain",
+              "short": {
+                "en": "Find minutes",
+                "hi": "मिनट निकालो"
+              },
+              "point": {
+                "en": "The child can find the number of minutes between 7 o'clock and 7:15.",
+                "hi": "बच्चा 7 बजे और 7:15 के बीच के मिनट बता सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do we know the minutes from 7 o'clock to 7:15?",
+                "hi": "मैं भूल गई! 7 बजे से 7:15 तक के मिनट कैसे पता चलते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Look at where the minute hand moves from 12 to 3.",
+                  "hi": "देखो मिनट की सुई 12 से 3 पर कैसे जाती है।"
+                },
+                {
+                  "en": "Show me with your finger, then tell me what you did.",
+                  "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "count five minutes for each number the minute hand crosses",
+                  "hi": "मिनट की सुई जितने अंक पार करे, हर एक के लिए पाँच मिनट गिनो",
+                  "words": [
+                    "count",
+                    "five minutes",
+                    "paanch minute",
+                    "गिनो",
+                    "पाँच"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Hetal took some time to eat breakfast from 7:00 to 7:15.",
+                "hi": "हेतल ने 7:00 से 7:15 तक नाश्ता किया।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "She started at 7 o'clock and finished at 7:15 in the morning. It took 15 minutes.",
+                "hi": "उसने सुबह 7 बजे शुरू किया और 7:15 पर खत्म किया। इसमें 15 मिनट लगे।"
+              },
+              "art": "🥣"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many minutes did she take?",
+                "hi": "उसे कितने मिनट लगे?"
+              },
+              "opts": [
+                "15 minutes",
+                "60 minutes"
+              ],
+              "hiOpts": [
+                "15 मिनट",
+                "60 मिनट"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children might confuse the minute mark 15 with 60 minutes in an hour.",
+                "hi": "बच्चे 15 मिनट को एक घंटे के 60 मिनट से मिला सकते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Count by fives to find the minutes passed.",
+                "hi": "बीते हुए मिनट जानने के लिए पाँच-पाँच गिनो।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-wu9lyv"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "text"
+        ],
+        "aimErrors": [],
+        "aimFixes": [
+          "aim 1: hint 2 (hi) already gives the explanation (it says \"पाँच\") — replaced with a general nudge"
+        ]
+      },
+      "verdict": "repaired"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Growing Vegetables",
+          "hi": "सब्ज़ियों का उगना"
+        },
+        "sub": {
+          "en": "Days and months for plants",
+          "hi": "पौधों के लिए दिन और महीने"
+        },
+        "ic": "🌱",
+        "skill": "time2",
+        "source": "Page 173",
+        "aims": [
+          {
+            "short": {
+              "en": "Radish time",
+              "hi": "मूली का समय"
+            },
+            "point": {
+              "en": "The child can tell how many weeks radish takes to grow.",
+              "hi": "बच्चा बता सकता है कि मूली उगने में कितने हफ्ते लेती है।"
+            },
+            "forget": {
+              "en": "I forgot! How many weeks does radish take to grow?",
+              "hi": "मैं भूल गई! मूली को उगने में कितने हफ्ते लगते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Look at the vegetable seeds list in Grandma's garden.",
+                "hi": "दादी के बगीचे में सब्ज़ियों के बीजों की सूची देखो।"
+              },
+              {
+                "en": "Does radish take weeks or months?",
+                "hi": "क्या मूली को हफ्ते लगते हैं या महीने?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "radish takes 2 to 3 weeks to grow",
+                "hi": "मूली को उगने में 2 से 3 हफ्ते लगते हैं",
+                "words": [
+                  "2 to 3 weeks",
+                  "do se teen hafte",
+                  "weeks",
+                  "हफ्ते",
+                  "सप्ताह"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Different vegetable seeds take different times to grow.",
+              "hi": "अलग-अलग सब्ज़ियों के बीजों को उगने में अलग समय लगता है।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Radish takes 2 to 3 weeks to grow in the soil.",
+              "hi": "मूली को मिट्टी में उगने में 2 से 3 हफ्ते लगते हैं।"
+            },
+            "art": "🥕"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many weeks does radish take to grow?",
+              "hi": "मूली को उगने में कितने हफ्ते लगते हैं?"
+            },
+            "opts": [
+              "2-3 weeks",
+              "2-3 months"
+            ],
+            "hiOpts": [
+              "2-3 हफ्ते",
+              "2-3 महीने"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might mix up weeks with months which other vegetables take.",
+              "hi": "बच्चे हफ्तों को महीनों से मिला सकते हैं जो दूसरी सब्ज़ियाँ लेती हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Radish takes 2 to 3 weeks to grow.",
+              "hi": "मूली को उगने में 2 से 3 हफ्ते लगते हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🌱",
+          "title": {
+            "en": "Growing Vegetables",
+            "hi": "सब्ज़ियों का उगना"
+          },
+          "sub": {
+            "en": "Days and months for plants",
+            "hi": "पौधों के लिए दिन और महीने"
+          },
+          "skillId": "time2",
+          "source": "Page 173",
+          "aims": [
+            {
+              "id": "s1cyhci7.0",
+              "kind": "explain",
+              "short": {
+                "en": "Radish time",
+                "hi": "मूली का समय"
+              },
+              "point": {
+                "en": "The child can tell how many weeks radish takes to grow.",
+                "hi": "बच्चा बता सकता है कि मूली उगने में कितने हफ्ते लेती है।"
+              },
+              "forget": {
+                "en": "I forgot! How many weeks does radish take to grow?",
+                "hi": "मैं भूल गई! मूली को उगने में कितने हफ्ते लगते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Look at the vegetable seeds list in Grandma's garden.",
+                  "hi": "दादी के बगीचे में सब्ज़ियों के बीजों की सूची देखो।"
+                },
+                {
+                  "en": "Does radish take weeks or months?",
+                  "hi": "क्या मूली को हफ्ते लगते हैं या महीने?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "radish takes 2 to 3 weeks to grow",
+                  "hi": "मूली को उगने में 2 से 3 हफ्ते लगते हैं",
+                  "words": [
+                    "2 to 3 weeks",
+                    "do se teen hafte",
+                    "सप्ताह"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Different vegetable seeds take different times to grow.",
+                "hi": "अलग-अलग सब्ज़ियों के बीजों को उगने में अलग समय लगता है।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Radish takes 2 to 3 weeks to grow in the soil.",
+                "hi": "मूली को मिट्टी में उगने में 2 से 3 हफ्ते लगते हैं।"
+              },
+              "art": "🥕"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many weeks does radish take to grow?",
+                "hi": "मूली को उगने में कितने हफ्ते लगते हैं?"
+              },
+              "opts": [
+                "2-3 weeks",
+                "2-3 months"
+              ],
+              "hiOpts": [
+                "2-3 हफ्ते",
+                "2-3 महीने"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children might mix up weeks with months which other vegetables take.",
+                "hi": "बच्चे हफ्तों को महीनों से मिला सकते हैं जो दूसरी सब्ज़ियाँ लेती हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Radish takes 2 to 3 weeks to grow.",
+                "hi": "मूली को उगने में 2 से 3 हफ्ते लगते हैं।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-1cyhci7"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "text"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "repairRaw": null,
+      "second": null,
+      "verdict": "passed"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Bincy's Age",
+          "hi": "बिंसी की आयु"
+        },
+        "sub": {
+          "en": "Reading birth dates",
+          "hi": "जन्म तिथि पढ़ना"
+        },
+        "ic": "👶",
+        "skill": "time2",
+        "source": "Page 169",
+        "aims": [
+          {
+            "short": {
+              "en": "Birth month",
+              "hi": "जन्म का महीना"
+            },
+            "point": {
+              "en": "The child can find the birth month from a date like 2/5/2015.",
+              "hi": "बच्चा 2/5/2015 जैसी तारीख से जन्म का महीना बता सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! What month does the number 5 stand for in a date?",
+              "hi": "मैं भूल गई! तारीख में 5 का अंक कौन सा महीना बताता है?"
+            },
+            "hints": [
+              {
+                "en": "Count the months of the year starting from January as 1.",
+                "hi": "जनवरी से शुरू करके साल के महीने गिनो।"
+              },
+              {
+                "en": "Which month comes fifth in the year?",
+                "hi": "साल में पाँचवाँ महीना कौन सा आता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the fifth month of the year is May",
+                "hi": "साल का पाँचवाँ महीना मई होता है",
+                "words": [
+                  "May",
+                  "मई",
+                  "panchva mahina",
+                  "fifth month"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us read Bincy's birth certificate date.",
+              "hi": "आओ बिंसी के जन्म प्रमाण पत्र की तारीख पढ़ें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Bincy was born on 02/05/2015. Here 5 stands for the fifth month, May.",
+              "hi": "बिंसी का जन्म 02/05/2015 को हुआ था। यहाँ 5 पाँचवें महीने, मई को बताता है।"
+            },
+            "art": "📄"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Which month is shown by 5 in the date?",
+              "hi": "त तारीख में 5 कौन सा महीना दिखाता है?"
+            },
+            "opts": [
+              "May",
+              "July"
+            ],
+            "hiOpts": [
+              "मई",
+              "जुलाई"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children can confuse May with July from chapter poems.",
+              "hi": "बच्चे अध्याय की कविताओं से मई और जुलाई में भ्रमित हो सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "The fifth month in the year is May.",
+              "hi": "साल का पाँचवाँ महीना मई होता है।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "👶",
+          "title": {
+            "en": "Bincy's Age",
+            "hi": "बिंसी की आयु"
+          },
+          "sub": {
+            "en": "Reading birth dates",
+            "hi": "जन्म तिथि पढ़ना"
+          },
+          "skillId": "time2",
+          "source": "Page 169",
+          "aims": [
+            {
+              "id": "sa67bik.0",
+              "kind": "explain",
+              "short": {
+                "en": "Birth month",
+                "hi": "जन्म का महीना"
+              },
+              "point": {
+                "en": "The child can find the birth month from a date like 2/5/2015.",
+                "hi": "बच्चा 2/5/2015 जैसी तारीख से जन्म का महीना बता सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! What month does the number 5 stand for in a date?",
+                "hi": "मैं भूल गई! तारीख में 5 का अंक कौन सा महीना बताता है?"
+              },
+              "hints": [
+                {
+                  "en": "Count the months of the year starting from January as 1.",
+                  "hi": "जनवरी से शुरू करके साल के महीने गिनो।"
+                },
+                {
+                  "en": "Which month comes fifth in the year?",
+                  "hi": "साल में पाँचवाँ महीना कौन सा आता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the fifth month of the year is May",
+                  "hi": "साल का पाँचवाँ महीना मई होता है",
+                  "words": [
+                    "May",
+                    "मई",
+                    "panchva mahina",
+                    "fifth month"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us read Bincy's birth certificate date.",
+                "hi": "आओ बिंसी के जन्म प्रमाण पत्र की तारीख पढ़ें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Bincy was born on 02/05/2015. Here 5 stands for the fifth month, May.",
+                "hi": "बिंसी का जन्म 02/05/2015 को हुआ था। यहाँ 5 पाँचवें महीने, मई को बताता है।"
+              },
+              "art": "📄"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Which month is shown by 5 in the date?",
+                "hi": "त तारीख में 5 कौन सा महीना दिखाता है?"
+              },
+              "opts": [
+                "May",
+                "July"
+              ],
+              "hiOpts": [
+                "मई",
+                "जुलाई"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children can confuse May with July from chapter poems.",
+                "hi": "बच्चे अध्याय की कविताओं से मई और जुलाई में भ्रमित हो सकते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "The fifth month in the year is May.",
+                "hi": "साल का पाँचवाँ महीना मई होता है।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-a67bik"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "text"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "repairRaw": null,
+      "second": null,
+      "verdict": "passed"
+    }
+  ]
+}

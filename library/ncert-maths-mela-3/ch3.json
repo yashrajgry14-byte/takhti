@@ -1,0 +1,53 @@
+{
+  "id": "ch3",
+  "n": 3,
+  "title": {
+    "en": "Double Century",
+    "hi": "Double Century"
+  },
+  "built": "2026-11-13T14:17:49.389Z",
+  "model": "gemini-3.5-flash-lite",
+  "lessons": [],
+  "notUsed": [
+    {
+      "title": {
+        "en": "Hundreds and Bundles",
+        "hi": "सैकड़ा और बंडल"
+      },
+      "errors": [
+        "beat 3: marked 5 right, but the picture before it shows 50",
+        "beat 3: marked \"5\" correct but the beats compute 50"
+      ]
+    },
+    {
+      "title": {
+        "en": "Numbers Beyond 100",
+        "hi": "100 से आगे की संख्याएँ"
+      },
+      "errors": [
+        "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"tens\"))"
+      ]
+    },
+    {
+      "title": {
+        "en": "Jumping on the Number Line",
+        "hi": "संख्या रेखा पर कूदना"
+      },
+      "errors": [
+        "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (hi) already gives the explanation (it says \"अगली संख्या\"))"
+      ]
+    },
+    {
+      "title": {
+        "en": "One More and One Less",
+        "hi": "एक ज्यादा और एक कम"
+      },
+      "errors": [
+        "beat 1: n=25 is too many to draw (at most 20)",
+        "beat 2: n=39 is too many to draw (at most 20)",
+        "beat 3: marked 40 right, but the picture before it shows 39",
+        "beat 3: marked \"40\" correct but the beats compute 39"
+      ]
+    }
+  ]
+}

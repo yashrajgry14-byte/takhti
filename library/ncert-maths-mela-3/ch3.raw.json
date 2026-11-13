@@ -1,0 +1,1730 @@
+{
+  "at": "2026-11-13T14:17:49.389Z",
+  "cls": "c3",
+  "band": "developing",
+  "rules": {
+    "band": "developing",
+    "ages": [
+      7,
+      8
+    ],
+    "maxNumber": 100,
+    "sayWords": 18,
+    "read": "developing"
+  },
+  "note": "",
+  "source": "cemm103.pdf",
+  "model": "gemini-3.5-flash-lite",
+  "chapter": "Double Century",
+  "draftMs": 101987,
+  "tried": [
+    {
+      "model": "gemini-3.5-flash-lite",
+      "outcome": "ok",
+      "ms": 101969,
+      "tokens": {
+        "in": 10641,
+        "out": 3788,
+        "total": 14429
+      }
+    }
+  ],
+  "repair": {
+    "status": 200,
+    "model": "gemini-3.5-flash-lite",
+    "error": "",
+    "ms": 7309,
+    "tried": [
+      {
+        "model": "gemini-3.5-flash-lite",
+        "outcome": "ok",
+        "ms": 7307,
+        "tokens": {
+          "in": 6019,
+          "out": 2142,
+          "total": 8161
+        }
+      }
+    ]
+  },
+  "drafts": [
+    {
+      "raw": {
+        "title": {
+          "en": "Hundreds and Bundles",
+          "hi": "सैकड़ा और बंडल"
+        },
+        "sub": {
+          "en": "Making 100 with sticks",
+          "hi": "तीलियों से 100 बनाना"
+        },
+        "ic": "🪵",
+        "skill": "place3",
+        "source": "Page 18",
+        "aims": [
+          {
+            "short": {
+              "en": "Count bundles for 100",
+              "hi": "100 के लिए बंडल गिनो"
+            },
+            "point": {
+              "en": "The child can explain that 10 bundles of 10 make 100.",
+              "hi": "बच्चा बता सकता है कि 10 के 10 बंडल मिलकर 100 बनाते हैं।"
+            },
+            "forget": {
+              "en": "I forgot! How many bundles of 10 sticks make 100?",
+              "hi": "मैं भूल गई! 10 तीलियों के कितने बंडल मिलकर 100 बनाते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Count how many tens are in one hundred.",
+                "hi": "गिनो कि सौ में कितने दस होते हैं।"
+              },
+              {
+                "en": "Look at the matchstick bundles on the page.",
+                "hi": "पन्ने पर तीलियों के बंडल देखो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "10 bundles of 10 sticks each make 100 sticks",
+                "hi": "10-10 तीलियों के 10 बंडल 100 तीलियाँ बनाते हैं",
+                "words": [
+                  "10 bundles",
+                  "ten bundles",
+                  "10 बंडल",
+                  "दस बंडल",
+                  "100 sticks",
+                  "100 तीलियाँ",
+                  "das bundle"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us learn about 100 using bundles.",
+              "hi": "आओ बंडलों की मदद से 100 के बारे में सीखें।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 100,
+            "say": {
+              "en": "10 bundles of 10 sticks each make 100 sticks.",
+              "hi": "10 तीलियों के 10 बंडल मिलकर 100 तीलियाँ बनाते हैं।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 100,
+            "say": {
+              "en": "Here is one hundred shown with bundles.",
+              "hi": "यहाँ बंडलों से एक सौ दिखाया गया है।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many bundles of 10 sticks make 100?",
+              "hi": "10 तीलियों के कितने बंडल मिलकर 100 बनाते हैं?"
+            },
+            "opts": [
+              "10",
+              "5"
+            ],
+            "hiOpts": [
+              "10",
+              "5"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children may confuse the number with half of ten or guess randomly.",
+              "hi": "बच्चे दस के आधे या किसी अन्य संख्या से भ्रमित हो सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "10 bundles of 10 make 100.",
+              "hi": "10 के दस बंडल 100 बनाते हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🪵",
+          "title": {
+            "en": "Hundreds and Bundles",
+            "hi": "सैकड़ा और बंडल"
+          },
+          "sub": {
+            "en": "Making 100 with sticks",
+            "hi": "तीलियों से 100 बनाना"
+          },
+          "skillId": "place3",
+          "source": "Page 18",
+          "aims": [
+            {
+              "id": "s144nx1f.0",
+              "kind": "explain",
+              "short": {
+                "en": "Count bundles for 100",
+                "hi": "100 के लिए बंडल गिनो"
+              },
+              "point": {
+                "en": "The child can explain that 10 bundles of 10 make 100.",
+                "hi": "बच्चा बता सकता है कि 10 के 10 बंडल मिलकर 100 बनाते हैं।"
+              },
+              "forget": {
+                "en": "I forgot! How many bundles of 10 sticks make 100?",
+                "hi": "मैं भूल गई! 10 तीलियों के कितने बंडल मिलकर 100 बनाते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Count how many tens are in one hundred.",
+                  "hi": "गिनो कि सौ में कितने दस होते हैं।"
+                },
+                {
+                  "en": "Look at the matchstick bundles on the page.",
+                  "hi": "पन्ने पर तीलियों के बंडल देखो।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "10 bundles of 10 sticks each make 100 sticks",
+                  "hi": "10-10 तीलियों के 10 बंडल 100 तीलियाँ बनाते हैं",
+                  "words": [
+                    "ten bundles",
+                    "दस बंडल",
+                    "100 sticks",
+                    "100 तीलियाँ",
+                    "das bundle"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us learn about 100 using bundles.",
+                "hi": "आओ बंडलों की मदद से 100 के बारे में सीखें।"
+              }
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "10 bundles of 10 sticks each make 100 sticks.",
+                "hi": "10 तीलियों के 10 बंडल मिलकर 100 तीलियाँ बनाते हैं।"
+              },
+              "a": 100
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "Here is one hundred shown with bundles.",
+                "hi": "यहाँ बंडलों से एक सौ दिखाया गया है।"
+              },
+              "a": 100
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many bundles of 10 sticks make 100?",
+                "hi": "10 तीलियों के कितने बंडल मिलकर 100 बनाते हैं?"
+              },
+              "opts": [
+                "5",
+                "10"
+              ],
+              "hiOpts": [
+                "5",
+                "10"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children may confuse the number with half of ten or guess randomly.",
+                "hi": "बच्चे दस के आधे या किसी अन्य संख्या से भ्रमित हो सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "10 bundles of 10 make 100.",
+                "hi": "10 के दस बंडल 100 बनाते हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-144nx1f"
+        },
+        "ok": false,
+        "errors": [
+          "beat 1: a=100 is too many to draw (at most 99)",
+          "beat 2: a=100 is too many to draw (at most 99)",
+          "beat 3: marked 10 right, but the picture before it shows 100",
+          "beat 3: the lines just before this question say the answer \"10\" (in beat 1's words) — let the child work it out",
+          "beat 3: marked \"10\" correct but the beats compute 100"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Hundreds and Bundles",
+          "hi": "सैकड़ा और बंडल"
+        },
+        "sub": {
+          "en": "Making numbers with sticks",
+          "hi": "तीलियों से संख्याएँ बनाना"
+        },
+        "ic": "🪵",
+        "skill": "place3",
+        "source": "Page 18",
+        "aims": [
+          {
+            "short": {
+              "en": "Count bundles for 50",
+              "hi": "50 के लिए बंडल गिनो"
+            },
+            "point": {
+              "en": "The child can explain that 5 bundles of 10 make 50.",
+              "hi": "बच्चा बता सकता है कि 10 के 5 बंडल मिलकर 50 बनाते हैं।"
+            },
+            "forget": {
+              "en": "I forgot! How many bundles of 10 sticks make 50?",
+              "hi": "मैं भूल गई! 10 तीलियों के कितने बंडल मिलकर 50 बनाते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Count how many tens are in fifty.",
+                "hi": "गिनो कि पचास में कितने दस होते हैं।"
+              },
+              {
+                "en": "Look at the matchstick bundles on the page.",
+                "hi": "पन्ने पर तीलियों के बंडल देखो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "5 bundles of 10 sticks each make 50 sticks",
+                "hi": "10-10 तीलियों के 5 बंडल 50 तीलियाँ बनाते हैं",
+                "words": [
+                  "5 bundles",
+                  "five bundles",
+                  "5 बंडल",
+                  "पाँच बंडल",
+                  "50 sticks",
+                  "50 तीलियाँ",
+                  "panch bundle"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us learn about groups using bundles.",
+              "hi": "आओ बंडलों की मदद से समूहों के बारे में सीखें।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 30,
+            "say": {
+              "en": "Here is thirty shown with bundles.",
+              "hi": "यहाँ बंडलों से तीस दिखाया गया है।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 50,
+            "say": {
+              "en": "Look at this collection of bundles.",
+              "hi": "बंडलों के इस समूह को देखो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many bundles of 10 sticks make this total?",
+              "hi": "10 तीलियों के कितने बंडल इस कुल संख्या को बनाते हैं?"
+            },
+            "opts": [
+              "5",
+              "3"
+            ],
+            "hiOpts": [
+              "5",
+              "3"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children may confuse the number with three bundles or guess randomly.",
+              "hi": "बच्चे तीन बंडलों या किसी अन्य संख्या से भ्रमित हो सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Count every ten to find the total.",
+              "hi": "कुल संख्या जानने के लिए हर दस को गिनो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🪵",
+          "title": {
+            "en": "Hundreds and Bundles",
+            "hi": "सैकड़ा और बंडल"
+          },
+          "sub": {
+            "en": "Making numbers with sticks",
+            "hi": "तीलियों से संख्याएँ बनाना"
+          },
+          "skillId": "place3",
+          "source": "Page 18",
+          "aims": [
+            {
+              "id": "s1usy6qh.0",
+              "kind": "explain",
+              "short": {
+                "en": "Count bundles for 50",
+                "hi": "50 के लिए बंडल गिनो"
+              },
+              "point": {
+                "en": "The child can explain that 5 bundles of 10 make 50.",
+                "hi": "बच्चा बता सकता है कि 10 के 5 बंडल मिलकर 50 बनाते हैं।"
+              },
+              "forget": {
+                "en": "I forgot! How many bundles of 10 sticks make 50?",
+                "hi": "मैं भूल गई! 10 तीलियों के कितने बंडल मिलकर 50 बनाते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Count how many tens are in fifty.",
+                  "hi": "गिनो कि पचास में कितने दस होते हैं।"
+                },
+                {
+                  "en": "Look at the matchstick bundles on the page.",
+                  "hi": "पन्ने पर तीलियों के बंडल देखो।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "5 bundles of 10 sticks each make 50 sticks",
+                  "hi": "10-10 तीलियों के 5 बंडल 50 तीलियाँ बनाते हैं",
+                  "words": [
+                    "5 bundles",
+                    "five bundles",
+                    "5 बंडल",
+                    "पाँच बंडल",
+                    "50 sticks",
+                    "50 तीलियाँ",
+                    "panch bundle"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us learn about groups using bundles.",
+                "hi": "आओ बंडलों की मदद से समूहों के बारे में सीखें।"
+              }
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "Here is thirty shown with bundles.",
+                "hi": "यहाँ बंडलों से तीस दिखाया गया है।"
+              },
+              "a": 30
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "Look at this collection of bundles.",
+                "hi": "बंडलों के इस समूह को देखो।"
+              },
+              "a": 50
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many bundles of 10 sticks make this total?",
+                "hi": "10 तीलियों के कितने बंडल इस कुल संख्या को बनाते हैं?"
+              },
+              "opts": [
+                "5",
+                "3"
+              ],
+              "hiOpts": [
+                "5",
+                "3"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children may confuse the number with three bundles or guess randomly.",
+                "hi": "बच्चे तीन बंडलों या किसी अन्य संख्या से भ्रमित हो सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Count every ten to find the total.",
+                "hi": "कुल संख्या जानने के लिए हर दस को गिनो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1usy6qh"
+        },
+        "ok": false,
+        "errors": [
+          "beat 3: marked 5 right, but the picture before it shows 50",
+          "beat 3: marked \"5\" correct but the beats compute 50"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Numbers Beyond 100",
+          "hi": "100 से आगे की संख्याएँ"
+        },
+        "sub": {
+          "en": "Read numbers with bundles and sticks",
+          "hi": "बंडलों और तीलियों से संख्याएँ पढ़ो"
+        },
+        "ic": "🔢",
+        "skill": "place3",
+        "source": "Page 22",
+        "aims": [
+          {
+            "short": {
+              "en": "Read bundles and sticks",
+              "hi": "बंडल और तीलियाँ पढ़ो"
+            },
+            "point": {
+              "en": "The child can read a number from 100, 10s and 1s bundles.",
+              "hi": "बच्चा 100, 10 और 1 के बंडलों से संख्या पढ़ सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we count 100 bundle, 2 tens and 3 ones?",
+              "hi": "मैं भूल गई! 1 सौ का बंडल, 2 दहाई और 3 इकाई को कैसे गिनते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Count the big hundred bundle first, then tens and ones.",
+                "hi": "पहले सौ का बड़ा बंडल गिनो, फिर दहाई और इकाई।"
+              },
+              {
+                "en": "Put the hundreds, tens and ones together.",
+                "hi": "सैकड़े, दहाई और इकाई को एक साथ रखो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "read 100 bundle as one hundred, tens and loose ones as extra",
+                "hi": "100 के बंडल को सौ और बचे हुए को दहाई-इकाई गिनो",
+                "words": [
+                  "100 bundle",
+                  "10s",
+                  "1s",
+                  "सैकड़ा",
+                  "दहाई",
+                  "इकाई",
+                  "hundred",
+                  "tens",
+                  "ones"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us read numbers above 100.",
+              "hi": "आओ 100 से ऊपर की संख्याएँ पढ़ें।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 123,
+            "say": {
+              "en": "1 hundred, 2 tens and 3 ones make 123.",
+              "hi": "1 सैकड़ा, 2 दहाई और 3 इकाई मिलकर 123 बनाते हैं।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 104,
+            "say": {
+              "en": "Look at this bundle and loose sticks.",
+              "hi": "इस बंडल और खुली तीलियों को देखो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What number is 1 hundred, 0 tens and 4 ones?",
+              "hi": "1 सैकड़ा, 0 दहाई और 4 इकाई कौन सी संख्या है?"
+            },
+            "opts": [
+              "104",
+              "140"
+            ],
+            "hiOpts": [
+              "104",
+              "140"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse zero tens and put the digit in the wrong place.",
+              "hi": "बच्चे शून्य दहाई में भ्रमित होकर अंक गलत जगह रख देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Count 100s, 10s and 1s to find the number.",
+              "hi": "संख्या जानने के लिए 100, 10 और 1 को गिनो।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔢",
+          "title": {
+            "en": "Numbers Beyond 100",
+            "hi": "100 से आगे की संख्याएँ"
+          },
+          "sub": {
+            "en": "Read numbers with bundles and sticks",
+            "hi": "बंडलों और तीलियों से संख्याएँ पढ़ो"
+          },
+          "skillId": "place3",
+          "source": "Page 22",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us read numbers above 100.",
+                "hi": "आओ 100 से ऊपर की संख्याएँ पढ़ें।"
+              }
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "1 hundred, 2 tens and 3 ones make 123.",
+                "hi": "1 सैकड़ा, 2 दहाई और 3 इकाई मिलकर 123 बनाते हैं।"
+              },
+              "a": 123
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "Look at this bundle and loose sticks.",
+                "hi": "इस बंडल और खुली तीलियों को देखो।"
+              },
+              "a": 104
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What number is 1 hundred, 0 tens and 4 ones?",
+                "hi": "1 सैकड़ा, 0 दहाई और 4 इकाई कौन सी संख्या है?"
+              },
+              "opts": [
+                "140",
+                "104"
+              ],
+              "hiOpts": [
+                "140",
+                "104"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse zero tens and put the digit in the wrong place.",
+                "hi": "बच्चे शून्य दहाई में भ्रमित होकर अंक गलत जगह रख देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Count 100s, 10s and 1s to find the number.",
+                "hi": "संख्या जानने के लिए 100, 10 और 1 को गिनो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1vtfoxh"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"tens\"))",
+          "beat 1: a=123 is too many to draw (at most 99)",
+          "beat 2: a=104 is too many to draw (at most 99)",
+          "beat 1: a=123 exceeds the band ceiling of 100",
+          "beat 2: a=104 exceeds the band ceiling of 100"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: Munni's question (en) already gives the explanation (it says \"tens\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Numbers Beyond 50",
+          "hi": "50 से आगे की संख्याएँ"
+        },
+        "sub": {
+          "en": "Read numbers with bundles and sticks",
+          "hi": "बंडलों और तीलियों से संख्याएँ पढ़ो"
+        },
+        "ic": "🔢",
+        "skill": "place3",
+        "source": "Page 22",
+        "aims": [
+          {
+            "short": {
+              "en": "Read bundles and sticks",
+              "hi": "बंडल और तीलियाँ पढ़ो"
+            },
+            "point": {
+              "en": "The child can read a number from 10s and 1s bundles.",
+              "hi": "बच्चा 10 और 1 के बंडलों से संख्या पढ़ सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we count 4 tens and 3 ones?",
+              "hi": "मैं भूल गई! 4 दहाई और 3 इकाई को कैसे गिनते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Count the tens first, then the loose ones.",
+                "hi": "पहले दहाई गिनो, फिर खुली हुई इकाइयाँ।"
+              },
+              {
+                "en": "Put the tens and ones together.",
+                "hi": "दहाई और इकाई को एक साथ रखो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "read tens as groups and loose ones as extra",
+                "hi": "दहाई को समूह और बचे हुए को अतिरिक्त गिनो",
+                "words": [
+                  "10s",
+                  "1s",
+                  "दहाई",
+                  "इकाई",
+                  "tens",
+                  "ones",
+                  "bhi",
+                  "extra"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us read numbers using bundles.",
+              "hi": "आओ बंडलों का उपयोग करके संख्याएँ पढ़ें।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 43,
+            "say": {
+              "en": "Look at these bundles and loose sticks.",
+              "hi": "इन बंडलों और खुली तीलियों को देखो।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 24,
+            "say": {
+              "en": "Here are two tens and four loose sticks.",
+              "hi": "यहाँ दो दहाई और चार खुली तीलियाँ हैं।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What number is shown by these bundles and sticks?",
+              "hi": "इन बंडलों और तीलियों द्वारा कौन सी संख्या दिखाई गई है?"
+            },
+            "opts": [
+              "24",
+              "42"
+            ],
+            "hiOpts": [
+              "24",
+              "42"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse tens and ones and put the digits in the wrong place.",
+              "hi": "बच्चे दहाई और इकाई में भ्रमित होकर अंक गलत जगह रख देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Count 10s and 1s to find the number.",
+              "hi": "संख्या जानने के लिए 10 और 1 को गिनो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔢",
+          "title": {
+            "en": "Numbers Beyond 50",
+            "hi": "50 से आगे की संख्याएँ"
+          },
+          "sub": {
+            "en": "Read numbers with bundles and sticks",
+            "hi": "बंडलों और तीलियों से संख्याएँ पढ़ो"
+          },
+          "skillId": "place3",
+          "source": "Page 22",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us read numbers using bundles.",
+                "hi": "आओ बंडलों का उपयोग करके संख्याएँ पढ़ें।"
+              }
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "Look at these bundles and loose sticks.",
+                "hi": "इन बंडलों और खुली तीलियों को देखो।"
+              },
+              "a": 43
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "Here are two tens and four loose sticks.",
+                "hi": "यहाँ दो दहाई और चार खुली तीलियाँ हैं।"
+              },
+              "a": 24
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What number is shown by these bundles and sticks?",
+                "hi": "इन बंडलों और तीलियों द्वारा कौन सी संख्या दिखाई गई है?"
+              },
+              "opts": [
+                "24",
+                "42"
+              ],
+              "hiOpts": [
+                "24",
+                "42"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children confuse tens and ones and put the digits in the wrong place.",
+                "hi": "बच्चे दहाई और इकाई में भ्रमित होकर अंक गलत जगह रख देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Count 10s and 1s to find the number.",
+                "hi": "संख्या जानने के लिए 10 और 1 को गिनो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1guwil8"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"tens\"))"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: Munni's question (en) already gives the explanation (it says \"tens\")"
+        ],
+        "aimFixes": []
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Jumping on the Number Line",
+          "hi": "संख्या रेखा पर कूदना"
+        },
+        "sub": {
+          "en": "Jumps of 5 and 20",
+          "hi": "5 और 20 की छलांग"
+        },
+        "ic": "🐸",
+        "skill": "skip",
+        "source": "Page 26",
+        "aims": [
+          {
+            "short": {
+              "en": "Jump by fives",
+              "hi": "पाँच की छलांग"
+            },
+            "point": {
+              "en": "The child can jump by 5s on a number line.",
+              "hi": "बच्चा संख्या रेखा पर 5-5 की छलांग लगा सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! When jumping by 5 from 100, what number comes next?",
+              "hi": "मैं भूल गई! 100 से 5 की छलांग लगाने पर अगली संख्या क्या आती है?"
+            },
+            "hints": [
+              {
+                "en": "Add 5 to your current number.",
+                "hi": "अपनी मौजूदा संख्या में 5 जोड़ो।"
+              },
+              {
+                "en": "Count five steps forward on the line.",
+                "hi": "रेखा पर पाँच कदम आगे गिनो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "add five to the number to make the next step",
+                "hi": "अगला कदम बढ़ाने के लिए संख्या में पाँच जोड़ो",
+                "words": [
+                  "add 5",
+                  "five more",
+                  "5 जोड़ो",
+                  "पाँच आगे",
+                  "next number",
+                  "अगली संख्या",
+                  "panch"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us take jumps on the number line.",
+              "hi": "आओ संख्या रेखा पर छलांग लगाएँ।"
+            }
+          },
+          {
+            "t": "line",
+            "a": 100,
+            "b": 5,
+            "hops": 2,
+            "say": {
+              "en": "Jumping by 5 from 100 gives 105, then 110.",
+              "hi": "100 से 5 कूदने पर 105, फिर 110 आता है।"
+            }
+          },
+          {
+            "t": "line",
+            "a": 110,
+            "b": 5,
+            "hops": 1,
+            "say": {
+              "en": "Let us jump 5 more from 110.",
+              "hi": "आओ 110 से 5 और आगे कूदें।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Which number comes after 110 when jumping by 5?",
+              "hi": "5 की छलांग लगाने पर 110 के बाद कौन सी संख्या आती है?"
+            },
+            "opts": [
+              "115",
+              "112"
+            ],
+            "hiOpts": [
+              "115",
+              "112"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children may count by ones instead of skipping by fives.",
+              "hi": "बच्चे पाँच की छलांग की बजाय एक-एक करके गिन सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Add 5 each time to jump forward.",
+              "hi": "आगे कूदने के लिए हर बार 5 जोड़ो।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🐸",
+          "title": {
+            "en": "Jumping on the Number Line",
+            "hi": "संख्या रेखा पर कूदना"
+          },
+          "sub": {
+            "en": "Jumps of 5 and 20",
+            "hi": "5 और 20 की छलांग"
+          },
+          "skillId": "skip",
+          "source": "Page 26",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us take jumps on the number line.",
+                "hi": "आओ संख्या रेखा पर छलांग लगाएँ।"
+              }
+            },
+            {
+              "t": "line",
+              "say": {
+                "en": "Jumping by 5 from 100 gives 105, then 110.",
+                "hi": "100 से 5 कूदने पर 105, फिर 110 आता है।"
+              },
+              "a": 100,
+              "b": 5,
+              "hops": 2
+            },
+            {
+              "t": "line",
+              "say": {
+                "en": "Let us jump 5 more from 110.",
+                "hi": "आओ 110 से 5 और आगे कूदें।"
+              },
+              "a": 110,
+              "b": 5,
+              "hops": 1
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Which number comes after 110 when jumping by 5?",
+                "hi": "5 की छलांग लगाने पर 110 के बाद कौन सी संख्या आती है?"
+              },
+              "opts": [
+                "112",
+                "115"
+              ],
+              "hiOpts": [
+                "112",
+                "115"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children may count by ones instead of skipping by fives.",
+                "hi": "बच्चे पाँच की छलांग की बजाय एक-एक करके गिन सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Add 5 each time to jump forward.",
+                "hi": "आगे कूदने के लिए हर बार 5 जोड़ो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1gjqflw"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says \"add 5\"))",
+          "beat 1: a=100 is too many to draw (at most 50)",
+          "beat 2: a=110 is too many to draw (at most 50)",
+          "beat 2: a=110 exceeds the band ceiling of 100"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"add 5\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Jumping on the Number Line",
+          "hi": "संख्या रेखा पर कूदना"
+        },
+        "sub": {
+          "en": "Jumps of 5",
+          "hi": "5 की छलांग"
+        },
+        "ic": "🐸",
+        "skill": "skip",
+        "source": "Page 26",
+        "aims": [
+          {
+            "short": {
+              "en": "Jump by fives",
+              "hi": "पाँच की छलांग"
+            },
+            "point": {
+              "en": "The child can jump by 5s on a number line.",
+              "hi": "बच्चा संख्या रेखा पर 5-5 की छलांग लगा सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! When jumping by 5 from 20, what number comes next?",
+              "hi": "मैं भूल गई! 20 से 5 की छलांग लगाने पर अगली संख्या क्या आती है?"
+            },
+            "hints": [
+              {
+                "en": "Move forward on the line.",
+                "hi": "रेखा पर आगे बढ़ो।"
+              },
+              {
+                "en": "Count five steps forward on the line.",
+                "hi": "रेखा पर पाँच कदम आगे गिनो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "step forward on the number line to make the next value",
+                "hi": "अगला मान बनाने के लिए संख्या रेखा पर कदम बढ़ाओ",
+                "words": [
+                  "five more",
+                  "5 आगे",
+                  "next number",
+                  "अगली संख्या",
+                  "panch",
+                  "age",
+                  "badho"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us take jumps on the number line.",
+              "hi": "आओ संख्या रेखा पर छलांग लगाएँ।"
+            }
+          },
+          {
+            "t": "line",
+            "a": 20,
+            "b": 5,
+            "hops": 2,
+            "say": {
+              "en": "Jumping by 5 from 20 gives 25, then 30.",
+              "hi": "20 से 5 कूदने पर 25, फिर 30 आता है।"
+            }
+          },
+          {
+            "t": "line",
+            "a": 30,
+            "b": 5,
+            "hops": 1,
+            "say": {
+              "en": "Let us jump 5 more from 30.",
+              "hi": "आओ 30 से 5 और आगे कूदें।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Which number comes after 30 when jumping by 5?",
+              "hi": "5 की छलांग लगाने पर 30 के बाद कौन सी संख्या आती है?"
+            },
+            "opts": [
+              "35",
+              "32"
+            ],
+            "hiOpts": [
+              "35",
+              "32"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children may count by ones instead of skipping by fives.",
+              "hi": "बच्चे पाँच की छलांग की बजाय एक-एक करके गिन सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Step forward to jump correctly.",
+              "hi": "सही ढंग से कूदने के लिए आगे बढ़ो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🐸",
+          "title": {
+            "en": "Jumping on the Number Line",
+            "hi": "संख्या रेखा पर कूदना"
+          },
+          "sub": {
+            "en": "Jumps of 5",
+            "hi": "5 की छलांग"
+          },
+          "skillId": "skip",
+          "source": "Page 26",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us take jumps on the number line.",
+                "hi": "आओ संख्या रेखा पर छलांग लगाएँ।"
+              }
+            },
+            {
+              "t": "line",
+              "say": {
+                "en": "Jumping by 5 from 20 gives 25, then 30.",
+                "hi": "20 से 5 कूदने पर 25, फिर 30 आता है।"
+              },
+              "a": 20,
+              "b": 5,
+              "hops": 2
+            },
+            {
+              "t": "line",
+              "say": {
+                "en": "Let us jump 5 more from 30.",
+                "hi": "आओ 30 से 5 और आगे कूदें।"
+              },
+              "a": 30,
+              "b": 5,
+              "hops": 1
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Which number comes after 30 when jumping by 5?",
+                "hi": "5 की छलांग लगाने पर 30 के बाद कौन सी संख्या आती है?"
+              },
+              "opts": [
+                "32",
+                "35"
+              ],
+              "hiOpts": [
+                "32",
+                "35"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children may count by ones instead of skipping by fives.",
+                "hi": "बच्चे पाँच की छलांग की बजाय एक-एक करके गिन सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Step forward to jump correctly.",
+                "hi": "सही ढंग से कूदने के लिए आगे बढ़ो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1yqn92v"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (hi) already gives the explanation (it says \"अगली संख्या\"))"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: Munni's question (hi) already gives the explanation (it says \"अगली संख्या\")"
+        ],
+        "aimFixes": []
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "One More and One Less",
+          "hi": "एक ज्यादा और एक कम"
+        },
+        "sub": {
+          "en": "Finding neighbors on the number table",
+          "hi": "संख्या सारणी में पड़ोसी ढूँढ़ना"
+        },
+        "ic": "➕",
+        "skill": "place3",
+        "source": "Page 26",
+        "aims": [
+          {
+            "short": {
+              "en": "Find 1 more and less",
+              "hi": "1 ज्यादा और कम ढूँढ़ो"
+            },
+            "point": {
+              "en": "The child can find 1 more and 1 less than any given number.",
+              "hi": "बच्चा किसी दी गई संख्या से 1 ज्यादा और 1 कम बता सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we find 1 more than 160?",
+              "hi": "मैं भूल गई! 160 से 1 ज्यादा कैसे पता करते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Think of the number that comes right after.",
+                "hi": "वह संख्या सोचो जो ठीक बाद में आती है।"
+              },
+              {
+                "en": "Add one to the last digit.",
+                "hi": "आखिरी अंक में एक जोड़ो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "add one to get the next number or one more",
+                "hi": "अगली संख्या पाने के लिए एक जोड़ो",
+                "words": [
+                  "one more",
+                  "next number",
+                  "एक ज्यादा",
+                  "अगली संख्या",
+                  "add one",
+                  "एक जोड़ो",
+                  "ek jyada"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us find numbers that are 1 more or 1 less.",
+              "hi": "आओ ऐसी संख्याएँ ढूँढ़ें जो 1 ज्यादा या 1 कम हों।"
+            }
+          },
+          {
+            "t": "count",
+            "n": 10,
+            "say": {
+              "en": "1 more than 160 is 161, and 1 less is 159.",
+              "hi": "160 से 1 ज्यादा 161 है, और 1 कम 159 है।"
+            }
+          },
+          {
+            "t": "count",
+            "n": 5,
+            "say": {
+              "en": "Look at 129. One more than 129 is 130.",
+              "hi": "129 को देखो। 129 से एक ज्यादा 130 है।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is 1 more than 187?",
+              "hi": "187 से 1 ज्यादा क्या है?"
+            },
+            "opts": [
+              "188",
+              "186"
+            ],
+            "hiOpts": [
+              "188",
+              "186"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children may pick 1 less (186) instead of 1 more.",
+              "hi": "बच्चे 1 ज्यादा की जगह 1 कम (186) चुन सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "One more is the next number, one less is before.",
+              "hi": "एक ज्यादा अगली संख्या है, एक कम पिछली संख्या है।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "➕",
+          "title": {
+            "en": "One More and One Less",
+            "hi": "एक ज्यादा और एक कम"
+          },
+          "sub": {
+            "en": "Finding neighbors on the number table",
+            "hi": "संख्या सारणी में पड़ोसी ढूँढ़ना"
+          },
+          "skillId": "place3",
+          "source": "Page 26",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us find numbers that are 1 more or 1 less.",
+                "hi": "आओ ऐसी संख्याएँ ढूँढ़ें जो 1 ज्यादा या 1 कम हों।"
+              }
+            },
+            {
+              "t": "count",
+              "say": {
+                "en": "1 more than 160 is 161, and 1 less is 159.",
+                "hi": "160 से 1 ज्यादा 161 है, और 1 कम 159 है।"
+              },
+              "n": 10
+            },
+            {
+              "t": "count",
+              "say": {
+                "en": "Look at 129. One more than 129 is 130.",
+                "hi": "129 को देखो। 129 से एक ज्यादा 130 है।"
+              },
+              "n": 5
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is 1 more than 187?",
+                "hi": "187 से 1 ज्यादा क्या है?"
+              },
+              "opts": [
+                "188",
+                "186"
+              ],
+              "hiOpts": [
+                "188",
+                "186"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children may pick 1 less (186) instead of 1 more.",
+                "hi": "बच्चे 1 ज्यादा की जगह 1 कम (186) चुन सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "One more is the next number, one less is before.",
+                "hi": "एक ज्यादा अगली संख्या है, एक कम पिछली संख्या है।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1bx1vbg"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 2 (en) already gives the explanation (it says \"add one\"))",
+          "beat 3: marked 188 right, but the picture before it shows 5",
+          "beat 3: marked \"188\" correct but the beats compute 5"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: hint 2 (en) already gives the explanation (it says \"add one\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "One More and One Less",
+          "hi": "एक ज्यादा और एक कम"
+        },
+        "sub": {
+          "en": "Finding neighbors on the number table",
+          "hi": "संख्या सारणी में पड़ोसी ढूँढ़ना"
+        },
+        "ic": "➕",
+        "skill": "place3",
+        "source": "Page 26",
+        "aims": [
+          {
+            "short": {
+              "en": "Find 1 more and less",
+              "hi": "1 ज्यादा और कम ढूँढ़ो"
+            },
+            "point": {
+              "en": "The child can find 1 more and 1 less than any given number.",
+              "hi": "बच्चा किसी दी गई संख्या से 1 ज्यादा और 1 कम बता सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we find 1 more than 40?",
+              "hi": "मैं भूल गई! 40 से 1 ज्यादा कैसे पता करते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Think of the number that comes right after.",
+                "hi": "वह संख्या सोचो जो ठीक बाद में आती है।"
+              },
+              {
+                "en": "Move one step on the count table.",
+                "hi": "गिनती तालिका पर एक कदम चलो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "get the next number or one more by stepping forward",
+                "hi": "आगे बढ़कर अगली संख्या या एक ज्यादा प्राप्त करो",
+                "words": [
+                  "one more",
+                  "next number",
+                  "एक ज्यादा",
+                  "अगली संख्या",
+                  "ek jyada",
+                  "age",
+                  "badho"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us find numbers that are 1 more or 1 less.",
+              "hi": "आओ ऐसी संख्याएँ ढूँढ़ें जो 1 ज्यादा या 1 कम हों।"
+            }
+          },
+          {
+            "t": "count",
+            "n": 25,
+            "say": {
+              "en": "Look at this group of twenty-five items.",
+              "hi": "पच्चीस वस्तुओं के इस समूह को देखो।"
+            }
+          },
+          {
+            "t": "count",
+            "n": 39,
+            "say": {
+              "en": "Look at thirty-nine. One more makes forty.",
+              "hi": "उनतालीस को देखो। एक ज्यादा चालीस बनता है।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is 1 more than 39?",
+              "hi": "39 से 1 ज्यादा क्या है?"
+            },
+            "opts": [
+              "40",
+              "38"
+            ],
+            "hiOpts": [
+              "40",
+              "38"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children may pick 1 less (38) instead of 1 more.",
+              "hi": "बच्चे 1 ज्यादा की जगह 1 कम (38) चुन सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "One more is the next number, one less is before.",
+              "hi": "एक ज्यादा अगली संख्या है, एक कम पिछली संख्या है।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "➕",
+          "title": {
+            "en": "One More and One Less",
+            "hi": "एक ज्यादा और एक कम"
+          },
+          "sub": {
+            "en": "Finding neighbors on the number table",
+            "hi": "संख्या सारणी में पड़ोसी ढूँढ़ना"
+          },
+          "skillId": "place3",
+          "source": "Page 26",
+          "aims": [
+            {
+              "id": "s1wo6wyd.0",
+              "kind": "explain",
+              "short": {
+                "en": "Find 1 more and less",
+                "hi": "1 ज्यादा और कम ढूँढ़ो"
+              },
+              "point": {
+                "en": "The child can find 1 more and 1 less than any given number.",
+                "hi": "बच्चा किसी दी गई संख्या से 1 ज्यादा और 1 कम बता सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do we find 1 more than 40?",
+                "hi": "मैं भूल गई! 40 से 1 ज्यादा कैसे पता करते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Think of the number that comes right after.",
+                  "hi": "वह संख्या सोचो जो ठीक बाद में आती है।"
+                },
+                {
+                  "en": "Move one step on the count table.",
+                  "hi": "गिनती तालिका पर एक कदम चलो।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "get the next number or one more by stepping forward",
+                  "hi": "आगे बढ़कर अगली संख्या या एक ज्यादा प्राप्त करो",
+                  "words": [
+                    "one more",
+                    "next number",
+                    "एक ज्यादा",
+                    "अगली संख्या",
+                    "ek jyada",
+                    "age",
+                    "badho"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us find numbers that are 1 more or 1 less.",
+                "hi": "आओ ऐसी संख्याएँ ढूँढ़ें जो 1 ज्यादा या 1 कम हों।"
+              }
+            },
+            {
+              "t": "count",
+              "say": {
+                "en": "Look at this group of twenty-five items.",
+                "hi": "पच्चीस वस्तुओं के इस समूह को देखो।"
+              },
+              "n": 25
+            },
+            {
+              "t": "count",
+              "say": {
+                "en": "Look at thirty-nine. One more makes forty.",
+                "hi": "उनतालीस को देखो। एक ज्यादा चालीस बनता है।"
+              },
+              "n": 39
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is 1 more than 39?",
+                "hi": "39 से 1 ज्यादा क्या है?"
+              },
+              "opts": [
+                "40",
+                "38"
+              ],
+              "hiOpts": [
+                "40",
+                "38"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children may pick 1 less (38) instead of 1 more.",
+                "hi": "बच्चे 1 ज्यादा की जगह 1 कम (38) चुन सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "One more is the next number, one less is before.",
+                "hi": "एक ज्यादा अगली संख्या है, एक कम पिछली संख्या है।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1wo6wyd"
+        },
+        "ok": false,
+        "errors": [
+          "beat 1: n=25 is too many to draw (at most 20)",
+          "beat 2: n=39 is too many to draw (at most 20)",
+          "beat 3: marked 40 right, but the picture before it shows 39",
+          "beat 3: marked \"40\" correct but the beats compute 39"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "not used"
+    }
+  ]
+}

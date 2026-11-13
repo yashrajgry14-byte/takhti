@@ -1,0 +1,425 @@
+{
+  "id": "ch11",
+  "n": 11,
+  "title": {
+    "en": "Filling and Lifting",
+    "hi": "Filling and Lifting"
+  },
+  "built": "2026-11-13T15:53:01.245Z",
+  "model": "gemini-3.5-flash-lite",
+  "lessons": [
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🥛",
+      "title": {
+        "en": "Bigger and smaller glasses",
+        "hi": "बड़े और छोटे गिलास"
+      },
+      "sub": {
+        "en": "Comparing glass size and count",
+        "hi": "गिलास के आकार और संख्या की तुलना"
+      },
+      "skillId": "compare1",
+      "source": "Page 139",
+      "aims": [
+        {
+          "id": "sn2iqni.0",
+          "kind": "explain",
+          "short": {
+            "en": "Smaller glass count",
+            "hi": "छोटा गिलास गिनती"
+          },
+          "point": {
+            "en": "The child can explain why a smaller glass needs more count.",
+            "hi": "बच्चा बता सकता है कि छोटे गिलास की गिनती क्यों ज्यादा होती है।"
+          },
+          "forget": {
+            "en": "I forgot! Why do we need more smaller glasses than bigger glasses?",
+            "hi": "मैं भूल गई! बड़े गिलासों की तुलना में छोटे गिलासों की संख्या ज्यादा क्यों चाहिए?"
+          },
+          "hints": [
+            {
+              "en": "Think back to the lesson. What did you do first?",
+              "hi": "पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?"
+            },
+            {
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "smaller glasses hold a small amount so we need more of them",
+              "hi": "छोटे गिलासों में थोड़ा पानी आता है इसलिए हमें ज्यादा गिलास चाहिए",
+              "words": [
+                "tiny",
+                "कम",
+                "chhota",
+                "kam",
+                "jyada"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us learn about capacity and glass sizes.",
+            "hi": "आओ क्षमता और गिलासों के आकार के बारे में सीखें।"
+          }
+        },
+        {
+          "t": "passage",
+          "p": {
+            "en": "Chintu drinks juice from glasses. Bigger glasses hold a large amount, and smaller glasses hold a tiny amount.",
+            "hi": "चिंटू गिलासों से जूस पीता है। बड़े गिलासों में काफी जूस आता है, और छोटे गिलासों में थोड़ा।"
+          },
+          "art": "🧃"
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "Which glass holds a tiny amount?",
+            "hi": "किस गिलास में बहुत थोड़ा जूस आता है?"
+          },
+          "opts": [
+            "bigger glass",
+            "smaller glass"
+          ],
+          "hiOpts": [
+            "बड़ा गिलास",
+            "छोटा गिलास"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children confuse the size words and pick the bigger glass.",
+            "hi": "बच्चे आकार वाले शब्दों में भ्रमित होकर बड़ा गिलास चुन लेते हैं।"
+          },
+          "derived": true
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Smaller glasses hold a tiny amount.",
+            "hi": "छोटे गिलासों में थोड़ा जूस आता है।"
+          }
+        }
+      ],
+      "subject": "read",
+      "id": "sch-n2iqni"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🧴",
+      "title": {
+        "en": "Measuring with 1 Litre",
+        "hi": "1 लीटर से मापना"
+      },
+      "sub": {
+        "en": "Exploring litre capacity",
+        "hi": "लीटर क्षमता की पहचान"
+      },
+      "skillId": "measure3",
+      "source": "Page 143",
+      "aims": [
+        {
+          "id": "s110zp3j.0",
+          "kind": "explain",
+          "short": {
+            "en": "Litre capacity",
+            "hi": "लीटर क्षमता"
+          },
+          "point": {
+            "en": "The child can identify vessels holding one litre.",
+            "hi": "बच्चा एक लीटर पानी आने वाले बर्तनों को पहचान सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How much water does a 1 litre jug hold?",
+            "hi": "मैं भूल गई! 1 लीटर वाले जग में कितना पानी आता है?"
+          },
+          "hints": [
+            {
+              "en": "Look at the bottle label we used with Nita.",
+              "hi": "नीता के साथ हमने जो बोतल देखी थी, उसका लेबल देखो।"
+            },
+            {
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "it holds a full single mark of water",
+              "hi": "इसमें पूरा एक माप पानी आता है",
+              "words": [
+                "full",
+                "one litre",
+                "पूरा",
+                "एक लीटर",
+                "theek",
+                "ek litre"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us check water using a litre bottle.",
+            "hi": "आओ एक लीटर बोतल से पानी मापें।"
+          }
+        },
+        {
+          "t": "passage",
+          "p": {
+            "en": "Nita pours water from the 1 litre bottle into the jug. The jug holds a full single mark of water.",
+            "hi": "नीता 1 लीटर की बोतल से जग में पानी डालती है। जग में पूरा एक लीटर पानी आता है।"
+          },
+          "art": "💧"
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "How much water does the jug hold?",
+            "hi": "जग में कितना पानी आता है?"
+          },
+          "opts": [
+            "less than a mark",
+            "full single mark"
+          ],
+          "hiOpts": [
+            "एक लीटर से कम",
+            "पूरा एक लीटर"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children may guess less than a litre without reading the text.",
+            "hi": "बच्चे बिना पढ़े 1 लीटर से कम अनुमान लगा सकते हैं।"
+          },
+          "derived": true
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "The jug holds a full single mark of water.",
+            "hi": "जग में पूरा एक लीटर पानी आता है।"
+          }
+        }
+      ],
+      "subject": "read",
+      "id": "sch-110zp3j"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "⚖️",
+      "title": {
+        "en": "Heavy and Light",
+        "hi": "भारी और हल्का"
+      },
+      "sub": {
+        "en": "Comparing weights in hands",
+        "hi": "हाथों से वजन की तुलना"
+      },
+      "skillId": "compare1",
+      "source": "Page 145",
+      "aims": [
+        {
+          "id": "s1nxe618.0",
+          "kind": "explain",
+          "short": {
+            "en": "Heavy hand goes down",
+            "hi": "भारी हाथ नीचे"
+          },
+          "point": {
+            "en": "The child can explain why a heavy hand goes down.",
+            "hi": "बच्चा बता सकता है कि भारी चीज वाला हाथ नीचे क्यों जाता है।"
+          },
+          "forget": {
+            "en": "I forgot! Why does the hand holding books go lower?",
+            "hi": "मैं भूल गई! किताबें पकड़ने वाला हाथ नीचे क्यों झुक जाता है?"
+          },
+          "hints": [
+            {
+              "en": "Feel how hard it is to hold three textbooks in your hand.",
+              "hi": "अपने हाथ में तीन किताबें उठाकर महसूस करके देखो कि कितना जोर लगता है।"
+            },
+            {
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "heavy things pull the hand down because they are massive",
+              "hi": "भारी चीजें अपने भारीपन के कारण हाथ को नीचे खींचती हैं",
+              "words": [
+                "heavy",
+                "down",
+                "भारी",
+                "heavy",
+                "vajan",
+                "neeche"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us find out why some things feel heavy.",
+            "hi": "आओ देखें कि कुछ चीजें भारी क्यों लगती हैं।"
+          }
+        },
+        {
+          "t": "passage",
+          "p": {
+            "en": "Chintu holds 3 textbooks in one hand and a pencil box in the other. The hand with books goes lower because books are heavier.",
+            "hi": "चिंटू एक हाथ में 3 किताबें और दूसरे में पेंसिल बॉक्स पकड़ता है। किताबों वाला हाथ नीचे हो जाता है क्योंकि वे भारी हैं।"
+          },
+          "art": "📚"
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "Which is heavier, 3 textbooks or a pencil box?",
+            "hi": "3 किताबें या पेंसिल बॉक्स, कौन सा भारी है?"
+          },
+          "opts": [
+            "pencil box",
+            "3 textbooks"
+          ],
+          "hiOpts": [
+            "पेंसिल बॉक्स",
+            "3 किताबें"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children might pick the pencil box if they confuse the items.",
+            "hi": "चीजों में भ्रम होने पर बच्चे पेंसिल बॉक्स चुन सकते हैं।"
+          },
+          "derived": true
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Heavier things go down.",
+            "hi": "भारी चीजें नीचे जाती हैं।"
+          }
+        }
+      ],
+      "subject": "read",
+      "id": "sch-1nxe618"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "📦",
+      "title": {
+        "en": "Weighing with Matchboxes",
+        "hi": "माचिस की डिब्बियों से तौलना"
+      },
+      "sub": {
+        "en": "Using sand matchboxes",
+        "hi": "रेत भरी माचिस का प्रयोग"
+      },
+      "skillId": "measure3",
+      "source": "Page 146",
+      "aims": [
+        {
+          "id": "s1vujtaa.0",
+          "kind": "explain",
+          "short": {
+            "en": "Matchbox weights",
+            "hi": "माचिस वजन"
+          },
+          "point": {
+            "en": "The child can explain how sand matchboxes measure weight.",
+            "hi": "बच्चा बता सकता है कि रेत भरी माचिस से वजन कैसे मापते हैं।"
+          },
+          "forget": {
+            "en": "I forgot! What do we fill inside a matchbox to weigh things?",
+            "hi": "मैं भूल गई! चीजें तौलने के लिए हम माचिस के अंदर क्या भरते हैं?"
+          },
+          "hints": [
+            {
+              "en": "Look at what we put inside the small box from the ground.",
+              "hi": "सोचो हमने जमीन से उठाकर छोटी डिब्बी में क्या भरा था।"
+            },
+            {
+              "en": "It is tiny brownish grains you find near a riverbank or playground.",
+              "hi": "यह छोटे भूरे कण होते हैं जो मैदान या नदी के पास मिलते हैं।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "we fill a matchbox with ground grains to use as a weight",
+              "hi": "वजन की तरह इस्तेमाल करने के लिए हम माचिस में मिट्टी जैसे कण भरते हैं",
+              "words": [
+                "weight",
+                "वजन",
+                "vajan"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us make our own weights using matchboxes.",
+            "hi": "आओ माचिस से अपना वजन मापें।"
+          }
+        },
+        {
+          "t": "passage",
+          "p": {
+            "en": "Fill a matchbox with loose earth. Use this earth matchbox to weigh objects like a pencil box or a spoon on a balance.",
+            "hi": "माचिस में मिट्टी भरें। तराजू पर पेंसिल बॉक्स या चम्मच तौलने के लिए इस मिट्टी भरी माचिस का उपयोग करें।"
+          },
+          "art": "⏳"
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "What do we fill in the matchbox to make a weight?",
+            "hi": "वजन बनाने के लिए माचिस में क्या भरते हैं?"
+          },
+          "opts": [
+            "loose earth",
+            "water"
+          ],
+          "hiOpts": [
+            "मिट्टी",
+            "पानी"
+          ],
+          "correct": 0,
+          "why": {
+            "en": "Children might guess water since water is used in previous pages.",
+            "hi": "पिछले पन्नों में पानी के इस्तेमाल के कारण बच्चे पानी चुन सकते हैं।"
+          },
+          "derived": true
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Fill a matchbox with loose earth to weigh objects.",
+            "hi": "चीजें तौलने के लिए माचिस में मिट्टी भरें।"
+          }
+        }
+      ],
+      "subject": "read",
+      "id": "sch-1vujtaa"
+    }
+  ],
+  "notUsed": []
+}

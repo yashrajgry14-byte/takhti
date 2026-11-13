@@ -1,0 +1,52 @@
+{
+  "id": "ch9",
+  "n": 9,
+  "title": {
+    "en": "House of Hundreds - II",
+    "hi": "House of Hundreds - II"
+  },
+  "built": "2026-11-13T15:50:49.109Z",
+  "model": "gemini-3.5-flash-lite",
+  "lessons": [],
+  "notUsed": [
+    {
+      "title": {
+        "en": "Rice Sacks Tiles",
+        "hi": "चावल की बोरियाँ"
+      },
+      "errors": [
+        "beat 2: marked 5 right, but the picture before it shows 54",
+        "beat 2: marked \"5\" correct but the beats compute 54"
+      ]
+    },
+    {
+      "title": {
+        "en": "Crane Steps",
+        "hi": "सारस के कदम"
+      },
+      "errors": [
+        "beat 2: marked 15 right, but the picture before it shows 25",
+        "beat 2: marked \"15\" correct but the beats compute 25"
+      ]
+    },
+    {
+      "title": {
+        "en": "Making Numbers",
+        "hi": "संख्याएँ बनाना"
+      },
+      "errors": [
+        "beat 2: marked 3 right, but the picture before it shows 30",
+        "beat 2: marked \"3\" correct but the beats compute 30"
+      ]
+    },
+    {
+      "title": {
+        "en": "Word Numerals",
+        "hi": "शब्द संख्याएँ"
+      },
+      "errors": [
+        "beat 2: the right answer \"1\" isn't in the passage"
+      ]
+    }
+  ]
+}

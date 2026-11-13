@@ -1,0 +1,237 @@
+{
+  "id": "ch10",
+  "n": 10,
+  "title": {
+    "en": "Fun at Class Party!",
+    "hi": "Fun at Class Party!"
+  },
+  "built": "2026-11-13T15:51:15.098Z",
+  "model": "gemini-3.5-flash-lite",
+  "lessons": [
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "✋",
+      "title": {
+        "en": "Measuring with Hand Span",
+        "hi": "बालिश्त से नापना"
+      },
+      "sub": {
+        "en": "Use body parts to measure length",
+        "hi": "शरीर के अंगों से लंबाई नापो"
+      },
+      "skillId": "measure3",
+      "source": "Page 128",
+      "aims": [
+        {
+          "id": "slu62iy.0",
+          "kind": "explain",
+          "short": {
+            "en": "Use hand span",
+            "hi": "बालिश्त का प्रयोग"
+          },
+          "point": {
+            "en": "The child can use hand span to measure table length.",
+            "hi": "बच्चा मेज की लंबाई नापने के लिए बालिश्त का उपयोग कर सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do we use our hand span to measure length?",
+            "hi": "मैं भूल गई! लंबाई नापने के लिए बालिश्त का उपयोग कैसे करते हैं?"
+          },
+          "hints": [
+            {
+              "en": "Open your fingers fully. Where do you place it first?",
+              "hi": "अपनी उँगलियों को पूरा खोलो। इसे पहले कहाँ रखते हैं?"
+            },
+            {
+              "en": "What do you do after placing your fingers once?",
+              "hi": "उँगलियाँ एक बार रखने के बाद क्या करते हो?"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "stretch your fingers and place them end to end along the object",
+              "hi": "अपनी उँगलियाँ फैलाओ और वस्तु के साथ-साथ एक के बाद एक रखो",
+              "words": [
+                "stretch",
+                "spread fingers",
+                "फैलाओ",
+                "ek ke baad ek"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us measure things using our hand span.",
+            "hi": "आओ अपने बालिश्त से चीजें नापें।"
+          }
+        },
+        {
+          "t": "passage",
+          "p": {
+            "en": "Children use their hands to measure table length. Different hands give different numbers.",
+            "hi": "बच्चे मेज की लंबाई नापने के लिए हाथ का उपयोग करते हैं। अलग हाथों से अलग गिनती आती है।"
+          },
+          "art": "✋"
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "Do Leena and Adi get the same measurement using their hand spans?",
+            "hi": "क्या लीना और आदि को अपने बालिश्त से एक जैसी माप मिलती है?"
+          },
+          "opts": [
+            "Yes",
+            "No"
+          ],
+          "hiOpts": [
+            "हाँ",
+            "नहीं"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children think all hand spans are of the exact same length.",
+            "hi": "बच्चों को लगता है कि सभी के हाथ बिल्कुल एक लंबाई के होते हैं।"
+          },
+          "derived": true
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Different people have different hand span sizes.",
+            "hi": "अलग-अलग लोगों के बालिश्त का आकार अलग होता है।"
+          }
+        }
+      ],
+      "subject": "read",
+      "id": "sch-lu62iy"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "✂️",
+      "title": {
+        "en": "Cutting Ropes",
+        "hi": "रस्सियाँ काटना"
+      },
+      "sub": {
+        "en": "Cuts and pieces",
+        "hi": "कट और टुकड़े"
+      },
+      "skillId": "measure3",
+      "source": "Page 138",
+      "aims": [
+        {
+          "id": "s21ar5a.0",
+          "kind": "explain",
+          "short": {
+            "en": "Cuts and pieces",
+            "hi": "कट और टुकड़े"
+          },
+          "point": {
+            "en": "The child can tell how many cuts are needed to make 4 equal pieces.",
+            "hi": "बच्चा बता सकता है कि 4 बराबर टुकड़े करने के लिए कितने कट लगाने होंगे।"
+          },
+          "forget": {
+            "en": "I forgot! How many cuts do we make to divide a rope into 4 equal pieces?",
+            "hi": "मैं भूल गई! किसी रस्सी को 4 बराबर टुकड़ों में बाँटने के लिए कितने कट लगाते हैं?"
+          },
+          "hints": [
+            {
+              "en": "Think about cutting a strip step by step.",
+              "hi": "एक पट्टी को धीरे-धीरे काटने के बारे में सोचो।"
+            },
+            {
+              "en": "Count the number of snips you make with scissors.",
+              "hi": "कैंची से लगाए गए कटों की गिनती करो।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "make 3 cuts to get 4 equal pieces",
+              "hi": "4 बराबर टुकड़े पाने के लिए 3 कट लगाओ",
+              "words": [
+                "3 cuts",
+                "three cuts",
+                "3",
+                "तीन कट",
+                "teen kat"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us count cuts and pieces of rope.",
+            "hi": "आओ रस्सी के कट और टुकड़े गिनें।"
+          }
+        },
+        {
+          "t": "passage",
+          "p": {
+            "en": "Cutting a rope into 4 equal pieces requires 3 cuts with scissors.",
+            "hi": "रस्सी को 4 बराबर टुकड़ों में काटने के लिए कैंची से 3 कट लगाने पड़ते हैं।"
+          },
+          "art": "✂️"
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "How many cuts did you make to cut a rope into 4 equal pieces?",
+            "hi": "रस्सी को 4 बराबर टुकड़ों में काटने के लिए तुमने कितने कट लगाए?"
+          },
+          "opts": [
+            "3",
+            "4"
+          ],
+          "hiOpts": [
+            "3",
+            "4"
+          ],
+          "correct": 0,
+          "why": {
+            "en": "Children assume the number of cuts is equal to the number of pieces (4).",
+            "hi": "बच्चों को लगता है कि कटों की संख्या टुकड़ों की संख्या (4) के बराबर होती है।"
+          },
+          "derived": true
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "We make 3 cuts to get 4 equal pieces.",
+            "hi": "4 बराबर टुकड़े पाने के लिए हम 3 कट लगाते हैं।"
+          }
+        }
+      ],
+      "subject": "read",
+      "id": "sch-21ar5a"
+    }
+  ],
+  "notUsed": [
+    {
+      "title": {
+        "en": "One Metre Long",
+        "hi": "एक मीटर लंबा"
+      },
+      "errors": [
+        "beat 2: the right answer \"Metre rod\" isn't in the passage"
+      ]
+    },
+    {
+      "title": {
+        "en": "Half and Quarter Metre",
+        "hi": "आधा और चौथाई मीटर"
+      },
+      "errors": [
+        "beat 2: the right answer \"Half metre\" isn't in the passage"
+      ]
+    }
+  ]
+}

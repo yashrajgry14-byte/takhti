@@ -1,0 +1,1652 @@
+{
+  "at": "2026-11-13T15:50:49.109Z",
+  "cls": "c3",
+  "band": "developing",
+  "rules": {
+    "band": "developing",
+    "ages": [
+      7,
+      8
+    ],
+    "maxNumber": 100,
+    "sayWords": 18,
+    "read": "developing"
+  },
+  "note": "",
+  "source": "cemm109.pdf",
+  "model": "gemini-3.5-flash-lite",
+  "chapter": "House of Hundreds - II",
+  "draftMs": 99281,
+  "tried": [
+    {
+      "model": "gemini-3.5-flash-lite",
+      "outcome": "ok",
+      "ms": 11954,
+      "tokens": {
+        "in": 9561,
+        "out": 3240,
+        "total": 12801
+      }
+    }
+  ],
+  "repair": {
+    "status": 200,
+    "model": "gemini-3.5-flash-lite",
+    "error": "",
+    "ms": 5397,
+    "tried": [
+      {
+        "model": "gemini-3.5-flash-lite",
+        "outcome": "ok",
+        "ms": 5395,
+        "tokens": {
+          "in": 5477,
+          "out": 1733,
+          "total": 7210
+        }
+      }
+    ]
+  },
+  "drafts": [
+    {
+      "raw": {
+        "title": {
+          "en": "Rice Sacks Tiles",
+          "hi": "चावल की बोरियाँ"
+        },
+        "sub": {
+          "en": "Show with tiles",
+          "hi": "टाइलों से दिखाओ"
+        },
+        "ic": "🧱",
+        "skill": "place2",
+        "source": "Page 118",
+        "aims": [
+          {
+            "short": {
+              "en": "Show hundreds and tens",
+              "hi": "सैकड़े और दहाई दिखाओ"
+            },
+            "point": {
+              "en": "The child can show hundreds and tens using tiles.",
+              "hi": "बच्चा टाइलों से सैकड़े और दहाई दिखा सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I show hundreds and tens with tiles?",
+              "hi": "मैं भूल गई! टाइलों से सैकड़े और दहाई कैसे दिखाते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Look at the big blocks for hundreds. What about tens?",
+                "hi": "सैकड़े के लिए बड़े ब्लॉक देखो। दहाई के लिए क्या?"
+              },
+              {
+                "en": "How do we draw the tiles for each part?",
+                "hi": "हर हिस्से के लिए टाइलें कैसे बनाते हैं?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "draw big blocks for hundreds and small strips for tens",
+                "hi": "सैकड़े के लिए बड़े ब्लॉक और दहाई के लिए छोटी पट्टी बनाओ",
+                "words": [
+                  "big blocks",
+                  "strips",
+                  "hundreds",
+                  "tens",
+                  "बड़े ब्लॉक",
+                  "पट्टी",
+                  "सैकड़ा",
+                  "दहाई",
+                  "bade block",
+                  "patti"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us show numbers with tiles.",
+              "hi": "आओ टाइलों से संख्याएँ दिखाएँ।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 83,
+            "say": {
+              "en": "Here are big blocks and strips for the number.",
+              "hi": "यहाँ संख्या के लिए बड़े ब्लॉक और पट्टियाँ हैं।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 54,
+            "say": {
+              "en": "See how we group tens and ones.",
+              "hi": "देखो हम दहाई और इकाई को कैसे समूह में रखते हैं।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many tens are shown in this group?",
+              "hi": "इस समूह में कितनी दहाई दिखाई गई हैं?"
+            },
+            "opts": [
+              "5",
+              "8"
+            ],
+            "hiOpts": [
+              "5",
+              "8"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the tens digit with the ones or hundreds digit.",
+              "hi": "बच्चे दहाई के अंक को इकाई या सैकड़े के अंक से मिला देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Use tiles to show hundreds and tens clearly.",
+              "hi": "सैकड़े और दहाई दिखाने के लिए टाइलों का उपयोग करो।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🧱",
+          "title": {
+            "en": "Rice Sacks Tiles",
+            "hi": "चावल की बोरियाँ"
+          },
+          "sub": {
+            "en": "Show with tiles",
+            "hi": "टाइलों से दिखाओ"
+          },
+          "skillId": "place2",
+          "source": "Page 118",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us show numbers with tiles.",
+                "hi": "आओ टाइलों से संख्याएँ दिखाएँ।"
+              }
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "Here are big blocks and strips for the number.",
+                "hi": "यहाँ संख्या के लिए बड़े ब्लॉक और पट्टियाँ हैं।"
+              },
+              "a": 83
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "See how we group tens and ones.",
+                "hi": "देखो हम दहाई और इकाई को कैसे समूह में रखते हैं।"
+              },
+              "a": 54
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many tens are shown in this group?",
+                "hi": "इस समूह में कितनी दहाई दिखाई गई हैं?"
+              },
+              "opts": [
+                "5",
+                "8"
+              ],
+              "hiOpts": [
+                "5",
+                "8"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children confuse the tens digit with the ones or hundreds digit.",
+                "hi": "बच्चे दहाई के अंक को इकाई या सैकड़े के अंक से मिला देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Use tiles to show hundreds and tens clearly.",
+                "hi": "सैकड़े और दहाई दिखाने के लिए टाइलों का उपयोग करो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-11uo1cm"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says \"big blocks\"))",
+          "beat 3: marked 5 right, but the picture before it shows 54",
+          "beat 3: marked \"5\" correct but the beats compute 54"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"big blocks\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Rice Sacks Tiles",
+          "hi": "चावल की बोरियाँ"
+        },
+        "sub": {
+          "en": "Show with tiles",
+          "hi": "टाइलों से दिखाओ"
+        },
+        "ic": "🧱",
+        "skill": "place2",
+        "source": "Page 118",
+        "aims": [
+          {
+            "short": {
+              "en": "Show hundreds and tens",
+              "hi": "सैकड़े और दहाई दिखाओ"
+            },
+            "point": {
+              "en": "The child can show hundreds and tens using tiles.",
+              "hi": "बच्चा टाइलों से सैकड़े और दहाई दिखा सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I show numbers with tiles?",
+              "hi": "मैं भूल गई! टाइलों से संख्याएँ कैसे दिखाते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Look at the blocks for each place. What about tens?",
+                "hi": "हर स्थान के लिए ब्लॉक देखो। दहाई के लिए क्या?"
+              },
+              {
+                "en": "How do we draw the tiles for each part?",
+                "hi": "हर हिस्से के लिए टाइलें कैसे बनाते हैं?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "draw blocks for parts and small strips for tens",
+                "hi": "हिस्सों के लिए ब्लॉक और दहाई के लिए छोटी पट्टी बनाओ",
+                "words": [
+                  "blocks",
+                  "strips",
+                  "tens",
+                  "बड़े ब्लॉक",
+                  "पट्टी",
+                  "दहाई",
+                  "patti"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us show numbers with tiles.",
+              "hi": "आओ टाइलों से संख्याएँ दिखाएँ।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 54,
+            "say": {
+              "en": "Here are groups for the number.",
+              "hi": "यहाँ संख्या के लिए समूह हैं।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many tens are shown in this group?",
+              "hi": "इस समूह में कितनी दहाई दिखाई गई हैं?"
+            },
+            "opts": [
+              "5",
+              "8"
+            ],
+            "hiOpts": [
+              "5",
+              "8"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the tens digit with the ones digit.",
+              "hi": "बच्चे दहाई के अंक को इकाई के अंक से मिला देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Use tiles to show numbers clearly.",
+              "hi": "संख्याएँ स्पष्ट रूप से दिखाने के लिए टाइलों का उपयोग करो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🧱",
+          "title": {
+            "en": "Rice Sacks Tiles",
+            "hi": "चावल की बोरियाँ"
+          },
+          "sub": {
+            "en": "Show with tiles",
+            "hi": "टाइलों से दिखाओ"
+          },
+          "skillId": "place2",
+          "source": "Page 118",
+          "aims": [
+            {
+              "id": "s1a7q9vu.0",
+              "kind": "explain",
+              "short": {
+                "en": "Show hundreds and tens",
+                "hi": "सैकड़े और दहाई दिखाओ"
+              },
+              "point": {
+                "en": "The child can show hundreds and tens using tiles.",
+                "hi": "बच्चा टाइलों से सैकड़े और दहाई दिखा सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I show numbers with tiles?",
+                "hi": "मैं भूल गई! टाइलों से संख्याएँ कैसे दिखाते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Think back to the lesson. What did you do first?",
+                  "hi": "पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?"
+                },
+                {
+                  "en": "How do we draw the tiles for each part?",
+                  "hi": "हर हिस्से के लिए टाइलें कैसे बनाते हैं?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "draw blocks for parts and small strips for tens",
+                  "hi": "हिस्सों के लिए ब्लॉक और दहाई के लिए छोटी पट्टी बनाओ",
+                  "words": [
+                    "blocks",
+                    "strips",
+                    "tens",
+                    "बड़े ब्लॉक",
+                    "पट्टी",
+                    "दहाई",
+                    "patti"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us show numbers with tiles.",
+                "hi": "आओ टाइलों से संख्याएँ दिखाएँ।"
+              }
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "Here are groups for the number.",
+                "hi": "यहाँ संख्या के लिए समूह हैं।"
+              },
+              "a": 54
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many tens are shown in this group?",
+                "hi": "इस समूह में कितनी दहाई दिखाई गई हैं?"
+              },
+              "opts": [
+                "5",
+                "8"
+              ],
+              "hiOpts": [
+                "5",
+                "8"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children confuse the tens digit with the ones digit.",
+                "hi": "बच्चे दहाई के अंक को इकाई के अंक से मिला देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Use tiles to show numbers clearly.",
+                "hi": "संख्याएँ स्पष्ट रूप से दिखाने के लिए टाइलों का उपयोग करो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1a7q9vu"
+        },
+        "ok": false,
+        "errors": [
+          "beat 2: marked 5 right, but the picture before it shows 54",
+          "beat 2: marked \"5\" correct but the beats compute 54"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [],
+        "aimFixes": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"blocks\") — replaced with a general nudge"
+        ]
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Crane Steps",
+          "hi": "सारस के कदम"
+        },
+        "sub": {
+          "en": "Jumps on the line",
+          "hi": "संख्या रेखा पर छलांग"
+        },
+        "ic": "🐦",
+        "skill": "skip",
+        "source": "Page 119",
+        "aims": [
+          {
+            "short": {
+              "en": "Count steps",
+              "hi": "कदम गिनो"
+            },
+            "point": {
+              "en": "The child can count steps on a number line.",
+              "hi": "बच्चा संख्या रेखा पर कदम गिन सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we count steps on the line?",
+              "hi": "मैं भूल गई! संख्या रेखा पर कदम कैसे गिनते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Look at where the jump starts and ends.",
+                "hi": "देखो छलांग कहाँ से शुरू और खत्म होती है।"
+              },
+              {
+                "en": "Count each small gap between numbers.",
+                "hi": "संख्याओं के बीच का हर छोटा अंतर गिनो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "count the gaps from start to finish",
+                "hi": "शुरुआत से अंत तक के अंतर गिनो",
+                "words": [
+                  "count gaps",
+                  "steps",
+                  "jump",
+                  "अंतर गिनो",
+                  "कदम",
+                  "छलांग",
+                  "ginti",
+                  "kadam"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us help the crane reach food with jumps.",
+              "hi": "आओ छलांग लगाकर सारस को खाना पहुँचाने में मदद करें।"
+            }
+          },
+          {
+            "t": "line",
+            "a": 650,
+            "b": 5,
+            "hops": 4,
+            "say": {
+              "en": "Count the steps from 650 to 670.",
+              "hi": "650 से 670 तक के कदम गिनो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many steps did the crane take?",
+              "hi": "सारस ने कितने कदम लिए?"
+            },
+            "opts": [
+              "20",
+              "10"
+            ],
+            "hiOpts": [
+              "20",
+              "10"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children miscalculate the total jump size by miscounting intervals.",
+              "hi": "बच्चे अंतरालों की गलत गिनती करके कुल छलांग का माप गलत निकाल देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Count every step on the number line.",
+              "hi": "संख्या रेखा पर हर कदम गिनो।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🐦",
+          "title": {
+            "en": "Crane Steps",
+            "hi": "सारस के कदम"
+          },
+          "sub": {
+            "en": "Jumps on the line",
+            "hi": "संख्या रेखा पर छलांग"
+          },
+          "skillId": "skip",
+          "source": "Page 119",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us help the crane reach food with jumps.",
+                "hi": "आओ छलांग लगाकर सारस को खाना पहुँचाने में मदद करें।"
+              }
+            },
+            {
+              "t": "line",
+              "say": {
+                "en": "Count the steps from 650 to 670.",
+                "hi": "650 से 670 तक के कदम गिनो।"
+              },
+              "a": 650,
+              "b": 5,
+              "hops": 4
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many steps did the crane take?",
+                "hi": "सारस ने कितने कदम लिए?"
+              },
+              "opts": [
+                "20",
+                "10"
+              ],
+              "hiOpts": [
+                "20",
+                "10"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children miscalculate the total jump size by miscounting intervals.",
+                "hi": "बच्चे अंतरालों की गलत गिनती करके कुल छलांग का माप गलत निकाल देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Count every step on the number line.",
+                "hi": "संख्या रेखा पर हर कदम गिनो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-t4jksj"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says \"jump\"))",
+          "beat 1: a=650 is too many to draw (at most 50)",
+          "beat 2: marked 20 right, but the picture before it shows 670",
+          "beat 1: a=650 exceeds the band ceiling of 100",
+          "beat 2: marked \"20\" correct but the beats compute 670"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"jump\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Crane Steps",
+          "hi": "सारस के कदम"
+        },
+        "sub": {
+          "en": "Jumps on the line",
+          "hi": "संख्या रेखा पर छलांग"
+        },
+        "ic": "🐦",
+        "skill": "skip",
+        "source": "Page 119",
+        "aims": [
+          {
+            "short": {
+              "en": "Count steps",
+              "hi": "कदम गिनो"
+            },
+            "point": {
+              "en": "The child can count steps on a number line.",
+              "hi": "बच्चा संख्या रेखा पर कदम गिन सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we count steps on the line?",
+              "hi": "मैं भूल गई! संख्या रेखा पर कदम कैसे गिनते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Look at where the mark starts and ends.",
+                "hi": "देखो निशान कहाँ से शुरू और खत्म होता है।"
+              },
+              {
+                "en": "Count each small gap between numbers.",
+                "hi": "संख्याओं के बीच का हर छोटा अंतर गिनो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "count the gaps from start to finish",
+                "hi": "शुरुआत से अंत तक के अंतर गिनो",
+                "words": [
+                  "count gaps",
+                  "steps",
+                  "interval",
+                  "अंतर गिनो",
+                  "कदम",
+                  "antara",
+                  "kadam"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us help the crane reach food with jumps.",
+              "hi": "आओ छलांग लगाकर सारस को खाना पहुँचाने में मदद करें।"
+            }
+          },
+          {
+            "t": "line",
+            "a": 10,
+            "b": 5,
+            "hops": 3,
+            "say": {
+              "en": "Count the steps from 10 to 25.",
+              "hi": "10 से 25 तक के कदम गिनो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many steps did the crane take?",
+              "hi": "सारस ने कितने कदम लिए?"
+            },
+            "opts": [
+              "15",
+              "10"
+            ],
+            "hiOpts": [
+              "15",
+              "10"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children miscalculate the total jump size by miscounting intervals.",
+              "hi": "बच्चे अंतरालों की गलत गिनती करके कुल छलांग का माप गलत निकाल देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Count every step on the number line.",
+              "hi": "संख्या रेखा पर हर कदम गिनो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🐦",
+          "title": {
+            "en": "Crane Steps",
+            "hi": "सारस के कदम"
+          },
+          "sub": {
+            "en": "Jumps on the line",
+            "hi": "संख्या रेखा पर छलांग"
+          },
+          "skillId": "skip",
+          "source": "Page 119",
+          "aims": [
+            {
+              "id": "sttmzi.0",
+              "kind": "explain",
+              "short": {
+                "en": "Count steps",
+                "hi": "कदम गिनो"
+              },
+              "point": {
+                "en": "The child can count steps on a number line.",
+                "hi": "बच्चा संख्या रेखा पर कदम गिन सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do we count steps on the line?",
+                "hi": "मैं भूल गई! संख्या रेखा पर कदम कैसे गिनते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Look at where the mark starts and ends.",
+                  "hi": "देखो निशान कहाँ से शुरू और खत्म होता है।"
+                },
+                {
+                  "en": "Show me with your finger, then tell me what you did.",
+                  "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "count the gaps from start to finish",
+                  "hi": "शुरुआत से अंत तक के अंतर गिनो",
+                  "words": [
+                    "count gaps",
+                    "interval",
+                    "अंतर गिनो",
+                    "antara",
+                    "kadam"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us help the crane reach food with jumps.",
+                "hi": "आओ छलांग लगाकर सारस को खाना पहुँचाने में मदद करें।"
+              }
+            },
+            {
+              "t": "line",
+              "say": {
+                "en": "Count the steps from 10 to 25.",
+                "hi": "10 से 25 तक के कदम गिनो।"
+              },
+              "a": 10,
+              "b": 5,
+              "hops": 3
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many steps did the crane take?",
+                "hi": "सारस ने कितने कदम लिए?"
+              },
+              "opts": [
+                "15",
+                "10"
+              ],
+              "hiOpts": [
+                "15",
+                "10"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children miscalculate the total jump size by miscounting intervals.",
+                "hi": "बच्चे अंतरालों की गलत गिनती करके कुल छलांग का माप गलत निकाल देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Count every step on the number line.",
+                "hi": "संख्या रेखा पर हर कदम गिनो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-ttmzi"
+        },
+        "ok": false,
+        "errors": [
+          "beat 2: marked 15 right, but the picture before it shows 25",
+          "beat 2: marked \"15\" correct but the beats compute 25"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [],
+        "aimFixes": [
+          "aim 1: hint 2 (hi) already gives the explanation (it says \"अंतर गिनो\") — replaced with a general nudge"
+        ]
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Making Numbers",
+          "hi": "संख्याएँ बनाना"
+        },
+        "sub": {
+          "en": "Using paper slips",
+          "hi": "कागज की पर्चियों से"
+        },
+        "ic": "📄",
+        "skill": "place3",
+        "source": "Page 125",
+        "aims": [
+          {
+            "short": {
+              "en": "Make with slips",
+              "hi": "पर्चियों से बनाओ"
+            },
+            "point": {
+              "en": "The child can make numbers using 100, 10, and 1 slips.",
+              "hi": "बच्चा 100, 10 और 1 की पर्चियों से संख्याएँ बना सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we use slips to make a number?",
+              "hi": "मैं भूल गई! संख्या बनाने के लिए पर्चियों का उपयोग कैसे करते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Check how many hundreds slips you need.",
+                "hi": "देखें कि आपको सैकड़े की कितनी पर्चियाँ चाहिए।"
+              },
+              {
+                "en": "Add the tens and ones slips next.",
+                "hi": "इसके बाद दहाई और इकाई की पर्चियाँ जोड़ो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "use hundreds tens and ones slips together",
+                "hi": "सैकड़े, दहाई और इकाई की पर्चियाँ एक साथ उपयोग करो",
+                "words": [
+                  "hundreds slips",
+                  "tens slips",
+                  "ones",
+                  "सैकड़े की पर्ची",
+                  "दहाई",
+                  "इकाई",
+                  "slip"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us make numbers using paper slips.",
+              "hi": "आओ कागज की पर्चियों से संख्याएँ बनाएँ।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 42,
+            "say": {
+              "en": "Four slips of 100 and two slips of 10 make 420.",
+              "hi": "100 की चार पर्चियाँ और 10 की दो पर्चियाँ मिलकर 420 बनाती हैं।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many 100 slips are needed for 300?",
+              "hi": "300 के लिए 100 की कितनी पर्चियाँ चाहिए?"
+            },
+            "opts": [
+              "3",
+              "4"
+            ],
+            "hiOpts": [
+              "3",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the hundreds digit with another place value.",
+              "hi": "बच्चे सैकड़े के अंक को किसी अन्य स्थानीय मान से मिला देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Combine slips to build any number.",
+              "hi": "कोई भी संख्या बनाने के लिए पर्चियाँ जोड़ो।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "📄",
+          "title": {
+            "en": "Making Numbers",
+            "hi": "संख्याएँ बनाना"
+          },
+          "sub": {
+            "en": "Using paper slips",
+            "hi": "कागज की पर्चियों से"
+          },
+          "skillId": "place3",
+          "source": "Page 125",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us make numbers using paper slips.",
+                "hi": "आओ कागज की पर्चियों से संख्याएँ बनाएँ।"
+              }
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "Four slips of 100 and two slips of 10 make 420.",
+                "hi": "100 की चार पर्चियाँ और 10 की दो पर्चियाँ मिलकर 420 बनाती हैं।"
+              },
+              "a": 42
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many 100 slips are needed for 300?",
+                "hi": "300 के लिए 100 की कितनी पर्चियाँ चाहिए?"
+              },
+              "opts": [
+                "4",
+                "3"
+              ],
+              "hiOpts": [
+                "4",
+                "3"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse the hundreds digit with another place value.",
+                "hi": "बच्चे सैकड़े के अंक को किसी अन्य स्थानीय मान से मिला देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Combine slips to build any number.",
+                "hi": "कोई भी संख्या बनाने के लिए पर्चियाँ जोड़ो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-1q5cvze"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says \"hundreds slips\"))",
+          "beat 2: marked 3 right, but the picture before it shows 42",
+          "beat 2: marked \"3\" correct but the beats compute 42"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"hundreds slips\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Making Numbers",
+          "hi": "संख्याएँ बनाना"
+        },
+        "sub": {
+          "en": "Using paper slips",
+          "hi": "कागज की पर्चियों से"
+        },
+        "ic": "📄",
+        "skill": "place3",
+        "source": "Page 125",
+        "aims": [
+          {
+            "short": {
+              "en": "Make with slips",
+              "hi": "पर्चियों से बनाओ"
+            },
+            "point": {
+              "en": "The child can make numbers using slips.",
+              "hi": "बच्चा पर्चियों से संख्याएँ बना सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we use slips to make a number?",
+              "hi": "मैं भूल गई! संख्या बनाने के लिए पर्चियों का उपयोग कैसे करते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Check how many slips you need for the place.",
+                "hi": "देखें कि आपको उस स्थान के लिए कितनी पर्चियाँ चाहिए।"
+              },
+              {
+                "en": "Add the tens and ones slips next.",
+                "hi": "इसके बाद दहाई और इकाई की पर्चियाँ जोड़ो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "use tens and ones slips together",
+                "hi": "दहाई और इकाई की पर्चियाँ एक साथ उपयोग करो",
+                "words": [
+                  "tens slips",
+                  "ones",
+                  "दहाई",
+                  "इकाई",
+                  "slip",
+                  "parchi"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us make numbers using paper slips.",
+              "hi": "आओ कागज की पर्चियों से संख्याएँ बनाएँ।"
+            }
+          },
+          {
+            "t": "group",
+            "a": 30,
+            "say": {
+              "en": "See how many slips are here.",
+              "hi": "देखो यहाँ कितनी पर्चियाँ हैं।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many tens slips are needed for 30?",
+              "hi": "30 के लिए दहाई की कितनी पर्चियाँ चाहिए?"
+            },
+            "opts": [
+              "3",
+              "4"
+            ],
+            "hiOpts": [
+              "3",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the tens digit with another place value.",
+              "hi": "बच्चे दहाई के अंक को किसी अन्य स्थानीय मान से मिला देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Combine slips to build any number.",
+              "hi": "कोई भी संख्या बनाने के लिए पर्चियाँ जोड़ो।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "📄",
+          "title": {
+            "en": "Making Numbers",
+            "hi": "संख्याएँ बनाना"
+          },
+          "sub": {
+            "en": "Using paper slips",
+            "hi": "कागज की पर्चियों से"
+          },
+          "skillId": "place3",
+          "source": "Page 125",
+          "aims": [
+            {
+              "id": "sphmfo.0",
+              "kind": "explain",
+              "short": {
+                "en": "Make with slips",
+                "hi": "पर्चियों से बनाओ"
+              },
+              "point": {
+                "en": "The child can make numbers using slips.",
+                "hi": "बच्चा पर्चियों से संख्याएँ बना सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do we use slips to make a number?",
+                "hi": "मैं भूल गई! संख्या बनाने के लिए पर्चियों का उपयोग कैसे करते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Check how many slips you need for the place.",
+                  "hi": "देखें कि आपको उस स्थान के लिए कितनी पर्चियाँ चाहिए।"
+                },
+                {
+                  "en": "Show me with your finger, then tell me what you did.",
+                  "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "use tens and ones slips together",
+                  "hi": "दहाई और इकाई की पर्चियाँ एक साथ उपयोग करो",
+                  "words": [
+                    "tens slips",
+                    "ones",
+                    "दहाई",
+                    "इकाई",
+                    "parchi"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us make numbers using paper slips.",
+                "hi": "आओ कागज की पर्चियों से संख्याएँ बनाएँ।"
+              }
+            },
+            {
+              "t": "group",
+              "say": {
+                "en": "See how many slips are here.",
+                "hi": "देखो यहाँ कितनी पर्चियाँ हैं।"
+              },
+              "a": 30
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many tens slips are needed for 30?",
+                "hi": "30 के लिए दहाई की कितनी पर्चियाँ चाहिए?"
+              },
+              "opts": [
+                "3",
+                "4"
+              ],
+              "hiOpts": [
+                "3",
+                "4"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children confuse the tens digit with another place value.",
+                "hi": "बच्चे दहाई के अंक को किसी अन्य स्थानीय मान से मिला देते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Combine slips to build any number.",
+                "hi": "कोई भी संख्या बनाने के लिए पर्चियाँ जोड़ो।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-phmfo"
+        },
+        "ok": false,
+        "errors": [
+          "beat 2: marked 3 right, but the picture before it shows 30",
+          "beat 2: marked \"3\" correct but the beats compute 30"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [],
+        "aimFixes": [
+          "aim 1: hint 2 (en) already gives the explanation (it says \"ones\") — replaced with a general nudge"
+        ]
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Word Numerals",
+          "hi": "शब्द संख्याएँ"
+        },
+        "sub": {
+          "en": "Bhutasankhya",
+          "hi": "भूतसंख्या"
+        },
+        "ic": "🔤",
+        "skill": "e3-compre",
+        "source": "Page 127",
+        "aims": [
+          {
+            "short": {
+              "en": "Read word numerals",
+              "hi": "शब्द संख्या पढ़ो"
+            },
+            "point": {
+              "en": "The child can read numbers represented by words.",
+              "hi": "बच्चा शब्दों द्वारा दर्शायी गई संख्याओं को पढ़ सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we read numbers from word cards?",
+              "hi": "मैं भूल गई! शब्द कार्ड से संख्याएँ कैसे पढ़ते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Look at the picture or clue on the card.",
+                "hi": "कार्ड पर बने चित्र या संकेत को देखो।"
+              },
+              {
+                "en": "Count how many items the word represents.",
+                "hi": "गिनो कि शब्द कितनी वस्तुओं को दर्शाता है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "match the word clue to its number value",
+                "hi": "शब्द संकेत को उसके संख्या मान से मिलाओ",
+                "words": [
+                  "word card",
+                  "value",
+                  "clue",
+                  "शब्द कार्ड",
+                  "मान",
+                  "संकेत",
+                  "shabd",
+                  "card"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us learn numbers using words and cards.",
+              "hi": "आओ शब्दों और कार्डों से संख्याएँ सीखें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Moon means one. Eyes mean two. Hands mean five.",
+              "hi": "चंद्रमा का अर्थ एक है। आँखें दो हैं। हाथ पाँच हैं।"
+            },
+            "art": "🌙"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What number does Moon stand for?",
+              "hi": "चंद्रमा किस संख्या को दर्शाता है?"
+            },
+            "opts": [
+              "1",
+              "2"
+            ],
+            "hiOpts": [
+              "1",
+              "2"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children mix up single-item symbols with multi-item symbols like eyes.",
+              "hi": "बच्चे एक वस्तु के प्रतीक को आँखों जैसे बहु-वस्तु प्रतीक से मिला देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Words can tell us numbers too.",
+              "hi": "शब्द भी हमें संख्याएँ बता सकते हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔤",
+          "title": {
+            "en": "Word Numerals",
+            "hi": "शब्द संख्याएँ"
+          },
+          "sub": {
+            "en": "Bhutasankhya",
+            "hi": "भूतसंख्या"
+          },
+          "skillId": "e3-compre",
+          "source": "Page 127",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us learn numbers using words and cards.",
+                "hi": "आओ शब्दों और कार्डों से संख्याएँ सीखें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Moon means one. Eyes mean two. Hands mean five.",
+                "hi": "चंद्रमा का अर्थ एक है। आँखें दो हैं। हाथ पाँच हैं।"
+              },
+              "art": "🌙"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What number does Moon stand for?",
+                "hi": "चंद्रमा किस संख्या को दर्शाता है?"
+              },
+              "opts": [
+                "2",
+                "1"
+              ],
+              "hiOpts": [
+                "2",
+                "1"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children mix up single-item symbols with multi-item symbols like eyes.",
+                "hi": "बच्चे एक वस्तु के प्रतीक को आँखों जैसे बहु-वस्तु प्रतीक से मिला देते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Words can tell us numbers too.",
+                "hi": "शब्द भी हमें संख्याएँ बता सकते हैं।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-1g42ds6"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"card\"))",
+          "beat 2: the right answer \"1\" isn't in the passage"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [
+          "aim 1: Munni's question (en) already gives the explanation (it says \"card\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Word Numerals",
+          "hi": "शब्द संख्याएँ"
+        },
+        "sub": {
+          "en": "Bhutasankhya",
+          "hi": "भूतसंख्या"
+        },
+        "ic": "🔤",
+        "skill": "e3-compre",
+        "source": "Page 127",
+        "aims": [
+          {
+            "short": {
+              "en": "Read word numerals",
+              "hi": "शब्द संख्या पढ़ो"
+            },
+            "point": {
+              "en": "The child can read numbers represented by words.",
+              "hi": "बच्चा शब्दों द्वारा दर्शायी गई संख्याओं को पढ़ सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do we read numbers from words?",
+              "hi": "मैं भूल गई! शब्दों से संख्याएँ कैसे पढ़ते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Look at the picture or clue on the page.",
+                "hi": "पृष्ठ पर बने चित्र या संकेत को देखो।"
+              },
+              {
+                "en": "Count how many items the word represents.",
+                "hi": "गिनो कि शब्द कितनी वस्तुओं को दर्शाता है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "match the word clue to its number value",
+                "hi": "शब्द संकेत को उसके संख्या मान से मिलाओ",
+                "words": [
+                  "word",
+                  "value",
+                  "clue",
+                  "शब्द",
+                  "मान",
+                  "संकेत",
+                  "shabd"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us learn numbers using words.",
+              "hi": "आओ शब्दों से संख्याएँ सीखें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Moon means one. Eyes mean two. Hands mean five.",
+              "hi": "चंद्रमा का अर्थ एक है। आँखें दो हैं। हाथ पाँच हैं।"
+            },
+            "art": "🌙"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What number does Moon stand for?",
+              "hi": "चंद्रमा किस संख्या को दर्शाता है?"
+            },
+            "opts": [
+              "1",
+              "2"
+            ],
+            "hiOpts": [
+              "1",
+              "2"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children mix up single items with multi items.",
+              "hi": "बच्चे एक वस्तु को बहु-वस्तु से मिला देते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Words can tell us numbers too.",
+              "hi": "शब्द भी हमें संख्याएँ बता सकते हैं।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔤",
+          "title": {
+            "en": "Word Numerals",
+            "hi": "शब्द संख्याएँ"
+          },
+          "sub": {
+            "en": "Bhutasankhya",
+            "hi": "भूतसंख्या"
+          },
+          "skillId": "e3-compre",
+          "source": "Page 127",
+          "aims": [
+            {
+              "id": "scxqbtn.0",
+              "kind": "explain",
+              "short": {
+                "en": "Read word numerals",
+                "hi": "शब्द संख्या पढ़ो"
+              },
+              "point": {
+                "en": "The child can read numbers represented by words.",
+                "hi": "बच्चा शब्दों द्वारा दर्शायी गई संख्याओं को पढ़ सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do we read numbers from words?",
+                "hi": "मैं भूल गई! शब्दों से संख्याएँ कैसे पढ़ते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Think back to the lesson. What did you do first?",
+                  "hi": "पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?"
+                },
+                {
+                  "en": "Count how many items the word represents.",
+                  "hi": "गिनो कि शब्द कितनी वस्तुओं को दर्शाता है।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "match the word clue to its number value",
+                  "hi": "शब्द संकेत को उसके संख्या मान से मिलाओ",
+                  "words": [
+                    "value",
+                    "clue",
+                    "मान",
+                    "संकेत",
+                    "shabd"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us learn numbers using words.",
+                "hi": "आओ शब्दों से संख्याएँ सीखें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Moon means one. Eyes mean two. Hands mean five.",
+                "hi": "चंद्रमा का अर्थ एक है। आँखें दो हैं। हाथ पाँच हैं।"
+              },
+              "art": "🌙"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What number does Moon stand for?",
+                "hi": "चंद्रमा किस संख्या को दर्शाता है?"
+              },
+              "opts": [
+                "1",
+                "2"
+              ],
+              "hiOpts": [
+                "1",
+                "2"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children mix up single items with multi items.",
+                "hi": "बच्चे एक वस्तु को बहु-वस्तु से मिला देते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Words can tell us numbers too.",
+                "hi": "शब्द भी हमें संख्याएँ बता सकते हैं।"
+              }
+            }
+          ],
+          "subject": "read",
+          "id": "sch-cxqbtn"
+        },
+        "ok": false,
+        "errors": [
+          "beat 2: the right answer \"1\" isn't in the passage"
+        ],
+        "checks": [
+          "teacher"
+        ],
+        "aimErrors": [],
+        "aimFixes": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"clue\") — replaced with a general nudge"
+        ]
+      },
+      "verdict": "not used"
+    }
+  ]
+}

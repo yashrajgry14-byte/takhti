@@ -1,0 +1,458 @@
+{
+  "id": "ch12",
+  "n": 12,
+  "title": {
+    "en": "Give and Take",
+    "hi": "Give and Take"
+  },
+  "built": "2026-11-13T15:55:17.662Z",
+  "model": "gemini-3.5-flash-lite",
+  "lessons": [
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "➕",
+      "title": {
+        "en": "Adding numbers with hops",
+        "hi": "छलांग लगाकर जोड़ना"
+      },
+      "sub": {
+        "en": "Use the number line",
+        "hi": "संख्या रेखा का उपयोग करो"
+      },
+      "skillId": "add2",
+      "source": "Page 151",
+      "aims": [
+        {
+          "id": "s1gz7sge.0",
+          "kind": "explain",
+          "short": {
+            "en": "Add on line",
+            "hi": "रेखा पर जोड़"
+          },
+          "point": {
+            "en": "The child can add numbers using a number line.",
+            "hi": "बच्चा संख्या रेखा का उपयोग करके संख्याएँ जोड़ सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do I use the number line to add?",
+            "hi": "मैं भूल गई! जोड़ने के लिए संख्या रेखा का उपयोग कैसे करते हैं?"
+          },
+          "hints": [
+            {
+              "en": "Which way do you move on the line when you add?",
+              "hi": "जोड़ते समय तुम संख्या रेखा पर किस ओर बढ़ते हो?"
+            },
+            {
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "begin at the first number and hop forward",
+              "hi": "पहली संख्या से आरंभ करो और आगे की ओर कूदो",
+              "words": [
+                "begin",
+                "hop forward",
+                "aage",
+                "कूद",
+                "आरंभ"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us add numbers by taking jumps on the number line.",
+            "hi": "आओ संख्या रेखा पर छलांग लगाकर संख्याएँ जोड़ें।"
+          }
+        },
+        {
+          "t": "line",
+          "say": {
+            "en": "Begin at 10 and hop forward by 5.",
+            "hi": "10 से आरंभ करो और 5 आगे कूदो।"
+          },
+          "a": 10,
+          "b": 5,
+          "hops": 1
+        },
+        {
+          "t": "line",
+          "say": {
+            "en": "Begin at 20 and take jumps.",
+            "hi": "20 से आरंभ करो और छलांग लगाओ।"
+          },
+          "a": 20,
+          "b": 2,
+          "hops": 2
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "What number do you reach after two jumps of 2 from 20?",
+            "hi": "20 से 2 की दो छलांग के बाद तुम किस संख्या पर पहुँचोगे?"
+          },
+          "opts": [
+            "22",
+            "24"
+          ],
+          "hiOpts": [
+            "22",
+            "24"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children only add 2 once instead of taking two hops of 2.",
+            "hi": "बच्चे 2 की दो छलांग के बजाय केवल एक बार 2 जोड़ते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Jumping forward on the line helps us add numbers.",
+            "hi": "रेखा पर आगे कूदने से संख्याएँ जोड़ना आसान हो जाता है।"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-1gz7sge"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "➖",
+      "title": {
+        "en": "Taking away tens and ones",
+        "hi": "दहाई और इकाई घटाना"
+      },
+      "sub": {
+        "en": "Subtracting step by step",
+        "hi": "क्रमशः घटाना"
+      },
+      "skillId": "sub2",
+      "source": "Page 152",
+      "aims": [
+        {
+          "id": "s1utcycu.0",
+          "kind": "explain",
+          "short": {
+            "en": "Subtract step",
+            "hi": "घटाव चरण"
+          },
+          "point": {
+            "en": "The child can subtract numbers by opening tens and ones.",
+            "hi": "बच्चा दहाई और इकाई खोलकर संख्याएँ घटा सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! What do we do when we do not have enough ones to take away?",
+            "hi": "मैं भूल गई! जब घटाने के लिए पर्याप्त इकाई न हों, तब हम क्या करते हैं?"
+          },
+          "hints": [
+            {
+              "en": "Look at the tens place. Can you open a rod?",
+              "hi": "दहाई के स्थान को देखो। क्या तुम एक छड़ खोल सकते हो?"
+            },
+            {
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "convert one rod into ten single units",
+              "hi": "एक छड़ को दस इकाइयों में बदलो",
+              "words": [
+                "convert",
+                "units",
+                "badlo"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us learn how to subtract by opening groups into units.",
+            "hi": "आओ सीखें कि समूहों को इकाई में बदलकर कैसे घटाते हैं।"
+          }
+        },
+        {
+          "t": "take",
+          "say": {
+            "en": "We take away 5 units from 10 units and are left with 5 units.",
+            "hi": "हम 10 इकाइयों में से 5 इकाई घटाते हैं और हमारे पास 5 इकाई बचती हैं।"
+          },
+          "a": 10,
+          "b": 5
+        },
+        {
+          "t": "take",
+          "say": {
+            "en": "Take away 7 from 15 using blocks.",
+            "hi": "ब्लॉक का उपयोग करके 15 में से 7 घटाओ।"
+          },
+          "a": 15,
+          "b": 7
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "What is 15 minus 7?",
+            "hi": "15 में से 7 घटाने पर क्या बचेगा?"
+          },
+          "opts": [
+            "7",
+            "8"
+          ],
+          "hiOpts": [
+            "7",
+            "8"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children miscalculate basic subtraction facts.",
+            "hi": "बच्चे साधारण घटाव में गलती कर देते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Opening tens helps us subtract easily.",
+            "hi": "दहाई खोलने से घटाना आसान हो जाता है।"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-1utcycu"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "💵",
+      "title": {
+        "en": "Money notes and coins",
+        "hi": "रुपये के नोट और सिक्के"
+      },
+      "sub": {
+        "en": "Exchange money values",
+        "hi": "धन का आदान-प्रदान"
+      },
+      "skillId": "money2",
+      "source": "Page 158",
+      "aims": [
+        {
+          "id": "s5d5yn.0",
+          "kind": "explain",
+          "short": {
+            "en": "Match values",
+            "hi": "मूल्य मिलाओ"
+          },
+          "point": {
+            "en": "The child can match notes and coins of the same value.",
+            "hi": "बच्चा समान मूल्य वाले नोटों और सिक्कों का मिलान कर सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do we know if different notes have the same value?",
+            "hi": "मैं भूल गई! हमें कैसे पता चलता है कि अलग-अलग नोटों का मूल्य समान है?"
+          },
+          "hints": [
+            {
+              "en": "Add up all the small coins and notes first.",
+              "hi": "पहले सभी छोटे सिक्कों और नोटों को जोड़ो।"
+            },
+            {
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "count and compare the combined values",
+              "hi": "संयुक्त मूल्य की गणना करो और तुलना करो",
+              "words": [
+                "count",
+                "sum",
+                "ginti",
+                "kul",
+                "गिनती"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us learn about notes and coins with equal values.",
+            "hi": "आओ समान मूल्य वाले नोटों और सिक्कों के बारे में जानें।"
+          }
+        },
+        {
+          "t": "count",
+          "say": {
+            "en": "Ten one-rupee coins make a ten-rupee value.",
+            "hi": "दस एक-एक रुपये के सिक्के मिलकर दस रुपये बनाते हैं।"
+          },
+          "n": 10
+        },
+        {
+          "t": "count",
+          "say": {
+            "en": "See how different coins make up money.",
+            "hi": "देखो कैसे अलग-अलग सिक्के मिलकर रुपये बनाते हैं।"
+          },
+          "n": 5
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "How many ten-rupee notes make fifty rupees?",
+            "hi": "पचास रुपये बनाने के लिए दस-दस रुपये के कितने नोट चाहिए?"
+          },
+          "opts": [
+            "5",
+            "10"
+          ],
+          "hiOpts": [
+            "5",
+            "10"
+          ],
+          "correct": 0,
+          "why": {
+            "en": "Children confuse 5 notes with 10 notes because of the number 10.",
+            "hi": "बच्चे संख्या 10 देखकर 5 नोटों के बजाय 10 नोट समझ लेते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Different notes and coins can have the exact same value.",
+            "hi": "अलग-अलग नोटों और सिक्कों का कुल मूल्य एक समान हो सकता है।"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-5d5yn"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🧮",
+      "title": {
+        "en": "Estimating and finding sums",
+        "hi": "अनुमान लगाना और जोड़ना"
+      },
+      "sub": {
+        "en": "Find the earnings",
+        "hi": "कमाई ज्ञात करो"
+      },
+      "skillId": "add2",
+      "source": "Page 160",
+      "aims": [
+        {
+          "id": "skhhm6n.0",
+          "kind": "explain",
+          "short": {
+            "en": "Find sum",
+            "hi": "योग निकालो"
+          },
+          "point": {
+            "en": "The child can find the difference or sum using box diagrams.",
+            "hi": "बच्चा डिब्बा आरेख का उपयोग करके अंतर या योग ज्ञात कर सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do we draw a box diagram for a word problem?",
+            "hi": "मैं भूल गई! इबारती सवाल के लिए डिब्बा आरेख कैसे बनाते हैं?"
+          },
+          "hints": [
+            {
+              "en": "Think back to the lesson. What did you do first?",
+              "hi": "पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?"
+            },
+            {
+              "en": "Put the parts in the smaller boxes below.",
+              "hi": "हिस्सों को नीचे वाले छोटे डिब्बों में रखो।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "draw boxes for parts and the sum",
+              "hi": "हिस्सों और योग के लिए डिब्बे बनाओ",
+              "words": [
+                "draw boxes",
+                "sum",
+                "dibba",
+                "योग"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us solve money problems using box diagrams.",
+            "hi": "आओ डिब्बा आरेख की मदद से रुपयों के सवाल हल करें।"
+          }
+        },
+        {
+          "t": "bar",
+          "say": {
+            "en": "Whole amount is 50 and we take out 20 to find what is left.",
+            "hi": "संपूर्ण राशि 50 है और हम शेष राशि निकालने के लिए 20 घटाते हैं।"
+          },
+          "a": 50,
+          "b": 20
+        },
+        {
+          "t": "bar",
+          "say": {
+            "en": "Look at the whole of 40 and the part 15.",
+            "hi": "संपूर्ण 40 और उसके एक हिस्से 15 को देखो।"
+          },
+          "a": 40,
+          "b": 15
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "If whole is 40 and one part is 15, what is the missing part?",
+            "hi": "यदि संपूर्ण 40 है और एक हिस्सा 15 है, तो दूसरा हिस्सा क्या होगा?"
+          },
+          "opts": [
+            "35",
+            "25"
+          ],
+          "hiOpts": [
+            "35",
+            "25"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children make borrowing errors in subtraction.",
+            "hi": "बच्चे घटाव में उधार लेने में गलती कर देते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Box diagrams help us see what to add or subtract.",
+            "hi": "डिब्बा आरेख हमें यह देखने में मदद करता है कि क्या जोड़ना या घटाना है।"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-khhm6n"
+    }
+  ],
+  "notUsed": []
+}

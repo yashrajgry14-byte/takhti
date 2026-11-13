@@ -1,0 +1,354 @@
+{
+  "id": "ch14",
+  "n": 14,
+  "title": {
+    "en": "The Surajkund Fair",
+    "hi": "The Surajkund Fair"
+  },
+  "built": "2026-11-13T15:58:07.136Z",
+  "model": "gemini-3.5-flash-lite",
+  "lessons": [
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🌸",
+      "title": {
+        "en": "Symmetrical Rangolis",
+        "hi": "सममित रंगोली"
+      },
+      "sub": {
+        "en": "Equal portions by creating a path",
+        "hi": "रेखा खींचकर बराबर हिस्से"
+      },
+      "skillId": "shapes2d",
+      "source": "Page 180",
+      "aims": [
+        {
+          "id": "s1qgfkm6.0",
+          "kind": "explain",
+          "short": {
+            "en": "Rangoli portions",
+            "hi": "रंगोली के हिस्से"
+          },
+          "point": {
+            "en": "The child can see equal portions in a rangoli by forming a trace.",
+            "hi": "बच्चा निशान बनाकर रंगोली में दो बराबर हिस्से देख सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do we show two equal portions in a rangoli?",
+            "hi": "मैं भूल गई! हम रंगोली में दो बराबर हिस्से कैसे दिखाते हैं?"
+          },
+          "hints": [
+            {
+              "en": "What do we construct right through the middle?",
+              "hi": "हम बिल्कुल बीच में क्या बनाते हैं?"
+            },
+            {
+              "en": "Think of a straight boundary dividing it into two identical segments.",
+              "hi": "एक सीधी सीमा के बारे में सोचो जो इसे दो एक जैसे खंडों में बाँटे।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "create a path to get two equal portions",
+              "hi": "दो बराबर हिस्से पाने के लिए एक सीमा बनाओ",
+              "words": [
+                "path",
+                "form",
+                "रेखा",
+                "निशान"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us look at rangolis and find equal portions.",
+            "hi": "आओ रंगोली को देखें और बराबर हिस्से ढूँढें।"
+          }
+        },
+        {
+          "t": "passage",
+          "p": {
+            "en": "Amma makes beautiful kolam and rangolis. We can see two equal portions in a rangoli by forming a trace.",
+            "hi": "अम्मा सुंदर कोलम और रंगोली बनाती हैं। हम निशान बनाकर रंगोली में दो बराबर हिस्से देख सकते हैं।"
+          },
+          "art": "🌸"
+        },
+        {
+          "t": "readline",
+          "say": {
+            "en": "Read this line aloud.",
+            "hi": "इस वाक्य को जोर से पढ़ो।"
+          },
+          "text": "I can see two equal portions in my rangoli by forming a trace."
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "Can we see two equal portions in a rangoli by forming a trace?",
+            "hi": "क्या हम निशान बनाकर रंगोली में दो बराबर हिस्से देख सकते हैं?"
+          },
+          "opts": [
+            "Yes",
+            "No"
+          ],
+          "hiOpts": [
+            "हाँ",
+            "नहीं"
+          ],
+          "correct": 0,
+          "why": {
+            "en": "Children might think borders do not affect symmetry.",
+            "hi": "बच्चे सोच सकते हैं कि सीमाओं से सममिति पर कोई असर नहीं पड़ता।"
+          },
+          "derived": true
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "A path can divide a symmetrical rangoli into two identical portions.",
+            "hi": "एक सीमा सममित रंगोली को दो एक जैसे हिस्सों में बाँट सकती है।"
+          }
+        }
+      ],
+      "subject": "read",
+      "id": "sch-1qgfkm6"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🪞",
+      "title": {
+        "en": "The Mirror Game",
+        "hi": "आईने का खेल"
+      },
+      "sub": {
+        "en": "Placing counters correctly",
+        "hi": "गोटी सही जगह रखना"
+      },
+      "skillId": "shapes2d",
+      "source": "Page 184",
+      "aims": [
+        {
+          "id": "s6ezu20.0",
+          "kind": "explain",
+          "short": {
+            "en": "Mirror perception",
+            "hi": "दर्पण दृश्य"
+          },
+          "point": {
+            "en": "The child can place counters to make a corresponding replica.",
+            "hi": "बच्चा संगत प्रतिरूप बनाने के लिए गोटियाँ रख सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do we place counters on the other side in the mirror game?",
+            "hi": "मैं भूल गई! आईने के खेल में दूसरी तरफ गोटियाँ कैसे रखते हैं?"
+          },
+          "hints": [
+            {
+              "en": "Where do the tokens reflect across the boundary?",
+              "hi": "सीमा के पार टोकन कहाँ दिखते हैं?"
+            },
+            {
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "place counters as the mirror replica on the other side",
+              "hi": "दूसरी तरफ दर्पण प्रतिरूप के रूप में गोटियाँ रखो",
+              "words": [
+                "replica",
+                "आईना",
+                "दृश्य",
+                "गोटी"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us play the mirror game with Soni and Avi.",
+            "hi": "आओ सोनी और रवि के साथ आईने का खेल खेलें।"
+          }
+        },
+        {
+          "t": "passage",
+          "p": {
+            "en": "Soni places four counters on her side. Avi places his counters to make the exact mirror replica.",
+            "hi": "सोनी अपनी तरफ चार गोटियाँ रखती है। रवि बिल्कुल सही दर्पण प्रतिरूप बनाने के लिए अपनी गोटियाँ रखता है।"
+          },
+          "art": "🪞"
+        },
+        {
+          "t": "readline",
+          "say": {
+            "en": "Read this line aloud.",
+            "hi": "इस वाक्य को जोर से पढ़ो।"
+          },
+          "text": "The counters placed by me are the mirror replica."
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "Are the counters placed by Avi the mirror replica of Soni's counters?",
+            "hi": "क्या रवि द्वारा रखी गई गोटियाँ सोनी की गोटियों का दर्पण प्रतिरूप हैं?"
+          },
+          "opts": [
+            "No",
+            "Yes"
+          ],
+          "hiOpts": [
+            "नहीं",
+            "हाँ"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children might place counters randomly without checking reflection.",
+            "hi": "बच्चे बिना परछाई की जाँच किए गोटियाँ कहीं भी रख सकते हैं।"
+          },
+          "derived": true
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Mirror replicas match across the line like reflections.",
+            "hi": "दर्पण प्रतिरूप रेखा के पार परछाई की तरह मिलते हैं।"
+          }
+        }
+      ],
+      "subject": "read",
+      "id": "sch-6ezu20"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🗺️",
+      "title": {
+        "en": "Search for Chaupal",
+        "hi": "चौपाल की खोज"
+      },
+      "sub": {
+        "en": "Reading the fair map",
+        "hi": "मेले का नक्शा पढ़ना"
+      },
+      "skillId": "shapes2d",
+      "source": "Page 189",
+      "aims": [
+        {
+          "id": "sm57h9t.0",
+          "kind": "explain",
+          "short": {
+            "en": "Read map",
+            "hi": "नक्शा पढ़ो"
+          },
+          "point": {
+            "en": "The child can use visuals on the map to find places like the chaupal.",
+            "hi": "बच्चा चौपाल जैसी जगहें ढूँढने के लिए नक्शे पर दृश्यों का उपयोग कर सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do we find locations in the fair using the map?",
+            "hi": "मैं भूल गई! नक्शे का उपयोग करके मेले में स्थान कैसे ढूँढते हैं?"
+          },
+          "hints": [
+            {
+              "en": "Think back to the lesson. What did you do first?",
+              "hi": "पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?"
+            },
+            {
+              "en": "Match the sign with the spot you want to reach.",
+              "hi": "जिस बिंदु पर पहुँचना चाहते हो, उसके निशान का मिलान करो।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "use visuals and titles on the map to find locations",
+              "hi": "स्थान ढूँढने के लिए नक्शे पर दृश्यों और शीर्षकों का उपयोग करो",
+              "words": [
+                "visuals",
+                "titles",
+                "दृश्य",
+                "शीर्षक",
+                "jagah"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us read the map to find Dada and Dadi at the chaupal.",
+            "hi": "आओ चौपाल पर दादा और दादी को ढूँढने के लिए नक्शा पढ़ें।"
+          }
+        },
+        {
+          "t": "passage",
+          "p": {
+            "en": "There are visuals with their titles on the fair map. The hut shows handicraft stalls, and the chaupal is at the bottom.",
+            "hi": "मेले के नक्शे पर उनके शीर्षकों के साथ दृश्य हैं। झोपड़ी हस्तशिल्प स्टॉल दिखाती है, और चौपाल नीचे है।"
+          },
+          "art": "🗺️"
+        },
+        {
+          "t": "readline",
+          "say": {
+            "en": "Read this line aloud.",
+            "hi": "इस वाक्य को जोर से पढ़ो।"
+          },
+          "text": "There are visuals here with their titles on this map."
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "Does the map show visuals with their titles to help us locate spots?",
+            "hi": "क्या नक्शा हमें स्थान ढूँढने में मदद के लिए उनके शीर्षक के साथ दृश्य दिखाता है?"
+          },
+          "opts": [
+            "No",
+            "Yes"
+          ],
+          "hiOpts": [
+            "नहीं",
+            "हाँ"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children might overlook map labels and symbols.",
+            "hi": "बच्चे नक्शे के लेबल और प्रतीकों को नजरअंदाज कर सकते हैं।"
+          },
+          "derived": true
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Maps use visuals and titles to help us navigate.",
+            "hi": "नक्शे रास्ता ढूँढने में मदद के लिए दृश्यों और शीर्षकों का उपयोग करते हैं।"
+          }
+        }
+      ],
+      "subject": "read",
+      "id": "sch-m57h9t"
+    }
+  ],
+  "notUsed": [
+    {
+      "title": {
+        "en": "Symmetrical Malas",
+        "hi": "सममित मालाएँ"
+      },
+      "errors": [
+        "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"match\"))"
+      ]
+    }
+  ]
+}
