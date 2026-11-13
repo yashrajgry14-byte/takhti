@@ -282,6 +282,7 @@ function sylDraftHTML(d, i, approved, badge){
     ${les.source ? `<div style="font-size:12px;opacity:.6">${hi ? 'स्रोत' : 'From'}: ${attr(les.source)}</div>` : ''}
     ${(les.aims || []).length ? `<div style="margin-top:6px"><div class="kicker2" style="font-size:10.5px">${hi ? 'उद्देश्य — बच्चा यह कर पाएगा' : 'AIMS — THE CHILD WILL BE ABLE TO'}</div>
       ${les.aims.map(a => `<div style="font-size:13.5px;margin:2px 0">• ${T(a)}</div>`).join('')}</div>` : ''}
+    ${d.ok && sylAimGaps(les).length ? `<div class="retry" style="font-size:12.5px;margin-top:4px">⚠ ${hi ? 'इस उद्देश्य को कोई प्रश्न नहीं जाँचता' : 'No question checks this aim'}: ${sylAimGaps(les).map(T).join('; ')}</div>` : ''}
     <details style="margin-top:4px"><summary style="font-size:12.5px;cursor:pointer">${hi ? 'पूरा पाठ पढ़ें' : 'Read the whole lesson'}</summary>${lines}</details>
     ${d.ok
       ? (isIn ? `<div class="muted" style="font-size:12.5px;margin-top:4px">✓ ${hi ? 'कक्षा के लिए मंज़ूर' : 'Approved for the class'}</div>`

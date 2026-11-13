@@ -186,6 +186,35 @@ function sylInferAsk(fig, q){
   return undefined;                                   // can't tell: the checker asks for it
 }
 
+/* Shape aims that no question in the lesson checks ("find a shape with 3
+   sides" with no row to find it in) — a warning for the teacher, not a
+   rejection: an aim is free text, read here by its key words, and an aim
+   these words don't cover is left to the teacher's reading. */
+function sylAimGaps(les){
+  const beats = (les && les.beats) || [];
+  if(!beats.some(b => GEO_TYPES.includes(b.t))) return [];
+  const asked = new Set();
+  beats.forEach((b, i) => {
+    if(!beats[i + 1] || beats[i + 1].t !== 'ask') return;
+    if(b.t === 'figure' && b.ask) asked.add(b.ask);
+    if(b.t === 'corner') asked.add('kind');
+    if(b.t === 'figures'){ asked.add('row'); if(b.find === 'squarecorner') asked.add('kind'); }
+  });
+  const need = en => {
+    const t = String(en || '').toLowerCase();
+    if(/\bfind|\bpick|\bspot|which one/.test(t)) return ['row'];
+    if(/perimeter|distance round|all the way round/.test(t)) return ['perimeter'];
+    if(/square corner|right angle/.test(t)) return ['kind'];
+    if(/cent(re|er)|fold/.test(t)) return ['meet'];
+    if(/corner/.test(t)) return ['corners'];
+    if(/side/.test(t) && /equal|same length/.test(t)) return ['equal'];
+    if(/side/.test(t)) return ['sides'];
+    if(/\bname|recogni[sz]e|identify/.test(t)) return ['name', 'row'];
+    return null;
+  };
+  return (les.aims || []).filter(a => { const n = need(a && a.en); return n && !n.some(k => asked.has(k)); });
+}
+
 /* Does a line of narration already say this answer? A number as a whole
    number; words when every content word of the answer is there. */
 function sylSaysIt(text, answer){
@@ -236,6 +265,11 @@ function sylClean(raw, opts){
       const g = geoClean(x);
       g.errors.forEach(e => errs.push(`beat ${i}: ${e}`));
       if(x.say){ const s = bi(x.say, `beat ${i}'s narration`, 200); if(s) g.beat.say = s; }
+      // a teaching circle that talks about its folds must draw them (the fourth
+      // live run: "the point where fold lines meet is the centre" over a plain circle)
+      if(g.beat.kind === 'circle' && g.beat.ask == null && g.beat.say && !(g.beat.folds >= 2)
+         && /fold|meet|cent(re|er)|तह|मिल|केंद्र|केन्द्र/i.test(g.beat.say.en + ' ' + g.beat.say.hi))
+        errs.push(`beat ${i}: the picture doesn't show the folds its narration talks about — give the circle folds: 2 or more`);
       // remember whether this picture teaches or is a question's picture
       if(g.beat.say) lead.push({ ...g.beat.say, pic: t !== 'figures' && g.beat.ask == null ? 'teach' : 'question' });
       les.beats.push(g.beat); lastShown = t; shown = g.beat;
@@ -297,8 +331,9 @@ function sylClean(raw, opts){
         checks.push('sum');
       } else if(lastShown && GEO_TYPES.includes(lastShown)){
         checks.push('shape');                          // validateLesson() reads the answer off the drawing
-        // "Are all sides equal in this square?" — the question mustn't name the shape it asks about
-        if(shown && shown.t === 'figure' && ['name', 'equal'].includes(shown.ask) && GEO_WORDS[shown.kind]
+        // "Are all sides equal in this square?" — the question mustn't name the shape it asks about;
+        // nor "How many sides does this triangle have?" — the name gives the count, so nobody counts
+        if(shown && shown.t === 'figure' && ['name', 'equal', 'sides', 'corners'].includes(shown.ask) && GEO_WORDS[shown.kind]
            && out.q && GEO_WORDS[shown.kind].some(r => r.test(out.q.en) || r.test(out.q.hi)))
           errs.push(`beat ${i}: the question names the shape it asks about — let the child work it out`);
       } else if(lastShown && SYL_READ.includes(lastShown)){

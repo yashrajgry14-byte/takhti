@@ -81,7 +81,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v48` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v49` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -331,7 +331,10 @@ child sees.
   gets one more try a moment later, then each `GEMINI_FALLBACK_MODEL` in
   turn (a comma list, default `gemini-3.7-flash,gemini-3.5-flash-lite`;
   `none` switches them off), which a 404 also moves to; all busy →
-  "Gemini is busy right now". A model that just hung or said
+  "Gemini is busy right now" (a 429 is said as the key's own limit, not
+  as busy). Every model's outcome and time (`ok`, `hung`, 503, 429…)
+  come back as `tried` and are logged (`TAKHTI_SYLLABUS_LOG=0` silences
+  it). A model that just hung or said
   busy rests for five minutes (`TAKHTI_GEMINI_REST_MS`), so the repair round
   and the next chapter go straight to the fallback. Every model but the last gets at most 60% of
   the time left (55 s serverless, 180 s on the voice server), so a model
@@ -372,7 +375,10 @@ child sees.
   goes into its own field, never over one that was given
   (`sylSizesFromText()`). Then: something must teach (a
   teaching picture, a worked example or a passage) before the first
-  question; a shape question mustn't name the shape it asks about; the Hindi
+  question; a shape question mustn't name the shape it asks about (for
+  sides and corners too: "this triangle" gives the count away); a teaching
+  circle whose narration talks about folds or the centre must draw 2 or
+  more folds; the Hindi
   answers are in Devanagari unless they are numbers. Every lesson carries its
   **aims** (1–4 bilingual "the child can …" points — required) and each
   question may carry a teacher-only `why` (why children pick the wrong
@@ -388,7 +394,10 @@ child sees.
   hash of the content, so a lesson edited later gets a different id.
 - **The teacher approves the aims** (`sylDraftHTML()`: the aims first, then
   the whole lesson folded underneath — every line, the right answer marked,
-  how each answer was checked, the `why` notes, never shown to a child): `sylApprove()`
+  how each answer was checked, the `why` notes, never shown to a child; a
+  shape aim no question checks — "find a shape with 3 sides" with no row —
+  is flagged under the aims, `sylAimGaps()`, a warning read from the aim's
+  key words, not a rejection): `sylApprove()`
   / `sylApproveAll()` / `sylRemove()` write `_lessons {items, at}` (≤ 12)
   into the class mirror; with *Keep this class synced* on, the class sync
   carries them to every synced phone (teacher's key only; shape- and
@@ -415,6 +424,10 @@ answer must be readable off what is on the screen.
 - **What a question asks is on the picture**: a figure's `ask` (name,
   sides, corners, perimeter, equal, meet), a corner's `ask:'kind'`, a
   row's `find` (square, rectangle, triangle, circle, squarecorner, odd).
+  A square corner is in a 90° corner, a square, a rectangle or a right
+  triangle (3-4-5), so a row of shapes may hold only one of those; a
+  triangle with a corner within 15° of square that isn't one can't be in
+  such a row (`geoSquareCorner()`).
   `geoExpect()` works the answer out from the drawing; `geoAskError()`,
   called by `validateLesson()` for every lesson, rejects a marked answer
   (English or Hindi, read by `geoSays()`: वर्ग, आयत, चौकोर कोना, केंद्र…)
@@ -1186,7 +1199,12 @@ Honest edges of what's built:
    (13 Nov), the repair did change its lessons and fixed the said-the-answer
    and same-picture faults, but left a row's rectangle without `h`, a row
    without `find` and "folds 2" written as text — the reason for the field
-   descriptions in the schema and the three extra tidy steps. A fair verdict on
+   descriptions in the schema and the three extra tidy steps. Its teacher
+   reading found more: "which shape has square corners?" over a rectangle
+   and a 3-4-5 triangle (two right answers), "how many sides does this
+   triangle have?" (the name gives the count), a teaching circle without
+   the folds it talked about, and an aim no question checked — each now
+   caught or flagged. A fair verdict on
    3.8-flash still needs a quieter hour.
 
 ## Style

@@ -202,6 +202,7 @@ The pictures (for teach and for each question's show) — use ONLY these:
 - figure {kind, s | w,h | sides, folds}: Takhti draws ONE shape — a square (s = its side), a rectangle (w AND h, both needed, different numbers), a triangle (sides = [a,b,c], three numbers that make a triangle) or a circle (folds = 0–4 fold lines through the middle). Side lengths are labelled. In teach it is a teaching picture (corners marked, Munni says what it is). As a question's show, its "ask" says what is asked: name (which shape?) | sides | corners | perimeter (add every side) | equal (are all its sides equal? Yes / No) | meet (where do the folds meet? Centre — needs folds ≥ 2).
 - corner {deg}: one corner of deg degrees (20–160; 90 is a square corner). As a show, ask is "kind" and the answers are two of "Square corner" / "Smaller corner" / "Bigger corner" (Hindi: चौकोर कोना / छोटा कोना / बड़ा कोना).
 - figures {items, find}: 2–4 shapes or corners in a row, numbered 1–4 (an item is {kind, s | w,h | sides} or {kind:"corner", deg}). find = square | rectangle | triangle | circle | squarecorner | odd; exactly ONE item must match; the answers are numbers like "2"; ask is "none".
+- A square corner is in a corner of 90, a square, a rectangle, or a triangle with one (3-4-5, 6-8-10): find = squarecorner works on a row of shapes too, so only ONE item in the row may have a square corner (not a rectangle AND a 3-4-5 triangle). A triangle that only looks nearly square-cornered (e.g. 5-5-7) can't be in such a row.
 - Every size is its own number field — s, w, h, sides, folds, deg — never written into text ("folds 2" in text is lost). A rectangle always has BOTH w and h, in a row too; a row always has its find.
 A picture can carry a short say (what Munni says while it shows). Never put a why on a picture.
 
@@ -220,14 +221,14 @@ An example of one good lesson (the shape of it, not its content):
 function rulesText(rules){
   return `Hard rules — Takhti's checker rejects any lesson that breaks one:
 1. Short: 1–4 teaching pictures, then the questions.
-2. TEACH, THEN ASK: teach really teaches what the questions check. Every aim is taught AND checked by a question — and is something a child can show on a screen (count, name, find, pick): never "fold a paper" or "cut", and never empty ("find a rectangle with 4 sides" — every rectangle has 4).
+2. TEACH, THEN ASK: teach really teaches what the questions check. Every aim is taught AND checked by a question — and is something a child can show on a screen (count, name, find, pick): never "fold a paper" or "cut", and never empty ("find a rectangle with 4 sides" — every rectangle has 4). If an aim says "find", one question is a numbered row to find it in.
 3. A maths question's show is the picture it is about, and its right answer is a number equal to what that picture computes (count → n, add → a+b, take → a−b, group → a, array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Numbers as digits.
 4. A reading question's show is the passage, word or line, and its right answer uses the passage's own words.
 5. A shape question's show is the figure/corner/figures it is about, and its right answer is what that drawing shows. For anything about shapes, sides, corners or perimeter, USE the drawings — never describe a shape only in words.
-6. Never say the answer in the lines just before a question (the intro counts), and never name it in the question itself ("Are all sides equal in this square?" gives it away — ask "Are all its sides equal?").
+6. Never say the answer in the lines just before a question (the intro counts), and never name it in the question itself ("Are all sides equal in this square?" gives it away — ask "Are all its sides equal?"; "How many sides does this triangle have?" too — ask "How many sides does this shape have?" so the child counts).
 6b. TEACH ON ONE SHAPE, ASK ON ANOTHER: a question's show is never a teaching picture again (a teaching picture marks the answer). Teach with a 6 × 3 rectangle, ask about a 4 × 2 one; teach a square corner, ask about a smaller or bigger corner; teach a circle with 2 folds, ask with 3.
 6c. Ask TWO questions per lesson: the first to recognise, the second about a NEW example (another shape, a numbered row, an odd one out).
-7. The wrong option is a mistake a child really makes — never silly, never equal to the right one. Its why names the misconception behind it ("children judge a corner by how long its arms are", "children count only the top two corners"), never "they might guess" or "they might confuse it".
+7. The wrong option is a mistake a child really makes — never silly, never equal to the right one. Its why names the misconception behind it ("children judge a corner by how long its arms are", "children count only the top two corners"), never "they might guess" or "they might confuse it". For "where do the folds meet?" the real wrong answer is Edge (किनारा).
 8. Every number a child meets is at most ${rules.maxNumber}.
 9. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; speak to the child as "तुम", never "आप"; never scold, never the word "wrong".
 10. title, sub, intro, remember, say, q, p, aims and why are objects with natural English "en" AND natural Hindi "hi" in Devanagari (not transliteration). opts are English; hiOpts are the same answers in Hindi, in Devanagari unless the answer is a number (Yes/No → हाँ/नहीं).
@@ -252,7 +253,7 @@ Answer with JSON only, in the given schema.`;
 
 function repairInstructions(rules){
   return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Each lesson is given in the lesson shape below; return it fixed in the same shape — same topic, same aims, every reason addressed — and change nothing else. The reasons count the lesson's steps in order (intro, teaching pictures, then each question's picture and the question itself, then remember).
-How to read the reasons: "must say what is asked (ask)" → set that question's ask to what it asks (sides, corners, name…); "needs exactly 2 answers" / "no checkpoint" → give the question both answers / add a question; "a rectangle needs w and h" → give both, as numbers; "a row needs its find" → set find to the one shape the question looks for; "needs a circle with 2 or more folds" → set folds (its own number field, not text); "say the answer" → change the narration or ask about a new example, not the answer; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "the teaching picture again" → change the QUESTION's picture to a different size or shape (and its answer, if that changes); "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi.
+How to read the reasons: "must say what is asked (ask)" → set that question's ask to what it asks (sides, corners, name…); "needs exactly 2 answers" / "no checkpoint" → give the question both answers / add a question; "a rectangle needs w and h" → give both, as numbers; "a row needs its find" → set find to the one shape the question looks for; "needs a circle with 2 or more folds" → set folds (its own number field, not text); "say the answer" → change the narration or ask about a new example, not the answer; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "the teaching picture again" → change the QUESTION's picture to a different size or shape (and its answer, if that changes); "names the shape" → ask without naming it ("this shape"); "doesn't show the folds" → give the teaching circle folds: 2 or more; "exactly one picture may have a square corner" → change the row so only one item has a square corner; "Hindi answers must be in Devanagari" → write hiOpts in Hindi.
 
 ${beatsText()}
 
@@ -294,6 +295,9 @@ async function callGemini(parts, system, env, fetchImpl){
   const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), total);
   // each model may take 60% of what is left while another one waits behind it
   const shareFor = m => { const left = total - (Date.now() - started); return Math.max(2000, Math.floor(left * (models.indexOf(m) < models.length - 1 ? 0.6 : 1))); };
+  // what each model said and how long it took (the live runs couldn't tell a
+  // hang from "busy" from a key's quota) — returned with the answer, and logged
+  const tried = [];
   try{
     let res, d, model;
     const busy = s => s === 503 || s === 429;
@@ -303,6 +307,7 @@ async function callGemini(parts, system, env, fetchImpl){
           const one = new AbortController(), left = Math.min(shareFor(model), total - (Date.now() - started));
           const stop = () => one.abort(), t1 = setTimeout(stop, Math.max(1000, left));
           ctl.signal.addEventListener('abort', stop);
+          const t0 = Date.now();
           try{
             res = await fetchImpl(urlFor(model), { method:'POST', signal: one.signal,
               headers:{ 'content-type':'application/json', 'x-goog-api-key': key }, body: JSON.stringify({ ...base, ...shape }) });
@@ -311,6 +316,7 @@ async function callGemini(parts, system, env, fetchImpl){
             if(ctl.signal.aborted) throw e;                               // the whole request is out of time
             res = { ok:false, status:503, hung:true }; d = {};            // this model hung: straight to the next one
           }finally{ clearTimeout(t1); ctl.signal.removeEventListener('abort', stop); }
+          tried.push({ model, outcome: res.hung ? 'hung' : res.ok ? 'ok' : res.status, ms: Date.now() - t0 });
           if(res.hung || !busy(res.status)) break;
           // (a busy model gets one more try, a moment later)
           if(attempt === 0) await wait(Number(env.TAKHTI_SYLLABUS_RETRY_MS || 1500));   // once more, a moment later
@@ -321,14 +327,17 @@ async function callGemini(parts, system, env, fetchImpl){
         if(res.status !== 400) break models;                                          // 400: the other request shape
       }
     }
-    if(!res.ok) return res.hung ? { error:'Gemini did not answer in time', status: 504 }
-                                : { error: busy(res.status) ? 'Gemini is busy right now — try again in a few minutes' : `Gemini said ${res.status}`, status: 502 };
+    if(env.TAKHTI_SYLLABUS_LOG !== '0') console.log('[syllabus] models:', tried.map(x => `${x.model} ${x.outcome} ${(x.ms / 1000).toFixed(1)}s`).join(' → '));
+    // 429 is the key's own limit (requests a minute or a day), not Google being busy
+    if(!res.ok) return res.hung ? { error:'Gemini did not answer in time', status: 504, tried }
+                                : { error: res.status === 429 ? "this Gemini key's limit is used up for now — try again later, or check the key's quota in AI Studio"
+                                    : res.status === 503 ? 'Gemini is busy right now — try again in a few minutes' : `Gemini said ${res.status}`, status: 502, tried };
     const text = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('').replace(/```json|```/g, '').trim();
     let out;
-    try{ out = JSON.parse(text); }catch(e){ return { error:'Gemini did not answer in the lesson format', status: 502 }; }
-    return { out, model };
+    try{ out = JSON.parse(text); }catch(e){ return { error:'Gemini did not answer in the lesson format', status: 502, tried }; }
+    return { out, model, tried };
   }catch(e){
-    return { error:'Gemini did not answer in time', status: 504 };
+    return { error:'Gemini did not answer in time', status: 504, tried };
   }finally{ clearTimeout(to); }
 }
 
@@ -347,8 +356,8 @@ export async function draftCore(body, env, ip, fetchImpl){
       .map(x => ({ lesson: x.lesson, errors: (Array.isArray(x.errors) ? x.errors : []).slice(0, 8).map(e => plain(e, 200)) }));
     if(!items.length) return { status:400, json:{ error:'nothing to repair' } };
     const r = await callGemini([{ text: JSON.stringify({ lessons: items.map(x => ({ lesson: fromBeats(x.lesson), errors: x.errors })) }) }], repairInstructions(rules), env, fetchImpl);
-    if(r.error) return { status: r.status, json:{ error: r.error } };
-    return { status:200, json:{ lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, items.length).map(toBeats), model: r.model } };
+    if(r.error) return { status: r.status, json:{ error: r.error, tried: r.tried } };
+    return { status:200, json:{ lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, items.length).map(toBeats), model: r.model, tried: r.tried } };
   }
 
   const ch = body.chapter || {};
@@ -373,11 +382,11 @@ export async function draftCore(body, env, ip, fetchImpl){
   parts.push({ text: `Write ${count} lesson(s) from this chapter.` });
 
   const r = await callGemini(parts, instructions(rules, count, skills, note), env, fetchImpl);
-  if(r.error) return { status: r.status, json:{ error: r.error } };
+  if(r.error) return { status: r.status, json:{ error: r.error, tried: r.tried } };
   return { status:200, json:{
     chapter: plain(r.out.chapter, 80),
     lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, count).map(toBeats),
-    model: r.model
+    model: r.model, tried: r.tried
   } };
 }
 

@@ -73,7 +73,7 @@ function geoErrors(b, maxNumber){
     else b.items.forEach((it, k) => geoItemErrors(it, true).forEach(x => e.push(`shape ${k + 1}: ${x}`)));
     if(b.find == null) e.push('a row needs its find (which shape the question looks for)');
     else if(!GEO_FINDS.includes(b.find)) e.push(`figures can't find "${b.find}"`);
-    else if(!e.length && geoExpect(b) == null) e.push(b.find === 'odd' ? 'there must be exactly one odd one out' : `exactly one shape must be the ${b.find === 'squarecorner' ? 'square corner' : b.find}`);
+    else if(!e.length && geoExpect(b) == null) e.push(b.find === 'odd' ? 'there must be exactly one odd one out' : b.find === 'squarecorner' ? 'exactly one picture may have a square corner (squares, rectangles and a 3-4-5 triangle all have one; a nearly-square corner can\'t be in the row)' : `exactly one shape must be the ${b.find}`);
   }
   if(maxNumber) for(const n of geoNumbers(b)) if(n > maxNumber) { e.push(`${n} is over the band ceiling of ${maxNumber}`); break; }
   return e;
@@ -95,6 +95,17 @@ function geoPerimeter(it){
   if(it.kind === 'rectangle') return 2 * (it.w + it.h);
   if(it.kind === 'triangle') return it.sides.reduce((a, b) => a + b, 0);
   return null;
+}
+/* Has it a square corner? true / false, or null for a triangle with a corner
+   within 15° of square that isn't one (it looks square to a child). */
+function geoSquareCorner(it){
+  if(it.kind === 'corner') return it.deg === 90;
+  if(it.kind === 'square' || it.kind === 'rectangle') return true;
+  if(it.kind !== 'triangle') return false;
+  const [a, b, c] = it.sides.slice().sort((x, y) => x - y);
+  if(a * a + b * b === c * c) return true;
+  const ang = (x, y, z) => Math.acos((y * y + z * z - x * x) / (2 * y * z)) * 180 / Math.PI;
+  return [ang(a, b, c), ang(b, a, c), ang(c, a, b)].some(g => Math.abs(g - 90) < 15) ? null : false;
 }
 function geoCornerKind(deg){ return deg === 90 ? 'square' : deg < 90 ? 'smaller' : 'bigger'; }
 function geoExpect(b){
@@ -121,7 +132,15 @@ function geoExpect(b){
     if(items.length < 2 || items.some(it => geoItemErrors(it, true).length)) return null;
     const kindOf = it => it.kind === 'corner' ? (it.deg === 90 ? 'squarecorner' : 'corner') : it.kind;
     let hits;
-    if(b.find === 'odd'){
+    if(b.find === 'squarecorner'){
+      // squares, rectangles and a 3-4-5 triangle have square corners too (the
+      // fourth live run: "which shape has square corners?" over a rectangle and
+      // a 3-4-5 triangle had two right answers); a triangle that only looks
+      // square-cornered can't be judged by eye, so it can't be in such a row
+      const has = items.map(geoSquareCorner);
+      if(has.includes(null)) return null;
+      hits = has.map((h, i) => h ? i : -1).filter(i => i >= 0);
+    } else if(b.find === 'odd'){
       const kinds = items.map(kindOf);
       hits = kinds.map((k, i) => kinds.filter(x => x === k).length === 1 ? i : -1).filter(i => i >= 0);
       if(new Set(kinds).size !== 2) return null;               // one odd one out among the same others

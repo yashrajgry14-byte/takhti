@@ -58,7 +58,7 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     const r = typeof reply === 'function' ? reply(body) : reply;
     return { ok: true, status: 200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify(r) }] } }] }) };
   };
-  const env = { GEMINI_API_KEY: 'gk-secret', GEMINI_MODEL: 'gemini-test' };
+  const env = { GEMINI_API_KEY: 'gk-secret', GEMINI_MODEL: 'gemini-test', TAKHTI_SYLLABUS_LOG: '0' };
   const rules = { band:'developing', ages:[7,8], maxNumber:100, sayWords:18, read:'developing' };
   const pdf = Buffer.from('%PDF-1.4 ' + 'x'.repeat(400)).toString('base64');
   const r1 = await draftCore({ mode:'draft', chapter:{ file: pdf, mime:'application/pdf' }, rules, count: 2, skills:[{ id:'sub2', en:'Two-digit subtraction' }], note:'borrowing' }, env, '1.1.1.1',
@@ -111,6 +111,13 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   const r3m = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.3.3', twoBusy);
   check('…and when that one is busy too, the lite model is last', r3m.status === 200 && r3m.json.model === 'gemini-3.5-flash-lite', JSON.stringify(calls.map(c => c.url.split('/').pop())));
   check('…and when every model is busy, an honest "busy right now"', rz.status === 502 && /busy right now/.test(rz.json.error), JSON.stringify(rz));
+  // the fourth live run couldn't tell a hang from "busy" from a quota: every model's outcome and time comes back
+  check("each model's outcome and time come back with the answer — a hang, then the fallback's answer",
+    Array.isArray(rh.json.tried) && rh.json.tried[0].model === 'gemini-test' && rh.json.tried[0].outcome === 'hung' && rh.json.tried.slice(-1)[0].outcome === 'ok' && rh.json.tried.every(x => Number.isFinite(x.ms)), JSON.stringify(rh.json.tried));
+  check('…busy twice, then the next model', rb.json.tried.filter(x => x.model === 'gemini-test').map(x => x.outcome).join() === '503,503' && rz.json.tried.length >= 3, JSON.stringify(rb.json.tried));
+  const quota = async () => ({ ok:false, status:429, json: async () => ({ error:{ message:'Quota exceeded' } }) });
+  const rq = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.3.4', quota);
+  check("a 429 is said as the key's own limit, not as Google being busy", rq.status === 502 && /limit/.test(rq.json.error) && !/busy/.test(rq.json.error) && rq.json.tried.every(x => x.outcome === 429), JSON.stringify(rq.json));
   const big = Buffer.alloc(5 * 1024 * 1024, 7).toString('base64');
   const r413 = await draftCore({ chapter:{ file: big, mime:'application/pdf' }, rules }, env, '1.1.2.1', gemini({ lessons:[] }));
   const r12 = await draftCore({ chapter:{ file: big, mime:'application/pdf' }, rules }, { ...env, TAKHTI_SYLLABUS_MAX_MB: 12 }, '1.1.2.2', gemini({ lessons:[] }));
@@ -284,6 +291,16 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     check('sizes written as text ("folds 3", "2 folds") go into their own fields', folded.ok && folded.lesson.beats.filter(b => b.kind === 'circle').map(b => b.folds).join() === '2,3' && !folded.lesson.beats.some(b => 'text' in b), JSON.stringify(folded.errors));
     const sizes = JSON.parse(E(`JSON.stringify(sylTidy([{ t:'figure', kind:'rectangle', text:'6 × 3' }, { t:'figure', kind:'triangle', text:'sides 3, 4 and 5' }, { t:'corner', text:'a 60° corner' }, { t:'figure', kind:'square', s:5, text:'side 9' }]))`));
     check('…a rectangle "6 × 3", a triangle "3, 4 and 5", a corner "60°" — never over a field that was given', sizes[0].w === 6 && sizes[0].h === 3 && sizes[1].sides.join() === '3,4,5' && sizes[2].deg === 60 && sizes[3].s === 5, JSON.stringify(sizes));
+    // the fourth run's teacher reading: a named shape gives the count away; a teaching circle without the folds it talks about
+    bad('"How many sides does this triangle have?" gives the count away — the name says it, so nobody counts', shapeL({ en:'How many sides does this rectangle have?', hi:'इस आयत की कितनी भुजाएँ हैं?' }, ['4','3'], ['4','3'], { ask:'sides' }), /names the shape/);
+    bad('a teaching circle that talks about its folds must draw them',
+      circ([{ t:'intro', say:{ en:'Let us fold a plate.', hi:'आओ प्लेट मोड़ें।' } }, { t:'figure', kind:'circle', say:{ en:'Where the fold lines meet is the centre.', hi:'जहाँ तह की रेखाएँ मिलती हैं, वह केंद्र है।' } }, { t:'figure', kind:'circle', folds:3, ask:'meet' }]), /doesn't show the folds/);
+    // an aim no question checks is shown to the teacher (not a rejection)
+    const aimed = clean({ ...shapeL({ en:'How many sides does it have?', hi:'इसकी कितनी भुजाएँ हैं?' }, ['4','3'], ['4','3']),
+      aims:[{ en:'The child can count the sides of a shape.', hi:'बच्चा आकृति की भुजाएँ गिन सकता है।' }, { en:'The child can find a shape with 3 sides.', hi:'बच्चा 3 भुजाओं वाली आकृति ढूँढ सकता है।' }] });
+    const gaps = JSON.parse(E(`JSON.stringify(sylAimGaps(${JSON.stringify(aimed.lesson)}))`));
+    check('an aim no question checks ("find a shape with 3 sides" with no row to find it in) is flagged for the teacher — and only that one', aimed.ok && gaps.length === 1 && /find a shape/.test(gaps[0].en), JSON.stringify(gaps));
+    check("…the example lesson's aims are all checked", JSON.parse(E(`JSON.stringify(sylAimGaps(${JSON.stringify(ex.lesson)}))`)).length === 0, '');
     const c3 = JSON.parse(E(`JSON.stringify(sylSkills(sylClass('c3')).map(s => s.id))`));
     check('a Class 3 chapter may name the shape skills — flat shapes (Class 1), angles and perimeter (Class 4) — Class 3 skills first', ['shapes2d','angles','perimeter'].every(id => c3.includes(id)) && c3.length <= 60, JSON.stringify(c3));
     bad('a maths question needs a number for its answer', (() => { const x = clone(MATH); x.beats[2].opts = ['twenty-five','65']; return x; })(), /must be a number/);
