@@ -292,7 +292,10 @@ async function callGemini(parts, system, env, fetchImpl){
   // flash-lite alone drafted 3 of 3. A model's retries share its one budget.
   const leftNow = () => total - (Date.now() - started);
   const reserve = Math.min(Number(env.TAKHTI_SYLLABUS_LAST_MS || 45000), Math.floor(total * 0.4));
-  const budgetFor = m => { const left = leftNow(); return models.indexOf(m) === models.length - 1 ? left : Math.floor(Math.min(left * 0.6, left - reserve)); };
+  // …and at most a minute each (TAKHTI_SYLLABUS_MODEL_MS): on the ninth run a
+  // hanging 3.8-flash held a teacher for 108 s before anything else was tried
+  const cap = Number(env.TAKHTI_SYLLABUS_MODEL_MS || 60000);
+  const budgetFor = m => { const left = leftNow(); return models.indexOf(m) === models.length - 1 ? left : Math.floor(Math.min(left * 0.6, left - reserve, cap)); };
   // what each model said and how long it took (the live runs couldn't tell a
   // hang from "busy" from a key's quota) — returned with the answer, and logged
   const tried = [];
