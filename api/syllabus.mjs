@@ -26,8 +26,9 @@
    → { lessons:[…raw drafts…], chapter, model }
 
    Keys stay here: GEMINI_API_KEY (or GOOGLE_API_KEY), GEMINI_MODEL
-   (default gemini-3.8-flash; GEMINI_FALLBACK_MODEL, default
-   gemini-3.5-flash-lite, when that one is busy). TAKHTI_SYLLABUS_KEY, if set, is a school
+   (default gemini-3.8-flash; GEMINI_FALLBACK_MODEL, a comma list tried in
+   turn when that one is busy, default gemini-3.7-flash,gemini-3.5-flash-lite;
+   a model that hung or was busy rests a few minutes). TAKHTI_SYLLABUS_KEY, if set, is a school
    password the teacher view must send. Works as a Netlify function
    (Request → Response), with the Vercel-style (req, res) signature
    api/ask.js uses, and inside the voice server (voice/server.js,
@@ -104,11 +105,11 @@ const BEAT_SCHEMA = { anyOf: [
   { ...beat('figure', { kind:{ type:'string', enum:['square'] }, s: int, ask: SHAPE_ASK, say: bi }, ['kind', 's']), description:'A square: s is its side.' },
   { ...beat('figure', { kind:{ type:'string', enum:['rectangle'] }, w: int, h: int, ask: SHAPE_ASK, say: bi }, ['kind', 'w', 'h']), description:'A rectangle: w and h, two different numbers.' },
   { ...beat('figure', { kind:{ type:'string', enum:['triangle'] }, sides:{ type:'array', items: int, minItems:3, maxItems:3 }, ask: SHAPE_ASK, say: bi }, ['kind', 'sides']), description:'A triangle: three side lengths that make a triangle.' },
-  { ...beat('figure', { kind:{ type:'string', enum:['circle'] }, folds:{ type:'integer', minimum:0, maximum:4 }, ask: SHAPE_ASK, say: bi }, ['kind', 'folds']), description:'A circle: 0–4 fold lines through the middle; a "meet" question needs 2 or more.' },
+  { ...beat('figure', { kind:{ type:'string', enum:['circle'] }, folds:{ type:'integer', minimum:0, maximum:4, description:'how many fold lines, 0–4 — a number here, never in the narration' }, ask: SHAPE_ASK, say: bi }, ['kind', 'folds']), description:'A circle: 0–4 fold lines through the middle; a "meet" question needs 2 or more.' },
   beat('corner',  { deg: int, ask:{ type:'string', enum:['kind'], description:'Only when the next beat asks what kind of corner it is.' }, say: bi }, ['deg']),
-  beat('figures', { items:{ type:'array', minItems:2, maxItems:4, items:{ type:'object', properties:{ kind:{ type:'string', enum:['square','rectangle','triangle','circle','corner'] },
-                      s: int, w: int, h: int, sides:{ type:'array', items: int }, deg: int }, required:['kind'] } },
-                    find:{ type:'string', enum:['square','rectangle','triangle','circle','squarecorner','odd'] }, say: bi }, ['items', 'find']),
+  beat('figures', { items:{ type:'array', minItems:2, maxItems:4, description:'the 2–4 shapes in the row', items:{ type:'object', properties:{ kind:{ type:'string', enum:['square','rectangle','triangle','circle','corner'] },
+                      s: int, w: int, h:{ type:'integer', description:'rectangle: always give it, different from w' }, sides:{ type:'array', items: int }, folds: int, deg: int }, required:['kind'] } },
+                    find:{ type:'string', enum:['square','rectangle','triangle','circle','squarecorner','odd'], description:'which ONE item the question looks for' }, say: bi }, ['items', 'find']),
   beat('win',     { say: bi }, ['say'])
 ] };
 /* the old flattened beat: every field optional — only if the strict schema is refused */
@@ -197,11 +198,13 @@ An example of one good lesson (the shape of it, not its content):
 function rulesText(rules){
   return `Hard rules — Takhti's checker rejects any lesson that breaks one:
 1. 4 to 8 beats; start with intro, passage or a teaching picture; end with win; at least one ask.
-2. TEACH, THEN ASK: before the first question there must be something that teaches — a teaching picture (a figure or corner without ask, or a count/add/take/… beat), or a passage. Every aim is taught in the beats AND checked by a question.
+2. TEACH, THEN ASK: before the first question there must be something that teaches — a teaching picture (a figure or corner without ask, or a count/add/take/… beat), or a passage. Every aim is taught in the beats AND checked by a question. Every aim is something a child can show on a screen (count, name, find, pick): never "fold a paper" or "cut", and never empty ("find a rectangle with 4 sides" — every rectangle has 4). If an aim says "find", one question is a numbered row to find it in.
 3. A maths ask comes right after the beat that shows it, and its right answer is a number equal to what that beat computes (count → n, add → a+b, take → a−b, group → a, array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Numbers as digits.
 4. A reading ask comes after a passage/word/readline, and its right answer uses the passage's own words.
 5. A shape ask comes right after the figure/corner/figures it is about (with its ask or find set), and its right answer is what that drawing shows. For anything about shapes, sides, corners or perimeter, USE the drawings — never describe a shape only in words.
 6. Never say the answer in the lines just before a question — not as a digit, not as a word ("three", "तीन") — and never name it in the question itself ("Are all sides equal in this square?" gives it away — ask "Are all its sides equal?"). Where you can, ask two questions: one to recognise, one to apply to something new.
+6b. TEACH ON ONE SHAPE, ASK ON ANOTHER: a question's picture is never a teaching picture again (a teaching picture marks the answer). Teach with a 6 × 3 rectangle, ask about a 4 × 2 one; teach a square corner, ask about a smaller or bigger corner; teach a circle with 2 folds, ask with 3. A teaching circle that talks about folds draws them (folds 2 or more).
+6c. Ask TWO questions per lesson where you can: the first to recognise, the second about a NEW example (another shape, a numbered row, an odd one out).
 7. The wrong option is a mistake a child really makes — never silly, never equal to the right one. Its why names that mistake ("children count only the top two corners"), not "they might guess".
 8. Every number a child meets is at most ${rules.maxNumber}.
 9. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; speak to the child as "तुम", never "आप"; never scold, never the word "wrong".
@@ -243,13 +246,24 @@ Answer with JSON only, in the given schema.`;
 }
 
 const wait = ms => new Promise(r => setTimeout(r, ms));
+/* A model that just hung or said "busy" rests for a few minutes
+   (TAKHTI_GEMINI_REST_MS, default 5 min): the repair round and the next
+   chapter go straight to the fallback instead of waiting on it again — on
+   the first live runs that wait was ~110 s a request. Kept per server
+   process; a serverless host forgets it when it goes cold, which is fine. */
+const RESTING = new Map();
 async function callGemini(parts, system, env, fetchImpl){
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
   // the chosen model, then a lighter one when Google says it's busy (503/429)
   // or doesn't know the model (404) — GEMINI_FALLBACK_MODEL, 'none' to switch off
   const primary = env.GEMINI_MODEL || 'gemini-3.8-flash';
-  const fallback = env.GEMINI_FALLBACK_MODEL === 'none' ? null : (env.GEMINI_FALLBACK_MODEL || 'gemini-3.5-flash-lite');
-  const models = [primary].concat(fallback && fallback !== primary ? [fallback] : []);
+  // the fallbacks, in order — a full Flash model before the lite one (the
+  // third live run: flash-lite left out whole questions); a comma list
+  const fallbacks = env.GEMINI_FALLBACK_MODEL === 'none' ? []
+    : String(env.GEMINI_FALLBACK_MODEL || 'gemini-3.7-flash,gemini-3.5-flash-lite').split(',').map(x => x.trim()).filter(Boolean);
+  const all = [primary].concat(fallbacks.filter((m, i) => m !== primary && fallbacks.indexOf(m) === i));
+  const now = Date.now(), awake = all.filter(m => !(RESTING.get(m) > now));
+  const models = awake.length ? awake : all.slice(-1);               // all resting: the last one still tries
   const urlFor = m => `${env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(m)}:generateContent`;
   const base = { systemInstruction:{ parts:[{ text: system }] }, contents:[{ role:'user', parts }] };
   // the current structured-output field first; older deployments of the API
@@ -266,16 +280,21 @@ async function callGemini(parts, system, env, fetchImpl){
   // still leaves time for the fallback (the first live run's health check hung for 55 s)
   const total = Number(env.TAKHTI_SYLLABUS_TIMEOUT_MS || 55000), started = Date.now();
   const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), total);
-  const perModel = Math.max(2000, Math.floor(total * (models.length > 1 ? 0.6 : 1)));
+  // each model may take 60% of what is left while another one waits behind it
+  const shareFor = m => { const left = total - (Date.now() - started); return Math.max(2000, Math.floor(left * (models.indexOf(m) < models.length - 1 ? 0.6 : 1))); };
+  // what each model said and how long it took (the live runs couldn't tell a
+  // hang from "busy" from a key's quota) — returned with the answer, and logged
+  const tried = [];
   try{
     let res, d, model;
     const busy = s => s === 503 || s === 429;
     models: for(model of models){
       for(const shape of shapes){
         for(let attempt = 0; attempt < 2; attempt++){
-          const one = new AbortController(), left = Math.min(perModel, total - (Date.now() - started));
+          const one = new AbortController(), left = Math.min(shareFor(model), total - (Date.now() - started));
           const stop = () => one.abort(), t1 = setTimeout(stop, Math.max(1000, left));
           ctl.signal.addEventListener('abort', stop);
+          const t0 = Date.now();
           try{
             res = await fetchImpl(urlFor(model), { method:'POST', signal: one.signal,
               headers:{ 'content-type':'application/json', 'x-goog-api-key': key }, body: JSON.stringify({ ...base, ...shape }) });
@@ -284,23 +303,28 @@ async function callGemini(parts, system, env, fetchImpl){
             if(ctl.signal.aborted) throw e;                               // the whole request is out of time
             res = { ok:false, status:503, hung:true }; d = {};            // this model hung: straight to the next one
           }finally{ clearTimeout(t1); ctl.signal.removeEventListener('abort', stop); }
+          tried.push({ model, outcome: res.hung ? 'hung' : res.ok ? 'ok' : res.status, ms: Date.now() - t0 });
           if(res.hung || !busy(res.status)) break;
+          // (a busy model gets one more try, a moment later)
           if(attempt === 0) await wait(Number(env.TAKHTI_SYLLABUS_RETRY_MS || 1500));   // once more, a moment later
         }
-        if(res.ok) break models;
-        if(res.hung) continue models;
-        if(busy(res.status) || res.status === 404) continue models;                  // busy, or no such model: the next one
+        if(res.ok){ RESTING.delete(model); break models; }
+        if(res.hung || busy(res.status)){ RESTING.set(model, Date.now() + (env.TAKHTI_GEMINI_REST_MS != null ? Number(env.TAKHTI_GEMINI_REST_MS) : 300000)); continue models; }
+        if(res.status === 404) continue models;                                       // no such model: the next one
         if(res.status !== 400) break models;                                          // 400: the other request shape
       }
     }
-    if(!res.ok) return res.hung ? { error:'Gemini did not answer in time', status: 504 }
-                                : { error: busy(res.status) ? 'Gemini is busy right now — try again in a few minutes' : `Gemini said ${res.status}`, status: 502 };
+    if(env.TAKHTI_SYLLABUS_LOG !== '0') console.log('[syllabus] models:', tried.map(x => `${x.model} ${x.outcome} ${(x.ms / 1000).toFixed(1)}s`).join(' → '));
+    // 429 is the key's own limit (requests a minute or a day), not Google being busy
+    if(!res.ok) return res.hung ? { error:'Gemini did not answer in time', status: 504, tried }
+                                : { error: res.status === 429 ? "this Gemini key's limit is used up for now — try again later, or check the key's quota in AI Studio"
+                                    : res.status === 503 ? 'Gemini is busy right now — try again in a few minutes' : `Gemini said ${res.status}`, status: 502, tried };
     const text = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('').replace(/```json|```/g, '').trim();
     let out;
-    try{ out = JSON.parse(text); }catch(e){ return { error:'Gemini did not answer in the lesson format', status: 502 }; }
-    return { out, model };
+    try{ out = JSON.parse(text); }catch(e){ return { error:'Gemini did not answer in the lesson format', status: 502, tried }; }
+    return { out, model, tried };
   }catch(e){
-    return { error:'Gemini did not answer in time', status: 504 };
+    return { error:'Gemini did not answer in time', status: 504, tried };
   }finally{ clearTimeout(to); }
 }
 
@@ -319,8 +343,8 @@ export async function draftCore(body, env, ip, fetchImpl){
       .map(x => ({ lesson: x.lesson, errors: (Array.isArray(x.errors) ? x.errors : []).slice(0, 10).map(e => plain(e, 240)) }));
     if(!items.length) return { status:400, json:{ error:'nothing to repair' } };
     const r = await callGemini([{ text: JSON.stringify({ lessons: items }) }], repairInstructions(rules), env, fetchImpl);
-    if(r.error) return { status: r.status, json:{ error: r.error } };
-    return { status:200, json:{ lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, items.length), model: r.model } };
+    if(r.error) return { status: r.status, json:{ error: r.error, tried: r.tried } };
+    return { status:200, json:{ lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, items.length), model: r.model, tried: r.tried } };
   }
 
   const ch = body.chapter || {};
@@ -345,11 +369,11 @@ export async function draftCore(body, env, ip, fetchImpl){
   parts.push({ text: `Write ${count} lesson(s) from this chapter.` });
 
   const r = await callGemini(parts, instructions(rules, count, skills, note), env, fetchImpl);
-  if(r.error) return { status: r.status, json:{ error: r.error } };
+  if(r.error) return { status: r.status, json:{ error: r.error, tried: r.tried } };
   return { status:200, json:{
     chapter: plain(r.out.chapter, 80),
     lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, count),
-    model: r.model
+    model: r.model, tried: r.tried
   } };
 }
 

@@ -115,13 +115,64 @@ function sylTidy(beats){
     if(prev && JSON.stringify(prev) === JSON.stringify(x)) continue;
     out.push(x);
   }
+  // a size written into a note ("folds 2") instead of its own field
+  out.forEach(x => { if(x && (x.t === 'figure' || x.t === 'corner')) { sylSizesFromText(x); delete x.text; } });
   out.forEach((x, i) => {
     const next = out[i + 1];
     if(!x || !next || next.t !== 'ask') return;
     if(x.t === 'corner' && x.ask == null) x.ask = 'kind';
     if(x.t === 'figure' && x.ask == null) x.ask = sylInferAsk(x, next);
+    if(x.t === 'figures' && x.find == null) x.find = sylInferFind(next);
+  });
+  // a rectangle with only one side given: give it the other, half as long
+  // (never equal, so it stays a rectangle) — unless the question is its
+  // perimeter, where the made-up side would change the answer
+  // (a row shows no side labels, so a rectangle in a row gets one too)
+  const ok = v => Number.isInteger(v) && v >= 1;
+  const fillRect = r => {
+    if(!r || r.kind !== 'rectangle') return;
+    if(ok(r.w) && !ok(r.h)) r.h = r.w >= 2 ? Math.max(1, Math.round(r.w / 2)) : 2;
+    else if(ok(r.h) && !ok(r.w)) r.w = r.h * 2;
+  };
+  out.forEach(x => {
+    if(!x) return;
+    if(x.t === 'figure' && x.ask !== 'perimeter') fillRect(x);
+    if(x.t === 'figures' && Array.isArray(x.items)) x.items = x.items.map(it => { if(!it || typeof it !== 'object') return it; const c = { ...it }; fillRect(c); return c; });
   });
   return out;
+}
+/* Only the fields this kind of shape has, and only where they're missing:
+   "folds 2" / "2 folds", "6 × 3", "side 4", "sides 3, 4, 5", "60°". */
+function sylSizesFromText(x){
+  if(typeof x.text !== 'string' || !x.text.trim()) return;
+  const t = x.text.toLowerCase().replace(/\s+/g, ' ');
+  const one = (...res) => { for(const re of res){ const m = t.match(re); if(m) return Number(m[1]); } return null; };
+  const fill = (k, v) => { if(x[k] == null && Number.isInteger(v)) x[k] = v; };
+  if(x.t === 'corner') return fill('deg', one(/(\d+)\s*(?:°|deg)/, /(?:deg\w*|angle|कोण)\s*[:=]?\s*(\d+)/));
+  if(x.kind === 'circle') fill('folds', one(/(\d+)\s*(?:fold|तह)/, /(?:folds?|fold lines?|तह)\s*[:=]?\s*(\d+)/));
+  if(x.kind === 'square') fill('s', one(/sides?\s*[:=]?\s*(\d+)/, /\bs\s*[:=]\s*(\d+)/));
+  if(x.kind === 'rectangle'){
+    const m = t.match(/(\d+)\s*[×x*]\s*(\d+)/);
+    if(m){ fill('w', Number(m[1])); fill('h', Number(m[2])); }
+    fill('w', one(/\b(?:w|width)\s*[:=]?\s*(\d+)/)); fill('h', one(/\b(?:h|height)\s*[:=]?\s*(\d+)/));
+  }
+  if(x.kind === 'triangle' && !Array.isArray(x.sides)){
+    const m = t.match(/(\d+)\s*,\s*(\d+)\s*(?:,|and)\s*(\d+)/);
+    if(m) x.sides = [m[1], m[2], m[3]].map(Number);
+  }
+}
+/* Which shape a row's question looks for, when it names exactly one;
+   a wrong reading fails against the drawing like any other answer. */
+function sylInferFind(q){
+  const text = [q.q && q.q.en, q.q && q.q.hi].filter(Boolean).join(' ').toLowerCase();
+  const right = (q.opts || [])[q.correct];
+  if(!/^\d+$/.test(String(right == null ? '' : right).trim())) return undefined;   // a row's answers are its numbers
+  if(/odd one|different|doesn.?t belong|not like the others|अलग/.test(text)) return 'odd';
+  if(/\bnot\b|नहीं/.test(text)) return undefined;
+  if(/square corner|right angle|चौकोर कोन|समकोण/.test(text)) return 'squarecorner';
+  const hits = [['triangle', /triangle|त्रिभुज|three sides|3 sides|तीन भुज|3 भुज/], ['rectangle', /rectangle|आयत/],
+    ['square', /square|वर्ग/], ['circle', /circle|वृत्त|गोल/]].filter(([, re]) => re.test(text)).map(([k]) => k);
+  return hits.length === 1 ? hits[0] : undefined;
 }
 function sylInferAsk(fig, q){
   const text = [q.q && q.q.en, q.q && q.q.hi].filter(Boolean).join(' ').toLowerCase();
@@ -135,12 +186,42 @@ function sylInferAsk(fig, q){
   return undefined;                                   // can't tell: the checker asks for it
 }
 
-/* Does a line of narration already say this answer? A number as a whole
-   number; words when every content word of the answer is there. */
+/* Shape aims that no question in the lesson checks ("find a shape with 3
+   sides" with no row to find it in) — a warning for the teacher, not a
+   rejection: an aim is free text, read here by its key words, and an aim
+   these words don't cover is left to the teacher's reading. */
+function sylAimGaps(les){
+  const beats = (les && les.beats) || [];
+  if(!beats.some(b => GEO_TYPES.includes(b.t))) return [];
+  const asked = new Set();
+  beats.forEach((b, i) => {
+    if(!beats[i + 1] || beats[i + 1].t !== 'ask') return;
+    if(b.t === 'figure' && b.ask) asked.add(b.ask);
+    if(b.t === 'corner') asked.add('kind');
+    if(b.t === 'figures'){ asked.add('row'); if(b.find === 'squarecorner') asked.add('kind'); }
+  });
+  const need = en => {
+    const t = String(en || '').toLowerCase();
+    if(/\bfind|\bpick|\bspot|which one/.test(t)) return ['row'];
+    if(/perimeter|distance round|all the way round/.test(t)) return ['perimeter'];
+    if(/square corner|right angle/.test(t)) return ['kind'];
+    if(/cent(re|er)|fold/.test(t)) return ['meet'];
+    if(/corner/.test(t)) return ['corners'];
+    if(/side/.test(t) && /equal|same length/.test(t)) return ['equal'];
+    if(/side/.test(t)) return ['sides'];
+    if(/\bname|recogni[sz]e|identify/.test(t)) return ['name', 'row'];
+    return null;
+  };
+  // an aim is a structured Teach Munni aim (its point is what the child can do); an older plain {en, hi} point still reads
+  return (les.aims || []).filter(a => { const n = need(a && (a.point ? a.point.en : a.en)); return n && !n.some(k => asked.has(k)); });
+}
+
 /* number words up to twenty, so "three" and "तीन" say 3 as surely as "3" does
    (the 13 Nov live run: "A triangle has three straight sides" — then "how many sides?") */
 const SYL_NUM_EN = ['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
 const SYL_NUM_HI = ['शून्य','एक','दो','तीन','चार','पाँच','छह','सात','आठ','नौ','दस','ग्यारह','बारह','तेरह','चौदह','पंद्रह','सोलह','सत्रह','अठारह','उन्नीस','बीस'];
+/* Does a line of narration already say this answer? A number as a whole
+   number (a digit or a word); words when every content word of the answer is there. */
 function sylSaysIt(text, answer){
   if(!text || answer == null) return false;
   const a = String(answer).trim();
@@ -192,7 +273,6 @@ function sylClean(raw, opts){
   const beats = sylTidy(Array.isArray(raw.beats) ? raw.beats.slice(0, 12) : []);
   if(beats.length > 10) errs.push('more than 10 beats — keep a lesson short');
   let lastShown = null, shown = null, readText = '', lead = [], taught = false, asked = false;   // lead: what Munni said since the last question
-  let pics = [];                                          // teaching pictures since the last question
   const checks = [];
 
   beats.forEach((x, i) => {
@@ -204,14 +284,13 @@ function sylClean(raw, opts){
       const g = geoClean(x);
       g.errors.forEach(e => errs.push(`beat ${i}: ${e}`));
       if(x.say){ const s = bi(x.say, `beat ${i}'s narration`, 200); if(s) g.beat.say = s; }
-      if(g.beat.say) lead.push(g.beat.say);
-      // teach on one example, ask on another: a question picture that is the
-      // teaching picture again only asks the child to remember (13 Nov live run:
-      // a square corner taught, then the same square corner asked about)
-      const picKey = b => JSON.stringify([b.t, b.kind, b.s, b.w, b.h, b.sides, b.folds, b.deg, b.items]);
-      if(t !== 'figures' && g.beat.ask != null && pics.includes(picKey(g.beat)))
-        errs.push(`beat ${i}: the question picture is the same as the teaching picture — ask about a different example (another size or another shape)`);
-      if(t !== 'figures' && g.beat.ask == null) pics.push(picKey(g.beat));
+      // a teaching circle that talks about its folds must draw them (the fourth
+      // live run: "the point where fold lines meet is the centre" over a plain circle)
+      if(g.beat.kind === 'circle' && g.beat.ask == null && g.beat.say && !(g.beat.folds >= 2)
+         && /fold|meet|cent(re|er)|तह|मिल|केंद्र|केन्द्र/i.test(g.beat.say.en + ' ' + g.beat.say.hi))
+        errs.push(`beat ${i}: the picture doesn't show the folds its narration talks about — give the circle folds: 2 or more`);
+      // remember whether this picture teaches or is a question's picture
+      if(g.beat.say) lead.push({ ...g.beat.say, pic: t !== 'figures' && g.beat.ask == null ? 'teach' : 'question' });
       les.beats.push(g.beat); lastShown = t; shown = g.beat;
       if(t !== 'figures' && g.beat.ask == null) taught = true;           // a teaching picture
       return;
@@ -271,8 +350,9 @@ function sylClean(raw, opts){
         checks.push('sum');
       } else if(lastShown && GEO_TYPES.includes(lastShown)){
         checks.push('shape');                          // validateLesson() reads the answer off the drawing
-        // "Are all sides equal in this square?" — the question mustn't name the shape it asks about
-        if(shown && shown.t === 'figure' && ['name', 'equal'].includes(shown.ask) && GEO_WORDS[shown.kind]
+        // "Are all sides equal in this square?" — the question mustn't name the shape it asks about;
+        // nor "How many sides does this triangle have?" — the name gives the count, so nobody counts
+        if(shown && shown.t === 'figure' && ['name', 'equal', 'sides', 'corners'].includes(shown.ask) && GEO_WORDS[shown.kind]
            && out.q && GEO_WORDS[shown.kind].some(r => r.test(out.q.en) || r.test(out.q.hi)))
           errs.push(`beat ${i}: the question names the shape it asks about — let the child work it out`);
       } else if(lastShown && SYL_READ.includes(lastShown)){
@@ -284,18 +364,21 @@ function sylClean(raw, opts){
       } else {
         errs.push(`beat ${i}: a question must come after something to look at or read`);
       }
-      // the child works the answer out: Munni mustn't have just said it — every
-      // line written since the last question, a shape's own picture included
-      // ("A triangle has three straight sides" before "How many sides?")
-      const said = lead;
+      // the child works the answer out: Munni mustn't have just said it. For a
+      // shape question that is everything said since the last question — the
+      // intro too — except that a teaching picture may name the idea it
+      // teaches ("this is the centre") when the answer is a word; a number
+      // said there ("it has 4 sides") still gives a count away
+      const geoQ = lastShown && GEO_TYPES.includes(lastShown);
+      const said = geoQ ? lead.filter(s => s.pic !== 'teach' || /^\d+$/.test(String(right))) : lead;
       if(right != null && !opts.every(o => /^(yes|no)$/i.test(o)) && said.some(s => sylSaysIt(s.en, right) || sylSaysIt(s.hi, hiOpts[out.correct])))
         errs.push(`beat ${i}: the lines just before this question say the answer "${right}" — let the child work it out`);
-      lead = []; pics = [];
+      lead = [];
     } else if(t !== 'intro' && t !== 'win'){
       lastShown = t; shown = out;
       if(SYL_READ.includes(t)) readText = [out.p && out.p.en, out.p && out.p.hi, out.w, out.text].filter(Boolean).join(' ');
     }
-    if(t !== 'ask' && out.say) lead.push(out.say);
+    if(t !== 'ask' && out.say) lead.push({ ...out.say });
     if(t !== 'ask' && t !== 'intro' && t !== 'win') taught = true;          // a worked example or a passage
     les.beats.push(out);
   });
@@ -347,9 +430,11 @@ async function sylDraft(input){
       (r.lessons || []).forEach((raw, k) => {
         const again = sylClean(raw, { band: cls.band, skills, mendHints: true }), at = drafts.indexOf(failed[k]);
         if(at < 0) return;
-        drafts[at] = again.ok ? { raw, ...again, repaired: true } : { ...drafts[at], repairErrors: again.errors };
+        // a "fix" that came back exactly as sent is said so, not counted as a second try
+        const same = JSON.stringify(sylTidy(raw.beats || [])) === JSON.stringify(sylTidy(failed[k].raw.beats || []));
+        drafts[at] = again.ok ? { raw, ...again, repaired: true } : { ...drafts[at], repairErrors: again.errors, unchanged: same };
       });
-      log(2, `Syllabus · ${failed.length} sent back to Gemini with the checker's reasons · ${drafts.filter(x => x.repaired).length} fixed and passed`);
+      log(2, `Syllabus · ${failed.length} sent back to Gemini with the checker's reasons · ${drafts.filter(x => x.repaired).length} fixed and passed${drafts.some(x => x.unchanged) ? ` · ${drafts.filter(x => x.unchanged).length} came back unchanged` : ''}`);
     }catch(e){ log(2, `Syllabus · repair round not reached (${e.message}) — the failures stay unused`); }
   }
   return { chapter: d.chapter || '', model: d.model || '', cls: cls.id, drafts };

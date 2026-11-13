@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v50` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v51` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -333,12 +333,19 @@ child sees.
   Takhti's lesson schema (structured output, **one beat schema per beat
   type, each with its own required fields** — a question can't arrive
   without its two answers and the right one, a rectangle without `w` and
-  `h`, a circle without `folds`; one retry with the older field names, and
-  the old all-optional schema only if the API refuses the strict one). Google saying the model is busy (503/429) gets one more try a
-  moment later, then the lighter `GEMINI_FALLBACK_MODEL`
-  (`gemini-3.5-flash-lite`; `none` switches it off), which a 404 also moves
-  to; all busy → "Gemini is busy right now". One model gets at most 60% of
-  the time limit (55 s serverless, 180 s on the voice server), so a model
+  `h`, a circle without `folds`; the fields that live runs left out or wrote
+  as text carry descriptions; one retry with the older field names, and
+  the old all-optional schema only if the API refuses the strict one).
+  Google saying the model is busy (503/429) gets one more try a moment
+  later, then each `GEMINI_FALLBACK_MODEL` in turn (a comma list, default
+  `gemini-3.7-flash,gemini-3.5-flash-lite`; `none` switches them off),
+  which a 404 also moves to; all busy → "Gemini is busy right now" (a 429
+  is said as the key's own limit, not as busy). Every model's outcome and
+  time (`ok`, `hung`, 503, 429…) come back as `tried` and are logged
+  (`TAKHTI_SYLLABUS_LOG=0` silences it). A model that just hung or said
+  busy rests for five minutes (`TAKHTI_GEMINI_REST_MS`), so the repair round
+  and the next chapter go straight to the fallback. Every model but the last gets at most 60% of
+  the time left (55 s serverless, 180 s on the voice server), so a model
   that hangs leaves time for the fallback. The draft and the repair prompt
   share one description of the beats and the rules (`beatsText()`,
   `rulesText()`) — what each shape `ask` means, the school's Hindi words
@@ -348,7 +355,9 @@ child sees.
   schema (a rectangle's `w` is a number). The class's skills offered are its
   own grade first, then the grades around it (a Class 3 shapes chapter
   reaches `shapes2d`, `angles`, `perimeter`). A PDF or photo goes as `inline_data`. `mode:'repair'` sends
-  rejected lessons back with the checker's reasons. Drafts only; the key
+  rejected lessons back with the checker's reasons; a repair that comes
+  back the same as what was sent is marked, and the teacher card says
+  "Gemini's fix changed nothing". Drafts only; the key
   never leaves the server; `TAKHTI_SYLLABUS_KEY` (optional school password)
   and a per-address hourly limit.
 - **The checks, on the phone** (`sylClean()`, then `validateLesson()`):
@@ -366,9 +375,18 @@ child sees.
   twice in a row is kept once, a picture's stray notes are dropped, and a
   figure or corner followed by a question but missing its `ask` gets it from
   the question's own words (`sylInferAsk()`: "How many sides?" → sides) —
-  a wrong reading fails against the drawing. Then: something must teach (a
+  a wrong reading fails against the drawing — and a rectangle given only its
+  width gets a height half as long (in a row too), except for a perimeter
+  question, where a made-up side would change the answer; a row missing its
+  `find` gets it from a question that names exactly one shape
+  (`sylInferFind()`); a size written as a note ("folds 2", "6 × 3", "60°")
+  goes into its own field, never over one that was given
+  (`sylSizesFromText()`). Then: something must teach (a
   teaching picture, a worked example or a passage) before the first
-  question; a shape question mustn't name the shape it asks about; the Hindi
+  question; a shape question mustn't name the shape it asks about (for
+  sides and corners too: "this triangle" gives the count away); a teaching
+  circle whose narration talks about folds or the centre must draw 2 or
+  more folds; the Hindi
   answers are in Devanagari unless they are numbers. Every lesson carries its
   **aims** — required, 1–4, in the one format Teach Munni uses (a bilingual
   `point`, "the child can …", plus Munni's `forget` question, two `hints` and
@@ -382,10 +400,19 @@ child sees.
   (`TEACH_NUDGES`, checked again, shown to the teacher as "Hint replaced") — and each
   question may carry a teacher-only `why` (why children pick the wrong
   answer); a question whose answer Munni has just said (`sylSaysIt()` over
-  every line written since the last question, a shape's picture included;
-  a number as a digit or a word — "three", "तीन" — and centre/center alike)
-  is rejected, so the child works it out, and so is a question picture
-  that is the teaching picture again (teach on one example, ask on another). A failure goes back to
+  every line written since the last question — for a shape question the
+  intro counts too, but a teaching picture may name the idea it teaches when
+  the answer is a word; a number as a digit or a word ("three", "तीन") and
+  centre/center alike) is rejected, so the child works it out. A shape
+  question whose picture is the teaching picture again (same drawing, which
+  marks the answer) is rejected by `validateLesson()` (`geoSig()`) — teach
+  on one shape, ask on another, as the built-in lessons do; a teaching
+  circle that talks about its folds must draw them; a row asking which has
+  a square corner may have only one (squares, rectangles and a 3-4-5
+  triangle all do — `geoSquareCorner()`); "how many sides does this
+  triangle have?" names the count away. An aim no question checks is
+  flagged for the teacher (`sylAimGaps()`, not a rejection), and a repair
+  that came back unchanged is marked. A failure goes back to
   Gemini **once** with its reasons; still failing → shown as "not used",
   with why. The right answer is shuffled (stable, by content); the id is a
   hash of the content, so a lesson edited later gets a different id.
@@ -393,7 +420,10 @@ child sees.
   first, *Approve these aims*, Munni's questions for them folded under
   "Afterwards Munni forgets these", any aim left out and why, then
   the whole lesson folded underneath — every line, the right answer marked,
-  how each answer was checked, the `why` notes, never shown to a child): `sylApprove()`
+  how each answer was checked, the `why` notes, never shown to a child; a
+  shape aim no question checks — "find a shape with 3 sides" with no row —
+  is flagged under the aims, `sylAimGaps()`, a warning read from the aim's
+  key words, not a rejection): `sylApprove()`
   / `sylApproveAll()` / `sylRemove()` write `_lessons {items, at}` (≤ 12)
   into the class mirror; with *Keep this class synced* on, the class sync
   carries them to every synced phone (teacher's key only; shape- and
@@ -460,6 +490,10 @@ answer must be readable off what is on the screen.
 - **What a question asks is on the picture**: a figure's `ask` (name,
   sides, corners, perimeter, equal, meet), a corner's `ask:'kind'`, a
   row's `find` (square, rectangle, triangle, circle, squarecorner, odd).
+  A square corner is in a 90° corner, a square, a rectangle or a right
+  triangle (3-4-5), so a row of shapes may hold only one of those; a
+  triangle with a corner within 15° of square that isn't one can't be in
+  such a row (`geoSquareCorner()`).
   `geoExpect()` works the answer out from the drawing; `geoAskError()`,
   called by `validateLesson()` for every lesson, rejects a marked answer
   (English or Hindi, read by `geoSays()`: वर्ग, आयत, चौकोर कोना, केंद्र…)
@@ -1353,20 +1387,32 @@ Honest edges of what's built:
    the *Maths Mela* Class 3 shapes chapter, every rejection a missing shape
    `ask` or a rectangle without `h`, and the repair round (which then didn't
    describe the beats) fixed none — the reason for the shared prompt, the
-   worked example and `sylTidy()`. The re-run (13 Nov, `tools/try-syllabus.mjs`,
-   flash-lite again — 3.8-flash busy): 0 of 4 — every question without its
-   answers, rectangles without `h`, circles without folds, junk `s:0`/`w:0`
-   on every beat (the flat schema made every field optional), and every aim
-   dropped (Munni's question naming the topic Gemini also listed as
-   explanation words; hints that were the method). Hence the per-type
-   schema, the topic words, the named giveaways and the nudge; re-checked
-   offline, the same drafts now keep all four aims. The third run (13 Nov,
-   flash-lite): every beat valid first time, the hints fixed by the repair
-   round — 4 of 4 usable; but three of them gave the answer away in ways the
-   checker didn't yet see ("A triangle has three sides" before "how many
-   sides?", the teaching picture asked about again, "center" before
-   "Centre"), now rejected — the next run shows whether the repair round
-   fixes them.
+   worked example and `sylTidy()`. The second run (still flash-lite;
+   3.8-flash hung or was busy every time) passed 2 of 3, but both passing
+   lessons asked about their own teaching picture and one intro said the
+   answer — the reason for the same-picture rule, the wider "said it" check,
+   the resting model and the rectangle's inferred height. The third run
+   (flash-lite again) passed 0 of 3: the schema then required only a
+   beat's type, so it sent a question with no answers and two lessons with
+   no question at all, and the repair returned them unchanged — the reason
+   for the lesson shape with every field required, the unchanged-repair
+   mark and the full-Flash fallback before the lite one. In the fourth
+   (13 Nov), the repair did change its lessons and fixed the said-the-answer
+   and same-picture faults, but left a row's rectangle without `h`, a row
+   without `find` and "folds 2" written as text — the reason for the field
+   descriptions in the schema and the three extra tidy steps. Its teacher
+   reading found more: "which shape has square corners?" over a rectangle
+   and a 3-4-5 triangle (two right answers), "how many sides does this
+   triangle have?" (the name gives the count), a teaching circle without
+   the folds it talked about, and an aim no question checked — each now
+   caught or flagged. In parallel (13 Nov, `tools/try-syllabus.mjs`), the
+   flat schema's 0 of 4 led to the per-type schema, the topic words, the
+   named giveaways and the nudge for hints; the next run gave 4 of 4 valid,
+   then the number words and centre/center; the run after that, 4 of 4
+   usable with nothing given away. The two lines of work were combined on
+   13 Nov: the per-type schema (it gave the 4 of 4), with the lesson-shape
+   branch's checks, tidy steps, fallbacks and resting models. A fair verdict
+   on 3.8-flash still needs a quieter hour.
 14. **Teach Munni is new and untested on real children.** The judge (Gemini
    on a transcript) is tested against a stand-in; whether it judges a
    seven-year-old's Hinglish fairly needs real recordings first (try ten

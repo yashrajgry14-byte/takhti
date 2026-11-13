@@ -53,6 +53,12 @@ check('a numbered row: the number of the one that matches, the odd one out, and 
   && E({ t:'figures', items:[{ kind:'corner', deg:60 }, { kind:'corner', deg:120 }, { kind:'corner', deg:90 }], find:'squarecorner' }) === 3
   && E({ t:'figures', items:[{ kind:'triangle', sides:[3,4,5] }, { kind:'square', s:2 }, { kind:'triangle', sides:[4,4,4] }], find:'odd' }) === 2
   && E({ t:'figures', items:[{ kind:'square', s:3 }, { kind:'square', s:5 }], find:'square' }) === null, '');
+check('"which has a square corner?" over shapes: squares, rectangles and a 3-4-5 triangle have one — so a rectangle and a 3-4-5 triangle in one row is two answers (the fourth live run)',
+  E({ t:'figures', items:[{ kind:'triangle', sides:[3,4,5] }, { kind:'circle' }, { kind:'triangle', sides:[4,4,4] }], find:'squarecorner' }) === 1
+  && E({ t:'figures', items:[{ kind:'triangle', sides:[4,4,4] }, { kind:'rectangle', w:5, h:3 }, { kind:'circle' }], find:'squarecorner' }) === 2
+  && E({ t:'figures', items:[{ kind:'triangle', sides:[3,4,5] }, { kind:'rectangle', w:5, h:3 }, { kind:'circle' }], find:'squarecorner' }) === null
+  && E({ t:'figures', items:[{ kind:'triangle', sides:[5,5,7] }, { kind:'circle' }, { kind:'square', s:3 }], find:'squarecorner' }) === null
+  && /exactly one picture may have a square corner/.test(X.geoErrors({ t:'figures', items:[{ kind:'triangle', sides:[3,4,5] }, { kind:'rectangle', w:5, h:3 }], find:'squarecorner' }).join()), '');
 check('answers are read in English and Hindi: वर्ग/आयत/त्रिभुज/वृत्त, केंद्र, चौकोर/छोटा/बड़ा कोना, हाँ/नहीं',
   X.geoSays('वर्ग', 'square') && X.geoSays('Rectangle', 'rectangle') && !X.geoSays('Square corner', 'square') && X.geoSays('केंद्र', 'centre')
   && X.geoSays('चौकोर कोना', 'corner:square') && X.geoSays('छोटा कोना', 'corner:smaller') && X.geoSays('Bigger corner', 'corner:bigger') && X.geoSays('हाँ', 'yes') && X.geoSays('12', 12) && !X.geoSays('12', 13), '');
