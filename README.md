@@ -19,9 +19,47 @@ tracing to writing, counting to carrying, tables and BODMAS.
 school's own syllabus have started: a teacher uploads a chapter, Gemini
 drafts the week's lessons, Takhti checks every one.
 
-**Build status:** web prototype on `main` (offline shell `takhti-v59`, 43 test
+**Build status:** web prototype on `main` (offline shell `takhti-v59`, 44 test
 suites); the voice server has had its first live Bolna call. The Android app
 ports the same logic to Kotlin (`ANDROID.md`).
+
+---
+
+## The core loop: learn → teach Munni → fix the gap
+
+1. **Learn.** This week's lesson comes from the school's own textbook
+   (Gemini drafts it, Takhti checks it, the teacher approves its aims in a
+   few plain points), and each child gets their own path to those aims —
+   pictures first, the cartoon, the story, or straight in if they already
+   know it — chosen from what has actually worked for that child.
+2. **Teach Munni.** Elephants never forget, but Munni does, on purpose: she
+   "forgets" the aims and the child teaches them back out loud — in the
+   app, at the end of a phone call, and with a parent at home.
+3. **Judge each aim.** Gemini decides which aims the explanation covered and
+   must quote the child's own words for each credit; offline, Takhti's own
+   rubric decides. Two hints at most, then "we'll figure it out together
+   later" — never "wrong".
+4. **Fix the gap.** An aim the child couldn't explain is taught again in the
+   way that works for them, then Munni forgets it again until every aim is
+   green. The teacher sees what the class could explain; the parent sees
+   how their child explains.
+
+## Built with Google
+
+| Google component | What it does in Takhti | Where |
+|---|---|---|
+| **Gemini API — structured output** (`gemini-3.8-flash`, falling back to `gemini-3.7-flash` and `gemini-3.5-flash-lite`) | Turns a textbook chapter (PDF, photo or text) into lessons in Takhti's own format, one JSON schema per lesson-step type, each with its teacher-approved aims; a failed lesson goes back once with the checker's reasons | `api/syllabus.mjs`, `tools/try-syllabus.mjs`, `tools/build-library.mjs` |
+| **Gemini — audio understanding** | Writes down what a child *said* when reading aloud (बाई stays बाई, not भाई) and when explaining to Munni; the phone grades it | `voice/speech.js` |
+| **Gemini — the judge** | Decides which aims a child's explanation covered, quoting the child for every credit; an unquoted credit is downgraded on the server and again on the phone | `api/teachback.mjs` |
+| **Gemini TTS + Batch API** | Munni's voice, built ahead at half price and shipped offline, so a lesson never waits for the network | `tools/build-audio.mjs` |
+| **Chrome built-in AI (Prompt API, on-device Gemini Nano)** | Writes a fresh practice line for the words a child missed, on the phone, with no network — only if the model is already there, and strictly checked | `src/core/tier1.js` |
+| **Chrome on-device speech recognition** | Hears a child read with no network at all, once the language pack is downloaded | `src/core/speech.js` |
+| **Google AI Studio** | Prompt testing on real NCERT chapters and the Gemini API key | — |
+
+The rule that keeps all of it safe for a lesson: **the network loads
+tomorrow; it never serves today.** Gemini prepares next week's lessons and
+judges explanations; it never decides what a child sees, and never writes a
+word the child hears.
 
 ---
 
@@ -88,6 +126,13 @@ and the class gets it at the Story Fire, offline. Every child's phone checks
 it again before showing it. Gemini prepares next week; it never decides what a
 child sees. → `api/syllabus.mjs`, `src/core/syllabus.js`
 
+**The lesson library:** a school only says which book it teaches from. Each
+book is built once, ahead of time (`tools/build-library.mjs`: every chapter
+through the same draft → check → one repair), and ships offline, so every
+school on that book gets the same checked lessons with no waiting. The
+teacher picks the book, orders its chapters to the school calendar and
+approves each week's aims, offline. → `library/`, `src/core/library.js`
+
 ### Ask Munni
 A help button on every question: Munni breaks it down the way a teacher would
 — make ten, tens then ones, borrow a ten, a hard word in pieces — and never
@@ -102,7 +147,15 @@ out together later"; the gap is taught again the child's way and Munni forgets
 it again. Online, Gemini judges which aims the explanation covered and must
 quote the child for each; offline, Takhti's own rubric does. Parents see how
 their child explains; the teacher sees which aims the class could explain.
-→ `src/core/teachback.js`, `src/ui/teach-munni.js`, `api/teachback.mjs`
+
+**On a phone call, too:** at the end of a call Munni forgets up to two points
+of a topic the child is really working on (the teacher's homework, a mistake
+they keep making, or what they've practised) and the child teaches them back
+by voice — the same aims, hints and rules as the app, run by the same code.
+**And at home:** the parent's Wednesday "teach" activity asks Munni's own
+question, with her clue and what a full answer says, so a parent can listen
+the way Munni does — a point the child couldn't yet explain comes first.
+→ `src/core/teachback.js`, `src/ui/teach-munni.js`, `api/teachback.mjs`, `voice/session.js`, `voice/circle.js`
 
 ### Munni on a phone call — Bolna
 For children with no smartphone or data, Munni calls at the family's chosen
@@ -135,7 +188,7 @@ not kept. No streaks, no reminders to children (India's DPDP Act s.9).
 
 ```bash
 npm run dev                                   # the app, on http://localhost:5173
-npm test                                      # 38 test suites
+npm test                                      # 44 test suites
 npm run voice:sim -- --auto --mistakes        # a whole Munni phone call, in the terminal
 ```
 
