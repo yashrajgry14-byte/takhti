@@ -251,6 +251,8 @@ function lesNext(){
       const passed = S.lesson.asked ? S.lesson.right >= S.lesson.asked/2 : true;
       if(!les.school || les.subject === 'math') record('math', passed);   // a school reading lesson isn't a maths rung
       markLessonDone(S.lesson.id);
+      // a school lesson's first finish decides its harder/easier step (core/planner.js)
+      if(les.school){ S.lessonScores = S.lessonScores || {}; if(!S.lessonScores[S.lesson.id]) S.lessonScores[S.lesson.id] = { r: S.lesson.right, a: S.lesson.asked }; }
       if(les.isHomeworkStory && S.lesson.hwAt){ S.hwDone = S.lesson.hwAt; saveSoon(); }
       if(passed && S.lesson.asked){
         if(typeof sfxChime === 'function') sfxChime();
@@ -474,6 +476,7 @@ function planGo(id){
   const p = typeof planFor === 'function' ? planFor(les) : null, s = p && p.next;
   log(0, `Plan · "${les.title.en}" for this child: ${p ? p.steps.map(x => (x.done ? '✓' : x === s ? '▶' : '·') + x.k + (x.k === 'gap' ? ' ' + x.skill : '')).join(' → ') : 'none'}${p && p.way ? ' · way: ' + p.way : ''}${p && p.knows ? ' · already knows it' : ''}`);
   if(s && s.k === 'teach' && typeof teachStart === 'function'){ const u = teachUnitFor(les); if(u){ teachStart(u); return; } }
+  if(s && s.k === 'more'){ S.mindFocus = s.skill; S.planMore = { lesson: id, skill: s.skill }; go('math'); return; }
   if(s && s.k === 'cartoon' && typeof startCartoonVideo === 'function'){ go('theater'); startCartoonVideo(s.skill); return; }
   startLesson(s && (s.k === 'gap' || s.k === 'show') ? s.lesson : id);
 }

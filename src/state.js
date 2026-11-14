@@ -35,6 +35,7 @@ function newProfile(name){
     today:   { read:0, write:0, math:0, facts:0 },   // counted on success only
     photos:  [],           // notebook photos, stay on this device
     doneLessons: [],       // ids already offered, so the picker rotates
+    lessonScores: {},      // a school lesson's first finish {r, a}, and x once its harder/easier step is answered (core/planner.js)
     skillHistory: {},      // skillId -> {n, right}, built from lesson checkpoints; see core/diagnose.js
     classCode: null,       // a teacher's 6-char code, entered once on the parent dashboard; see core/diagnose.js
     syncOn: false,         // a parent's consent to sync this child's name + practice counts with the class (core/class-sync.js); off until switched on

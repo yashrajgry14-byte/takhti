@@ -292,6 +292,9 @@ math(){
     const f = S.mindFocus && skillHasProblem(S.mindFocus) ? skillProblem(S.mindFocus, Math.floor(Math.random() * 1e9)) : null;
     S.mindFocus = null;
     S.ctx.p = f && f.c == null ? { a: f.a, b: f.b, op: f.op, ans: f.ans, opts: f.opts.map(Number) } : mindPracticeProblem();
+    // the plan's harder/easier step after a school lesson: this sum is it
+    if(S.planMore && f && f.c == null) S.ctx.planMore = S.planMore;
+    S.planMore = null;
   }
   const p = S.ctx.p;
   const g = gameById(S.game);

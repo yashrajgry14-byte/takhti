@@ -21,11 +21,15 @@
                    reads it alone first;
      · the school's lesson — the teacher's chapter, the same for every
        child — whose answers tell the mind whether the way worked;
+     · one more question after it, at this child's level: a harder one
+       (the next skill up) when every answer was right first time, an
+       easier one (the skill underneath) when one was missed — arithmetic
+       skills only, where skillProblem() can make a real question;
      · Teach Munni on the aims the teacher approved.
 
    Two children in one class, the same approved aims, two different
    paths: that is the point. A step's status is read from what is
-   already kept (S.doneLessons, S.teach) — the plan adds no state of its
+   already kept (S.doneLessons, S.lessonScores, S.teach) — the plan adds no state of its
    own, so it can never disagree with what the child really did.
    ================================================================== */
 
@@ -64,6 +68,38 @@ function planWhyWay(skill, way, c){
   const ch = (m.changes || []).find(x => x.skill === skill && x.to === way);
   if(ch) return { en: 'the other way didn’t stick, so Munni is trying this', hi: 'दूसरा तरीक़ा नहीं जमा, इसलिए मुन्नी यह आज़मा रही है' };
   return { en: 'let’s see if this works for you', hi: 'देखते हैं यह तुम्हारे लिए कैसा रहता है' };
+}
+
+/* After the school's lesson: a question one step harder or easier, from
+   how its first answers went. Harder = a skill one up (its prerequisites
+   include this one), easier = one underneath — the same kind of sum where
+   there is one, inside this child's band, never a two-operation sum (the
+   one-question screen can't show brackets). No skill fits → no step. */
+const PLAN_MORE_LABEL = {
+  up:   { en: 'A harder one', hi: 'एक थोड़ा कठिन' },
+  down: { en: 'One more, a little easier', hi: 'एक और, थोड़ा आसान' }
+};
+function planMoreSkill(skill, up, c){
+  if(typeof SKILL_OPS === 'undefined' || !SKILL_OPS[skill] || SKILL_OPS[skill] === 'mix') return null;
+  const gmax = (typeof CARTOON_MAX_GRADE !== 'undefined' && CARTOON_MAX_GRADE[bandForAge((c || S).age || 6).id]) || 1;
+  const ok = id => { const op = SKILL_OPS[id], s = skillById(id); return !!(op && op !== 'mix' && s && (s.g || 0) <= gmax); };
+  const cands = up ? SKILLS.filter(s => (s.pre || []).includes(skill)).map(s => s.id)
+                   : ((skillById(skill) || {}).pre || []).slice();
+  const fit = cands.filter(ok);
+  const same = fit.find(id => SKILL_OPS[id] === SKILL_OPS[skill]);
+  return same || fit[0] || (up ? null : skill);    // nothing easier underneath: one more of the same
+}
+function planMoreStep(les, skill, c){
+  const sc = ((c || S).lessonScores || {})[les.id];
+  if(!sc || !sc.a || !skill) return null;
+  const up = sc.r >= sc.a, to = planMoreSkill(skill, up, c);
+  if(!to) return null;
+  const ts = skillById(to);
+  return { k: 'more', skill: to, up, done: !!sc.x,
+    label: { en: PLAN_MORE_LABEL[up ? 'up' : 'down'].en + (ts && to !== skill ? ' — ' + ts.en.toLowerCase() : ''),
+             hi: PLAN_MORE_LABEL[up ? 'up' : 'down'].hi + (ts && to !== skill ? ' — ' + ts.hi : '') },
+    why: up ? { en: 'you got every question right first time', hi: 'तुमने हर सवाल पहली बार में सही किया' }
+            : { en: 'one was tricky — a smaller step makes it stick', hi: 'एक सवाल कठिन था — छोटा क़दम उसे पक्का करेगा' } };
 }
 
 /* The path for one school lesson. */
@@ -114,6 +150,8 @@ function planFor(les, c){
          : { en: 'The school’s lesson', hi: 'स्कूल का पाठ' },
     why: knows ? { en: 'you already know this well', hi: 'यह तुम्हें अच्छे से आता है' }
          : way === 'story' || readWay ? planWhyWay(skill, way, ch) : { en: 'what your class is learning this week', hi: 'इस हफ़्ते तुम्हारी कक्षा यही सीख रही है' } });
+  const more = planMoreStep(les, skill, ch);
+  if(more) steps.push(more);
   const unit = typeof teachUnitFor === 'function' ? teachUnitFor(les, ch) : null;
   if(unit){
     const taught = Object.values((typeof teachOf === 'function' ? teachOf(ch) : { units: {} }).units).some(u => u.lessonId === les.id);
@@ -130,7 +168,7 @@ function planFor(les, c){
    short codes only, under the parent's sync consent (S.syncOn), with the
    Teach Munni points: the way (pictures, the story, the cartoon, a reading
    way), "already knew it", the skill underneath taken first, and steps done
-   of the whole. Never what was said or read, never the mind itself. */
+   of the whole (a harder/easier step counts as a step, nothing more). Never what was said or read, never the mind itself. */
 function planPathOf(les, c){
   const p = planFor(les, c);
   if(!p) return null;

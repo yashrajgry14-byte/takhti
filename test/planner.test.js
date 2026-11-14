@@ -121,6 +121,26 @@ check('…the cartoon step is done once it was watched (its round open), the sch
 vm.runInContext(`var skip = kid({ mind: JSON.parse(JSON.stringify(toon.mind)) }); skip.mind.pending = {}; skip.doneLessons.push(MLES.id); var pk2 = planFor(MLES, skip);`, ctx);
 check('…a step skipped on the way doesn\'t come back: the school\'s lesson done first, next is Teach Munni, not the cartoon', V(`pk2.next && pk2.next.k`) === 'teach', V(`pk2`));
 
+// harder or easier after the school's lesson, from how its first answers went
+vm.runInContext(`
+  var allRight = kid({ mind: JSON.parse(JSON.stringify(tale.mind)), doneLessons: [MLES.id], lessonScores: { [MLES.id]: { r: 2, a: 2 } } });
+  var missed = kid({ mind: JSON.parse(JSON.stringify(tale.mind)), doneLessons: [MLES.id], lessonScores: { [MLES.id]: { r: 1, a: 2 } } });
+  var little = kid({ age: 5, mind: JSON.parse(JSON.stringify(tale.mind)), doneLessons: [MLES.id], lessonScores: { [MLES.id]: { r: 2, a: 2 } } });
+  var pr = planFor(MLES, allRight), pm = planFor(MLES, missed), pl = planFor(MLES, little);
+  var mr = pr.steps.find(s => s.k === 'more'), mm = pm.steps.find(s => s.k === 'more'), ml = pl.steps.find(s => s.k === 'more');`, ctx);
+check('every answer right first time → a harder step after the school\'s lesson: a take-away skill one up (it builds on two-digit taking away), before Teach Munni',
+  V(`[steps(pr).join(' '), mr.up, SKILL_OPS[mr.skill], skillById(mr.skill).pre.includes('sub2'), pr.next.k]`).join(' | ') === 'school more teach | true | − | true | more', JSON.stringify(V(`[steps(pr), mr, pr.next]`)));
+check('one missed → an easier step instead: a skill underneath (a prerequisite of two-digit taking away), said kindly, never "wrong"',
+  V(`[mm.up, (skillById('sub2').pre || []).concat('sub2').includes(mm.skill), mm.label.en, mm.why.en, /wrong/i.test(JSON.stringify(mm))]`).join(' | ').startsWith('false | true | One more, a little easier'), JSON.stringify(V(`mm`)));
+check('…both in Hindi too', /थोड़ा कठिन/.test(V(`mr.label.hi`)) && /थोड़ा आसान/.test(V(`mm.label.hi`)) && /[ऀ-ॿ]/.test(V(`mr.why.hi + mm.why.hi`)), JSON.stringify(V(`[mr.label, mm.label]`)));
+check('a harder skill must be inside the child\'s band: a 5-year-old who got it all right gets no step a Class 3 skill would need (or one inside the band)',
+  V(`!ml || skillById(ml.skill).g <= CARTOON_MAX_GRADE[bandForAge(5).id]`) === true, JSON.stringify(V(`ml || null`)));
+check('…no score yet (the school\'s lesson not finished), a shapes lesson, or a two-operation skill → no such step',
+  V(`[planFor(MLES, tale).steps.some(s => s.k === 'more'), planFor(LES, kid({ doneLessons: [LES.id], lessonScores: { [LES.id]: { r: 1, a: 1 } } })).steps.some(s => s.k === 'more'), planMoreSkill('bodmas', true, allRight)]`).join() === 'false,false,', '');
+vm.runInContext(`allRight.lessonScores[MLES.id].x = 'y'; var pr2 = planFor(MLES, allRight);`, ctx);
+check('…answered once, the step is done (read from what is kept) and Teach Munni is next; the teacher\'s path counts it as a step, within the server\'s six',
+  V(`[pr2.steps.find(s => s.k === 'more').done, pr2.next.k, planPathOf(MLES, allRight).n <= 6, planPathOf(MLES, allRight).d]`).join() === 'true,teach,true,2', JSON.stringify(V(`[pr2.steps, planPathOf(MLES, allRight)]`)));
+
 // reading: the way lives inside the school's lesson — how its passage is read
 const RD = { title:{ en:"Meena's kite", hi:'मीना की पतंग' }, sub:{ en:'Read and answer', hi:'पढ़ो और जवाब दो' }, ic:'🪁', skill:'read5', source:'Lesson 6',
   aims:[{ short:{ en:'Find where', hi:'कहाँ, ढूँढो' }, point:{ en:'The child can find where something happens in a short story.', hi:'बच्चा छोटी कहानी में ढूँढ सकता है कि कुछ कहाँ होता है।' },
@@ -237,6 +257,23 @@ check('…with nothing in it a child said, read or wrote (only the keys w, k, g,
     win.document.querySelector('.lescard[onclick^="planGo"]').click();
     await wait(30);
     check('…and the button opens that skill\'s cartoon in the Picture Hut', E(`S.screen`) === 'theater' && E(`S.activeVideo && S.activeVideo.data.skillId`) === 'sub2', E(`JSON.stringify([S.screen, S.activeVideo && S.activeVideo.data.skillId])`));
+    // the school's lesson played, every answer right → the harder step, in Counting Stones
+    E(`S.activeVideo = null; go('lessons'); startLesson(schoolLessons()[0].id)`);
+    await wait(20);
+    E(`(function(){ const les = S.lesson.data; for(let n = 0; n < 40 && S.lesson && S.lesson.i < les.beats.length - 1; n++){ const b = les.beats[S.lesson.i]; if(b.t === 'ask' && S.lesson.picked == null){ S.lesson.picked = b.correct; S.lesson.asked++; S.lesson.right++; } S.lesson.i++; S.lesson.picked = null; } lesNext(); })()`);
+    const sid = E(`schoolLessons()[0].id`);
+    check('a school lesson\'s first finish is kept as its score', E(`JSON.stringify(S.lessonScores[${JSON.stringify(sid)}])`) === '{"r":1,"a":1}', E(`JSON.stringify(S.lessonScores)`));
+    E(`endLesson(); go('lessons')`);
+    await wait(20);
+    check('…the Story Fire then shows "A harder one" on this child\'s path', /A harder one/.test(screen()), screen().slice(0, 400));
+    win.document.querySelector('.lescard[onclick^="planGo"]').click();
+    await wait(30);
+    check('…its button opens Counting Stones on a take-away sum of the harder skill', E(`S.screen`) === 'math' && E(`S.ctx.p && S.ctx.p.op`) === '−' && E(`!!S.ctx.planMore`) === true, E(`JSON.stringify([S.screen, S.ctx])`));
+    E(`answerMath(S.ctx.p.ans)`);
+    check('…answering it marks the step done, and Teach Munni is next', E(`S.lessonScores[${JSON.stringify(sid)}].x`) === 'y' && E(`planFor(schoolLessons()[0]).next && planFor(schoolLessons()[0]).next.k`) === 'teach', E(`JSON.stringify([S.lessonScores, planFor(schoolLessons()[0]).steps])`));
+    E(`S.lang = 'hi'; go('lessons')`); await wait(20);
+    check('…in Hindi too', /थोड़ा कठिन/.test(screen()), screen().slice(0, 300));
+    E(`S.lang = 'en'`);
     // the teacher sees which path each child is taking
     E(`endLesson(); sylSave('CLS001', [sylClean(${JSON.stringify(CIRCLE)}, { band: 'developing' }).lesson]);
        S.mind = { v: 1, arms: { angles: { show: { a: 12, b: 0 }, story: { a: 0, b: 12 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} };

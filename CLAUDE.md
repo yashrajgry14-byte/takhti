@@ -86,7 +86,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v68` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v69` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -570,11 +570,20 @@ the mind already know — nothing new measured, nothing sent:
   (`planMarkWay()`, called by `startLesson()`, for the lesson's own skill
   only), and its answers settle whether that way worked; a reading lesson
   opens as the plan's reading way;
+- **one more, at this child's level** (`planMoreStep()`, arithmetic skills
+  only): the school lesson's first finish is kept (`S.lessonScores[id]
+  {r, a}`, by `lesNext()`); every answer right → *A harder one* (a skill
+  one up, whose prerequisites include this one, the same operation where
+  there is one, inside the band), one missed → *One more, a little easier*
+  (a prerequisite, else the same skill) — never a two-operation sum. Its
+  button opens Counting Stones on that skill's `skillProblem()`
+  (`S.planMore` → `S.ctx.planMore`); the answer sets `x` (`y`/`n`) and the
+  step is done;
 - **Teach Munni** on the approved aims.
 
 Each step says why, from the child's own record ("this has worked for you
 before"), in Hindi and English. A step's status is read from what is kept
-(`S.doneLessons`, `S.teach` units' `lessonId`) — the plan has no state of
+(`S.doneLessons`, `S.lessonScores`, `S.teach` units' `lessonId`) — the plan has no state of
 its own. The next step is the first one not done *after* the last one
 done, so a step skipped on the way (the school's lesson opened straight
 away) doesn't come back.

@@ -433,6 +433,11 @@ function answerMath(o){
                  : (S.lang==='hi'?`जवाब है ${S.ctx.p.ans} — देखो कैसे`:`The answer is ${S.ctx.p.ans} — watch why`);
   const sk = skillOfProblem(S.ctx.p);
   twinCheck(twinKeyMath(S.ctx.p), o, ok, S.ctx.helped);   // was the twin's guess right? (core/twin.js)
+  if(S.ctx.planMore){                         // the school lesson's harder/easier step is answered
+    const m = S.ctx.planMore, sc = (S.lessonScores || {})[m.lesson];
+    if(sc && !sc.x){ sc.x = ok && !S.ctx.helped ? 'y' : 'n'; log(0, `Plan · the step after the school lesson (${m.skill}) · ${ok ? 'right' : 'not yet'}`); saveSoon(); }
+    S.ctx.planMore = null;
+  }
   if(!S.ctx.helped){
     record('math', ok);                       // after Ask Munni explained it, the answer isn't counted as the child's own
     if(sk){
