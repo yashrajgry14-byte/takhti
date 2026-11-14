@@ -130,6 +130,13 @@ function box(){
   check('"Munni forgot again": the next time she asks only the point still to teach', E(`s2.items.length === 1 && s2.items[0].aim.id === 'borrow.ten' && /forgot again/.test(s2.line.en)`), E(`s2.items.map(x => x.aim.id)`));
   E(`teachHeard(s2, 'it becomes twelve'); teachFinish(s2)`);
   check('…taught this time: nothing left for Munni to forget', E(`teachAgainList().length === 0 && S.teach.explained['borrow.ten'] === 'c'`), E(`JSON.stringify(teachAgainList())`));
+  check('the loop per point: explained the first time stays "c"; a gap asked again without re-teaching and explained is "gc"',
+    E(`S.teach.loop['borrow.when'] === 'c' && S.teach.loop['borrow.ten'] === 'gc'`), E(`JSON.stringify(S.teach.loop)`));
+  check('the loop\'s steps: a gap, re-taught, asked again (explained / still working); re-taught twice keeps one r; junk ignored',
+    E(`teachLoopNext(undefined, 'g') === 'g' && teachLoopRetaught('g') === 'gr' && teachLoopNext('gr', 'c') === 'grc' && teachLoopNext('gr', 'p') === 'grp'
+       && teachLoopRetaught('grp') === 'gr' && teachLoopNext('c', 'g') === 'c' && teachLoopRetaught('c') === 'c' && teachLoopNext('xx', 'p') === 'p'`), '');
+  check('the class\'s loops counted: first time, after re-teaching, on their own, re-taught and waiting, still working, not re-taught yet',
+    E(`JSON.stringify(teachLoopCounts(['c', 'grc', 'prc', 'gc', 'gr', 'grg', 'g', 'pp', 'bad']))`) === JSON.stringify({ first: 1, after: 2, alone: 1, waiting: 1, working: 1, notyet: 2, gap: 7 }), E(`JSON.stringify(teachLoopCounts(['c', 'grc', 'prc', 'gc', 'gr', 'grg', 'g', 'pp', 'bad']))`));
   check('a skill with no written points still gets Munni\'s sum; a 3–4 year old gets no Teach Munni at all',
     E(`teachUnitBuiltin('mult2x1').aims.length === 1 && teachUnitBuiltin('mult2x1').aims[0].kind === 'fix'`) && E(`(() => { S.age = 4; const u = teachUnitFor({ skillId: 'add10' }); S.age = 8; return u === null; })()`), '');
 
@@ -331,16 +338,29 @@ function box(){
 
     // the class: the points reach the mirror and the teacher's view
     app.E(`S.classCode = 'CLS777'; mirrorToClassNow(S)`);
+    check('the loop: Jai couldn\'t explain a point, took "Let\'s learn it again", then taught it — "grc"; the first-time point stays "c"',
+      app.E(`S.teach.loop['borrow.ten'] === 'grc' && S.teach.loop['borrow.when'] === 'c'`), app.E(`JSON.stringify(S.teach.loop)`));
     check('the class mirror carries which points were explained (ids and c/p/g only)',
       app.E(`(() => { const r = readClassShared('CLS777')[S.id]; return r && r.explained && r.explained['borrow.when'] === 'c' && Object.values(r.explained).every(v => ['c','p','g'].includes(v)); })()`), app.E(`JSON.stringify(readClassShared('CLS777'))`));
     app.E(`classMirrorUpdate('CLS777', all => { all['c-other'] = { childName: 'Asha', skillHistory: {}, explained: { 'borrow.when': 'g', 'borrow.ten': 'p' }, at: Date.now() }; })`);
+    app.E(`classMirrorUpdate('CLS777', all => { all['c-third'] = { childName: 'Ravi', skillHistory: {}, explained: { 'borrow.ten': 'g', 'borrow.when': 'g' }, loop: { 'borrow.ten': 'gr', 'borrow.when': 'g' }, at: Date.now() }; })`);
     app.E(`go('teacher'); S.ctx.tcode = 'CLS777'; render()`);
     const tv = app.screen();
+    check('the mirror carries the loop too — letters only', app.E(`(() => { const l = readClassShared('CLS777')[S.id].loop; return l['borrow.when'] === 'c' && l['borrow.ten'] === 'grc' && Object.values(l).every(v => /^[cpgr]{1,3}$/.test(v)); })()`), app.E(`JSON.stringify(readClassShared('CLS777')[S.id])`));
+    check('the teacher sees the loop across the class: of the points not explained at first, how many were explained after Munni taught them again',
+      /couldn't explain the first time \(3\): 1 explained after Munni taught them again/.test(tv) && /1 re-taught and still to be asked/.test(tv) && /1 not re-taught yet/.test(tv), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 700));
+    check('…and per point, by name: explained after re-teaching (Jai), re-taught and to ask again (Ravi), not re-taught yet (Ravi)',
+      /explained after re-teaching: Jai/.test(tv) && /re-taught, to ask again: Ravi/.test(tv) && /not re-taught yet: Ravi/.test(tv) && !!app.$('.teachloop-sum'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 900));
+    app.E(`S.lang = 'hi'; render()`);
+    check('…in Hindi too', /मुन्नी के फिर सिखाने के बाद समझा पाए/.test(app.screen()) && /फिर सिखाने के बाद समझाई: Jai/.test(app.screen()), app.screen().slice(app.screen().indexOf('मुन्नी को सिखाओ'), app.screen().indexOf('मुन्नी को सिखाओ') + 500));
+    app.E(`S.lang = 'en'; render()`);
     check('the teacher view: what the class could explain, point by point (the hardest first)',
-      /WHAT THE CLASS COULD EXPLAIN/.test(tv) && /Knows to borrow when the top ones digit is smaller/.test(tv) && /1 explained · 0 partly · 1 still to come/.test(tv) && !!app.$('.teachbar'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 400));
+      /WHAT THE CLASS COULD EXPLAIN/.test(tv) && /Knows to borrow when the top ones digit is smaller/.test(tv) && /1 explained · 0 partly · 2 still to come/.test(tv) && !!app.$('.teachbar'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 400));
     const { syncCore } = await import(pathToFileURL(path.join(root, 'api/class-sync.mjs')).href);
     const mem = new Map(), st = { get: async k => mem.get(k) || null, setJSON: async (k, v) => mem.set(k, JSON.parse(JSON.stringify(v))) };
     const sy = await syncCore(st, { code: 'CLS777', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.when': 'c', 'Bad Id!': 'c', 'borrow.ten': 'yes' }, at: 5, said: 'x' } } });
+    const sy2 = await syncCore(st, { code: 'CLS778', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.ten': 'c' }, loop: { 'borrow.ten': 'grc', 'borrow.when': 'cgr', 'x.y': 'I said twelve', 'Bad!': 'c' }, at: 5 } } });
+    check('the class sync keeps only well-formed loops (ids and the letters)', JSON.stringify(sy2.json.children['c-1'].loop) === '{"borrow.ten":"grc"}', JSON.stringify(sy2.json.children['c-1']));
     check('the class sync keeps only well-formed point ids and c/p/g — nothing the child said', JSON.stringify(sy.json.children['c-1'].explained) === '{"borrow.when":"c"}' && !sy.json.children['c-1'].said, JSON.stringify(sy.json));
 
     app.E(`S.age = 4; S.lesson = { id: 'x', data: { id: 'x', band: 'pre', skillId: 'add10', title: { en: 'Add', hi: 'जोड़' }, beats: [{ t: 'win', say: { en: 'Yes', hi: 'हाँ' } }] }, i: 0, right: 0, asked: 0, picked: null, counted: true }; go('lessons'); S.lesson = { id: 'x', data: { id: 'x', band: 'pre', skillId: 'add10', title: { en: 'Add', hi: 'जोड़' }, beats: [{ t: 'win', say: { en: 'Yes', hi: 'हाँ' } }] }, i: 0, right: 0, asked: 0, picked: null, counted: true }; render()`);

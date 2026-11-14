@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v63` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v64` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -599,6 +599,11 @@ functions, not set by hand: settled `mindTaught()`/`mindAttempt()` rounds
 and Munni-reads-first for Kabir) and, for Kabir, `twinAnswer()` twice on two
 different borrowing sums with the smaller digit taken from the bigger, so
 `twinHabit('borrow')` is real and Teach Munni's Munni makes his mistake.
+Both have also taught Munni borrowing once through Teach Munni's own session
+functions (`demoTeach()`): Asha couldn't say what a borrowed ten becomes,
+took *Let's learn it again*, then could (`grc`); Kabir couldn't say when to
+borrow and has been re-taught, Munni still to ask him (`gr`) — so the
+teacher's loop line has something real to show.
 Never synced (`syncOn` stays off); needs two free profile places and says so
 when there aren't; `demoRemove()` deletes exactly the flagged children from
 the phone and this phone's class mirror. When the approved lessons change
@@ -1086,10 +1091,18 @@ protégé effect, and the one place a child gets to *say* what they learnt.
   explained, without a hint, in their own words, the lesson's words used,
   the last sessions, "never compared"), and the teacher's **What the class
   could explain** (`teachTeacherHTML()`: per aim, explained / partly /
-  still to come, the hardest first). The class mirror and the class sync
-  carry `explained {aimId: c|p|g}` — ids and three letters, nothing said
-  (`teachExplainedOf()`; the server keeps only well-formed ids); the
-  parent's sync notice says so in both languages.
+  still to come, the hardest first) — and **the loop**: per point, where
+  each child started, whether Munni taught it again, where they are now
+  (`S.teach.loop`, `teachLoopNext()`: `c` first time; `g`/`p` a gap; `gr`
+  re-taught by *Let's learn it again* (`teachMarkRetaught()`); `grc`/`grp`…
+  re-taught then asked; `gc` asked again without re-teaching), counted by
+  `teachLoopCounts()` into one line for the class ("points children couldn't
+  explain the first time (3): 1 explained after Munni taught them again…")
+  and, per point, who is where by name. The class mirror and the class sync
+  carry `explained {aimId: c|p|g}` and `loop {aimId: code}` — ids and
+  letters, nothing said (`teachExplainedOf()`; the server keeps only
+  well-formed ids and codes); the parent's sync notice says so in both
+  languages.
 
 ## Talking Munni — `ui/talk-munni.js`
 

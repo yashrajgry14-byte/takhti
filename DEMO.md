@@ -35,7 +35,7 @@ optional live step (4b).
 | 8 | At the end tap **🐘 Teach Munni**. Type or say an explanation. | "Now Munni 'forgets', and the child teaches her back. What the child can't explain becomes next week's gap — never a 'wrong'." |
 | 9 | Switch to **Kabir (demo)** → **The Story Fire**. | "Kabir, same lesson — no pictures step. The story works for him." |
 | 10 | *(maths, if a sums chapter is approved)* Kabir → Teach Munni on chapter 12's *Taking away tens and ones* (or chapter 4's *Finding Hidden Seeds*). | "Munni makes Kabir's own mistake — taking the smaller digit from the bigger — and he has to catch it." |
-| 11 | Back to the teacher view → **What the class could explain**. | "The teacher sees, per aim, who could explain it. That closes the loop: explain back → weak points → re-teaching." |
+| 11 | Back to the teacher view → **What the class could explain**. Read the green line at the top, then the ↻ lines under the borrowing points. | "For every point a child couldn't explain the first time, the teacher sees what happened next: Asha couldn't say what a borrowed ten becomes, Munni taught her again her way, and then she could. Kabir has been re-taught and Munni will ask him again. That is the loop — explain back, find the gap, re-teach, explain again — and it's measured, child by child." |
 
 ## If something goes off-script
 
@@ -55,6 +55,12 @@ optional live step (4b).
   passed by Takhti's checks), the paths, the teacher's cards, Teach Munni.
 - **Staged, and labelled:** the two demo children's histories. They were
   written by the same functions a real child's answers go through, so the
-  paths are what real children with those histories would get.
+  paths are what real children with those histories would get. Their Teach
+  Munni loop (Asha: gap → re-taught → explained) was also written by Teach
+  Munni's own session, heard by the phone's own rubric, with typed sentences
+  standing in for a child's voice.
 - **Not yet tested on real children:** Gemini hearing children read, and the
-  Teach Munni judge on children's own words.
+  Teach Munni judge on children's own words. The first live check (14 Nov)
+  found Gemini too slow to hear a reading in time and copying a skipped word
+  back from the line; a fix is being checked. Until it passes, set
+  `SPEECH_PROVIDER=sarvam` for a demo, and type rather than speak to Munni.

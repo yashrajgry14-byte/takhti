@@ -168,6 +168,7 @@ function teachAfter(){
 function teachRemedy(){
   if(!TEACH || !TEACH.sum) return;
   const s = TEACH.s, gap = s.items.find(x => x.state !== 'covered');
+  teachMarkRetaught(s);
   const skill = gap && (gap.aim.skill || s.unit.skill);
   TEACH = null;
   if(skill && mindDomain(skill) === 'math'){ mindGoWay(skill, mindChoose(skill, mindMathWays(skill))); return; }
@@ -279,20 +280,42 @@ function teachAimLabel(id, code){
   return { en: id, hi: id };
 }
 function teachTeacherHTML(code){
-  const all = readClassShared(code), hi = S.lang === 'hi', rows = {};
+  const all = readClassShared(code), hi = S.lang === 'hi', rows = {}, loops = {};
   for(const [id, c] of Object.entries(all)){
     if(id.startsWith('_') || !c || !c.explained) continue;
     for(const [aim, v] of Object.entries(c.explained)){ const r = rows[aim] = rows[aim] || { c: 0, p: 0, g: 0 }; if(r[v] != null) r[v]++; }
+    for(const [aim, v] of Object.entries(c.loop || {})) (loops[aim] = loops[aim] || []).push({ v, name: c.childName || '?' });
   }
   const list = Object.entries(rows).sort((x, y) => (y[1].g + y[1].p) / (y[1].c + y[1].p + y[1].g) - (x[1].g + x[1].p) / (x[1].c + x[1].p + x[1].g)).slice(0, 12);
   if(!list.length) return '';
+  // the loop across the class: of the children who couldn't explain a point at first, how many
+  // could after Munni taught it again — the one number that says whether the teaching works
+  const tot = teachLoopCounts(Object.values(loops).flat().map(x => x.v));
+  const retaught = tot.after + tot.working;
+  const head = tot.gap ? `<div class="teachloop-sum">${hi
+      ? `जिन बातों को बच्चे पहली बार नहीं समझा पाए (${tot.gap}): ${tot.after} मुन्नी के फिर सिखाने के बाद समझा पाए${tot.alone ? `, ${tot.alone} अपने आप बाद में` : ''}${tot.waiting ? `, ${tot.waiting} फिर सीख चुके हैं, मुन्नी अभी पूछेगी` : ''}${tot.working ? `, ${tot.working} पर अभी काम चल रहा है` : ''}${tot.notyet ? `, ${tot.notyet} अभी फिर नहीं सिखाई गईं` : ''}।`
+      : `Points children couldn't explain the first time (${tot.gap}): ${tot.after} explained after Munni taught them again${retaught ? ` (${tot.after} of ${retaught} re-taught and asked again)` : ''}${tot.alone ? `, ${tot.alone} on their own later` : ''}${tot.waiting ? `, ${tot.waiting} re-taught and still to be asked` : ''}${tot.working ? `, ${tot.working} still working on it` : ''}${tot.notyet ? `, ${tot.notyet} not re-taught yet` : ''}.`}</div>` : '';
+  const loopLine = aim => {
+    const xs = loops[aim] || [], k = teachLoopCounts(xs.map(x => x.v));
+    if(!k.gap) return '';
+    const who = f => xs.filter(x => f(x.v)).map(x => attr(x.name)).join(', ');
+    const parts = [
+      k.after && (hi ? `फिर सिखाने के बाद समझाई: ${who(v => v.includes('r') && v.endsWith('c'))}` : `explained after re-teaching: ${who(v => v.includes('r') && v.endsWith('c'))}`),
+      k.alone && (hi ? `बाद में अपने आप: ${who(v => !v.includes('r') && v.length > 1 && v.endsWith('c'))}` : `later on their own: ${who(v => !v.includes('r') && v.length > 1 && v.endsWith('c'))}`),
+      k.waiting && (hi ? `फिर सीखा, अभी पूछना है: ${who(v => v.endsWith('r'))}` : `re-taught, to ask again: ${who(v => v.endsWith('r'))}`),
+      k.working && (hi ? `फिर सीखा, अभी काम चल रहा है: ${who(v => v.includes('r') && /[pg]$/.test(v))}` : `re-taught, still working: ${who(v => v.includes('r') && /[pg]$/.test(v))}`),
+      k.notyet && (hi ? `अभी फिर नहीं सिखाई: ${who(v => !v.includes('r') && /[pg]$/.test(v))}` : `not re-taught yet: ${who(v => !v.includes('r') && /[pg]$/.test(v))}`)
+    ].filter(Boolean);
+    return `<div class="teachloop">↻ ${parts.join(' · ')}</div>`;
+  };
   return `<div class="paper" style="margin-top:12px">
     <div class="kicker2">🐘 ${hi ? 'बच्चे क्या समझा पाए ("मुन्नी को सिखाओ")' : 'WHAT THE CLASS COULD EXPLAIN (TEACH MUNNI)'}</div>
-    <div style="font-size:12.5px;opacity:.75;margin-bottom:6px">${hi ? 'हर बात के लिए: कितने बच्चों ने अपने शब्दों में समझाई, कितनों ने थोड़ी, कितनों के लिए मुन्नी फिर पूछेगी।' : 'For each point: how many children explained it in their own words, partly, or still to come.'}</div>
-    ${list.map(([aim, r]) => { const tot = r.c + r.p + r.g; return `<div class="teachrow">
+    <div style="font-size:12.5px;opacity:.75;margin-bottom:6px">${hi ? 'हर बात के लिए: कितने बच्चों ने अपने शब्दों में समझाई, कितनों ने थोड़ी, कितनों के लिए मुन्नी फिर पूछेगी — और जो पहली बार नहीं समझा पाए, उनका आगे क्या हुआ।' : 'For each point: how many children explained it in their own words, partly, or still to come — and, for those who couldn\'t at first, what happened next.'}</div>
+    ${head}
+    ${list.map(([aim, r]) => { const n = r.c + r.p + r.g; return `<div class="teachrow">
       <div style="font-size:13px">${TMW(teachAimLabel(aim, code))}</div>
-      <div class="teachbar"><i class="c" style="width:${r.c / tot * 100}%"></i><i class="p" style="width:${r.p / tot * 100}%"></i><i class="g" style="width:${r.g / tot * 100}%"></i></div>
-      <div style="font-size:11.5px;opacity:.75">${hi ? `${r.c} ने समझाई · ${r.p} ने थोड़ी · ${r.g} बाक़ी` : `${r.c} explained · ${r.p} partly · ${r.g} still to come`}</div></div>`; }).join('')}
+      <div class="teachbar"><i class="c" style="width:${r.c / n * 100}%"></i><i class="p" style="width:${r.p / n * 100}%"></i><i class="g" style="width:${r.g / n * 100}%"></i></div>
+      <div style="font-size:11.5px;opacity:.75">${hi ? `${r.c} ने समझाई · ${r.p} ने थोड़ी · ${r.g} बाक़ी` : `${r.c} explained · ${r.p} partly · ${r.g} still to come`}</div>${loopLine(aim)}</div>`; }).join('')}
   </div>`;
 }
 

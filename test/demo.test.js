@@ -73,6 +73,12 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     check('on the book\'s two-digit taking-away lesson (sub2, no borrowing), Munni acts out Kabir\'s own borrowing habit — and Asha gets the usual mistake',
       kf.skill === 'borrow' && kf.m === 'smallbig' && kf.habit === true && af.skill === 'sub2' && af.m !== 'smallbig' && !af.habit, JSON.stringify([kf, af]));
     E(`switchProfile(S.profiles.findIndex(p => p.name === 'Kabir (demo)'))`); await wait(20);
+    const loops = JSON.parse(E(`JSON.stringify(S.profiles.filter(p => p.demo).map(p => p.teach && p.teach.loop))`));
+    check('both have taught Munni borrowing through Teach Munni\'s own session: Asha gap → re-taught → explained, Kabir re-taught and still to be asked',
+      loops[0]['borrow.ten'] === 'grc' && loops[0]['borrow.when'] === 'c' && loops[1]['borrow.when'] === 'gr' && loops[1]['borrow.ten'] === 'c', JSON.stringify(loops));
+    E(`S.ctx.tcode = 'DEMO01'; go('teacher'); S.ctx.tcode = 'DEMO01'; render()`); await wait(20);
+    check('…so the teacher\'s card shows the loop at once: explained after re-teaching (Asha), re-taught and to ask again (Kabir)',
+      /explained after Munni taught them again/.test(screen()) && /explained after re-teaching: Asha \(demo\)/.test(screen()) && /re-taught, to ask again: Kabir \(demo\)/.test(screen()), screen().slice(screen().indexOf('WHAT THE CLASS'), screen().indexOf('WHAT THE CLASS') + 700));
     check('the class sync would send neither demo child (sync is off for both)', E(`typeof syncBody === 'function' ? Object.keys((syncBody('DEMO01') || {}).children || {}).length : S.profiles.filter(p => p.demo && p.syncOn).length`) === 0, '');
     E(`S.ctx.tcode = 'DEMO01'; S.lang = 'hi'; go('teacher')`); await wait(20);
     check('the demo card is in Hindi too, and now offers to remove them', /डेमो कक्षा/.test(screen()) && !!btn(/डेमो बच्चे हटाएँ/), screen().slice(-400));
