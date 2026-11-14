@@ -230,7 +230,9 @@ const stand = http.createServer((req, res) => {
   check('…every line written, without an mp3 encoder as WAV (the manifest says x:"wav")',
     keys.length === 6 && keys.every(k => man[k].x === 'wav' && man[k].v === 'gemini' && fs.readFileSync(path.join(out1, 'hi', k + '.wav')).slice(0, 4).toString() === 'RIFF'), JSON.stringify(man).slice(0, 300));
   reset();
-  b = await run(path.join(root, 'tools/build-audio.mjs'), ['--lang', 'hi', '--limit', '6', '--out', out1], { ...GEM, TAKHTI_BATCH_POLL_MS: '20', TAKHTI_NO_FFMPEG: '1' });
+  // (the same blanks as the first run: this process has loaded voice/server.js, whose
+  // .env loader put the developer's own SPEECH_PROVIDER / SARVAM_API_KEY into process.env)
+  b = await run(path.join(root, 'tools/build-audio.mjs'), ['--lang', 'hi', '--limit', '6', '--out', out1], { ...GEM, SARVAM_API_KEY: '', ELEVEN_API_KEY: '', SPEECH_PROVIDER: '', TAKHTI_BATCH_POLL_MS: '20', TAKHTI_NO_FFMPEG: '1' });
   const sentAgain = (G.batch ? G.batch.batch.input_config.requests.requests : []).map(x => x.metadata.key);
   check('…a second run carries on: it sends only lines not yet rendered, and counts what is done', b.code === 0 && /already done : 6\b/.test(b.out) && sentAgain.length === 6 && sentAgain.every(k => !keys.includes(k)), b.out + JSON.stringify(sentAgain));
   let hasFfmpeg = true; try{ require('child_process').execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' }); }catch(e){ hasFfmpeg = false; }
