@@ -16,7 +16,7 @@ const LOAD_LIST = ['src/core/matcher.js','src/core/readability.js','src/content/
                 'src/content/games.js','src/content/facts.js','src/content/ages.js',
                 'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
                 'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-                'src/content/comprehension.js','src/content/geometry.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'];
+                'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'];
 for(const f of LOAD_LIST)
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
 // game-core.js calls log(0, ...) inside gameStart()/gameEnd() — a no-op

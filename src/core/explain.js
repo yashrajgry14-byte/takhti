@@ -241,7 +241,7 @@ function explainLessonBeat(les, i){
   if(!les || !les.beats || !les.beats[i] || les.beats[i].t !== 'ask' || les.beats[i].derived) return null;
   for(let k = i - 1; k >= 0; k--){
     const b = les.beats[k];
-    if(typeof GEO_TYPES !== 'undefined' && GEO_TYPES.includes(b.t)) return null;   // a shape: Ask Munni gives geoHint() instead
+    if(typeof picIs === 'function' && picIs(b.t)) return null;   // a picture (a shape, a clock…): Ask Munni gives picHint() instead
     if(b.t === 'add' && Number.isFinite(b.a)) return explainMath({ a: b.a, b: b.b, op: '+' });
     if(b.t === 'take' && Number.isFinite(b.a)) return explainMath({ a: b.a, b: b.b, op: '−' });
     if(b.t === 'count' && Number.isFinite(b.n)) return { kind: 'count', ans: b.n, steps: [xstep(XL.countEach, {})], final: null };

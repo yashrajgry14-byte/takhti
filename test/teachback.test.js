@@ -50,7 +50,7 @@ function box(){
   ctx.window = ctx; vm.createContext(ctx);
   const files = ['src/config.js', 'src/state.js', 'src/content/sentences.js', 'src/content/games.js', 'src/content/themes.js', 'src/content/facts.js', 'src/content/ages.js',
     'src/content/skills.js', 'src/content/curriculum-early.js', 'src/content/lessons.js', 'src/core/lesson-gen.js', 'src/content/literacy.js', 'src/content/comprehension.js',
-    'src/content/geometry.js', 'src/core/diagnose.js', 'src/core/class-share.js', 'src/core/syllabus.js', 'src/core/srs.js', 'src/core/log.js', 'src/core/store.js',
+    'src/content/geometry.js','src/content/clock.js', 'src/core/diagnose.js', 'src/core/class-share.js', 'src/core/syllabus.js', 'src/core/srs.js', 'src/core/log.js', 'src/core/store.js',
     'src/core/profiles.js', 'src/core/matcher.js', 'src/core/adaptive.js', 'src/core/daily-engine.js', 'src/core/mathgen.js', 'src/core/readability.js', 'src/core/explain.js', 'src/core/mind.js',
     'src/core/twin.js', 'src/core/lang-mistakes.js', 'src/content/teach.js', 'src/core/teachback.js'];
   let src = '';

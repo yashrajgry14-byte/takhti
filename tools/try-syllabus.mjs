@@ -143,6 +143,8 @@ function beatLine(b){
     case 'figure': return `figure: ${b.kind}${b.s ? ' s=' + b.s : ''}${b.w ? ' ' + b.w + '×' + b.h : ''}${b.sides ? ' sides ' + b.sides.join(',') : ''}${b.folds != null ? ' folds ' + b.folds : ''}${b.ask ? ' · asks ' + b.ask : ''}${say}`;
     case 'corner': return `corner: ${b.deg}°${b.ask ? ' · asks ' + b.ask : ''}${say}`;
     case 'figures': return `row: ${(b.items || []).map(i => i.kind + (i.deg ? ' ' + i.deg + '°' : '')).join(', ')}${b.find ? ' · find ' + b.find : ''}${say}`;
+    case 'clock': return `clock: ${b.h}:${String(b.m).padStart(2, '0')}${b.ask ? ' · asks ' + b.ask : ''}${say}`;
+    case 'clocks': return `clocks: ${b.from ? b.from.h + ':' + String(b.from.m).padStart(2, '0') : '?'} → ${b.to ? b.to.h + ':' + String(b.to.m).padStart(2, '0') : '?'}${b.ask ? ' · asks ' + b.ask : ''}${say}`;
     default: return `${b.t}${['a','b','n','hops'].filter(k => b[k] != null).map(k => ' ' + k + '=' + b[k]).join('')}${say}`;
   }
 }
