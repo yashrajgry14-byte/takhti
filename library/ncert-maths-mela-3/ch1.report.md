@@ -2,15 +2,15 @@
 
 2026-11-13T14:14:54.657Z · c3 (developing, numbers to 100) · Gemini model **gemini-3.5-flash-lite** · chapter "What's in a Name?"
 
-**1 passed first time · 1 fixed by the repair round · 2 not used** (of 4)  
+**1 passed first time · 2 fixed by the repair round · 1 not used** (of 4)  
 Draft took 151 s · repair took 7 s (gemini-3.5-flash-lite)
 
 Models for the draft: gemini-3.8-flash 503 (11 s) → gemini-3.8-flash hung (96 s) → gemini-3.7-flash hung (27 s) → gemini-3.5-flash-lite ok (16 s, 7941 in / 3052 out tokens)  
 Models for the repair: gemini-3.5-flash-lite ok (7 s, 4674 in / 2251 out tokens)  
 Tokens used: gemini-3.5-flash-lite 12615 in / 5303 out  
+_Checked again on 2026-11-14T09:06:45.371Z by today's checker (the same drafts, no new call to Gemini)._  
 
 ## What the checker caught first time
-- 2× beat N: the right answer "…" isn't in the passage
 - 1× the lesson needs its aims — N to N things the child will be able to do (aim N: Munni's que
 - 1× the lesson needs its aims — N to N things the child will be able to do (aim N: hint N (hi)
 - 1× the lesson needs its aims — N to N things the child will be able to do (aim N: hint N (en)
@@ -32,14 +32,13 @@ skill: count20 · source: Page 1
   _teacher note:_ Children may confuse the total count with double the number.  ·  बच्चे कुल गिनती को दोगुनी संख्या से भ्रमित हो सकते हैं।
 4. win — "Make one mark for each cow!  ·  हर गाय के लिए एक निशान बनाओ!"
 
-## 2. Animal Names and Letters  ·  जानवरों के नाम और अक्षर — NOT USED
+## 2. Animal Names and Letters  ·  जानवरों के नाम और अक्षर — REPAIRED
 skill: read3 · source: Page 3
 
 *First draft*
 
 **Why it failed:**
 - the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says "longest name"))
-- beat 2: the right answer "5" isn't in the passage
 
 **Aims dropped:**
 - aim 1: Munni's question (en) already gives the explanation (it says "longest name")
@@ -53,9 +52,6 @@ skill: read3 · source: Page 3
 4. win — "Count every letter in the name carefully.  ·  नाम में हर अक्षर को ध्यान से गिनो।"
 
 *After the repair round*
-
-**Why it failed:**
-- beat 2: the right answer "5" isn't in the passage
 
 **Hints replaced:**
 - aim 1: hint 2 (en) already gives the explanation (it says "total") — replaced with a general nudge
@@ -79,7 +75,6 @@ skill: read3 · source: Page 5
 
 **Why it failed:**
 - the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 2 (hi) already gives the explanation (it says "गिनो"))
-- beat 2: the right answer "9" isn't in the passage
 
 **Aims dropped:**
 - aim 1: hint 2 (hi) already gives the explanation (it says "गिनो")
@@ -96,7 +91,6 @@ skill: read3 · source: Page 5
 
 **Why it failed:**
 - the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: each idea needs 2–40 short words that show it)
-- beat 2: the right answer "9" isn't in the passage
 
 **Aims dropped:**
 - aim 1: each idea needs 2–40 short words that show it

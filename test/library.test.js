@@ -139,6 +139,8 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     E(`arrSkip(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance();`);
     [...win.document.querySelectorAll('.ob-av')][0].click(); [...win.document.querySelectorAll('.ob-cakebtn')][5].click(); win.document.querySelector('.ob-go').click();
     E(`S.game = S.game || 'cricket'; S.name = 'Asha'; S.age = 8; S.classCode = 'CLS003'; setOnline(false); go('map')`);
+    // the flow is tested on one chapter, whatever else the real library holds by now
+    E(`LIBRARY.books[0].chapters = LIBRARY.books[0].chapters.filter(c => c.id === 'ch5')`);
     fetches = 0;
     E(`S.ctx.tcode = 'CLS003'; S.ctx.sylCls = 'c2'; go('teacher')`);
     await wait(20);

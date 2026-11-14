@@ -196,7 +196,8 @@
                 "en": "See how we group tens and ones.",
                 "hi": "देखो हम दहाई और इकाई को कैसे समूह में रखते हैं।"
               },
-              "a": 54
+              "a": 54,
+              "ask": "tens"
             },
             {
               "t": "ask",
@@ -205,14 +206,14 @@
                 "hi": "इस समूह में कितनी दहाई दिखाई गई हैं?"
               },
               "opts": [
-                "5",
-                "8"
+                "8",
+                "5"
               ],
               "hiOpts": [
-                "5",
-                "8"
+                "8",
+                "5"
               ],
-              "correct": 0,
+              "correct": 1,
               "why": {
                 "en": "Children confuse the tens digit with the ones or hundreds digit.",
                 "hi": "बच्चे दहाई के अंक को इकाई या सैकड़े के अंक से मिला देते हैं।"
@@ -227,13 +228,11 @@
             }
           ],
           "subject": "math",
-          "id": "sch-11uo1cm"
+          "id": "sch-qdz0qv"
         },
         "ok": false,
         "errors": [
-          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says \"big blocks\"))",
-          "beat 3: marked 5 right, but the picture before it shows 54",
-          "beat 3: marked \"5\" correct but the beats compute 54"
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says \"big blocks\"))"
         ],
         "checks": [
           "sum"
@@ -358,7 +357,7 @@
           "source": "Page 118",
           "aims": [
             {
-              "id": "s1a7q9vu.0",
+              "id": "sylwu95.0",
               "kind": "explain",
               "short": {
                 "en": "Show hundreds and tens",
@@ -413,7 +412,8 @@
                 "en": "Here are groups for the number.",
                 "hi": "यहाँ संख्या के लिए समूह हैं।"
               },
-              "a": 54
+              "a": 54,
+              "ask": "tens"
             },
             {
               "t": "ask",
@@ -422,14 +422,14 @@
                 "hi": "इस समूह में कितनी दहाई दिखाई गई हैं?"
               },
               "opts": [
-                "5",
-                "8"
+                "8",
+                "5"
               ],
               "hiOpts": [
-                "5",
-                "8"
+                "8",
+                "5"
               ],
-              "correct": 0,
+              "correct": 1,
               "why": {
                 "en": "Children confuse the tens digit with the ones digit.",
                 "hi": "बच्चे दहाई के अंक को इकाई के अंक से मिला देते हैं।"
@@ -444,13 +444,10 @@
             }
           ],
           "subject": "math",
-          "id": "sch-1a7q9vu"
+          "id": "sch-ylwu95"
         },
-        "ok": false,
-        "errors": [
-          "beat 2: marked 5 right, but the picture before it shows 54",
-          "beat 2: marked \"5\" correct but the beats compute 54"
-        ],
+        "ok": true,
+        "errors": [],
         "checks": [
           "sum"
         ],
@@ -459,7 +456,7 @@
           "aim 1: hint 1 (en) already gives the explanation (it says \"blocks\") — replaced with a general nudge"
         ]
       },
-      "verdict": "not used"
+      "verdict": "repaired"
     },
     {
       "raw": {
@@ -1154,7 +1151,7 @@
           "source": "Page 125",
           "aims": [
             {
-              "id": "sphmfo.0",
+              "id": "s7ehzt9.0",
               "kind": "explain",
               "short": {
                 "en": "Make with slips",
@@ -1207,7 +1204,8 @@
                 "en": "See how many slips are here.",
                 "hi": "देखो यहाँ कितनी पर्चियाँ हैं।"
               },
-              "a": 30
+              "a": 30,
+              "ask": "tens"
             },
             {
               "t": "ask",
@@ -1216,14 +1214,14 @@
                 "hi": "30 के लिए दहाई की कितनी पर्चियाँ चाहिए?"
               },
               "opts": [
-                "3",
-                "4"
+                "4",
+                "3"
               ],
               "hiOpts": [
-                "3",
-                "4"
+                "4",
+                "3"
               ],
-              "correct": 0,
+              "correct": 1,
               "why": {
                 "en": "Children confuse the tens digit with another place value.",
                 "hi": "बच्चे दहाई के अंक को किसी अन्य स्थानीय मान से मिला देते हैं।"
@@ -1238,13 +1236,10 @@
             }
           ],
           "subject": "math",
-          "id": "sch-phmfo"
+          "id": "sch-7ehzt9"
         },
-        "ok": false,
-        "errors": [
-          "beat 2: marked 3 right, but the picture before it shows 30",
-          "beat 2: marked \"3\" correct but the beats compute 30"
-        ],
+        "ok": true,
+        "errors": [],
         "checks": [
           "sum"
         ],
@@ -1253,7 +1248,7 @@
           "aim 1: hint 2 (en) already gives the explanation (it says \"ones\") — replaced with a general nudge"
         ]
       },
-      "verdict": "not used"
+      "verdict": "repaired"
     },
     {
       "raw": {
@@ -1421,11 +1416,10 @@
         },
         "ok": false,
         "errors": [
-          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"card\"))",
-          "beat 2: the right answer \"1\" isn't in the passage"
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"card\"))"
         ],
         "checks": [
-          "teacher"
+          "text"
         ],
         "aimErrors": [
           "aim 1: Munni's question (en) already gives the explanation (it says \"card\")"
@@ -1634,19 +1628,18 @@
           "subject": "read",
           "id": "sch-cxqbtn"
         },
-        "ok": false,
-        "errors": [
-          "beat 2: the right answer \"1\" isn't in the passage"
-        ],
+        "ok": true,
+        "errors": [],
         "checks": [
-          "teacher"
+          "text"
         ],
         "aimErrors": [],
         "aimFixes": [
           "aim 1: hint 1 (en) already gives the explanation (it says \"clue\") — replaced with a general nudge"
         ]
       },
-      "verdict": "not used"
+      "verdict": "repaired"
     }
-  ]
+  ],
+  "rechecked": "2026-11-14T09:06:45.424Z"
 }

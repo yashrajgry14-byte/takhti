@@ -357,6 +357,26 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
       silentT.ok && silentT.lesson.beats.find(b => b.t === 'figure' && b.ask === 'sides').kind === 'triangle' && silentQ.opts[silentQ.correct] === '3', JSON.stringify([silentT.errors, silentQ]));
     bad('…and where both counts were said, nothing can be moved, so it is still sent back',
       { ...silent, beats:[{ t:'intro', say:{ en:'Triangles have three sides.', hi:'त्रिभुज की तीन भुजाएँ होती हैं।' } }].concat(silent.beats.slice(1)) }, /say the answer "4" \(in beat 1's words\)|say the answer "3"/);
+    // the first whole-book build: place-value questions about a group's bundles
+    const PV = { ...clone(READ), title:{ en:'Tens', hi:'दहाई' }, skill:'place2', beats:[
+      { t:'intro', say:{ en:'Let us look at bundles.', hi:'आओ बंडल देखें।' } },
+      { t:'group', a:30, say:{ en:'Here are some bundles.', hi:'ये कुछ बंडल हैं।' } },
+      { t:'group', a:54, say:{ en:'Look at these bundles and loose sticks.', hi:'इन बंडलों और खुली तीलियों को देखो।' } },
+      { t:'ask', q:{ en:'How many tens are shown here?', hi:'यहाँ कितनी दहाइयाँ हैं?' }, opts:['5','8'], hiOpts:['5','8'], correct:0 },
+      { t:'win', say:{ en:'Count the bundles.', hi:'बंडल गिनो।' } }] };
+    const pv = clean(PV), pvPic = pv.lesson && pv.lesson.beats.filter(b => b.t === 'group')[1];
+    check('"How many tens are shown?" over a group of 54 is a bundle question: the group asks about its tens, and 5 — the tens digit — is checked as right',
+      pv.ok && pvPic.ask === 'tens', JSON.stringify([pv.errors, pvPic]));
+    bad('…the wrong digit is still caught', { ...PV, beats: PV.beats.map(b => b.t === 'ask' ? { ...b, correct: 1 } : b) }, /shows 54|compute/);
+    bad('…and narration that counts the bundles aloud first is sent back', { ...PV, beats: PV.beats.map(b => b.a === 54 ? { ...b, say:{ en:'Here are five tens and four ones.', hi:'यहाँ पाँच दहाइयाँ और चार इकाइयाँ हैं।' } } : b) }, /say the answer "5"/);
+    const wn = clean({ ...clone(READ), beats: clone(READ).beats.map(b => b.t === 'passage' ? { ...b, p:{ en:'Moon means one. Eyes mean two.', hi:'चंद्रमा का अर्थ एक है। आँखें दो हैं।' } } : b.t === 'ask' ? { ...b, q:{ en:'What number does Moon stand for?', hi:'चंद्रमा किस संख्या के लिए है?' }, opts:['1','2'], hiOpts:['1','2'], correct:0 } : b) });
+    check('a reading answer "1" is in a passage that says "one" (a number is itself as a word)', wn.ok || !wn.errors.some(e => /isn't in the passage/.test(e)), JSON.stringify(wn.errors));
+    const lw = b => clean({ ...clone(READ), beats: clone(READ).beats.map(x => x.t === 'ask' ? { ...x, q:{ en:'How many letters are in the word tiger?', hi:'tiger शब्द में कितने अक्षर हैं?' }, opts:['5','4'], hiOpts:['5','4'], correct: b } : x) });
+    check('"How many letters are in the word tiger?" is checked by counting: 5 passes, 4 marked right is sent back', !lw(0).errors.some(e => /isn't in the passage/.test(e)) && lw(1).errors.some(e => /isn't in the passage/.test(e)), JSON.stringify([lw(0).errors, lw(1).errors]));
+    check('a maths topic taught only by a sentence to read is flagged for the teacher (EN/HI) — and a lesson with a picture is not',
+      E(`sylLessonWarnings({ skillId:'time2', beats:[{ t:'passage' }, { t:'ask', opts:['a','b'], correct:0 }, { t:'ask', opts:['a','b'], correct:1 }] }).some(w => /only by a sentence to read/.test(w.en) && /वाक्य/.test(w.hi))`)
+        && !E(`sylLessonWarnings({ skillId:'time2', beats:[{ t:'count', n:3 }, { t:'ask', opts:['a','b'], correct:0 }, { t:'ask', opts:['a','b'], correct:1 }] }).some(w => /sentence to read/.test(w.en))`)
+        && !E(`sylLessonWarnings({ skillId:'read3', beats:[{ t:'passage' }, { t:'ask', opts:['a','b'], correct:0 }, { t:'ask', opts:['a','b'], correct:1 }] }).some(w => /sentence to read/.test(w.en))`), '');
     // the sixth run (13 Nov, evening): every lesson taught a fact, then asked it — the repair changed only the size
     const SIX = { ...clone(READ), title:{ en:'Square and Rectangle', hi:'वर्ग और आयत' }, skill:'shapes2d', beats:[
       { t:'intro', say:{ en:'Squares and rectangles have sides and corners. Let us look at them.', hi:'वर्ग और आयत की भुजाएँ और कोने होते हैं। आओ इन्हें देखें।' } },

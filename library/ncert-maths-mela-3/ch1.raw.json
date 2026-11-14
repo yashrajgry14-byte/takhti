@@ -442,11 +442,10 @@
         },
         "ok": false,
         "errors": [
-          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"longest name\"))",
-          "beat 2: the right answer \"5\" isn't in the passage"
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"longest name\"))"
         ],
         "checks": [
-          "teacher"
+          "text"
         ],
         "aimErrors": [
           "aim 1: Munni's question (en) already gives the explanation (it says \"longest name\")"
@@ -654,19 +653,17 @@
           "subject": "read",
           "id": "sch-1024bkz"
         },
-        "ok": false,
-        "errors": [
-          "beat 2: the right answer \"5\" isn't in the passage"
-        ],
+        "ok": true,
+        "errors": [],
         "checks": [
-          "teacher"
+          "text"
         ],
         "aimErrors": [],
         "aimFixes": [
           "aim 1: hint 2 (en) already gives the explanation (it says \"total\") — replaced with a general nudge"
         ]
       },
-      "verdict": "not used"
+      "verdict": "repaired"
     },
     {
       "raw": {
@@ -833,11 +830,10 @@
         },
         "ok": false,
         "errors": [
-          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 2 (hi) already gives the explanation (it says \"गिनो\"))",
-          "beat 2: the right answer \"9\" isn't in the passage"
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 2 (hi) already gives the explanation (it says \"गिनो\"))"
         ],
         "checks": [
-          "teacher"
+          "text"
         ],
         "aimErrors": [
           "aim 1: hint 2 (hi) already gives the explanation (it says \"गिनो\")"
@@ -1007,11 +1003,10 @@
         },
         "ok": false,
         "errors": [
-          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: each idea needs 2–40 short words that show it)",
-          "beat 2: the right answer \"9\" isn't in the passage"
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: each idea needs 2–40 short words that show it)"
         ],
         "checks": [
-          "teacher"
+          "text"
         ],
         "aimErrors": [
           "aim 1: each idea needs 2–40 short words that show it"
@@ -1400,5 +1395,6 @@
       },
       "verdict": "repaired"
     }
-  ]
+  ],
+  "rechecked": "2026-11-14T09:06:45.371Z"
 }

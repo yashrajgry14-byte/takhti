@@ -94,7 +94,7 @@ const BEAT_SCHEMA = { anyOf: [
   beat('count',   { n: int, say: bi }, ['n']),
   ...['add', 'take', 'array', 'share', 'bar'].map(t => beat(t, { a: int, b: int, say: bi }, ['a', 'b'])),
   beat('line',    { a: int, b: int, hops: int, say: bi }, ['a', 'b', 'hops']),
-  beat('group',   { a: int, say: bi }, ['a']),
+  beat('group',   { a: int, ask: { type:'string', enum:['tens','ones'], description:'only when the question after it asks how many bundles of ten (tens) or how many are left over (ones); leave out to ask for the whole number' }, say: bi }, ['a']),
   beat('frac',    { b: int, say: bi }, ['b']),
   beat('passage', { p: bi, art:{ type:'string' } }, ['p', 'art']),
   beat('word',    { word:{ type:'string' }, art:{ type:'string' }, say: bi }, ['word', 'art']),
@@ -166,7 +166,7 @@ function beatsText(){
 - count {n}: n objects appear (n ≤ 20).
 - add {a,b}: a objects, then b more arrive (a,b ≤ 10).
 - take {a,b}: a objects, b go away (a ≤ 20, b ≤ a).
-- group {a}: the number a shown as bundles of ten and loose ones (a ≤ 99).
+- group {a, ask?}: the number a shown as bundles of ten and loose ones (a ≤ 99). To ask "how many tens?" give ask:"tens" (the answer is the tens digit); "how many left over?" → ask:"ones"; with ask, give the beat its own say that never says that count.
 - line {a,b,hops}: a number line from a, jumping b each hop (a ≤ 50, b ≤ 10, hops ≤ 10).
 - array {a,b}: a rows of b (a,b ≤ 10).
 - share {a,b}: a shared equally between b (b ≤ 6, a divisible by b, a ≤ 40).
@@ -203,7 +203,7 @@ function rulesText(rules){
   return `Hard rules — Takhti's checker rejects any lesson that breaks one:
 1. 4 to 8 beats; start with intro, passage or a teaching picture; end with win; at least one ask.
 2. TEACH, THEN ASK: before the first question there must be something that teaches — a teaching picture (a figure or corner without ask, or a count/add/take/… beat), or a passage. Every aim is taught in the beats AND checked by a question. Every aim is something a child can show on a screen (count, name, find, pick): never "fold a paper" or "cut", and never empty ("find a rectangle with 4 sides" — every rectangle has 4). If an aim says "find", one question is a numbered row to find it in.
-3. A maths ask comes right after the beat that shows it, and its right answer is a number equal to what that beat computes (count → n, add → a+b, take → a−b, group → a, array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Numbers as digits.
+3. A maths ask comes right after the beat that shows it, and its right answer is a number equal to what that beat computes (count → n, add → a+b, take → a−b, group → a (or its tens / ones digit when the group has ask), array → a×b, share → a÷b, bar → a−b, line → a+b×hops, frac → b). Numbers as digits.
 4. A reading ask comes after a passage/word/readline, and its right answer uses the passage's own words.
 5. A shape ask comes right after the figure/corner/figures it is about (with its ask or find set), and its right answer is what that drawing shows. For anything about shapes, sides, corners or perimeter, USE the drawings — never describe a shape only in words.
 6. Never say the answer in the lines just before a question — not as a digit, not as a word ("three", "तीन") — and never name it in the question itself ("Are all sides equal in this square?" gives it away — ask "Are all its sides equal?"; "How many sides does this triangle have?" too — ask "How many sides does this shape have?" so the child counts). Where you can, ask two questions: one to recognise, one to apply to something new.

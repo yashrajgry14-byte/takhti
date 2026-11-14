@@ -399,7 +399,7 @@ function validateLesson(les){
     if(x.t==='share') last = Math.floor(x.a / x.b);
     if(x.t==='bar')   last = x.a - x.b;
     if(x.t==='line')  last = x.a + x.b * (x.hops || 1);
-    if(x.t==='group') last = x.a;
+    if(x.t==='group') last = x.ask === 'tens' ? Math.floor(x.a / 10) : x.ask === 'ones' ? x.a % 10 : x.a;   // a bundle question (core/syllabus.js)
 
     if(x.t === 'ask'){
       asks++;

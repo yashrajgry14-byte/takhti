@@ -116,7 +116,7 @@ function lesArt(b, obj){
              <span>${obj}</span><b>10</b></div>`).join('')}
         <div class="grp loose">${dots(ones, 'in', 0.07, 20)}</div>
       </div>
-      <div class="tally">${tens} × 10 + ${ones} = ${b.a}</div>`;
+      ${b.ask ? '' : `<div class="tally">${tens} × 10 + ${ones} = ${b.a}</div>`}`;   // a bundle question: the child counts, the tally would tell
     }
 
     case 'line': {

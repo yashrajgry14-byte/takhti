@@ -46,7 +46,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     check('Kabir has a real habit in the twin — the smaller digit from the bigger, twice, on two different sums — and Asha has none',
       E(`(twinHabit('borrow', S.profiles.filter(p => p.demo)[1]) || {}).id`) === 'smallbig' && E(`twinHabit('borrow', S.profiles.filter(p => p.demo)[0])`) === null, E(`JSON.stringify(twinHabit('borrow', S.profiles.filter(p => p.demo)[1]))`));
     // the library's chapter → approved → two paths
-    E(`S.ctx.sylCls = 'c3'; render()`);
+    E(`LIBRARY.books[0].chapters = LIBRARY.books[0].chapters.filter(c => c.id === 'ch5'); S.ctx.sylCls = 'c3'; render()`);
     const sel = [...win.document.querySelectorAll('select')].find(s => [...s.options].some(o => o.value === 'ncert-maths-mela-3'));
     sel.value = 'ncert-maths-mela-3'; sel.dispatchEvent(new win.Event('change')); await wait(10);
     btn(/Open this week's lessons/).click(); await wait(10);

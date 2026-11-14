@@ -5,8 +5,9 @@
     "en": "The Surajkund Fair",
     "hi": "The Surajkund Fair"
   },
-  "built": "2026-11-13T15:58:07.136Z",
+  "built": "2026-11-14T09:06:45.490Z",
   "model": "gemini-3.5-flash-lite",
+  "rechecked": "2026-11-14T09:06:45.490Z",
   "lessons": [
     {
       "band": "developing",

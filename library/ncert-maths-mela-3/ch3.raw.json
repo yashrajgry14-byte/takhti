@@ -172,7 +172,7 @@
           "source": "Page 18",
           "aims": [
             {
-              "id": "s144nx1f.0",
+              "id": "s1ikes4w.0",
               "kind": "explain",
               "short": {
                 "en": "Count bundles for 100",
@@ -233,7 +233,8 @@
                 "en": "Here is one hundred shown with bundles.",
                 "hi": "यहाँ बंडलों से एक सौ दिखाया गया है।"
               },
-              "a": 100
+              "a": 100,
+              "ask": "tens"
             },
             {
               "t": "ask",
@@ -264,15 +265,13 @@
             }
           ],
           "subject": "math",
-          "id": "sch-144nx1f"
+          "id": "sch-1ikes4w"
         },
         "ok": false,
         "errors": [
           "beat 1: a=100 is too many to draw (at most 99)",
           "beat 2: a=100 is too many to draw (at most 99)",
-          "beat 3: marked 10 right, but the picture before it shows 100",
-          "beat 3: the lines just before this question say the answer \"10\" (in beat 1's words) — let the child work it out",
-          "beat 3: marked \"10\" correct but the beats compute 100"
+          "beat 3: the lines just before this question say the answer \"10\" (in beat 1's words) — let the child work it out"
         ],
         "checks": [
           "sum"
@@ -403,7 +402,7 @@
           "source": "Page 18",
           "aims": [
             {
-              "id": "s1usy6qh.0",
+              "id": "s1u2b4du.0",
               "kind": "explain",
               "short": {
                 "en": "Count bundles for 50",
@@ -466,7 +465,8 @@
                 "en": "Look at this collection of bundles.",
                 "hi": "बंडलों के इस समूह को देखो।"
               },
-              "a": 50
+              "a": 50,
+              "ask": "tens"
             },
             {
               "t": "ask",
@@ -497,20 +497,17 @@
             }
           ],
           "subject": "math",
-          "id": "sch-1usy6qh"
+          "id": "sch-1u2b4du"
         },
-        "ok": false,
-        "errors": [
-          "beat 3: marked 5 right, but the picture before it shows 50",
-          "beat 3: marked \"5\" correct but the beats compute 50"
-        ],
+        "ok": true,
+        "errors": [],
         "checks": [
           "sum"
         ],
         "aimErrors": [],
         "aimFixes": []
       },
-      "verdict": "not used"
+      "verdict": "repaired"
     },
     {
       "raw": {
@@ -1726,5 +1723,6 @@
       },
       "verdict": "not used"
     }
-  ]
+  ],
+  "rechecked": "2026-11-14T09:06:45.401Z"
 }

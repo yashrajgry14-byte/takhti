@@ -38,7 +38,7 @@ const SYL_URL = (typeof window !== 'undefined' && window.TAKHTI_SYLLABUS) || (TA
 
 /* What the lesson player can draw, and the fields each beat may carry. */
 const SYL_FIELDS = {
-  intro:[], count:['n'], add:['a','b'], take:['a','b'], group:['a'], line:['a','b','hops'],
+  intro:[], count:['n'], add:['a','b'], take:['a','b'], group:['a','ask'], line:['a','b','hops'],
   array:['a','b'], share:['a','b'], bar:['a','b'], frac:['b'],
   passage:['p','art'], word:['w','art'], readline:['text'],
   ask:['q','opts','hiOpts','correct','why'], win:[]
@@ -75,6 +75,8 @@ function sylSkills(cls){
 
 /* What a maths picture computes — the number its question must have as the answer. */
 function sylExpect(b){
+  // a group's question may be about its bundles: how many tens, how many left over
+  if(b.t === 'group' && b.ask) return b.ask === 'tens' ? Math.floor(b.a / 10) : b.ask === 'ones' ? b.a % 10 : null;
   const v = { count: b.n, add: b.a + b.b, take: b.a - b.b, group: b.a, line: b.a + b.b * (b.hops || 1),
               array: b.a * b.b, share: b.b ? b.a / b.b : null, bar: b.a - b.b, frac: b.b }[b.t];
   return Number.isInteger(v) ? v : null;
@@ -88,6 +90,9 @@ function sylWords(s){
     .filter(w => /\d/.test(w) || w.length >= 3 || (/[ऀ-ॿ]/.test(w) && w.length >= 2));
 }
 function sylGrounded(answer, text){
+  // "1" is in "Moon means one" (and "एक"): a number is itself as a word too
+  const a = String(answer == null ? '' : answer).trim();
+  if(/^\d+$/.test(a) && (sylSaysIt(text, a) || (Number(a) === 1 && /\bone\b|एक/i.test(String(text))))) return true;
   const want = sylWords(answer), have = sylWords(text);
   if(!want.length) return false;
   const hit = w => have.some(h => h === w || (w.length >= 4 && h.length >= 4 && h.slice(0, 4) === w.slice(0, 4)));
@@ -190,6 +195,17 @@ function sylTidy(beats){
       const items = x.items.slice(0, at).concat([it], x.items.slice(at));
       if(geoExpect({ t:'figures', items, find: x.find }) === right){ x.items = items; return; }
     }
+  });
+  // "How many tens / bundles of ten?" over a group → it asks about its
+  // tens; "left over / loose / ones" → its ones. Only when the question's
+  // right answer is that digit and not the whole number — else left alone.
+  out.forEach((x, i) => {
+    const q = out[i + 1];
+    if(!x || x.t !== 'group' || x.ask || !Number.isInteger(x.a) || !q || q.t !== 'ask' || !Array.isArray(q.opts)) return;
+    const right = Number(q.opts[q.correct]), text = `${(q.q && q.q.en) || ''} ${(q.q && q.q.hi) || ''}`.toLowerCase();
+    if(right === x.a) return;
+    if(right === Math.floor(x.a / 10) && /\btens?\b|bundles?|दहाई|दहाइयाँ|बंडल|गट्ठ/.test(text)) x.ask = 'tens';
+    else if(right === x.a % 10 && /\bones\b|loose|left over|इकाई|खुल|बच/.test(text)) x.ask = 'ones';
   });
   sylAskAnother(out);
   return out;
@@ -373,6 +389,15 @@ function sylLessonWarnings(les){
         hi:'"क्या सारी भुजाएँ बराबर हैं?" का हर उत्तर हाँ है — हमेशा हाँ कहने वाला बच्चा पास हो जाएगा। एक आयत (नहीं) से जाँच होगी।' }
     : { en:'Every "are all its sides equal?" answer is No — a child who always says No passes. A square (Yes) would test it.',
         hi:'"क्या सारी भुजाएँ बराबर हैं?" का हर उत्तर नहीं है — हमेशा नहीं कहने वाला बच्चा पास हो जाएगा। एक वर्ग (हाँ) से जाँच होगी।' });
+  // a maths topic taught only by a sentence to read: the question checks that
+  // the child read the sentence, not that they can do the maths (the first
+  // whole-book build: a clock chapter's "The short hand is the hour hand.
+  // Which hand is the hour hand?"). Takhti can't draw clocks, coins or scales yet.
+  const sk = typeof SKILLS !== 'undefined' && les && SKILLS.find(k => k.id === les.skillId);
+  const mathsTopic = sk && !['lit', 'eng', 'hin'].includes(sk.strand || '');
+  if(mathsTopic && asks && !beats.some(b => b && (SYL_MATH.includes(b.t) || ['figure', 'corner', 'figures'].includes(b.t))))
+    out.push({ en:'This maths topic is taught only by a sentence to read — the questions check that the child read it, not that they can do it. Takhti has no picture for this topic yet.',
+               hi:'गणित का यह विषय केवल पढ़ने के वाक्य से सिखाया गया है — प्रश्न यह जाँचते हैं कि बच्चे ने वाक्य पढ़ा, यह नहीं कि वह कर सकता है। तख़्ती के पास इस विषय का चित्र अभी नहीं है।' });
   // every question with the same right answer (the ninth run: 4 sides, then 4 corners)
   const rights = beats.filter(b => b && b.t === 'ask' && Array.isArray(b.opts)).map(b => String(b.opts[b.correct]).trim().toLowerCase());
   if(rights.length >= 2 && new Set(rights).size === 1) out.push({ en:`Every question's right answer is "${rights[0]}" — a child who learnt that one answer passes them all.`,
@@ -485,6 +510,9 @@ function sylClean(raw, opts){
       if(['a','b','n','hops','correct'].includes(k)){
         if(!Number.isInteger(v) || v < 0){ errs.push(`beat ${i}: ${k} must be a whole number`); continue; }
         out[k] = v;
+      } else if(k === 'ask'){
+        if(v === 'tens' || v === 'ones') out.ask = v;
+        else errs.push(`beat ${i}: a group's ask is "tens" or "ones" (leave it out to ask for the whole number)`);
       } else if(k === 'why'){
         const s = bi(v, `beat ${i}'s note for the teacher`, 220); if(s) out.why = s;   // never shown to a child
       } else if(k === 'p' || k === 'q'){
@@ -508,6 +536,9 @@ function sylClean(raw, opts){
       if(out[k] == null) errs.push(`beat ${i}: "${t}" needs ${k}`);
       else if(out[k] > max) errs.push(`beat ${i}: ${k}=${out[k]} is too many to draw (at most ${max})`);
     }
+    // a bundle question's picture mustn't be narrated by the player's own
+    // line (which counts the bundles aloud) — it needs words of its own
+    if(t === 'group' && out.ask && !out.say) errs.push(`beat ${i}: a group that asks about its tens or ones needs its own "say" (what to look at, not the count)`);
     if(t === 'take' && out.b > out.a) errs.push(`beat ${i}: can't take away more than there are`);
     if(t === 'bar' && out.b > out.a) errs.push(`beat ${i}: the known part is bigger than the whole`);
     if(t === 'share' && (!out.b || out.a % out.b)) errs.push(`beat ${i}: ${out.a} doesn't share equally between ${out.b}`);
@@ -538,7 +569,11 @@ function sylClean(raw, opts){
           errs.push(`beat ${i}: the question names the shape it asks about — let the child work it out`);
       } else if(lastShown && SYL_READ.includes(lastShown)){
         out.derived = true;
-        const grounded = right != null && (sylGrounded(right, readText) || sylGrounded(hiOpts[out.correct], readText));
+        // "How many letters are in the word tiger?" is checked by counting them
+        // (Maths Mela's first chapter counts the letters in names)
+        const lw = /how many letters\b.*\b(?:word|name)\s+["'“‘]?([A-Za-z]{2,15})\b/i.exec((out.q && out.q.en) || '');
+        const counted = lw && /^\d+$/.test(String(right)) && Number(right) === lw[1].length;
+        const grounded = right != null && (counted || sylGrounded(right, readText) || sylGrounded(hiOpts[out.correct], readText));
         const yesNo = opts.every(o => /^(yes|no)$/i.test(o));
         if(!grounded && !yesNo) errs.push(`beat ${i}: the right answer "${right}" isn't in the passage`);
         checks.push(grounded ? 'text' : 'teacher');

@@ -2,31 +2,29 @@
 
 2026-11-13T15:50:49.109Z · c3 (developing, numbers to 100) · Gemini model **gemini-3.5-flash-lite** · chapter "House of Hundreds - II"
 
-**0 passed first time · 0 fixed by the repair round · 4 not used** (of 4)  
+**0 passed first time · 3 fixed by the repair round · 1 not used** (of 4)  
 Draft took 99 s · repair took 5 s (gemini-3.5-flash-lite)
 
 Models for the draft: gemini-3.5-flash-lite ok (12 s, 9561 in / 3240 out tokens)  
 Models for the repair: gemini-3.5-flash-lite ok (5 s, 5477 in / 1733 out tokens)  
 Tokens used: gemini-3.5-flash-lite 15038 in / 4973 out  
+_Checked again on 2026-11-14T09:06:45.424Z by today's checker (the same drafts, no new call to Gemini)._  
 
 ## What the checker caught first time
 - 3× the lesson needs its aims — N to N things the child will be able to do (aim N: hint N (en)
-- 3× beat N: marked N right, but the picture before it shows N
-- 3× beat N: marked "…" correct but the beats compute N
+- 2× beat N: marked N right, but the picture before it shows N
+- 2× beat N: marked "…" correct but the beats compute N
 - 1× beat N: a=N is too many to draw (at most N)
 - 1× beat N: a=N exceeds the band ceiling of N
 - 1× the lesson needs its aims — N to N things the child will be able to do (aim N: Munni's que
-- 1× beat N: the right answer "…" isn't in the passage
 
-## 1. Rice Sacks Tiles  ·  चावल की बोरियाँ — NOT USED
+## 1. Rice Sacks Tiles  ·  चावल की बोरियाँ — REPAIRED
 skill: place2 · source: Page 118
 
 *First draft*
 
 **Why it failed:**
 - the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says "big blocks"))
-- beat 3: marked 5 right, but the picture before it shows 54
-- beat 3: marked "5" correct but the beats compute 54
 
 **Aims dropped:**
 - aim 1: hint 1 (en) already gives the explanation (it says "big blocks")
@@ -42,10 +40,6 @@ skill: place2 · source: Page 118
 
 *After the repair round*
 
-**Why it failed:**
-- beat 2: marked 5 right, but the picture before it shows 54
-- beat 2: marked "5" correct but the beats compute 54
-
 **Hints replaced:**
 - aim 1: hint 1 (en) already gives the explanation (it says "blocks") — replaced with a general nudge
 
@@ -57,7 +51,7 @@ skill: place2 · source: Page 118
 1. intro — "Let us show numbers with tiles.  ·  आओ टाइलों से संख्याएँ दिखाएँ।"
 2. group a=54 — "Here are groups for the number.  ·  यहाँ संख्या के लिए समूह हैं।"
 3. **Q:** How many tens are shown in this group?  ·  इस समूह में कितनी दहाई दिखाई गई हैं?  
-  options: **5 ✓** / 8  ·  5 / 8  
+  options: 8 / **5 ✓**  ·  8 / 5  
   _teacher note:_ Children confuse the tens digit with the ones digit.  ·  बच्चे दहाई के अंक को इकाई के अंक से मिला देते हैं।
 4. win — "Use tiles to show numbers clearly.  ·  संख्याएँ स्पष्ट रूप से दिखाने के लिए टाइलों का उपयोग करो।"
 
@@ -105,7 +99,7 @@ skill: skip · source: Page 119
   _teacher note:_ Children miscalculate the total jump size by miscounting intervals.  ·  बच्चे अंतरालों की गलत गिनती करके कुल छलांग का माप गलत निकाल देते हैं।
 4. win — "Count every step on the number line.  ·  संख्या रेखा पर हर कदम गिनो।"
 
-## 3. Making Numbers  ·  संख्याएँ बनाना — NOT USED
+## 3. Making Numbers  ·  संख्याएँ बनाना — REPAIRED
 skill: place3 · source: Page 125
 
 *First draft*
@@ -128,10 +122,6 @@ skill: place3 · source: Page 125
 
 *After the repair round*
 
-**Why it failed:**
-- beat 2: marked 3 right, but the picture before it shows 30
-- beat 2: marked "3" correct but the beats compute 30
-
 **Hints replaced:**
 - aim 1: hint 2 (en) already gives the explanation (it says "ones") — replaced with a general nudge
 
@@ -143,18 +133,17 @@ skill: place3 · source: Page 125
 1. intro — "Let us make numbers using paper slips.  ·  आओ कागज की पर्चियों से संख्याएँ बनाएँ।"
 2. group a=30 — "See how many slips are here.  ·  देखो यहाँ कितनी पर्चियाँ हैं।"
 3. **Q:** How many tens slips are needed for 30?  ·  30 के लिए दहाई की कितनी पर्चियाँ चाहिए?  
-  options: **3 ✓** / 4  ·  3 / 4  
+  options: 4 / **3 ✓**  ·  4 / 3  
   _teacher note:_ Children confuse the tens digit with another place value.  ·  बच्चे दहाई के अंक को किसी अन्य स्थानीय मान से मिला देते हैं।
 4. win — "Combine slips to build any number.  ·  कोई भी संख्या बनाने के लिए पर्चियाँ जोड़ो।"
 
-## 4. Word Numerals  ·  शब्द संख्याएँ — NOT USED
+## 4. Word Numerals  ·  शब्द संख्याएँ — REPAIRED
 skill: e3-compre · source: Page 127
 
 *First draft*
 
 **Why it failed:**
 - the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says "card"))
-- beat 2: the right answer "1" isn't in the passage
 
 **Aims dropped:**
 - aim 1: Munni's question (en) already gives the explanation (it says "card")
@@ -168,9 +157,6 @@ skill: e3-compre · source: Page 127
 4. win — "Words can tell us numbers too.  ·  शब्द भी हमें संख्याएँ बता सकते हैं।"
 
 *After the repair round*
-
-**Why it failed:**
-- beat 2: the right answer "1" isn't in the passage
 
 **Hints replaced:**
 - aim 1: hint 1 (en) already gives the explanation (it says "clue") — replaced with a general nudge

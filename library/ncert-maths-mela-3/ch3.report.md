@@ -2,23 +2,24 @@
 
 2026-11-13T14:17:49.389Z · c3 (developing, numbers to 100) · Gemini model **gemini-3.5-flash-lite** · chapter "Double Century"
 
-**0 passed first time · 0 fixed by the repair round · 4 not used** (of 4)  
+**0 passed first time · 1 fixed by the repair round · 3 not used** (of 4)  
 Draft took 102 s · repair took 7 s (gemini-3.5-flash-lite)
 
 Models for the draft: gemini-3.5-flash-lite ok (102 s, 10641 in / 3788 out tokens)  
 Models for the repair: gemini-3.5-flash-lite ok (7 s, 6019 in / 2142 out tokens)  
 Tokens used: gemini-3.5-flash-lite 16660 in / 5930 out  
+_Checked again on 2026-11-14T09:06:45.401Z by today's checker (the same drafts, no new call to Gemini)._  
 
 ## What the checker caught first time
 - 6× beat N: a=N is too many to draw (at most N)
 - 3× beat N: a=N exceeds the band ceiling of N
-- 2× beat N: marked N right, but the picture before it shows N
-- 2× beat N: marked "…" correct but the beats compute N
 - 2× the lesson needs its aims — N to N things the child will be able to do (aim N: hint N (en)
 - 1× beat N: the lines just before this question say the answer "…" (in beat N's words) — let t
 - 1× the lesson needs its aims — N to N things the child will be able to do (aim N: Munni's que
+- 1× beat N: marked N right, but the picture before it shows N
+- 1× beat N: marked "…" correct but the beats compute N
 
-## 1. Hundreds and Bundles  ·  सैकड़ा और बंडल — NOT USED
+## 1. Hundreds and Bundles  ·  सैकड़ा और बंडल — REPAIRED
 skill: place3 · source: Page 18
 
 *First draft*
@@ -26,9 +27,7 @@ skill: place3 · source: Page 18
 **Why it failed:**
 - beat 1: a=100 is too many to draw (at most 99)
 - beat 2: a=100 is too many to draw (at most 99)
-- beat 3: marked 10 right, but the picture before it shows 100
 - beat 3: the lines just before this question say the answer "10" (in beat 1's words) — let the child work it out
-- beat 3: marked "10" correct but the beats compute 100
 
 **Aims kept (what the teacher approves):**
 - The child can explain that 10 bundles of 10 make 100.  ·  बच्चा बता सकता है कि 10 के 10 बंडल मिलकर 100 बनाते हैं।  
@@ -44,10 +43,6 @@ skill: place3 · source: Page 18
 5. win — "10 bundles of 10 make 100.  ·  10 के दस बंडल 100 बनाते हैं।"
 
 *After the repair round*
-
-**Why it failed:**
-- beat 3: marked 5 right, but the picture before it shows 50
-- beat 3: marked "5" correct but the beats compute 50
 
 **Aims kept (what the teacher approves):**
 - The child can explain that 5 bundles of 10 make 50.  ·  बच्चा बता सकता है कि 10 के 5 बंडल मिलकर 50 बनाते हैं।  

@@ -5,8 +5,9 @@
     "en": "What's in a Name?",
     "hi": "What's in a Name?"
   },
-  "built": "2026-11-13T14:14:54.657Z",
+  "built": "2026-11-14T09:06:45.371Z",
   "model": "gemini-3.5-flash-lite",
+  "rechecked": "2026-11-14T09:06:45.371Z",
   "lessons": [
     {
       "band": "developing",
@@ -114,6 +115,109 @@
     {
       "band": "developing",
       "school": true,
+      "ic": "🐅",
+      "title": {
+        "en": "Animal Names and Letters",
+        "hi": "जानवरों के नाम और अक्षर"
+      },
+      "sub": {
+        "en": "Counting letters in names",
+        "hi": "नामों में अक्षर गिनना"
+      },
+      "skillId": "read3",
+      "source": "Page 3",
+      "aims": [
+        {
+          "id": "s1024bkz.0",
+          "kind": "explain",
+          "short": {
+            "en": "Count letters",
+            "hi": "अक्षर गिनो"
+          },
+          "point": {
+            "en": "The child can count letters in animal names.",
+            "hi": "बच्चा जानवरों के नामों में अक्षर गिन सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do we find the letter count among animals?",
+            "hi": "मैं भूल गई! जानवरों के नाम में अक्षर कैसे ढूंढते हैं?"
+          },
+          "hints": [
+            {
+              "en": "What do we count in each animal's name?",
+              "hi": "हम हर जानवर के नाम में क्या गिनते हैं?"
+            },
+            {
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "count the number of letters in the word",
+              "hi": "शब्द में अक्षरों की संख्या गिनो",
+              "words": [
+                "akshar",
+                "gin",
+                "total",
+                "कुल"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us count the letters in animal names.",
+            "hi": "आओ जानवरों के नामों में अक्षर गिनें।"
+          }
+        },
+        {
+          "t": "word",
+          "say": {
+            "en": "Read the animal name and count its letters.",
+            "hi": "जानवर का नाम पढ़ो और उसके अक्षर गिनो।"
+          },
+          "w": "tiger",
+          "art": "🐅"
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "How many letters are in the word tiger?",
+            "hi": "tiger शब्द में कितने अक्षर हैं?"
+          },
+          "opts": [
+            "5",
+            "4"
+          ],
+          "hiOpts": [
+            "5",
+            "4"
+          ],
+          "correct": 0,
+          "why": {
+            "en": "Children might miscount letters due to vowel grouping.",
+            "hi": "बच्चे स्वर समूहीकरण के कारण गलत गिनती कर सकते हैं।"
+          },
+          "derived": true
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Count every letter in the name carefully.",
+            "hi": "नाम में हर अक्षर को ध्यान से गिनो।"
+          }
+        }
+      ],
+      "subject": "read",
+      "id": "sch-1024bkz"
+    },
+    {
+      "band": "developing",
+      "school": true,
       "ic": "💡",
       "title": {
         "en": "Grouping Objects",
@@ -216,21 +320,11 @@
   "notUsed": [
     {
       "title": {
-        "en": "Animal Names and Letters",
-        "hi": "जानवरों के नाम और अक्षर"
-      },
-      "errors": [
-        "beat 2: the right answer \"5\" isn't in the passage"
-      ]
-    },
-    {
-      "title": {
         "en": "Number Names and Letter Count",
         "hi": "संख्या नाम और अक्षर गिनती"
       },
       "errors": [
-        "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: each idea needs 2–40 short words that show it)",
-        "beat 2: the right answer \"9\" isn't in the passage"
+        "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: each idea needs 2–40 short words that show it)"
       ]
     }
   ]

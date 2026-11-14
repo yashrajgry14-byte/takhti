@@ -5,20 +5,125 @@
     "en": "Double Century",
     "hi": "Double Century"
   },
-  "built": "2026-11-13T14:17:49.389Z",
+  "built": "2026-11-14T09:06:45.401Z",
   "model": "gemini-3.5-flash-lite",
-  "lessons": [],
-  "notUsed": [
+  "rechecked": "2026-11-14T09:06:45.401Z",
+  "lessons": [
     {
+      "band": "developing",
+      "school": true,
+      "ic": "🪵",
       "title": {
         "en": "Hundreds and Bundles",
         "hi": "सैकड़ा और बंडल"
       },
-      "errors": [
-        "beat 3: marked 5 right, but the picture before it shows 50",
-        "beat 3: marked \"5\" correct but the beats compute 50"
-      ]
-    },
+      "sub": {
+        "en": "Making numbers with sticks",
+        "hi": "तीलियों से संख्याएँ बनाना"
+      },
+      "skillId": "place3",
+      "source": "Page 18",
+      "aims": [
+        {
+          "id": "s1u2b4du.0",
+          "kind": "explain",
+          "short": {
+            "en": "Count bundles for 50",
+            "hi": "50 के लिए बंडल गिनो"
+          },
+          "point": {
+            "en": "The child can explain that 5 bundles of 10 make 50.",
+            "hi": "बच्चा बता सकता है कि 10 के 5 बंडल मिलकर 50 बनाते हैं।"
+          },
+          "forget": {
+            "en": "I forgot! How many bundles of 10 sticks make 50?",
+            "hi": "मैं भूल गई! 10 तीलियों के कितने बंडल मिलकर 50 बनाते हैं?"
+          },
+          "hints": [
+            {
+              "en": "Count how many tens are in fifty.",
+              "hi": "गिनो कि पचास में कितने दस होते हैं।"
+            },
+            {
+              "en": "Look at the matchstick bundles on the page.",
+              "hi": "पन्ने पर तीलियों के बंडल देखो।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "5 bundles of 10 sticks each make 50 sticks",
+              "hi": "10-10 तीलियों के 5 बंडल 50 तीलियाँ बनाते हैं",
+              "words": [
+                "5 bundles",
+                "five bundles",
+                "5 बंडल",
+                "पाँच बंडल",
+                "50 sticks",
+                "50 तीलियाँ",
+                "panch bundle"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us learn about groups using bundles.",
+            "hi": "आओ बंडलों की मदद से समूहों के बारे में सीखें।"
+          }
+        },
+        {
+          "t": "group",
+          "say": {
+            "en": "Here is thirty shown with bundles.",
+            "hi": "यहाँ बंडलों से तीस दिखाया गया है।"
+          },
+          "a": 30
+        },
+        {
+          "t": "group",
+          "say": {
+            "en": "Look at this collection of bundles.",
+            "hi": "बंडलों के इस समूह को देखो।"
+          },
+          "a": 50,
+          "ask": "tens"
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "How many bundles of 10 sticks make this total?",
+            "hi": "10 तीलियों के कितने बंडल इस कुल संख्या को बनाते हैं?"
+          },
+          "opts": [
+            "5",
+            "3"
+          ],
+          "hiOpts": [
+            "5",
+            "3"
+          ],
+          "correct": 0,
+          "why": {
+            "en": "Children may confuse the number with three bundles or guess randomly.",
+            "hi": "बच्चे तीन बंडलों या किसी अन्य संख्या से भ्रमित हो सकते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Count every ten to find the total.",
+            "hi": "कुल संख्या जानने के लिए हर दस को गिनो।"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-1u2b4du"
+    }
+  ],
+  "notUsed": [
     {
       "title": {
         "en": "Numbers Beyond 100",

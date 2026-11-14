@@ -25,7 +25,7 @@ optional live step (4b).
 | # | Do | Say |
 |---|----|-----|
 | 1 | Teacher view → the syllabus card. Pick **Class 3**. Under *From the library*, choose **Maths Mela · NCERT**. | "The school tells us its book once. Every chapter was drafted ahead by Gemini and checked by Takhti — the teacher never waits, and needs no internet." |
-| 2 | Show the term list; tap ↑ ↓ on a chapter. | "This is the school's term. The teacher moves chapters to match their own calendar." |
+| 2 | Show the term list; tap ↑ ↓ on a chapter. Then tap **This week** on **5. Fun with Shapes**. | "This is the school's term. The teacher moves chapters to match their own calendar." |
 | 3 | Tap **Open this week's lessons**. Open one lesson's *Read the whole lesson*. | "The teacher sees the aims first, in plain points. Every answer was checked against the drawing — Gemini drafts, but it never decides what a child sees." |
 | 4 | Tap **Approve all the checked lessons' aims**. | "One tap. That's the teacher's whole job for the week." |
 | 4b | *(optional, needs internet and the voice server)* Upload a chapter PDF under *Or draft from a chapter now*. | "A chapter that isn't in the library yet is drafted live, through the same checks." |
@@ -42,7 +42,7 @@ optional live step (4b).
 - **A demo child lands on a greeting screen:** tap through it once; it plays
   once a day per child.
 - **Both children show the same path:** you approved a lesson for a topic the
-  demo children have no record on. Use the shapes chapter (chapter 5).
+  demo children have no record on. Use the shapes chapter: tap **This week** on chapter 5, or chapter 12 (*Give and Take*) for sums.
 - **The library shows no book:** the class must be **Class 3**.
 - **Teach Munni's microphone does nothing:** type the explanation. Voice
   needs the voice server (`npm run voice`), a signal and the reading terms.

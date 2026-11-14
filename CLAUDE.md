@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v59` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v60` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -377,6 +377,13 @@ child sees.
   "Gemini's fix changed nothing". Drafts only; the key
   never leaves the server; `TAKHTI_SYLLABUS_KEY` (optional school password)
   and a per-address hourly limit.
+- **A group can ask about its bundles** (`group {a, ask:'tens'|'ones'}`):
+  "how many tens?" is checked as the tens digit, "how many left over?" as
+  the ones; `sylTidy()` sets it from the question's words when the marked
+  answer is that digit; such a group needs its own `say`, and the player
+  hides the tally that would tell. A reading answer "1" counts as in a
+  passage that says "one"/"एक"; "how many letters are in the word tiger?"
+  is checked by counting.
 - **The checks, on the phone** (`sylClean()`, then `validateLesson()`):
   only the player's beat types and fields; plain text (no markup, links,
   braces); one emoji; both languages, the Hindi in Devanagari; pictures
@@ -526,9 +533,12 @@ network and no waiting in the week.
   children the same way (the class mirror, then the class sync). The plan
   is the teacher phone's own setting (`S.libPlan`, a device field like the
   sync keys) and is never sent. No network is used for any of it.
-- **In the library now**: NCERT *Maths Mela* Class 3, chapter 5 (shapes) —
-  the seventh live run's four lessons, imported. Other chapters go in
-  `book.json` with their PDFs.
+- **In the library now**: NCERT *Maths Mela* Class 3 — 32 lessons across 10
+  of its 14 chapters (the first whole-book build, 13 Nov, all drafted by
+  flash-lite; chapters 4, 6, 7, 8 not built — Gemini busy). 16 of the 32
+  are taught only by a sentence to read (measuring, weighing, time,
+  symmetry, a map): Takhti has no picture for those topics, and the teacher
+  is warned on each (`sylLessonWarnings()`).
 
 ## This child's path — `core/planner.js`
 
@@ -1591,9 +1601,12 @@ Honest edges of what's built:
    read, not the questions; built-in picture lessons for `shapes2d` at 7–8
    are only the centre-of-a-circle ones; the teacher sees a child's path
    only through the class mirror or the class sync (not in progress codes).
-17. **The library is new (13 Nov 2026).** One book with one chapter so
-   far (*Maths Mela* Class 3, chapter 5, from the seventh live run); the
-   rest of the book needs its chapter PDFs and a build. The builder drafts
+17. **The library is new (13 Nov 2026).** One book, *Maths Mela* Class 3:
+   32 lessons in 10 of 14 chapters; four chapters not built yet, and
+   chapter 3 kept only one lesson. Half the kept lessons teach a maths topic
+   by a sentence to read, because Takhti can't draw clocks, coins, scales,
+   measuring jugs, mirror lines or maps — they pass the checks but check
+   reading, not doing; the teacher sees a warning. The builder drafts
    one chapter at a time with live calls (about three minutes each while
    the faster models are busy) — the half-price Batch API isn't used yet.
    The term is a list of chapters, one a week; a chapter taking two weeks
