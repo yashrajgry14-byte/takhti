@@ -8,7 +8,7 @@ Draft took 102 s · repair took 7 s (gemini-3.5-flash-lite)
 Models for the draft: gemini-3.5-flash-lite ok (102 s, 10641 in / 3788 out tokens)  
 Models for the repair: gemini-3.5-flash-lite ok (7 s, 6019 in / 2142 out tokens)  
 Tokens used: gemini-3.5-flash-lite 16660 in / 5930 out  
-_Checked again on 2026-11-14T09:06:45.401Z by today's checker (the same drafts, no new call to Gemini)._  
+_Checked again on 2026-11-14T09:14:08.061Z by today's checker (the same drafts, no new call to Gemini)._  
 
 ## What the checker caught first time
 - 6× beat N: a=N is too many to draw (at most N)

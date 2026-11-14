@@ -1,0 +1,342 @@
+{
+  "id": "ch4",
+  "n": 4,
+  "title": {
+    "en": "Vacation with My Nani Maa",
+    "hi": "Vacation with My Nani Maa"
+  },
+  "built": "2026-11-14T09:14:08.134Z",
+  "model": "gemini-3.5-flash-lite",
+  "rechecked": "2026-11-14T09:14:08.134Z",
+  "lessons": [
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🍬",
+      "title": {
+        "en": "Adding Balushahi",
+        "hi": "बलूशाही जोड़ना"
+      },
+      "sub": {
+        "en": "Counting sweets in all",
+        "hi": "कुल मिठाइयाँ गिनना"
+      },
+      "skillId": "add2",
+      "source": "Page 30",
+      "aims": [
+        {
+          "id": "s1fvwz07.0",
+          "kind": "explain",
+          "short": {
+            "en": "Find total sweets",
+            "hi": "कुल मिठाई ढूँढो"
+          },
+          "point": {
+            "en": "The child can find the total by adding two groups.",
+            "hi": "बच्चा दो समूहों को जोड़कर कुल संख्या बता सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do I find how many sweets are there in total?",
+            "hi": "मैं भूल गई! कुल कितनी मिठाइयाँ हैं, यह कैसे पता करूँ?"
+          },
+          "hints": [
+            {
+              "en": "Think back to the lesson. What did you do first?",
+              "hi": "पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?"
+            },
+            {
+              "en": "Do you bring them close or move them away?",
+              "hi": "क्या तुम उन्हें पास लाते हो या दूर करते हो?"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "add both numbers together to get the total sum",
+              "hi": "कुल योग पाने के लिए दोनों संख्याओं को जोड़ो",
+              "words": [
+                "add",
+                "together",
+                "जोड़",
+                "मिला",
+                "jod",
+                "mila",
+                "kul"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us add sweets to find the total.",
+            "hi": "कुल संख्या जानने के लिए मिठाइयाँ जोड़ें।"
+          }
+        },
+        {
+          "t": "add",
+          "say": {
+            "en": "Nandini has 7 balushahi and Chirag has 5 balushahi.",
+            "hi": "नंदिनी के पास 7 बलूशाही और चिराग के पास 5 बलूशाही हैं।"
+          },
+          "a": 7,
+          "b": 5
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "How many balushahi do they have in total?",
+            "hi": "उनके पास कुल कितनी बलूशाही हैं?"
+          },
+          "opts": [
+            "2",
+            "12"
+          ],
+          "hiOpts": [
+            "2",
+            "12"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children subtract instead of adding.",
+            "hi": "बच्चे जोड़ने के बजाय घटा देते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Put both groups together to add them up.",
+            "hi": "जोड़ने के लिए दोनों समूहों को एक साथ मिलाओ।"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-1fvwz07"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "📿",
+      "title": {
+        "en": "Jumping on Ginladi",
+        "hi": "गिनलड़ी पर छलांग"
+      },
+      "sub": {
+        "en": "Adding with a bead string",
+        "hi": "मनकों की माला से जोड़ना"
+      },
+      "skillId": "skip",
+      "source": "Page 32",
+      "aims": [
+        {
+          "id": "sqko0sx.0",
+          "kind": "explain",
+          "short": {
+            "en": "Jump forward",
+            "hi": "आगे छलांग लगाओ"
+          },
+          "point": {
+            "en": "The child can add numbers by jumping forward on a line.",
+            "hi": "बच्चा रेखा पर आगे कूदकर संख्याएँ जोड़ सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do I add using jumps on the bead string?",
+            "hi": "मैं भूल गई! मनकों की माला पर छलांग लगाकर कैसे जोड़ूँ?"
+          },
+          "hints": [
+            {
+              "en": "Think back to the lesson. What did you do first?",
+              "hi": "पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?"
+            },
+            {
+              "en": "Which direction do you go when you increase the amount?",
+              "hi": "जब तुम मात्रा बढ़ाते हो तो किस दिशा में जाते हो?"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "jump forward step by step to add the amount",
+              "hi": "मात्रा जोड़ने के लिए कदम-दर-कदम आगे कूदो",
+              "words": [
+                "forward",
+                "step",
+                "आगे",
+                "कूद",
+                "aage",
+                "kood",
+                "chhalang"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us jump on the string to add numbers.",
+            "hi": "संख्याएँ जोड़ने के लिए माला पर कूदें।"
+          }
+        },
+        {
+          "t": "line",
+          "say": {
+            "en": "Start at 15 and jump ahead by 7.",
+            "hi": "15 से शुरू करो और 7 आगे कूदो।"
+          },
+          "a": 15,
+          "b": 7,
+          "hops": 1
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "What number do you land on after 15 + 7?",
+            "hi": "15 + 7 के बाद आप किस संख्या पर पहुँचेंगे?"
+          },
+          "opts": [
+            "22",
+            "8"
+          ],
+          "hiOpts": [
+            "22",
+            "8"
+          ],
+          "correct": 0,
+          "why": {
+            "en": "Children subtract or miscount the hops.",
+            "hi": "बच्चे घटा देते हैं या छलांगें गलत गिनते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Jump along the line to find the sum.",
+            "hi": "योग ज्ञात करने के लिए रेखा पर आगे की ओर कूदो।"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-qko0sx"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🌱",
+      "title": {
+        "en": "Finding Hidden Seeds",
+        "hi": "छिपे हुए बीज ढूँढना"
+      },
+      "sub": {
+        "en": "How many are hidden",
+        "hi": "कितने छिपे हैं"
+      },
+      "skillId": "sub2",
+      "source": "Page 1",
+      "aims": [
+        {
+          "id": "sjorssv.0",
+          "kind": "explain",
+          "short": {
+            "en": "Find hidden part",
+            "hi": "छिपा भाग ढूँढो"
+          },
+          "point": {
+            "en": "The child can find a missing part by subtracting from the total.",
+            "hi": "बच्चा कुल में से घटाकर छूटा हुआ भाग ढूँढ सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do I find out how many seeds are hidden?",
+            "hi": "मैं भूल गई! कितने बीज छिपे हैं, यह कैसे पता करूँ?"
+          },
+          "hints": [
+            {
+              "en": "Take the seeds on the table away from the total seeds.",
+              "hi": "कुल बीजों में से मेज पर रखे बीज हटा दो।"
+            },
+            {
+              "en": "What do you do when you know the total and one part?",
+              "hi": "जब तुम्हें कुल और एक हिस्सा पता हो, तो क्या करते हो?"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "subtract the visible seeds from the total seeds",
+              "hi": "कुल बीजों में से दिखने वाले बीज घटाओ",
+              "words": [
+                "subtract",
+                "minus",
+                "remaining",
+                "घटाओ",
+                "बाकी",
+                "अंतर",
+                "ghatao",
+                "baaki",
+                "antar"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us find the hidden seeds by subtracting.",
+            "hi": "घटाकर छिपे हुए बीज ढूँढें।"
+          }
+        },
+        {
+          "t": "bar",
+          "say": {
+            "en": "There are 15 total seeds and 12 are on the table.",
+            "hi": "कुल 15 बीज हैं और 12 मेज पर हैं।"
+          },
+          "a": 15,
+          "b": 12
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "If total is 15 and 12 are on the table, how many are hidden?",
+            "hi": "यदि कुल 15 हैं और 12 मेज पर हैं, तो कितने छिपे हैं?"
+          },
+          "opts": [
+            "27",
+            "3"
+          ],
+          "hiOpts": [
+            "27",
+            "3"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children add the numbers instead of finding the difference.",
+            "hi": "बच्चे अंतर निकालने के बजाय संख्याओं को जोड़ देते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Subtract the visible part from the total.",
+            "hi": "कुल में से दिखने वाले हिस्से को घटा दो।"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-jorssv"
+    }
+  ],
+  "notUsed": [
+    {
+      "title": {
+        "en": "Subtracting Balushahi",
+        "hi": "बलूशाही घटाना"
+      },
+      "errors": [
+        "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (hi) already gives the explanation (it says \"निकाल\"))"
+      ]
+    }
+  ]
+}

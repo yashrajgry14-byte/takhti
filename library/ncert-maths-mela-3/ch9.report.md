@@ -8,7 +8,7 @@ Draft took 99 s · repair took 5 s (gemini-3.5-flash-lite)
 Models for the draft: gemini-3.5-flash-lite ok (12 s, 9561 in / 3240 out tokens)  
 Models for the repair: gemini-3.5-flash-lite ok (5 s, 5477 in / 1733 out tokens)  
 Tokens used: gemini-3.5-flash-lite 15038 in / 4973 out  
-_Checked again on 2026-11-14T09:06:45.424Z by today's checker (the same drafts, no new call to Gemini)._  
+_Checked again on 2026-11-14T09:14:08.489Z by today's checker (the same drafts, no new call to Gemini)._  
 
 ## What the checker caught first time
 - 3× the lesson needs its aims — N to N things the child will be able to do (aim N: hint N (en)

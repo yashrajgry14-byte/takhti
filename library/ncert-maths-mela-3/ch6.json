@@ -1,0 +1,147 @@
+{
+  "id": "ch6",
+  "n": 6,
+  "title": {
+    "en": "House of Hundreds - I",
+    "hi": "House of Hundreds - I"
+  },
+  "built": "2026-11-14T09:14:08.274Z",
+  "model": "gemini-3.5-flash-lite",
+  "rechecked": "2026-11-14T09:14:08.274Z",
+  "lessons": [
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🥢",
+      "title": {
+        "en": "Matchstick Bundles",
+        "hi": "माचिस की तीलियों के बंडल"
+      },
+      "sub": {
+        "en": "Tens and ones",
+        "hi": "दहाई और इकाई"
+      },
+      "skillId": "place3",
+      "source": "Page 76",
+      "aims": [
+        {
+          "id": "szctptz.0",
+          "kind": "explain",
+          "short": {
+            "en": "Count bundles",
+            "hi": "बंडल गिनो"
+          },
+          "point": {
+            "en": "The child can read numbers from ten bundles.",
+            "hi": "बच्चा तीलियों के बंडल से संख्या पढ़ सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do we count 10s bundles?",
+            "hi": "मैं भूल गई! 10 के बंडल कैसे गिने जाते हैं?"
+          },
+          "hints": [
+            {
+              "en": "Count the big bundles first.",
+              "hi": "पहले बड़े बंडल गिनो।"
+            },
+            {
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "count tens first then ones",
+              "hi": "पहले दहाई फिर इकाई गिनो",
+              "words": [
+                "tens",
+                "ones",
+                "दहाई",
+                "इकाई"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us count items packed in groups.",
+            "hi": "आओ समूहों में रखी वस्तुएँ गिनें।"
+          }
+        },
+        {
+          "t": "group",
+          "say": {
+            "en": "Here we have 2 tens and 5 ones.",
+            "hi": "यहाँ हमारे पास 2 दहाई और 5 इकाई हैं।"
+          },
+          "a": 25
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "What number do 2 tens and 5 ones make?",
+            "hi": "2 दहाई और 5 इकाई से कौन सी संख्या बनती है?"
+          },
+          "opts": [
+            "52",
+            "25"
+          ],
+          "hiOpts": [
+            "52",
+            "25"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children may reverse tens and ones digits.",
+            "hi": "बच्चे दहाई और इकाई के अंकों को उलट सकते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Count tens and ones to find the number.",
+            "hi": "संख्या जानने के लिए दहाई और इकाई गिनो।"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-zctptz"
+    }
+  ],
+  "notUsed": [
+    {
+      "title": {
+        "en": "Counting up to 300",
+        "hi": "300 तक गिनना"
+      },
+      "errors": [
+        "beat 3: the lines just before this question say the answer \"10\" (in beat 2's words) — let the child work it out"
+      ]
+    },
+    {
+      "title": {
+        "en": "Comparing Numbers",
+        "hi": "संख्याओं की तुलना"
+      },
+      "errors": [
+        "beat 3: marked 5 right, but the picture before it shows 8",
+        "beat 3: the lines just before this question say the answer \"5\" (in beat 2's words) — let the child work it out",
+        "beat 3: marked \"5\" correct but the beats compute 8"
+      ]
+    },
+    {
+      "title": {
+        "en": "Number Line Jumps",
+        "hi": "संख्या रेखा पर छलांग"
+      },
+      "errors": [
+        "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: each idea needs 2–40 short words that show it)",
+        "beat 2: marked 22 right, but the picture before it shows 26",
+        "beat 2: marked \"22\" correct but the beats compute 26"
+      ]
+    }
+  ]
+}

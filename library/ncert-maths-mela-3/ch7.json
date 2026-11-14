@@ -1,0 +1,424 @@
+{
+  "id": "ch7",
+  "n": 7,
+  "title": {
+    "en": "Raksha Bandhan",
+    "hi": "Raksha Bandhan"
+  },
+  "built": "2026-11-14T09:14:08.341Z",
+  "model": "gemini-3.5-flash-lite",
+  "rechecked": "2026-11-14T09:14:08.341Z",
+  "lessons": [
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🌸",
+      "title": {
+        "en": "Making Rakhis",
+        "hi": "राखी बनाना"
+      },
+      "sub": {
+        "en": "Counting flowers and threads",
+        "hi": "फूल और धागे गिनना"
+      },
+      "skillId": "mult2x1",
+      "source": "Page 83",
+      "aims": [
+        {
+          "id": "s16meusb.0",
+          "kind": "explain",
+          "short": {
+            "en": "Count flowers",
+            "hi": "फूल गिनो"
+          },
+          "point": {
+            "en": "The child can calculate total flowers for multiple rakhis using multiplication.",
+            "hi": "बच्चा गुणा करके कई राखियों के लिए कुल फूल निकाल सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do I find the total number of flowers needed for making rakhis?",
+            "hi": "मैं भूल गई! राखियाँ बनाने के लिए कुल कितने फूल चाहिए, यह कैसे पता करूँ?"
+          },
+          "hints": [
+            {
+              "en": "How many flowers do you need for each rakhi?",
+              "hi": "हर राखी के लिए कितने फूल चाहिए?"
+            },
+            {
+              "en": "If you combine the groups together, what operation do you use?",
+              "hi": "यदि आप समूहों को एक साथ मिलाते हैं, तो आप किस संक्रिया का उपयोग करते हैं?"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "multiply the number of rakhis by flowers per rakhi",
+              "hi": "राखियों की संख्या को प्रति राखी फूलों से गुणा करो",
+              "words": [
+                "multiply",
+                "guna",
+                "kul phool",
+                "times"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us find out how many flowers we need.",
+            "hi": "आओ पता करें कि हमें कितने फूल चाहिए।"
+          }
+        },
+        {
+          "t": "array",
+          "say": {
+            "en": "We make rakhis, each using some flowers.",
+            "hi": "हम राखियाँ बनाते हैं, हर एक में कुछ फूल लगते हैं।"
+          },
+          "a": 5,
+          "b": 1
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "How many flowers do we need in total?",
+            "hi": "कुल कितने फूलों की आवश्यकता है?"
+          },
+          "opts": [
+            "1",
+            "5"
+          ],
+          "hiOpts": [
+            "1",
+            "5"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children may just look at the flowers per rakhi instead of multiplying by total rakhis.",
+            "hi": "बच्चे कुल राखियों से गुणा करने के बजाय प्रति राखी फूल देख सकते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Great job! Multiplying gives us the total flowers.",
+            "hi": "बहुत बढ़िया! गुणा करने से कुल फूल मिल जाते हैं।"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-16meusb"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🍬",
+      "title": {
+        "en": "Sharing Laddoos",
+        "hi": "लड्डू बाँटना"
+      },
+      "sub": {
+        "en": "Equally sharing sweets",
+        "hi": "मिठाइयाँ बराबर बाँटना"
+      },
+      "skillId": "divshare",
+      "source": "Page 87",
+      "aims": [
+        {
+          "id": "s7by4t6.0",
+          "kind": "explain",
+          "short": {
+            "en": "Share equally",
+            "hi": "बराबर बाँटो"
+          },
+          "point": {
+            "en": "The child can share a total number of items equally among people using division.",
+            "hi": "बच्चा भाग का उपयोग करके लोगों में वस्तुओं को बराबर-बराबर बाँट सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do I find how many sweets each person gets when shared equally?",
+            "hi": "मैं भूल गई! बराबर बाँटने पर हर व्यक्ति को कितने लड्डू मिलेंगे, यह कैसे पता करूँ?"
+          },
+          "hints": [
+            {
+              "en": "Think about sharing the total items among the friends.",
+              "hi": "कुल वस्तुओं को दोस्तों के बीच बराबर बाँटने के बारे में सोचो।"
+            },
+            {
+              "en": "What operation splits a total into equal shares?",
+              "hi": "कौन सी संक्रिया कुल चीज़ों को बराबर हिस्सों में बाँटती है?"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "divide the total number of items by the number of people",
+              "hi": "कुल वस्तुओं को लोगों की संख्या से भाग दो",
+              "words": [
+                "divide",
+                "bhag",
+                "barabar baanto",
+                "each gets"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us share laddoos equally among friends.",
+            "hi": "आओ दोस्तों में लड्डू बराबर-बराबर बाँटें।"
+          }
+        },
+        {
+          "t": "share",
+          "say": {
+            "en": "We distribute 12 laddoos equally among 4 people.",
+            "hi": "हम 12 लड्डू 4 लोगों के बीच बराबर बाँटते हैं।"
+          },
+          "a": 12,
+          "b": 4
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "How many laddoos does each person get?",
+            "hi": "हर व्यक्ति को कितने लड्डू मिलते हैं?"
+          },
+          "opts": [
+            "3",
+            "4"
+          ],
+          "hiOpts": [
+            "3",
+            "4"
+          ],
+          "correct": 0,
+          "why": {
+            "en": "Children might confuse the number of people with the number of laddoos each gets.",
+            "hi": "बच्चे लोगों की संख्या और प्रति व्यक्ति मिलने वाले लड्डुओं में भ्रमित हो सकते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Sharing equally means dividing the total!",
+            "hi": "बराबर बाँटने का मतलब है कुल को भाग देना!"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-7by4t6"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🐸",
+      "title": {
+        "en": "Skip Jumping",
+        "hi": "छलांग लगाकर कूदना"
+      },
+      "sub": {
+        "en": "Jumps on the number line",
+        "hi": "संख्या रेखा पर छलांगें"
+      },
+      "skillId": "skip",
+      "source": "Page 95",
+      "aims": [
+        {
+          "id": "s1o5tqzl.0",
+          "kind": "explain",
+          "short": {
+            "en": "Skip jumps",
+            "hi": "छलांगें गिनो"
+          },
+          "point": {
+            "en": "The child can find the number reached after multiple skip jumps.",
+            "hi": "बच्चा कई छलांगों के बाद पहुँची हुई संख्या का पता लगा सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do I find the number reached after taking equal skip jumps?",
+            "hi": "मैं भूल गई! एक जैसी छलांगें लगाने के बाद कौन सी संख्या आएगी, यह कैसे निकालूँ?"
+          },
+          "hints": [
+            {
+              "en": "Look at the size of each jump and how many jumps are made.",
+              "hi": "हर छलांग के आकार और कुल छलांगों को देखो।"
+            },
+            {
+              "en": "Can you use repeated addition or multiplication?",
+              "hi": "क्या तुम बार-बार जोड़ने या गुणा करने का उपयोग कर सकते हो?"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "add the jump size repeatedly or multiply jumps by size",
+              "hi": "छलांग के आकार को बार-बार जोड़ो या गुणा करो",
+              "words": [
+                "chhalang",
+                "multiply",
+                "guna",
+                "add",
+                "jodo"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us practice skip jumping on the number track.",
+            "hi": "आओ संख्या रेखा पर छलांग लगाने का अभ्यास करें।"
+          }
+        },
+        {
+          "t": "line",
+          "say": {
+            "en": "Starting from 0, make 3 jumps of 3 steps each.",
+            "hi": "0 से शुरू करके, 3-3 कदमों की 3 छलांगें लगाओ।"
+          },
+          "a": 0,
+          "b": 3,
+          "hops": 3
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "What number do you reach after 3 jumps?",
+            "hi": "3 छलांगों के बाद तुम किस संख्या पर पहुँचते हो?"
+          },
+          "opts": [
+            "9",
+            "6"
+          ],
+          "hiOpts": [
+            "9",
+            "6"
+          ],
+          "correct": 0,
+          "why": {
+            "en": "Children might stop at 2 jumps instead of 3.",
+            "hi": "बच्चे 3 के बजाय 2 छलांगों पर रुक सकते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Skip jumping is repeated addition!",
+            "hi": "छलांग लगाकर कूदना बार-बार जोड़ना है!"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-1o5tqzl"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "🕷️",
+      "title": {
+        "en": "Spider Legs",
+        "hi": "मकड़ी के पैर"
+      },
+      "sub": {
+        "en": "Multiplication with spider legs",
+        "hi": "मकड़ी के पैरों से गुणा"
+      },
+      "skillId": "tables",
+      "source": "Page 102",
+      "aims": [
+        {
+          "id": "sbsp53b.0",
+          "kind": "explain",
+          "short": {
+            "en": "Count spider legs",
+            "hi": "पैर गिनो"
+          },
+          "point": {
+            "en": "The child can calculate total legs for multiple spiders using multiplication.",
+            "hi": "बच्चा गुणा करके कई मकड़ियों के कुल पैर निकाल सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do I find the total legs of several spiders?",
+            "hi": "मैं भूल गई! कई मकड़ियों के कुल पैर कैसे पता करूँ?"
+          },
+          "hints": [
+            {
+              "en": "How many legs does one spider have?",
+              "hi": "एक मकड़ी के कितने पैर होते हैं?"
+            },
+            {
+              "en": "Think about combining the groups of legs together.",
+              "hi": "पैरों के समूहों को एक साथ मिलाने के बारे में सोचो।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "multiply the number of spiders by eight",
+              "hi": "मकड़ियों की संख्या को आठ से गुणा करो",
+              "words": [
+                "makdi ke pair",
+                "multiply",
+                "guna",
+                "times"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us count how many legs spiders have.",
+            "hi": "आओ गिनें कि मकड़ियों के कुल कितने पैर होते हैं।"
+          }
+        },
+        {
+          "t": "array",
+          "say": {
+            "en": "Each spider has legs. We have multiple spiders.",
+            "hi": "हर मकड़ी के पैर होते हैं। हमारे पास कई मकड़ियाँ हैं।"
+          },
+          "a": 5,
+          "b": 8
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "How many total legs do they have?",
+            "hi": "उनके कुल कितने पैर हैं?"
+          },
+          "opts": [
+            "13",
+            "40"
+          ],
+          "hiOpts": [
+            "13",
+            "40"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children might add 5 and 8 instead of multiplying them.",
+            "hi": "बच्चे गुणा करने के बजाय 5 और 8 को जोड़ सकते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Multiplying legs gives the total count!",
+            "hi": "पैर गुणा करने से कुल संख्या मिल जाती है!"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-bsp53b"
+    }
+  ],
+  "notUsed": []
+}

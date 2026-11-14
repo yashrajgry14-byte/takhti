@@ -1,0 +1,1586 @@
+{
+  "at": "2026-11-13T16:14:39.721Z",
+  "cls": "c3",
+  "band": "developing",
+  "rules": {
+    "band": "developing",
+    "ages": [
+      7,
+      8
+    ],
+    "maxNumber": 100,
+    "sayWords": 18,
+    "read": "developing"
+  },
+  "note": "",
+  "source": "cemm108.pdf",
+  "model": "gemini-3.5-flash-lite",
+  "chapter": "Fair Share",
+  "draftMs": 11561,
+  "tried": [
+    {
+      "model": "gemini-3.5-flash-lite",
+      "outcome": "ok",
+      "ms": 11529,
+      "tokens": {
+        "in": 9021,
+        "out": 3194,
+        "total": 12215
+      }
+    }
+  ],
+  "repair": {
+    "status": 200,
+    "model": "gemini-3.5-flash-lite",
+    "error": "",
+    "ms": 7290,
+    "tried": [
+      {
+        "model": "gemini-3.5-flash-lite",
+        "outcome": "ok",
+        "ms": 7285,
+        "tokens": {
+          "in": 5401,
+          "out": 3060,
+          "total": 8461
+        }
+      }
+    ]
+  },
+  "drafts": [
+    {
+      "raw": {
+        "title": {
+          "en": "Sharing equally",
+          "hi": "बराबर बाँटना"
+        },
+        "sub": {
+          "en": "Fair share for two",
+          "hi": "दो लोगों में बराबर हिस्सा"
+        },
+        "ic": "🍕",
+        "skill": "divshare",
+        "source": "Page 107",
+        "aims": [
+          {
+            "short": {
+              "en": "Share equally",
+              "hi": "बराबर बाँटो"
+            },
+            "point": {
+              "en": "The child can share objects equally between two parts.",
+              "hi": "बच्चा वस्तुओं को दो बराबर भागों में बाँट सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I share things equally?",
+              "hi": "मैं भूल गई! चीज़ों को बराबर कैसे बाँटते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Give one to each person one by one.",
+                "hi": "हर व्यक्ति को एक-एक करके वस्तु दो।"
+              },
+              {
+                "en": "Make sure both have the same amount at the end.",
+                "hi": "देख लो कि अंत में दोनों के पास बराबर चीज़ें हों।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "give items one by one to each until all are finished",
+                "hi": "सबके बीच एक-एक करके चीज़ें तब तक बाँटो जब तक खत्म न हों",
+                "words": [
+                  "one by one",
+                  "equal parts",
+                  "same",
+                  "एक-एक",
+                  "बराबर",
+                  "barabar",
+                  "ek ek"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us share things equally between two bowls.",
+              "hi": "आओ दो कटोरियों में चीज़ों को बराबर बाँटें।"
+            }
+          },
+          {
+            "t": "share",
+            "a": 6,
+            "b": 2,
+            "say": {
+              "en": "Share 6 mangoes equally between 2 bowls. Each bowl gets 3.",
+              "hi": "6 आमों को 2 कटोरियों में बराबर बाँटो। हर कटोरी को 3 मिले।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many mangoes does each bowl get when 6 are shared between 2?",
+              "hi": "6 आमों को 2 में बाँटने पर हर कटोरी को कितने आम मिलते हैं?"
+            },
+            "opts": [
+              "3",
+              "4"
+            ],
+            "hiOpts": [
+              "3",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children may guess 4 by miscounting the items during sharing.",
+              "hi": "बच्चे गिनने में गलती करके 4 सोच सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Sharing equally means giving the exact same amount to each.",
+              "hi": "बराबर बाँटने का मतलब है सबको एक जितनी वस्तुएँ देना।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🍕",
+          "title": {
+            "en": "Sharing equally",
+            "hi": "बराबर बाँटना"
+          },
+          "sub": {
+            "en": "Fair share for two",
+            "hi": "दो लोगों में बराबर हिस्सा"
+          },
+          "skillId": "divshare",
+          "source": "Page 107",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us share things equally between two bowls.",
+                "hi": "आओ दो कटोरियों में चीज़ों को बराबर बाँटें।"
+              }
+            },
+            {
+              "t": "share",
+              "say": {
+                "en": "Share 6 mangoes equally between 2 bowls. Each bowl gets 3.",
+                "hi": "6 आमों को 2 कटोरियों में बराबर बाँटो। हर कटोरी को 3 मिले।"
+              },
+              "a": 6,
+              "b": 2
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many mangoes does each bowl get when 6 are shared between 2?",
+                "hi": "6 आमों को 2 में बाँटने पर हर कटोरी को कितने आम मिलते हैं?"
+              },
+              "opts": [
+                "4",
+                "3"
+              ],
+              "hiOpts": [
+                "4",
+                "3"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children may guess 4 by miscounting the items during sharing.",
+                "hi": "बच्चे गिनने में गलती करके 4 सोच सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Sharing equally means giving the exact same amount to each.",
+                "hi": "बराबर बाँटने का मतलब है सबको एक जितनी वस्तुएँ देना।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-uv7p8k"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says \"one by one\"))",
+          "beat 2: the lines just before this question say the answer \"3\" (in beat 1's words) — let the child work it out"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"one by one\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Sharing equally",
+          "hi": "बराबर बाँटना"
+        },
+        "sub": {
+          "en": "Fair share for two",
+          "hi": "दो लोगों में बराबर हिस्सा"
+        },
+        "ic": "🍕",
+        "skill": "divshare",
+        "source": "Page 107",
+        "aims": [
+          {
+            "short": {
+              "en": "Share equally",
+              "hi": "बराबर बाँटो"
+            },
+            "point": {
+              "en": "The child can share objects equally between two parts.",
+              "hi": "बच्चा वस्तुओं को दो बराबर भागों में बाँट सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I share things equally?",
+              "hi": "मैं भूल गई! चीज़ों को बराबर कैसे बाँटते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Place items in both bowls carefully.",
+                "hi": "दोनों कटोरियों में वस्तुएँ सावधानी से रखो।"
+              },
+              {
+                "en": "Make sure both have the same amount at the end.",
+                "hi": "देख लो कि अंत में दोनों के पास बराबर चीज़ें हों।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "give items to each until all are finished",
+                "hi": "सबके बीच चीज़ें तब तक बाँटो जब तक खत्म न हों",
+                "words": [
+                  "equal parts",
+                  "same",
+                  "बराबर",
+                  "barabar"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us share things between two bowls.",
+              "hi": "आओ दो कटोरियों में चीज़ों को बाँटें।"
+            }
+          },
+          {
+            "t": "share",
+            "a": 6,
+            "b": 2,
+            "say": {
+              "en": "Share 6 mangoes between 2 bowls.",
+              "hi": "6 आमों को 2 कटोरियों में बाँटो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many mangoes does each bowl get when 6 are shared between 2?",
+              "hi": "6 आमों को 2 में बाँटने पर हर कटोरी को कितने आम मिलते हैं?"
+            },
+            "opts": [
+              "3",
+              "4"
+            ],
+            "hiOpts": [
+              "3",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children may guess 4 by miscounting the items during sharing.",
+              "hi": "बच्चे गिनने में गलती करके 4 सोच सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Sharing equally means giving the exact same amount to each.",
+              "hi": "बराबर बाँटने का मतलब है सबको एक जितनी वस्तुएँ देना।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🍕",
+          "title": {
+            "en": "Sharing equally",
+            "hi": "बराबर बाँटना"
+          },
+          "sub": {
+            "en": "Fair share for two",
+            "hi": "दो लोगों में बराबर हिस्सा"
+          },
+          "skillId": "divshare",
+          "source": "Page 107",
+          "aims": [
+            {
+              "id": "s15976a0.0",
+              "kind": "explain",
+              "short": {
+                "en": "Share equally",
+                "hi": "बराबर बाँटो"
+              },
+              "point": {
+                "en": "The child can share objects equally between two parts.",
+                "hi": "बच्चा वस्तुओं को दो बराबर भागों में बाँट सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I share things equally?",
+                "hi": "मैं भूल गई! चीज़ों को बराबर कैसे बाँटते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Place items in both bowls carefully.",
+                  "hi": "दोनों कटोरियों में वस्तुएँ सावधानी से रखो।"
+                },
+                {
+                  "en": "Show me with your finger, then tell me what you did.",
+                  "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "give items to each until all are finished",
+                  "hi": "सबके बीच चीज़ें तब तक बाँटो जब तक खत्म न हों",
+                  "words": [
+                    "equal parts",
+                    "same",
+                    "barabar"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us share things between two bowls.",
+                "hi": "आओ दो कटोरियों में चीज़ों को बाँटें।"
+              }
+            },
+            {
+              "t": "share",
+              "say": {
+                "en": "Share 6 mangoes between 2 bowls.",
+                "hi": "6 आमों को 2 कटोरियों में बाँटो।"
+              },
+              "a": 6,
+              "b": 2
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many mangoes does each bowl get when 6 are shared between 2?",
+                "hi": "6 आमों को 2 में बाँटने पर हर कटोरी को कितने आम मिलते हैं?"
+              },
+              "opts": [
+                "4",
+                "3"
+              ],
+              "hiOpts": [
+                "4",
+                "3"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children may guess 4 by miscounting the items during sharing.",
+                "hi": "बच्चे गिनने में गलती करके 4 सोच सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Sharing equally means giving the exact same amount to each.",
+                "hi": "बराबर बाँटने का मतलब है सबको एक जितनी वस्तुएँ देना।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-15976a0"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [],
+        "aimFixes": [
+          "aim 1: hint 2 (en) already gives the explanation (it says \"same\") — replaced with a general nudge"
+        ]
+      },
+      "verdict": "repaired"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "One half",
+          "hi": "आधा भाग"
+        },
+        "sub": {
+          "en": "Cut into two equal halves",
+          "hi": "दो बराबर हिस्सों में काटना"
+        },
+        "ic": "🫓",
+        "skill": "fracunit",
+        "source": "Page 108",
+        "aims": [
+          {
+            "short": {
+              "en": "Show half",
+              "hi": "आधा दिखाओ"
+            },
+            "point": {
+              "en": "The child can identify one half of a whole.",
+              "hi": "बच्चा किसी पूरे का आधा हिस्सा पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! What do we call one of two equal parts of a whole?",
+              "hi": "मैं भूल गई! किसी पूरे के दो बराबर भागों में से एक को क्या कहते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Think of sharing something with your friend in two equal pieces.",
+                "hi": "सोचो कि किसी चीज़ को दोस्त के साथ दो बराबर हिस्सों में बाँटते हैं।"
+              },
+              {
+                "en": "It starts with the letter h.",
+                "hi": "यह शब्द 'अ' से शुरू होता है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "one part of a whole divided into two equal pieces",
+                "hi": "किसी पूरे के दो बराबर भागों में से एक हिस्सा आधा कहलाता है",
+                "words": [
+                  "half",
+                  "two equal parts",
+                  "आधा",
+                  "aadha",
+                  "barabar"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "When 1 whole is shared equally, each share is a half.",
+              "hi": "जब 1 पूरे को बराबर बाँटते हैं, तो हर हिस्सा आधा होता है।"
+            }
+          },
+          {
+            "t": "frac",
+            "b": 2,
+            "say": {
+              "en": "Look at this whole divided into 2 equal parts. Each part is a half.",
+              "hi": "इस पूरे को देखो जो 2 बराबर भागों में बँटा है। हर हिस्सा आधा है।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many equal parts make one whole when we cut it in halves?",
+              "hi": "जब हम किसी चीज़ को आधा करते हैं, तो कितने बराबर भाग बनते हैं?"
+            },
+            "opts": [
+              "2",
+              "4"
+            ],
+            "hiOpts": [
+              "2",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might confuse halves with quarters and say 4.",
+              "hi": "बच्चे आधे और चौथाई में भ्रमित होकर 4 कह सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Two halves make one complete whole.",
+              "hi": "दो आधे मिलकर एक पूरा हिस्सा बनाते हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🫓",
+          "title": {
+            "en": "One half",
+            "hi": "आधा भाग"
+          },
+          "sub": {
+            "en": "Cut into two equal halves",
+            "hi": "दो बराबर हिस्सों में काटना"
+          },
+          "skillId": "fracunit",
+          "source": "Page 108",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "When 1 whole is shared equally, each share is a half.",
+                "hi": "जब 1 पूरे को बराबर बाँटते हैं, तो हर हिस्सा आधा होता है।"
+              }
+            },
+            {
+              "t": "frac",
+              "say": {
+                "en": "Look at this whole divided into 2 equal parts. Each part is a half.",
+                "hi": "इस पूरे को देखो जो 2 बराबर भागों में बँटा है। हर हिस्सा आधा है।"
+              },
+              "b": 2
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many equal parts make one whole when we cut it in halves?",
+                "hi": "जब हम किसी चीज़ को आधा करते हैं, तो कितने बराबर भाग बनते हैं?"
+              },
+              "opts": [
+                "4",
+                "2"
+              ],
+              "hiOpts": [
+                "4",
+                "2"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might confuse halves with quarters and say 4.",
+                "hi": "बच्चे आधे और चौथाई में भ्रमित होकर 4 कह सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Two halves make one complete whole.",
+                "hi": "दो आधे मिलकर एक पूरा हिस्सा बनाते हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-13ezw1l"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"two equal parts\"))",
+          "beat 2: the lines just before this question say the answer \"2\" (in beat 1's words) — let the child work it out"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: Munni's question (en) already gives the explanation (it says \"two equal parts\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "One half",
+          "hi": "आधा भाग"
+        },
+        "sub": {
+          "en": "Cut into two equal halves",
+          "hi": "दो बराबर हिस्सों में काटना"
+        },
+        "ic": "🫓",
+        "skill": "fracunit",
+        "source": "Page 108",
+        "aims": [
+          {
+            "short": {
+              "en": "Show half",
+              "hi": "आधा दिखाओ"
+            },
+            "point": {
+              "en": "The child can identify one half of a whole.",
+              "hi": "बच्चा किसी पूरे का आधा हिस्सा पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! What do we call one of the parts of a whole?",
+              "hi": "मैं भूल गई! किसी पूरे के भागों में से एक को क्या कहते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Think of sharing something with your friend.",
+                "hi": "सोचो कि किसी चीज़ को दोस्त के साथ कैसे बाँटते हैं।"
+              },
+              {
+                "en": "It is a portion of a whole.",
+                "hi": "यह पूरे का एक हिस्सा है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "one part of a divided piece",
+                "hi": "बँटे हुए टुकड़े का एक हिस्सा",
+                "words": [
+                  "half",
+                  "आधा",
+                  "aadha",
+                  "barabar"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "When 1 whole is shared, each share is a part.",
+              "hi": "जब 1 पूरे को बाँटते हैं, तो हर हिस्सा एक भाग होता है।"
+            }
+          },
+          {
+            "t": "frac",
+            "b": 2,
+            "say": {
+              "en": "Look at this whole divided into parts. Each part is a half.",
+              "hi": "इस पूरे को देखो जो भागों में बँटा है। हर हिस्सा आधा है।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many equal parts make one whole when we cut it?",
+              "hi": "जब हम किसी चीज़ को काटते हैं, तो कितने बराबर भाग बनते हैं?"
+            },
+            "opts": [
+              "2",
+              "4"
+            ],
+            "hiOpts": [
+              "2",
+              "4"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might confuse halves with quarters and say 4.",
+              "hi": "बच्चे आधे और चौथाई में भ्रमित होकर 4 कह सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Two halves make one complete whole.",
+              "hi": "दो आधे मिलकर एक पूरा हिस्सा बनाते हैं।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🫓",
+          "title": {
+            "en": "One half",
+            "hi": "आधा भाग"
+          },
+          "sub": {
+            "en": "Cut into two equal halves",
+            "hi": "दो बराबर हिस्सों में काटना"
+          },
+          "skillId": "fracunit",
+          "source": "Page 108",
+          "aims": [
+            {
+              "id": "swnff4t.0",
+              "kind": "explain",
+              "short": {
+                "en": "Show half",
+                "hi": "आधा दिखाओ"
+              },
+              "point": {
+                "en": "The child can identify one half of a whole.",
+                "hi": "बच्चा किसी पूरे का आधा हिस्सा पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! What do we call one of the parts of a whole?",
+                "hi": "मैं भूल गई! किसी पूरे के भागों में से एक को क्या कहते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Think of sharing something with your friend.",
+                  "hi": "सोचो कि किसी चीज़ को दोस्त के साथ कैसे बाँटते हैं।"
+                },
+                {
+                  "en": "It is a portion of a whole.",
+                  "hi": "यह पूरे का एक हिस्सा है।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "one part of a divided piece",
+                  "hi": "बँटे हुए टुकड़े का एक हिस्सा",
+                  "words": [
+                    "half",
+                    "आधा",
+                    "aadha",
+                    "barabar"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "When 1 whole is shared, each share is a part.",
+                "hi": "जब 1 पूरे को बाँटते हैं, तो हर हिस्सा एक भाग होता है।"
+              }
+            },
+            {
+              "t": "frac",
+              "say": {
+                "en": "Look at this whole divided into parts. Each part is a half.",
+                "hi": "इस पूरे को देखो जो भागों में बँटा है। हर हिस्सा आधा है।"
+              },
+              "b": 2
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many equal parts make one whole when we cut it?",
+                "hi": "जब हम किसी चीज़ को काटते हैं, तो कितने बराबर भाग बनते हैं?"
+              },
+              "opts": [
+                "4",
+                "2"
+              ],
+              "hiOpts": [
+                "4",
+                "2"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might confuse halves with quarters and say 4.",
+                "hi": "बच्चे आधे और चौथाई में भ्रमित होकर 4 कह सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Two halves make one complete whole.",
+                "hi": "दो आधे मिलकर एक पूरा हिस्सा बनाते हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-wnff4t"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Half and Double",
+          "hi": "आधा और दोगुना"
+        },
+        "sub": {
+          "en": "Numbers and their halves",
+          "hi": "संख्याएँ और उनके आधे"
+        },
+        "ic": "🔢",
+        "skill": "divshare",
+        "source": "Page 111",
+        "aims": [
+          {
+            "short": {
+              "en": "Find half number",
+              "hi": "आधी संख्या निकालो"
+            },
+            "point": {
+              "en": "The child can find the half of an even number.",
+              "hi": "बच्चा किसी सम संख्या का आधा बता सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I find the half of a number like 6?",
+              "hi": "मैं भूल गई! 6 जैसी संख्या का आधा कैसे निकालते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Split the total into two equal groups.",
+                "hi": "कुल संख्या को दो बराबर समूहों में बाँटो।"
+              },
+              {
+                "en": "What number added to itself gives 6?",
+                "hi": "किस संख्या को उसी में जोड़ने पर 6 आता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "divide the number into two equal parts",
+                "hi": "संख्या को दो बराबर भागों में बाँटकर आधा निकालते हैं",
+                "words": [
+                  "half",
+                  "two equal parts",
+                  "आधा",
+                  "aadha"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us learn about half and double of numbers.",
+              "hi": "आओ संख्याओं के आधे और दुगुने के बारे में सीखें।"
+            }
+          },
+          {
+            "t": "line",
+            "a": 0,
+            "b": 1,
+            "hops": 6,
+            "say": {
+              "en": "Look at 6 on the line. Half of 6 is 3, because 3 and 3 make 6.",
+              "hi": "रेखा पर 6 को देखो। 6 का आधा 3 है, क्योंकि 3 और 3 मिलकर 6 होते हैं।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is half of 8?",
+              "hi": "8 का आधा कितना होता है?"
+            },
+            "opts": [
+              "4",
+              "16"
+            ],
+            "hiOpts": [
+              "4",
+              "16"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might calculate double instead of half and say 16.",
+              "hi": "बच्चे आधे की जगह दुगुना करके 16 बता सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Half of a number is one of its two equal parts.",
+              "hi": "किसी संख्या का आधा उसके दो बराबर भागों में से एक होता है।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔢",
+          "title": {
+            "en": "Half and Double",
+            "hi": "आधा और दोगुना"
+          },
+          "sub": {
+            "en": "Numbers and their halves",
+            "hi": "संख्याएँ और उनके आधे"
+          },
+          "skillId": "divshare",
+          "source": "Page 111",
+          "aims": [
+            {
+              "id": "s89k7l1.0",
+              "kind": "explain",
+              "short": {
+                "en": "Find half number",
+                "hi": "आधी संख्या निकालो"
+              },
+              "point": {
+                "en": "The child can find the half of an even number.",
+                "hi": "बच्चा किसी सम संख्या का आधा बता सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I find the half of a number like 6?",
+                "hi": "मैं भूल गई! 6 जैसी संख्या का आधा कैसे निकालते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Split the total into two equal groups.",
+                  "hi": "कुल संख्या को दो बराबर समूहों में बाँटो।"
+                },
+                {
+                  "en": "What number added to itself gives 6?",
+                  "hi": "किस संख्या को उसी में जोड़ने पर 6 आता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "divide the number into two equal parts",
+                  "hi": "संख्या को दो बराबर भागों में बाँटकर आधा निकालते हैं",
+                  "words": [
+                    "two equal parts",
+                    "aadha"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us learn about half and double of numbers.",
+                "hi": "आओ संख्याओं के आधे और दुगुने के बारे में सीखें।"
+              }
+            },
+            {
+              "t": "line",
+              "say": {
+                "en": "Look at 6 on the line. Half of 6 is 3, because 3 and 3 make 6.",
+                "hi": "रेखा पर 6 को देखो। 6 का आधा 3 है, क्योंकि 3 और 3 मिलकर 6 होते हैं।"
+              },
+              "a": 0,
+              "b": 1,
+              "hops": 6
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is half of 8?",
+                "hi": "8 का आधा कितना होता है?"
+              },
+              "opts": [
+                "4",
+                "16"
+              ],
+              "hiOpts": [
+                "4",
+                "16"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children might calculate double instead of half and say 16.",
+                "hi": "बच्चे आधे की जगह दुगुना करके 16 बता सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Half of a number is one of its two equal parts.",
+                "hi": "किसी संख्या का आधा उसके दो बराबर भागों में से एक होता है।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-89k7l1"
+        },
+        "ok": false,
+        "errors": [
+          "beat 2: marked 4 right, but the picture before it shows 6",
+          "beat 2: marked \"4\" correct but the beats compute 6"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Half and Double",
+          "hi": "आधा और दोगुना"
+        },
+        "sub": {
+          "en": "Numbers and their halves",
+          "hi": "संख्याएँ और उनके आधे"
+        },
+        "ic": "🔢",
+        "skill": "divshare",
+        "source": "Page 111",
+        "aims": [
+          {
+            "short": {
+              "en": "Find half number",
+              "hi": "आधी संख्या निकालो"
+            },
+            "point": {
+              "en": "The child can find the half of an even number.",
+              "hi": "बच्चा किसी सम संख्या का आधा बता सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I find the half of a number like 8?",
+              "hi": "मैं भूल गई! 8 जैसी संख्या का आधा कैसे निकालते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Split the total into two equal groups.",
+                "hi": "कुल संख्या को दो बराबर समूहों में बाँटो।"
+              },
+              {
+                "en": "What number added to itself gives the total?",
+                "hi": "किस संख्या को उसी में जोड़ने पर कुल मिलता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "divide the number into two parts",
+                "hi": "संख्या को दो भागों में बाँटकर आधा निकालते हैं",
+                "words": [
+                  "half",
+                  "आधा",
+                  "aadha"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us learn about half of numbers.",
+              "hi": "आओ संख्याओं के आधे के बारे में सीखें।"
+            }
+          },
+          {
+            "t": "line",
+            "a": 0,
+            "b": 1,
+            "hops": 8,
+            "say": {
+              "en": "Look at 8 on the line. Half of 8 is 4, because 4 and 4 make 8.",
+              "hi": "रेखा पर 8 को देखो। 8 का आधा 4 है, क्योंकि 4 और 4 मिलकर 8 होते हैं।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is half of 8?",
+              "hi": "8 का आधा कितना होता है?"
+            },
+            "opts": [
+              "4",
+              "16"
+            ],
+            "hiOpts": [
+              "4",
+              "16"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might calculate double instead of half and say 16.",
+              "hi": "बच्चे आधे की जगह दुगुना करके 16 बता सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Half of a number is one of its two equal parts.",
+              "hi": "किसी संख्या का आधा उसके दो बराबर भागों में से एक होता है।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🔢",
+          "title": {
+            "en": "Half and Double",
+            "hi": "आधा और दोगुना"
+          },
+          "sub": {
+            "en": "Numbers and their halves",
+            "hi": "संख्याएँ और उनके आधे"
+          },
+          "skillId": "divshare",
+          "source": "Page 111",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us learn about half of numbers.",
+                "hi": "आओ संख्याओं के आधे के बारे में सीखें।"
+              }
+            },
+            {
+              "t": "line",
+              "say": {
+                "en": "Look at 8 on the line. Half of 8 is 4, because 4 and 4 make 8.",
+                "hi": "रेखा पर 8 को देखो। 8 का आधा 4 है, क्योंकि 4 और 4 मिलकर 8 होते हैं।"
+              },
+              "a": 0,
+              "b": 1,
+              "hops": 8
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is half of 8?",
+                "hi": "8 का आधा कितना होता है?"
+              },
+              "opts": [
+                "4",
+                "16"
+              ],
+              "hiOpts": [
+                "4",
+                "16"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children might calculate double instead of half and say 16.",
+                "hi": "बच्चे आधे की जगह दुगुना करके 16 बता सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Half of a number is one of its two equal parts.",
+                "hi": "किसी संख्या का आधा उसके दो बराबर भागों में से एक होता है।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-msf0us"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: each idea needs 2–40 short words that show it)",
+          "beat 2: marked 4 right, but the picture before it shows 8",
+          "beat 2: the lines just before this question say the answer \"4\" (in beat 1's words) — let the child work it out",
+          "beat 2: marked \"4\" correct but the beats compute 8"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: each idea needs 2–40 short words that show it"
+        ],
+        "aimFixes": []
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Quarters",
+          "hi": "चौथाई भाग"
+        },
+        "sub": {
+          "en": "Four equal parts",
+          "hi": "चार बराबर हिस्से"
+        },
+        "ic": "🟦",
+        "skill": "fracunit",
+        "source": "Page 112",
+        "aims": [
+          {
+            "short": {
+              "en": "Show quarter",
+              "hi": "चौथाई दिखाओ"
+            },
+            "point": {
+              "en": "The child can identify one quarter of a whole.",
+              "hi": "बच्चा किसी पूरे के एक चौथाई हिस्से को पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! What do we call one of four equal parts of a whole?",
+              "hi": "मैं भूल गई! किसी पूरे के चार बराबर भागों में से एक को क्या कहते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Think of sharing something among four people equally.",
+                "hi": "सोचो कि किसी चीज़ को चार लोगों में बराबर कैसे बाँटेंगे।"
+              },
+              {
+                "en": "It is also called one fourth.",
+                "hi": "इसे एक-चौथाई भी कहते हैं।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "one part out of four equal parts of a whole",
+                "hi": "पूरे के चार बराबर भागों में से एक हिस्सा चौथाई कहलाता है",
+                "words": [
+                  "quarter",
+                  "four equal parts",
+                  "चौथाई",
+                  "chouthai"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "When a whole is shared equally among 4 people, each share is a quarter.",
+              "hi": "जब एक पूरे को 4 लोगों में बराबर बाँटते हैं, तो हर हिस्सा चौथाई होता है।"
+            }
+          },
+          {
+            "t": "frac",
+            "b": 4,
+            "say": {
+              "en": "Look at this whole divided into 4 equal parts. Each part is a quarter.",
+              "hi": "इस पूरे को देखो जो 4 बराबर भागों में बँटा है। हर हिस्सा चौथाई है।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many quarters make one complete whole?",
+              "hi": "कितने चौथाई मिलकर एक पूरा हिस्सा बनाते हैं?"
+            },
+            "opts": [
+              "4",
+              "2"
+            ],
+            "hiOpts": [
+              "4",
+              "2"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might confuse quarters with halves and say 2.",
+              "hi": "बच्चे चौथाई और आधे में भ्रमित होकर 2 कह सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Four quarters make one complete whole.",
+              "hi": "चार चौथाई मिलकर एक पूरा हिस्सा बनाते हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🟦",
+          "title": {
+            "en": "Quarters",
+            "hi": "चौथाई भाग"
+          },
+          "sub": {
+            "en": "Four equal parts",
+            "hi": "चार बराबर हिस्से"
+          },
+          "skillId": "fracunit",
+          "source": "Page 112",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "When a whole is shared equally among 4 people, each share is a quarter.",
+                "hi": "जब एक पूरे को 4 लोगों में बराबर बाँटते हैं, तो हर हिस्सा चौथाई होता है।"
+              }
+            },
+            {
+              "t": "frac",
+              "say": {
+                "en": "Look at this whole divided into 4 equal parts. Each part is a quarter.",
+                "hi": "इस पूरे को देखो जो 4 बराबर भागों में बँटा है। हर हिस्सा चौथाई है।"
+              },
+              "b": 4
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many quarters make one complete whole?",
+                "hi": "कितने चौथाई मिलकर एक पूरा हिस्सा बनाते हैं?"
+              },
+              "opts": [
+                "2",
+                "4"
+              ],
+              "hiOpts": [
+                "2",
+                "4"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children might confuse quarters with halves and say 2.",
+                "hi": "बच्चे चौथाई और आधे में भ्रमित होकर 2 कह सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Four quarters make one complete whole.",
+                "hi": "चार चौथाई मिलकर एक पूरा हिस्सा बनाते हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-b0cvx"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"four equal parts\"))",
+          "beat 2: the lines just before this question say the answer \"4\" (in the intro) — let the child work it out"
+        ],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [
+          "aim 1: Munni's question (en) already gives the explanation (it says \"four equal parts\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Quarters",
+          "hi": "चौथाई भाग"
+        },
+        "sub": {
+          "en": "Four equal parts",
+          "hi": "चार बराबर हिस्से"
+        },
+        "ic": "🟦",
+        "skill": "fracunit",
+        "source": "Page 112",
+        "aims": [
+          {
+            "short": {
+              "en": "Show quarter",
+              "hi": "चौथाई दिखाओ"
+            },
+            "point": {
+              "en": "The child can identify one quarter of a whole.",
+              "hi": "बच्चा किसी पूरे के एक चौथाई हिस्से को पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! What do we call parts of a whole?",
+              "hi": "मैं भूल गई! किसी पूरे के भागों को क्या कहते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Think of sharing something among people.",
+                "hi": "सोचो कि किसी चीज़ को लोगों में कैसे बाँटेंगे।"
+              },
+              {
+                "en": "It is a portion of a whole.",
+                "hi": "यह पूरे का एक हिस्सा है।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "one part out of portions of a whole",
+                "hi": "पूरे के भागों में से एक हिस्सा चौथाई कहलाता है",
+                "words": [
+                  "quarter",
+                  "चौथाई",
+                  "chouthai"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "When a whole is shared among people, each share is a piece.",
+              "hi": "जब एक पूरे को लोगों में बाँटते हैं, तो हर हिस्सा एक टुकड़ा होता है।"
+            }
+          },
+          {
+            "t": "frac",
+            "b": 4,
+            "say": {
+              "en": "Look at this whole divided into parts. Each part is a quarter.",
+              "hi": "इस पूरे को देखो जो भागों में बँटा है। हर हिस्सा चौथाई है।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many quarters make one complete whole?",
+              "hi": "कितने चौथाई मिलकर एक पूरा हिस्सा बनाते हैं?"
+            },
+            "opts": [
+              "4",
+              "2"
+            ],
+            "hiOpts": [
+              "4",
+              "2"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children might confuse quarters with halves and say 2.",
+              "hi": "बच्चे चौथाई और आधे में भ्रमित होकर 2 कह सकते हैं।"
+            }
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Four quarters make one complete whole.",
+              "hi": "चार चौथाई मिलकर एक पूरा हिस्सा बनाते हैं।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "developing",
+          "school": true,
+          "ic": "🟦",
+          "title": {
+            "en": "Quarters",
+            "hi": "चौथाई भाग"
+          },
+          "sub": {
+            "en": "Four equal parts",
+            "hi": "चार बराबर हिस्से"
+          },
+          "skillId": "fracunit",
+          "source": "Page 112",
+          "aims": [
+            {
+              "id": "s148ybkc.0",
+              "kind": "explain",
+              "short": {
+                "en": "Show quarter",
+                "hi": "चौथाई दिखाओ"
+              },
+              "point": {
+                "en": "The child can identify one quarter of a whole.",
+                "hi": "बच्चा किसी पूरे के एक चौथाई हिस्से को पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! What do we call parts of a whole?",
+                "hi": "मैं भूल गई! किसी पूरे के भागों को क्या कहते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Think of sharing something among people.",
+                  "hi": "सोचो कि किसी चीज़ को लोगों में कैसे बाँटेंगे।"
+                },
+                {
+                  "en": "It is a portion of a whole.",
+                  "hi": "यह पूरे का एक हिस्सा है।"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "one part out of portions of a whole",
+                  "hi": "पूरे के भागों में से एक हिस्सा चौथाई कहलाता है",
+                  "words": [
+                    "quarter",
+                    "चौथाई",
+                    "chouthai"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "When a whole is shared among people, each share is a piece.",
+                "hi": "जब एक पूरे को लोगों में बाँटते हैं, तो हर हिस्सा एक टुकड़ा होता है।"
+              }
+            },
+            {
+              "t": "frac",
+              "say": {
+                "en": "Look at this whole divided into parts. Each part is a quarter.",
+                "hi": "इस पूरे को देखो जो भागों में बँटा है। हर हिस्सा चौथाई है।"
+              },
+              "b": 4
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many quarters make one complete whole?",
+                "hi": "कितने चौथाई मिलकर एक पूरा हिस्सा बनाते हैं?"
+              },
+              "opts": [
+                "4",
+                "2"
+              ],
+              "hiOpts": [
+                "4",
+                "2"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children might confuse quarters with halves and say 2.",
+                "hi": "बच्चे चौथाई और आधे में भ्रमित होकर 2 कह सकते हैं।"
+              }
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Four quarters make one complete whole.",
+                "hi": "चार चौथाई मिलकर एक पूरा हिस्सा बनाते हैं।"
+              }
+            }
+          ],
+          "subject": "math",
+          "id": "sch-148ybkc"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "sum"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    }
+  ],
+  "rechecked": "2026-11-14T09:14:08.409Z"
+}
