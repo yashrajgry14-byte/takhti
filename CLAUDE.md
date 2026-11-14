@@ -1741,7 +1741,7 @@ Honest edges of what's built:
    only through the class mirror or the class sync (not in progress codes).
 17. **The library is new (13 Nov 2026).** One book, *Maths Mela* Class 3:
    41 lessons in all 14 chapters, every one with a single question (the
-   arithmetic ones get a "your turn" sum at play time; the 22 shapes, clock
+   17 arithmetic ones get a "your turn" sum at play time; the 24 shapes, clock, fraction
    and reading ones stay at one until the library is rebuilt with two); chapters 3 and 6 (numbers to 200 and
    300) kept only one lesson each, and chapter 13 two (clocks; its calendar
    lessons were rejected as sentences to read). 12 of the kept lessons
