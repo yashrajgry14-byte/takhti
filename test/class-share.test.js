@@ -15,7 +15,7 @@ const LOAD_LIST = [
   'src/content/games.js','src/content/themes.js','src/content/facts.js','src/content/ages.js',
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
   'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-  'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/core/diagnose.js','src/core/class-share.js','src/core/mathgen.js'
+  'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/content/calendar.js','src/core/diagnose.js','src/core/class-share.js','src/core/mathgen.js'
 ];
 function phone(child){
   const data = {};

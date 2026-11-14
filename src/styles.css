@@ -1289,6 +1289,8 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 
 /* shapes (content/geometry.js) */
 .geo{color:var(--chalk);max-width:100%;height:auto;display:block;margin:0 auto}
+/* a clock's numbers ring themselves in the face's colour, so a hand never hides the number it points at */
+.geo.clock .num{paint-order:stroke;stroke:#333822;stroke-width:5px;stroke-linejoin:round}
 
 /* ---------- Teach Munni (ui/teach-munni.js) ---------- */
 .teachchips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}

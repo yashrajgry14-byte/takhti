@@ -64,7 +64,8 @@ export function phoneChecker(){
     cls: id => call(`sylClass(${JSON.stringify(id)})`),
     rules: band => call(`sylRules(${JSON.stringify(band)})`),
     skills: id => call(`sylSkills(sylClass(${JSON.stringify(id)}))`),
-    clean: (raw, band, skills, mend) => call(`sylClean(${JSON.stringify(raw)}, { band: ${JSON.stringify(band)}, skills: ${JSON.stringify(skills)}, mendHints: ${!!mend} })`)
+    // min: the questions a picture lesson must ask (the library builder sets 2 — a coin toss isn't kept)
+    clean: (raw, band, skills, mend, min) => call(`sylClean(${JSON.stringify(raw)}, { band: ${JSON.stringify(band)}, skills: ${JSON.stringify(skills)}, mendHints: ${!!mend}, minQuestions: ${Number(min) || 0} })`)
   };
 }
 
@@ -101,7 +102,8 @@ export async function run(opts, fetchImpl){
   const draftMs = Date.now() - t0;
   if(d.status !== 200) throw new Error(`Gemini's draft failed (${d.status}): ${d.json.error}`);
   const raws = d.json.lessons || [];
-  const drafts = raws.map(raw => ({ raw, first: ph.clean(raw, cls.band, skills) }));
+  const min = opts.minQuestions || 0;
+  const drafts = raws.map(raw => ({ raw, first: ph.clean(raw, cls.band, skills, false, min) }));
   say(`Drafted ${raws.length} in ${(draftMs / 1000).toFixed(0)} s (${d.json.model}) · ${drafts.filter(x => x.first.ok).length} passed the checker first time`);
 
   const failed = drafts.filter(x => !x.first.ok);
@@ -110,7 +112,7 @@ export async function run(opts, fetchImpl){
     const t1 = Date.now();
     const r = await draftCore({ mode:'repair', repair: failed.map(x => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })), rules }, env, 'try-syllabus', fetchImpl);
     repair = { status: r.status, model: r.json.model || '', error: r.json.error || '', ms: Date.now() - t1, tried: r.json.tried || [] };
-    if(r.status === 200) (r.json.lessons || []).forEach((raw, k) => { if(failed[k]){ failed[k].repairRaw = raw; failed[k].second = ph.clean(raw, cls.band, skills, true); } });
+    if(r.status === 200) (r.json.lessons || []).forEach((raw, k) => { if(failed[k]){ failed[k].repairRaw = raw; failed[k].second = ph.clean(raw, cls.band, skills, true, min); } });
     say(`Sent ${failed.length} back with the checker's reasons · ${failed.filter(x => x.second && x.second.ok).length} fixed`);
   }
   const result = {
@@ -124,10 +126,11 @@ export async function run(opts, fetchImpl){
 
 /* A saved run checked again by today's checker — no Gemini, no key. After a
    change to the checks, this says what the same drafts would get now. */
-export function recheck(r){
+export function recheck(r, opts){
+  const min = (opts && opts.minQuestions) || 0;
   const ph = phoneChecker(), skills = ph.skills(r.cls);
   const drafts = r.drafts.map(x => {
-    const first = ph.clean(x.raw, r.band, skills), second = x.repairRaw ? ph.clean(x.repairRaw, r.band, skills, true) : null;
+    const first = ph.clean(x.raw, r.band, skills, false, min), second = x.repairRaw ? ph.clean(x.repairRaw, r.band, skills, true, min) : null;
     return { ...x, first, second, verdict: first.ok ? 'passed' : second && second.ok ? 'repaired' : 'not used' };
   });
   return { ...r, rechecked: new Date().toISOString(), drafts };
@@ -144,6 +147,8 @@ function beatLine(b){
     case 'corner': return `corner: ${b.deg}°${b.ask ? ' · asks ' + b.ask : ''}${say}`;
     case 'figures': return `row: ${(b.items || []).map(i => i.kind + (i.deg ? ' ' + i.deg + '°' : '')).join(', ')}${b.find ? ' · find ' + b.find : ''}${say}`;
     case 'clock': return `clock: ${b.h}:${String(b.m).padStart(2, '0')}${b.ask ? ' · asks ' + b.ask : ''}${say}`;
+    case 'months': return `months${b.date ? ' · date ' + b.date : ''}${b.m ? ' · month ' + b.m : ''}${b.m2 ? ' to ' + b.m2 : ''}${b.k ? ' · ' + b.k + ' later' : ''}${b.ask ? ' · asks ' + b.ask : ''}${say}`;
+    case 'calendar': return `calendar: ${b.days} days, 1st on day ${b.start}${b.month ? ' · month ' + b.month : ''}${b.d ? ' · date ' + b.d : ''}${b.w != null ? ' · column ' + b.w : ''}${b.k ? ' · ' + b.k + ' days later' : ''}${b.ask ? ' · asks ' + b.ask : ''}${say}`;
     case 'clocks': return `clocks: ${b.from ? b.from.h + ':' + String(b.from.m).padStart(2, '0') : '?'} → ${b.to ? b.to.h + ':' + String(b.to.m).padStart(2, '0') : '?'}${b.ask ? ' · asks ' + b.ask : ''}${say}`;
     default: return `${b.t}${['a','b','n','hops'].filter(k => b[k] != null).map(k => ' ' + k + '=' + b[k]).join('')}${say}`;
   }

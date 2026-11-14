@@ -103,11 +103,12 @@ console.log('still missing:', gaps3.map(s=>s.id).join(', ') || 'none');
 // inflated the subject figure from 89% to 91%. With the ladder properly
 // separated, the subject-only figure lands exactly on the brief's
 // original 89% — re-verified by running it, not assumed.
-// (14 Nov 2026: 86% for literacy.js alone — telling the hour (time2) is now taught by
-// content/clock.js, not loaded here, and the new Class 3 time3 skill is one more to teach;
-// with clock.js both are taught — see test/diagnose.test.js and test/pictures.test.js)
-check('Nursery-Class 3 subject coverage (EVS and the ladder both excluded) is 86% for literacy.js alone (89% before the o\'clock lessons moved to clock.js)',
-  pct3===86, `got ${pct3}%`);
+// (14 Nov 2026: 85% for literacy.js alone — telling the hour (time2) is now taught by
+// content/clock.js, not loaded here, and the new Class 3 skills time3 and calendar3 are
+// two more to teach; with clock.js and calendar.js all three are taught — see
+// test/diagnose.test.js and test/pictures.test.js)
+check('Nursery-Class 3 subject coverage (EVS and the ladder both excluded) is 85% for literacy.js alone (89% before the o\'clock lessons moved to clock.js)',
+  pct3===85, `got ${pct3}%`);
 
 // The blended figure — subject skills plus both ladders folded back in —
 // is the earlier session's 91%, unchanged, but now arrived at
@@ -117,8 +118,8 @@ const combinedDone = d3.length + ladders.reduce((a,l)=>a+l.done,0);
 const combinedTotal = upto3.length + ladders.reduce((a,l)=>a+l.n,0);
 const combinedPct = Math.round(combinedDone/combinedTotal*100);
 console.log(`\nOverall (subject + both ladders), Nursery-Class 3: ${combinedDone}/${combinedTotal} = ${combinedPct}%`);
-check('overall Nursery-Class 3 figure (subject matrix + both ladders) is 88% for literacy.js alone (91% before the o\'clock lessons moved to clock.js)',
-  combinedPct===88, `got ${combinedPct}%`);
+check('overall Nursery-Class 3 figure (subject matrix + both ladders) is 87% for literacy.js alone (91% before the o\'clock lessons moved to clock.js)',
+  combinedPct===87, `got ${combinedPct}%`);
 
 // contentQueue() and diagnosis must still see the ladder in full — the
 // strand split only changes how it's REPORTED, not what's teachable or
