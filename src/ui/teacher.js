@@ -324,6 +324,16 @@ function libOpen(){
   render();
 }
 
+/* A beat's picture, small, for the teacher's reading of a lesson. Words-only
+   beats draw nothing here (their words are already on the line). */
+const SYL_NO_ART = ['intro', 'passage', 'word', 'readline', 'win', 'ask'];
+function sylTeacherArt(b){
+  if(!b || SYL_NO_ART.includes(b.t) || typeof lesArt !== 'function') return '';
+  let h = '';
+  try{ h = lesArt(b, '🍎') || ''; }catch(e){ h = ''; }
+  return h ? `<div class="lesart tmini" aria-hidden="true">${h}</div>` : '';
+}
+
 /* One draft, as the teacher reads it: every line the child will hear or
    read, the two answers with the right one marked, and how it was checked. */
 function sylDraftHTML(d, i, approved, badge){
@@ -342,9 +352,12 @@ function sylDraftHTML(d, i, approved, badge){
                   array:`${b.a} × ${b.b}`, share:`${b.a} ÷ ${b.b}`, bar:`${b.a} = ${b.b} + ?`, frac:`1/${b.b}` }[b.t];
     const shape = b.t === 'figure' ? `[${b.kind}${b.kind === 'square' ? ' ' + b.s : b.kind === 'rectangle' ? ` ${b.w} × ${b.h}` : b.kind === 'triangle' ? ' ' + (b.sides || []).join(', ') : b.folds ? `, ${b.folds} folds` : ''}${b.ask ? ' · asks ' + b.ask : ''}]`
       : b.t === 'corner' ? `[corner ${b.deg}°]` : b.t === 'figures' ? `[${(b.items || []).map((it, n) => `${n + 1}: ${it.kind === 'corner' ? it.deg + '°' : it.kind}`).join(' · ')} · find ${b.find}]` : '';
-    if(shape) return `<div style="margin:3px 0 3px 10px;font-size:13px"><span style="font-family:var(--mono);opacity:.75">${attr(shape)}</span>${b.say ? ` ${T(b.say)}` : ''}</div>`;
+    // the picture itself, drawn by the player's own lesArt() (shapes, and every picture the
+    // player learns to draw later): a teacher approves what the child will see, not a code
+    const art = sylTeacherArt(b);
+    if(shape) return `<div style="margin:3px 0 3px 10px;font-size:13px">${art}<span style="font-family:var(--mono);opacity:.75">${attr(shape)}</span>${b.say ? ` ${T(b.say)}` : ''}</div>`;
     const words = b.t === 'passage' ? `📖 ${T(b.p)}` : b.t === 'word' ? `🔤 ${attr(b.w)}` : b.t === 'readline' ? `🗣 ${attr(b.text)}` : '';
-    return `<div style="margin:3px 0 3px 10px;font-size:13px">${pic ? `<span style="font-family:var(--mono);opacity:.75">[${b.t} ${pic}]</span> ` : ''}${words}${b.say ? ` ${T(b.say)}` : ''}</div>`;
+    return `<div style="margin:3px 0 3px 10px;font-size:13px">${art}${pic ? `<span style="font-family:var(--mono);opacity:.75">[${b.t} ${pic}]</span> ` : ''}${words}${b.say ? ` ${T(b.say)}` : ''}</div>`;
   }).join('');
   const why = (d.repairErrors || d.errors || []).slice(0, 3);
   return `<div class="card" style="margin-top:8px;padding:10px;${d.ok ? '' : 'opacity:.75;border:1px dashed var(--line)'}">

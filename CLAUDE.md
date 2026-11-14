@@ -86,7 +86,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v65` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v66` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -465,7 +465,8 @@ child sees.
 - **The teacher approves the aims** (`sylDraftHTML()`: the aims' points
   first, *Approve these aims*, Munni's questions for them folded under
   "Afterwards Munni forgets these", any aim left out and why, then
-  the whole lesson folded underneath — every line, the right answer marked,
+  the whole lesson folded underneath — every line with its picture drawn small
+  by the player's own `lesArt()` (`sylTeacherArt()`), the right answer marked,
   how each answer was checked, the `why` notes, never shown to a child; a
   shape aim no question checks — "find a shape with 3 sides" with no row —
   is flagged under the aims, on a lesson that isn't used too, and so is an

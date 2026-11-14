@@ -160,6 +160,9 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     check('"Open this week\'s lessons" shows the chapter\'s lessons in the approval card — every one checked again on this phone, the aims first — with no network at all',
       approve.length === 4 && /📗 4 lesson\(s\) from "Fun with Shapes" · 4 passed the check/.test(screen()) && /AIMS — THE CHILD WILL BE ABLE TO/.test(screen()) && fetches === 0,
       `${approve.length} · fetches ${fetches} · ` + screen().slice(0, 300));
+    const minis = [...win.document.querySelectorAll('.lesart.tmini')];
+    check('…and reading a lesson there shows the pictures the child will see (drawn shapes), not only their codes',
+      minis.length >= 4 && minis.every(m => m.querySelector('svg')) && minis.every(m => m.closest('details')), `${minis.length} pictures`);
     btn(/Approve all the checked lessons' aims/).click();
     await wait(10);
     check('approving puts them in the class like any approved lesson (and so into the class sync)', E(`sylApproved('CLS003').length`) === 4 && /APPROVED FOR THE CLASS/.test(screen()), E(`sylApproved('CLS003').length`));

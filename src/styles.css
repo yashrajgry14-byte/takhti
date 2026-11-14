@@ -1315,3 +1315,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 .teachloop{font-size:11.5px;margin-top:2px;opacity:.85;color:var(--leaf)}
 .teachloop-sum{font-size:13px;line-height:1.45;margin:4px 0 10px;padding:8px 10px;border-radius:8px;background:rgba(127,176,105,.14);border-left:3px solid var(--leaf)}
 @media (prefers-reduced-motion: reduce){.teachmunni.is-puzzled .hm-munni{animation:none}}
+/* the teacher's reading of a lesson: the child's picture, small and still */
+.lesart.tmini{min-height:0;zoom:.6;margin:2px 0;pointer-events:none;align-items:flex-start}
+.lesart.tmini .obj{animation:none!important;opacity:1!important}
+.lesart.tmini svg{max-width:220px;height:auto}
