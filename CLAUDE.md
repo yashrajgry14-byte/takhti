@@ -920,7 +920,10 @@ the whole reading check again the moment the setting says `sarvam`.
   Clamped inputs, a per-address limit, nothing kept: no clip, no
   transcript, no audio on the server.
 - **Teach Munni** hears an explanation through the same `checkReading()`
-  (no passage), in the same order, before Gemini judges it.
+  (no passage), in the same order, before Gemini judges it — or first by
+  `TAKHTI_TEACH_HEAR` (gemini | sarvam), falling back to that order: an
+  explanation is judged on meaning, so a provider that tidies slips (too
+  risky for readings) is fine for it.
 - **Munni's voice** (`narrate()`): built ahead with **Gemini TTS**
   (`GEMINI_TTS_MODEL`, default `gemini-3.8-flash-tts`, from Google's
   speech-generation guide; voice `GEMINI_TTS_VOICE`, Kore) through the
@@ -1656,7 +1659,14 @@ Honest edges of what's built:
    correcting — and judged the Hinglish ten-ones explanation only "partly".
    Those requests set no thinking level then (the newer Flash models think at
    length by default); now they ask for low, and the check hears each clip
-   without the line too; the Batch API's job state and inline answers
+   without the line too. The second run (14 Nov, low thinking): flash-lite
+   heard in 1.6–2.8 s and judged all four explanations right in 0.9–1.8 s
+   (Hinglish included) — but still tidied slips: with the line it wrote
+   "भाई" for "बाई" and put "red" back; without it, "ran" for "run". The full
+   Flash models were still 503 or silent. So, for now: readings to Sarvam
+   (`SPEECH_PROVIDER=sarvam`), Teach Munni explanations still heard by
+   Gemini (`TAKHTI_TEACH_HEAR=gemini` — judged on meaning, where a tidied word
+   costs nothing) and judged by flash-lite (`TAKHTI_TEACH_MODEL`); the Batch API's job state and inline answers
    appear under two field names in the docs, and both are read. Phone
    calls (Bolna) use the transcriber set in Bolna's dashboard — unchanged.
    The v3 terms wording is for the lawyer, not final.

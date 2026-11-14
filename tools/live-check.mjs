@@ -170,7 +170,10 @@ export async function run(opts, fetchImpl){
   const hearOk = hearPick(out.hear, true) || hearPick(out.hear, false);
   say('\n4. Judging from a recording');
   if(clips.explain && judgeOk){
-    const hearModel = hearOk ? hearOk.model : models[0];
+    // a model that answered (an explanation is judged on meaning, so a tidying hearer is fine here)
+    const answered = m => m.rows.filter(x => !x.error || (x.noLine && !x.noLine.error)).length;
+    const most = out.hear.slice().sort((x, y) => answered(y) - answered(x))[0];
+    const hearModel = hearOk ? hearOk.model : (most && answered(most) ? most.model : models[0]);
     const hear = (buf, mime, lang) => checkReading({ buf, mime }, null, lang, { env: { ...env, GEMINI_SPEECH_MODEL: hearModel }, fetch: fetchImpl, provider: 'gemini' });
     t0 = Date.now();
     const r = await judgeCore({ consent: true, lang: 'en', ages: [7, 8], ask: AIMS[0].id, aims: AIMS, audio: clips.explain.buf.toString('base64'), mime: clips.explain.mime },
@@ -219,7 +222,11 @@ export function advise(out, env, models){
   const lineNote = h => h.line ? '' : ' and GEMINI_HEAR_LINE=0 (with the line, it wrote the line instead of what was said)';
   if(hear) a.push(hear.model === curHear && hear.line ? `Hearing: ${curHear} works and fits the phone's time. Nothing to change.` : `Hearing: set GEMINI_SPEECH_MODEL=${hear.model}${lineNote(hear)} in voice/.env.`);
   else if(hearSlow) a.push(`Hearing: only ${hearSlow.model}${hearSlow.line ? '' : ' without the line'} heard every slip, and too slowly for the phone's 6 s. Readings would wait and then fall back to Sarvam: set SPEECH_PROVIDER=sarvam for now.`);
-  else if(out.hear.length) a.push('Hearing: no model kept every slip in time. Set SPEECH_PROVIDER=sarvam in voice/.env for now, and run tools/compare-speech.mjs on real recordings before deciding.');
+  else if(out.hear.length){
+    const answered = m => m.rows.filter(x => !x.error || (x.noLine && !x.noLine.error)).length;
+    const most = out.hear.slice().sort((x, y) => answered(y) - answered(x))[0];
+    a.push(`Hearing: no model kept every slip, so readings shouldn't be heard by Gemini yet. Set SPEECH_PROVIDER=sarvam in voice/.env (with SARVAM_API_KEY).${most && answered(most) ? ` Explanations are judged on meaning, so Gemini can still hear those: TAKHTI_TEACH_HEAR=gemini and GEMINI_SPEECH_MODEL=${most.model}.` : ''} Then run tools/compare-speech.mjs on real recordings.`);
+  }
   if(judge) a.push(judge.model === curJudge ? `Judge: ${curJudge} works and fits. Nothing to change.` : `Judge: set TAKHTI_TEACH_MODEL=${judge.model} in voice/.env (${curJudge} failed or was too slow; lesson drafting keeps its own setting).`);
   else if(judgeSlow) a.push(`Judge: only ${judgeSlow.model} judged all four right, and too slowly for the phone's 9 s; the phone's own rubric would decide instead.`);
   else a.push('Judge: no model judged all four right; the phone\'s own rubric decides (safe: it hints, never says wrong).');

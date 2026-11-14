@@ -236,7 +236,18 @@ function createServer(opts) {
         if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
         const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
         const { judgeCore } = await import('../api/teachback.mjs');
-        const hear = (buf, mime, lang) => speech.checkReading({ buf, mime }, null, lang, { env, fetch: opts.fetch || fetch });
+        // An explanation is judged on its meaning, so a recognizer that tidies a word
+        // costs nothing here — unlike a reading, where the slip is the point. So
+        // TAKHTI_TEACH_HEAR can send explanations to Gemini while readings go to
+        // Sarvam (SPEECH_PROVIDER=sarvam); it falls back to the usual order.
+        const hear = async (buf, mime, lang) => {
+          const pick = String(env.TAKHTI_TEACH_HEAR || '').toLowerCase();
+          if(['gemini', 'sarvam'].includes(pick)){
+            const r = await speech.checkReading({ buf, mime }, null, lang, { env, fetch: opts.fetch || fetch, provider: pick });
+            if(!r.error) return r;
+          }
+          return speech.checkReading({ buf, mime }, null, lang, { env, fetch: opts.fetch || fetch });
+        };
         const r = await judgeCore(await readBody(req, 2.2 * 1024 * 1024), env, ip, opts.fetch || fetch, hear);
         return send(res, r.status, r.json);
       }

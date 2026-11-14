@@ -183,6 +183,17 @@ const stand = http.createServer((req, res) => {
   const tj = await vs.post('/teach/judge', { consent: true, lang: 'hi', mime: 'audio/webm', audio, ask: 'borrow.when', aims: [{ id: 'borrow.when', kind: 'explain' }] });
   check('Teach Munni hears the same way: Gemini failing → Sarvam wrote the explanation down', tj.status === 200 && tj.body.provider === 'sarvam' && tj.body.transcript === G.sarvamSaid, JSON.stringify(tj));
   vs.server.close();
+  // readings to Sarvam, explanations to Gemini: TAKHTI_TEACH_HEAR
+  vs = await boot({ ...GEM, ...SAR, SPEECH_PROVIDER: 'sarvam', TAKHTI_TEACH_HEAR: 'gemini' });
+  reset();
+  const rd = await vs.post('/reading/asr', { consent: true, lang: 'hi', mime: 'audio/webm', audio, line: realLine });
+  const tj2 = await vs.post('/teach/judge', { consent: true, lang: 'hi', mime: 'audio/webm', audio, ask: 'borrow.when', aims: [{ id: 'borrow.when', kind: 'explain' }] });
+  check('SPEECH_PROVIDER=sarvam with TAKHTI_TEACH_HEAR=gemini: a reading goes to Sarvam only, an explanation is heard by Gemini',
+    rd.body.provider === 'sarvam' && tj2.status === 200 && tj2.body.provider === 'gemini' && tj2.body.transcript === G.said, JSON.stringify([rd.body, tj2.body]));
+  reset(); G.hear = 'fail';
+  const tj3 = await vs.post('/teach/judge', { consent: true, lang: 'hi', mime: 'audio/webm', audio, ask: 'borrow.when', aims: [{ id: 'borrow.when', kind: 'explain' }] });
+  check('…and Gemini failing on an explanation falls back to the usual order (Sarvam)', tj3.status === 200 && tj3.body.provider === 'sarvam', JSON.stringify(tj3.body));
+  vs.server.close();
   // nothing kept
   const kept = [];
   const walk = d => { for(const f of fs.readdirSync(d)){ const p = path.join(d, f); if(fs.statSync(p).isDirectory()) walk(p); else kept.push(fs.readFileSync(p, 'utf8')); } };

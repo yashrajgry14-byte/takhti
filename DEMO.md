@@ -61,6 +61,7 @@ optional live step (4b).
   standing in for a child's voice.
 - **Not yet tested on real children:** Gemini hearing children read, and the
   Teach Munni judge on children's own words. The first live check (14 Nov)
-  found Gemini too slow to hear a reading in time and copying a skipped word
-  back from the line; a fix is being checked. Until it passes, set
-  `SPEECH_PROVIDER=sarvam` for a demo, and type rather than speak to Munni.
+  found Gemini writing the correct word over a child's slip, so readings go
+  to Sarvam (`SPEECH_PROVIDER=sarvam`); explanations are still heard and
+  judged by Gemini (`TAKHTI_TEACH_HEAR=gemini`, `TAKHTI_TEACH_MODEL=
+  gemini-3.5-flash-lite`: all four test explanations right in under 2 s).

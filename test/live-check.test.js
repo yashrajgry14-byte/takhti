@@ -10,7 +10,7 @@ function check(name, pass, detail){ if(pass) passes++; else failures++; console.
 const KEY = 'test-key-never-printed-123';
 const calls = [];
 // TTS: the "audio" is the spoken text itself, as 16-bit PCM bytes, so hearing can read it back
-function standIn(url, init){
+function standIn(url, init, tidyAlways){
   const model = decodeURIComponent(url.match(/models\/([^:]+):/)[1]);
   const body = JSON.parse(init.body);
   const think = body.generationConfig && body.generationConfig.thinkingConfig;
@@ -28,7 +28,8 @@ function standIn(url, init){
     const audio = parts.find(p => p.inline_data);
     const said = Buffer.from(audio.inline_data.data, 'base64').slice(44).toString('utf8');
     const line = (parts.find(p => p.text) || {}).text;
-    const out = model === 'tidy-model' && line ? line.replace('The line: ', '') : said;   // the tidier writes the line
+    const fix = t => t.replace('बाई', 'भाई').replace(' run ', ' ran ').replace('eat apples', 'eat red apples');
+    const out = tidyAlways ? fix(said) : model === 'tidy-model' && line ? line.replace('The line: ', '') : said;   // the tidier writes the line
     return json({ candidates: [{ content: { parts: [{ text: JSON.stringify({ said: out }) }] } }] });
   }
   if(/check how well a child explained/.test(sys)){
@@ -88,6 +89,11 @@ function standIn(url, init){
   const out2 = await lc.run({ env, models: 'tidy-model', quiet: true }, standIn);
   check('when the only hearer writes the line, but hears right without it, the advice says GEMINI_HEAR_LINE=0',
     out2.advice.some(a => /GEMINI_SPEECH_MODEL=tidy-model and GEMINI_HEAR_LINE=0/.test(a)), out2.advice.join(' | '));
+  // a hearer that tidies both with and without the line → readings to Sarvam, explanations still to Gemini
+  const out3 = await lc.run({ env, models: 'always-tidy', quiet: true }, (u, i) => standIn(u, i, true));
+  check('when no model keeps the slips, the advice: readings to Sarvam, explanations still heard by Gemini (TAKHTI_TEACH_HEAR) with the model that answered',
+    out3.advice.some(a => /SPEECH_PROVIDER=sarvam/.test(a) && /TAKHTI_TEACH_HEAR=gemini and GEMINI_SPEECH_MODEL=always-tidy/.test(a)), out3.advice.join(' | '));
+  check('…and judging from a recording is heard by a model that answered, not the first in the list', out3.judgeAudio && out3.judgeAudio.hearModel === 'always-tidy', JSON.stringify(out3.judgeAudio));
   // a model that refuses the thinking field still answers, without it
   calls.length = 0;
   const { checkReading } = require('../voice/speech.js');
