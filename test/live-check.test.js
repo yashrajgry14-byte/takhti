@@ -93,6 +93,10 @@ function standIn(url, init, tidyAlways){
   const out3 = await lc.run({ env, models: 'always-tidy', quiet: true }, (u, i) => standIn(u, i, true));
   check('when no model keeps the slips, the advice: readings to Sarvam, explanations still heard by Gemini (TAKHTI_TEACH_HEAR) with the model that answered',
     out3.advice.some(a => /SPEECH_PROVIDER=sarvam/.test(a) && /TAKHTI_TEACH_HEAR=gemini and GEMINI_SPEECH_MODEL=always-tidy/.test(a)), out3.advice.join(' | '));
+  const out4 = await lc.run({ env, models: 'always-tidy', quiet: true, hearSarvam: async clip => ({ transcript: clip.buf.slice(44).toString('utf8'), provider: 'sarvam' }) }, (u, i) => standIn(u, i, true));
+  check('Sarvam heard on the same clips when it is set up: every slip kept, and the advice says so',
+    out4.sarvam && out4.sarvam.length === 4 && out4.sarvam.every(r => r.pass) && out4.advice.some(a => /Sarvam kept every slip in time/.test(a)) && /### sarvam/.test(lc.report(out4)), JSON.stringify([out4.sarvam, out4.advice]));
+  check('…and with no Sarvam key the advice says to add it and run again before switching', out3.sarvam === null && out3.advice.some(a => /Sarvam wasn't tried/.test(a)), out3.advice.join(' | '));
   check('…and judging from a recording is heard by a model that answered, not the first in the list', out3.judgeAudio && out3.judgeAudio.hearModel === 'always-tidy', JSON.stringify(out3.judgeAudio));
   // a model that refuses the thinking field still answers, without it
   calls.length = 0;
