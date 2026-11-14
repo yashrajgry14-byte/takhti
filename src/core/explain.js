@@ -239,6 +239,9 @@ function explainRead(line, missed, lang){
    is about, so the same step-by-step help works there too. */
 function explainLessonBeat(les, i){
   if(!les || !les.beats || !les.beats[i] || les.beats[i].t !== 'ask' || les.beats[i].derived) return null;
+  // a "your turn" question carries its own sum (lesYourTurn() in the lesson player)
+  const own = les.beats[i].sum;
+  if(own && Number.isFinite(own.a) && Number.isFinite(own.b) && /^[+−×÷]$/.test(own.op)) return explainMath({ a: own.a, b: own.b, op: own.op });
   for(let k = i - 1; k >= 0; k--){
     const b = les.beats[k];
     if(typeof picIs === 'function' && picIs(b.t)) return null;   // a picture (a shape, a clock…): Ask Munni gives picHint() instead

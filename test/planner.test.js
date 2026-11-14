@@ -262,7 +262,18 @@ check('…with nothing in it a child said, read or wrote (only the keys w, k, g,
     await wait(20);
     E(`(function(){ const les = S.lesson.data; for(let n = 0; n < 40 && S.lesson && S.lesson.i < les.beats.length - 1; n++){ const b = les.beats[S.lesson.i]; if(b.t === 'ask' && S.lesson.picked == null){ S.lesson.picked = b.correct; S.lesson.asked++; S.lesson.right++; } S.lesson.i++; S.lesson.picked = null; } lesNext(); })()`);
     const sid = E(`schoolLessons()[0].id`);
-    check('a school lesson\'s first finish is kept as its score', E(`JSON.stringify(S.lessonScores[${JSON.stringify(sid)}])`) === '{"r":1,"a":1}', E(`JSON.stringify(S.lessonScores)`));
+    check('a school lesson\'s first finish is kept as its score — its own question and the "your turn" one', E(`JSON.stringify(S.lessonScores[${JSON.stringify(sid)}])`) === '{"r":2,"a":2}', E(`JSON.stringify(S.lessonScores)`));
+    const turn = JSON.parse(E(`JSON.stringify((function(){ const les = schoolLessons()[0], t = lesYourTurn(les), b = t.beats.find(x => x.turn); const x = explainLessonBeat(t, t.beats.indexOf(b));
+      return { n0: les.beats.filter(x => x.t === 'ask').length, n1: t.beats.filter(x => x.t === 'ask').length, last: t.beats[t.beats.length - 1].t, b, sameId: t.id === les.id,
+        stored: schoolLessons()[0].beats.length === les.beats.length, again: JSON.stringify(lesYourTurn(les)) === JSON.stringify(t), shapes: lesYourTurn(Object.assign({}, les, { skillId: 'shapes2d' })) === null ? 'x' : lesYourTurn(Object.assign({}, les, { skillId: 'shapes2d' })).beats.length === les.beats.length,
+        steps: x && x.steps ? x.steps.length : 0, said: x ? JSON.stringify(x.steps) : '' }; })())`));
+    const right = turn.b && Number(turn.b.opts[turn.b.correct]), sum = turn.b && turn.b.sum, val = sum && (sum.op === '−' ? sum.a - sum.b : sum.op === '+' ? sum.a + sum.b : NaN);
+    check('a one-question school maths lesson gets a second, "your turn" question at play time: the same skill, new numbers, right by construction, the other answer a real mistake, before the ending',
+      turn.n0 === 1 && turn.n1 === 2 && turn.last === 'win' && sum && sum.op === '−' && right === val && turn.b.opts.length === 2 && /Your turn/.test(turn.b.q.en) && /तुम्हारी बारी/.test(turn.b.q.hi), JSON.stringify(turn));
+    check('…the approved lesson and its id are untouched, the same child gets the same question again, and a non-arithmetic lesson gets none',
+      turn.sameId && turn.stored && turn.again && turn.shapes === true, JSON.stringify(turn));
+    check('…Ask Munni explains the "your turn" sum itself (not the lesson\'s earlier picture), never saying its answer',
+      turn.steps > 0 && !new RegExp('\\b' + val + '\\b').test(turn.said), turn.said);
     E(`endLesson(); go('lessons')`);
     await wait(20);
     check('…the Story Fire then shows "A harder one" on this child\'s path', /A harder one/.test(screen()), screen().slice(0, 400));

@@ -189,13 +189,36 @@ function lesArt(b, obj){
    reads THAT instead of re-looking the id up — lessonBank() now includes
    the generated bank, and re-fetching by id would also throw away
    whatever enrichLesson() came back with. */
+/* A school maths lesson with one question gets a second, "your turn": the
+   same skill, new numbers from skillProblem() at this child's band (so it is
+   right by construction — no model decides it), two answers, the wrong one a
+   real mistake for that skill. Added at play time only: the approved lesson
+   and its id are unchanged. A shapes, clock or reading lesson, or a
+   two-operation skill, is left as it is. */
+function lesYourTurn(les){
+  if(!les || !les.school || les.subject === 'read' || !les.skillId || typeof skillProblem !== 'function') return les;
+  if(SKILL_OPS[les.skillId] === 'mix' || !skillHasProblem(les.skillId)) return les;
+  if(les.beats.filter(b => b.t === 'ask').length !== 1) return les;
+  const f = skillProblem(les.skillId, seedOf(les.id + '|turn|' + (S.id || '')));
+  if(!f || f.c != null) return les;
+  const wrong = f.opts.find(o => Number(o) !== f.ans);
+  if(wrong == null) return les;
+  const first = seedOf(les.id) % 2 === 0, opts = first ? [String(f.ans), wrong] : [wrong, String(f.ans)];
+  const sum = `${f.a} ${f.op} ${f.b}`;
+  const turn = { t: 'ask', q: { en: `Your turn: ${sum} = ?`, hi: `अब तुम्हारी बारी: ${sum} = ?` }, opts, hiOpts: opts.slice(), correct: first ? 0 : 1, turn: 1, sum: { a: f.a, b: f.b, op: f.op },
+    ...(les.aims && les.aims.length === 1 ? { aim: 1 } : {}) };
+  const beats = les.beats.slice(), w = beats.length && beats[beats.length - 1].t === 'win' ? beats.length - 1 : beats.length;
+  beats.splice(w, 0, turn);
+  return Object.assign({}, les, { beats });
+}
+
 async function startLesson(id){
   if(S._lessonBusy) return;
   const found = lessonBank().find(l => l.id === id) || schoolLessons().find(l => l.id === id);
   if(!found) return;
   S._lessonBusy = true;
   // a school lesson's words are the ones its teacher approved — never rewritten
-  const les = S.online && !found.school ? await enrichLesson(found) : found;   // already falls back to `found` on any failure
+  const les = S.online && !found.school ? await enrichLesson(found) : lesYourTurn(found);   // enrich falls back to `found` on any failure
   S._lessonBusy = false;
   S.lesson = { id, data: les, i:0, right:0, asked:0, picked:null };
   // a school reading lesson's passage is read this child's way (core/planner.js)

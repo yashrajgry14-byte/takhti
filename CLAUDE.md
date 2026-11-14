@@ -86,7 +86,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v70` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v71` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -500,7 +500,13 @@ child sees.
   on this phone and drops any lesson whose id no longer matches. `startLesson()`
   finds them, never rewrites their words online (`enrichLesson()` is
   skipped), answers count for the lesson's skill when the checker matched
-  one, and a reading lesson doesn't move the maths ladder. Under each
+  one, and a reading lesson doesn't move the maths ladder. A school maths
+  lesson with one question gets a second at play time (`lesYourTurn()`):
+  "your turn", the same skill's `skillProblem()` at the child's band (right
+  by construction), two answers, the other a real mistake, with its own
+  `sum` so Ask Munni explains that sum — the approved lesson and its id
+  unchanged; shapes, clocks, reading and two-operation skills get none
+  (the teacher's card says which). Under each
   lesson the child sees **their own path** to its aims (`planFor()`, see
   **This child's path**), and the lesson's button starts its next step
   (`planGo()`).
@@ -1734,7 +1740,9 @@ Honest edges of what's built:
    are only the centre-of-a-circle ones; the teacher sees a child's path
    only through the class mirror or the class sync (not in progress codes).
 17. **The library is new (13 Nov 2026).** One book, *Maths Mela* Class 3:
-   41 lessons in all 14 chapters; chapters 3 and 6 (numbers to 200 and
+   41 lessons in all 14 chapters, every one with a single question (the
+   arithmetic ones get a "your turn" sum at play time; the 22 shapes, clock
+   and reading ones stay at one until the library is rebuilt with two); chapters 3 and 6 (numbers to 200 and
    300) kept only one lesson each, and chapter 13 two (clocks; its calendar
    lessons were rejected as sentences to read). 12 of the kept lessons
    teach a maths topic by a sentence to read, because Takhti can't yet draw

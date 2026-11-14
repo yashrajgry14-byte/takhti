@@ -389,7 +389,11 @@ function sylAimGaps(les){
 function sylLessonWarnings(les){
   const beats = (les && les.beats) || [], out = [];
   const asks = beats.filter(b => b && b.t === 'ask').length;
-  if(asks === 1) out.push({ en:'Only one question — with two answers, a child who guesses is right half the time.',
+  // an arithmetic lesson gets a "your turn" sum at play time (lesYourTurn() in the player), so it isn't one question for the child
+  const turn = les && les.subject !== 'read' && les.skillId && typeof SKILL_OPS !== 'undefined' && SKILL_OPS[les.skillId] && SKILL_OPS[les.skillId] !== 'mix';
+  if(asks === 1 && turn) out.push({ en:'One question here — Takhti adds a "your turn" sum of the same kind, with new numbers, when a child plays it.',
+                                    hi:'यहाँ एक प्रश्न है — बच्चा जब इसे खेलेगा, तक्ती उसी तरह का "अब तुम्हारी बारी" वाला सवाल नई संख्याओं के साथ जोड़ेगी।' });
+  else if(asks === 1) out.push({ en:'Only one question — with two answers, a child who guesses is right half the time.',
                             hi:'केवल एक प्रश्न — दो उत्तरों में अंदाज़ा लगाने वाला बच्चा आधी बार सही होगा।' });
   const eq = beats.filter((b, i) => b && b.t === 'figure' && b.ask === 'equal' && beats[i + 1] && beats[i + 1].t === 'ask').map(b => geoExpect(b));
   if(eq.length && new Set(eq).size === 1) out.push(eq[0] === 'yes'
