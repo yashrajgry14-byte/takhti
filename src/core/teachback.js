@@ -39,6 +39,7 @@ const tL = (o, lang) => o ? (lang === 'hi' ? o.hi : o.en) : '';
 function teachOf(c){
   const ch = c || S;
   if(!ch.teach || ch.teach.v !== 1) ch.teach = { v: 1, units: {}, log: [], explained: {} };
+  if(!ch.teach.loop) ch.teach.loop = {};
   return ch.teach;
 }
 
@@ -225,7 +226,13 @@ function teachUnitFor(les){
   if(!les || typeof band !== 'function' || band().id === 'pre') return null;
   if(les.school && Array.isArray(les.aims) && les.aims.length){
     const aims = les.aims.slice();
-    const fix = les.skillId && teachUnitBuiltin(les.skillId);
+    // Munni's sum is aimed at THIS child's habit. A habit is kept on the skill it was
+    // seen in, which is often the next one up (borrowing builds on two-digit taking
+    // away, and a sub2 sum never borrows), so a habit there moves her sum up a step.
+    const up = les.skillId && typeof twinHabit === 'function' && typeof SKILLS !== 'undefined'
+      ? SKILLS.filter(s => (s.pre || []).includes(les.skillId)).map(s => s.id)
+          .find(id => twinHabit(id) && skillHasProblem(id) && TEACH_ACTS[twinHabit(id).id]) : null;
+    const fix = les.skillId && (teachUnitBuiltin(up || les.skillId) || teachUnitBuiltin(les.skillId));
     const f = fix && fix.aims.find(a => a.kind === 'fix');
     if(f) aims.push({ ...f, id: (les.id.replace(/^sch-/, 's') + '.fix').slice(0, 32) });
     return { id: les.id, skill: les.skillId || null, title: les.title, aims, lessonId: les.id };
@@ -358,9 +365,12 @@ function teachFinish(s, c){
   for(const x of items) aims[x.aim.id] = x.state === 'todo' ? (aims[x.aim.id] || 'gap') : x.state;
   t.units[s.unit.id] = { at: new Date().toISOString(), title: s.unit.title, skill: s.unit.skill, lessonId: s.unit.lessonId,
                          aims, gaps: Object.keys(aims).filter(id => aims[id] !== 'covered') };
-  for(const x of items) if(x.state !== 'todo') t.explained[x.aim.id] = x.state === 'covered' ? 'c' : x.state === 'partly' ? 'p' : 'g';
-  const keys = Object.keys(t.explained);
-  for(const k of keys.slice(0, Math.max(0, keys.length - 60))) delete t.explained[k];
+  for(const x of items) if(x.state !== 'todo'){
+    const L = x.state === 'covered' ? 'c' : x.state === 'partly' ? 'p' : 'g';
+    t.explained[x.aim.id] = L;
+    t.loop[x.aim.id] = teachLoopNext(t.loop[x.aim.id], L);
+  }
+  for(const o of [t.explained, t.loop]){ const keys = Object.keys(o); for(const k of keys.slice(0, Math.max(0, keys.length - 60))) delete o[k]; }
 
   const said = s.heard.filter(h => h.verdict === 'covered' || h.verdict === 'partly');
   const avg = xs => xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length * 100) / 100 : null;
@@ -376,6 +386,47 @@ function teachFinish(s, c){
   if(typeof mirrorToClass === 'function') mirrorToClass(ch);
   if(typeof saveSoon === 'function') saveSoon();
   return { ...entry, gaps };
+}
+
+/* ---------- the loop, per point: where the child started, whether Munni
+   taught it again, where they are now ----------
+   'c'   explained the first time
+   'g'/'p'          not yet / partly, not taught again yet
+   'gr'/'pr'        taught again ("Let's learn it again"), not asked since
+   'grc', 'grp'…    taught again, then asked: explained / partly / not yet
+   'gc', 'pg'…      asked again without being taught again ("Munni forgot again")
+   Letters only, like `explained` — never what was said. */
+const TEACH_LOOP_RE = /^(?:[cpg]|[pg]r|[pg]r?[cpg])$/;
+function teachLoopNext(prev, L){
+  if(!prev || !TEACH_LOOP_RE.test(prev)) return L;
+  if(prev[0] === 'c') return 'c';                 // explained first time stays the story
+  return prev[0] + (prev.includes('r') ? 'r' : '') + L;
+}
+function teachLoopRetaught(prev){
+  if(!prev || !TEACH_LOOP_RE.test(prev) || prev[0] === 'c') return prev;
+  return prev[0] + 'r';                           // what came after a second teaching is asked again
+}
+/* The child chose "Let's learn it again": every point of the session still to teach is re-taught. */
+function teachMarkRetaught(s, c){
+  const t = teachOf(c);
+  for(const x of (s && s.items) || []) if(x.state !== 'covered' && t.loop[x.aim.id]) t.loop[x.aim.id] = teachLoopRetaught(t.loop[x.aim.id]);
+  if(typeof mirrorToClass === 'function') mirrorToClass(c || S);
+  if(typeof saveSoon === 'function') saveSoon();
+}
+/* One class's loops, counted: for the teacher's card. */
+function teachLoopCounts(loops){
+  const k = { first: 0, after: 0, alone: 0, waiting: 0, working: 0, notyet: 0 };
+  for(const v of loops){
+    if(!TEACH_LOOP_RE.test(v || '')) continue;
+    const re = v.includes('r'), last = v[v.length - 1];
+    if(v === 'c') k.first++;
+    else if(re && last === 'r') k.waiting++;
+    else if(re) last === 'c' ? k.after++ : k.working++;
+    else if(v.length > 1 && last === 'c') k.alone++;
+    else k.notyet++;
+  }
+  k.gap = k.after + k.alone + k.waiting + k.working + k.notyet;
+  return k;
 }
 
 /* Units with points still to teach Munni again. */

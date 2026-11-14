@@ -503,8 +503,8 @@ parent(){
     <div class="metric">
       <div><b>${S.lang==='hi'?'अपने आप सिंक करो (हर घंटे)':'Sync automatically (every hour)'}</b>
         <div style="font-size:12.5px;opacity:.7">${S.lang==='hi'
-          ? `सिर्फ़ ${attr(S.name)} का नाम, अभ्यास की गिनती और पाठ की कौन-सी बातें मुन्नी को समझाईं और स्कूल के हर पाठ का उसका रास्ता (चित्र, कहानी, कार्टून…), शिक्षक की कक्षा में भेजी जाती हैं — तस्वीरें, आवाज़, बोले गए शब्द या पढ़ा हुआ पाठ कभी नहीं। कभी भी बंद कर सकते हैं।`
-          : `Only ${attr(S.name)}'s name, practice counts, which lesson points they explained to Munni and the way each school lesson is being taught to them (pictures, the story, the cartoon…) go to the teacher's class — never photos, voice, the words they said or what was read. You can switch it off any time.`}</div>
+          ? `सिर्फ़ ${attr(S.name)} का नाम, अभ्यास की गिनती और पाठ की कौन-सी बातें मुन्नी को समझाईं (और क्या मुन्नी ने कोई बात फिर से सिखाई) और स्कूल के हर पाठ का उसका रास्ता (चित्र, कहानी, कार्टून…), शिक्षक की कक्षा में भेजी जाती हैं — तस्वीरें, आवाज़, बोले गए शब्द या पढ़ा हुआ पाठ कभी नहीं। कभी भी बंद कर सकते हैं।`
+          : `Only ${attr(S.name)}'s name, practice counts, which lesson points they explained to Munni (and whether Munni taught one again) and the way each school lesson is being taught to them (pictures, the story, the cartoon…) go to the teacher's class — never photos, voice, the words they said or what was read. You can switch it off any time.`}</div>
       </div>
       <button class="toggle ${S.syncOn?'on':''}" onclick="toggleSyncConsent()" aria-label="${S.syncOn?'sync on':'sync off'}"><span></span></button>
     </div>

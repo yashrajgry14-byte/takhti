@@ -16,6 +16,12 @@
                    from the bigger when borrowing (so Teach Munni's Munni
                    makes HIS mistake)
 
+   Both have taught Munni borrowing once, through Teach Munni's own
+   session functions, so the teacher's loop card has a story to show:
+   Asha couldn't say what a borrowed ten becomes, took "Let's learn it
+   again", then could (gap → re-taught → explained); Kabir couldn't say
+   when to borrow and has been re-taught, with Munni still to ask him.
+
    Behind the parent PIN (the teacher view). Demo children are never
    synced (syncOn stays off), take profile slots like any child, and
    demoRemove() deletes exactly the flagged ones — from the phone and
@@ -53,6 +59,7 @@ function demoAdd(code){
       }
     }
     if(k.habit) demoHabit(p);
+    demoTeach(p, k.habit ? 'kabir' : 'asha');
     S.profiles.push(p);
     mirrorToClassNow(p);
   }
@@ -74,6 +81,26 @@ function demoHabit(p){
       twinAnswer('borrow', q, given, p); n++;
     }
   }finally{ S.age = age; }
+}
+
+/* One Teach Munni session on borrowing's two explain points (when to borrow,
+   what the borrowed ten becomes), heard by the phone's own rubric, then the
+   "Let's learn it again" tap — teachMarkRetaught(), as the button does. */
+function demoTeach(p, who){
+  const u = teachUnitBuiltin('borrow');
+  if(!u) return;
+  u.aims = u.aims.filter(a => a.id === 'borrow.when' || a.id === 'borrow.ten');
+  const miss = s => { for(const w of ['it stays the same', 'i do not know that', 'no idea really']) teachHeard(s, w); };
+  const s = teachBegin(u, {}, p);
+  if(!s) return;
+  if(who === 'asha'){ teachHeard(s, 'you borrow a ten from the tens'); miss(s); }
+  else { miss(s); teachHeard(s, 'the 2 becomes twelve because a ten is ten ones'); }
+  teachFinish(s, p);
+  teachMarkRetaught(s, p);
+  if(who === 'asha'){
+    const s2 = teachBegin(u, { again: true }, p);
+    if(s2){ teachHeard(s2, 'the 2 becomes twelve because a ten is ten ones'); teachFinish(s2, p); }
+  }
 }
 
 function demoRemove(){

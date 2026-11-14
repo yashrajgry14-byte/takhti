@@ -104,15 +104,28 @@ Write what you HEAR, never what the child should have said: keep every mispronun
 ${withLine ? 'The line the child was reading is given only so you know which words to listen for — it is not what the child said. In "words", give each word of the line in order with what the child said for it ("" if skipped).' : 'There is no line: write down whatever the child said.'}
 Answer with JSON only, in the given schema.`;
 }
+/* Writing down a few seconds of speech needs no long thinking, and the
+   default on newer Flash models makes a reading wait far past the phone's
+   budget (tools/live-check.mjs, 14 Nov). Each body with thinkingLevel first,
+   then as it was, for a model that refuses the field (400).
+   TAKHTI_THINKING: minimal | low (default) | medium | high | off. */
+function thinkLow(bodies, env){
+  const lv = String(env.TAKHTI_THINKING || 'low').toLowerCase();
+  if(lv === 'off' || !['minimal', 'low', 'medium', 'high'].includes(lv)) return bodies;
+  return [...bodies.map(b => ({ ...b, generationConfig: { ...b.generationConfig, thinkingConfig: { thinkingLevel: lv } } })), ...bodies];
+}
 async function geminiHear(clip, passage, lang, env, fetchImpl, ms){
   const model = env.GEMINI_SPEECH_MODEL || 'gemini-3.8-flash';
+  // GEMINI_HEAR_LINE=0: heard without the line, for the day a live check shows
+  // the line pulling Gemini into writing it instead of what the child said
+  if(env.GEMINI_HEAR_LINE === '0') passage = null;
   const parts = [{ inline_data: { mime_type: clip.mime, data: clip.buf.toString('base64') } }];
   if(passage) parts.push({ text: 'The line: ' + passage });
   const base = { systemInstruction: { parts: [{ text: readInstructions(lang, !!passage) }] }, contents: [{ role: 'user', parts }] };
-  const r = await geminiCall(env, fetchImpl, model, [
+  const r = await geminiCall(env, fetchImpl, model, thinkLow([
     { ...base, generationConfig: { temperature: 0, responseFormat: { text: { mimeType: 'APPLICATION_JSON', schema: READ_SCHEMA } } } },
     { ...base, generationConfig: { temperature: 0, responseMimeType: 'application/json', responseJsonSchema: READ_SCHEMA } }
-  ], ms);
+  ], env), ms);
   if(r.error) return r;
   let out;
   try{ out = JSON.parse(partsOf(r.data).map(p => p.text || '').join('').replace(/```json|```/g, '').trim()); }

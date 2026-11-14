@@ -109,10 +109,11 @@ function classMirrorKey(code){ return 'takhti-class-' + code; }
    write for a while, e.g. right before the app backgrounds) can force it
    immediately instead of waiting out the debounce window. */
 /* Teach Munni's points (core/teachback.js) travel with the counts: which
-   lesson points this child explained — ids and c/p/g only, nothing said. */
+   lesson points this child explained — ids and c/p/g only, nothing said —
+   and each point's loop (teachLoopNext(): first try, taught again, now). */
 function teachExplainedOf(c){
-  const e = c && c.teach && c.teach.explained;
-  return e && Object.keys(e).length ? { explained: e } : {};
+  const e = c && c.teach && c.teach.explained, l = c && c.teach && c.teach.loop;
+  return e && Object.keys(e).length ? { explained: e, ...(l && Object.keys(l).length ? { loop: l } : {}) } : {};
 }
 function mirrorToClassNow(child){
   const c = child || S;

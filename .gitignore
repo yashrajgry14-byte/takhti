@@ -15,3 +15,6 @@ syllabus-run/
 
 # the library: chapter PDFs are the publishers' — never committed
 library/**/*.pdf
+
+# tools/live-check.mjs: the report and the TTS clips it made
+live-check/
