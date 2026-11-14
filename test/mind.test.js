@@ -32,7 +32,7 @@ function mindBox(seed){
   const ctx = { S: { name: 'Jai' }, console };
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(path.join(root, 'src/core/mathgen.js'), 'utf8').split('/* ---------------- free-practice')[0].replace(/^[\s\S]*?const SKILL_OPS/m, 'var SKILL_OPS'), ctx);
-  vm.runInContext(fs.readFileSync(path.join(root, 'src/core/mind.js'), 'utf8') + `;this.M = { mindOf, mindChoose, mindTaught, mindAttempt, mindAssessment, mindNext, mindBest, mindSubject, skillOfProblem, setRand: f => { mindRand = f; }, WAYS };`, ctx);
+  vm.runInContext(fs.readFileSync(path.join(root, 'src/core/mind.js'), 'utf8') + `;this.M = { mindOf, mindChoose, mindTaught, mindAttempt, mindAssessment, mindNext, mindChooseOther, mindBest, mindSubject, skillOfProblem, setRand: f => { mindRand = f; }, WAYS };`, ctx);
   let t = seed || 1; ctx.M.setRand(() => { t = (t * 16807) % 2147483647; return t / 2147483647; });
   return ctx;
 }
@@ -52,6 +52,12 @@ function mindBox(seed){
   // a round that sticks keeps the plan
   M.mindTaught('carry', now); M.mindAttempt('carry', true); M.mindAttempt('carry', true);
   check('a round that sticks keeps the plan and counts for that way', M.mindChoose('carry') === now && m.arms.carry[now].a === 1, JSON.stringify(m.arms.carry));
+  // teaching again after a child couldn't explain: never the way just used, and the plan stays
+  const planned = M.mindChoose('carry'), planBefore = JSON.stringify(m.plan.carry);
+  const others = new Set(); for(let i = 0; i < 40; i++) others.add(M.mindChooseOther('carry'));
+  check('the second way (to teach again after a gap in an explanation) is never the planned one, and leaves the plan alone',
+    !others.has(planned) && others.size >= 1 && JSON.stringify(m.plan.carry) === planBefore, JSON.stringify([planned, [...others], m.plan.carry]));
+  check('…limited to what the screen can do, it picks from those', ['story', 'cartoon'].filter(w => w !== planned).includes(M.mindChooseOther('carry', ['story', 'cartoon'].filter(w => w !== planned).concat(planned))), planned);
   // an answer with no teaching round open changes nothing
   const before = JSON.stringify(m.arms);
   M.mindAttempt('carry', false);

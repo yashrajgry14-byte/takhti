@@ -135,6 +135,31 @@ function mindChoose(skill, avail, c){
   return best;
 }
 
+/* A second way, for teaching again after a child couldn't explain it: the
+   best of the ways NOT just used (the plan's, or the round still open), so a
+   cartoon that didn't lead to an explanation isn't simply shown again. The
+   plan itself is left alone — explanations are their own measure, and the
+   next answers on their own still decide whether this way works. */
+function mindChooseOther(skill, avail, c){
+  const dom = mindDomain(skill);
+  if(!dom) return null;
+  const m = mindOf(c), now = Date.now();
+  const used = [m.plan[skill] && m.plan[skill].way, m.pending[skill] && m.pending[skill].way].filter(Boolean);
+  const cool = m.cool[skill] || {};
+  let opts = (avail || Object.keys(WAYS[dom])).filter(w => WAYS[dom][w] && !used.includes(w));
+  const warm = opts.filter(w => !(cool[w] > now));
+  if(warm.length) opts = warm;
+  if(!opts.length) return mindChoose(skill, avail, c);
+  const subj = mindSubject(dom, c), arms = m.arms[skill] || {};
+  let best = null, bestDraw = -1;
+  for(const w of opts){
+    const own = arms[w] || { a: 0, b: 0 }, sb = subj[w] || { a: 0, b: 0 };
+    const d = betaDraw(1 + own.a + Math.min(6, Math.round((sb.a - own.a) / 2)), 1 + own.b + Math.min(6, Math.round((sb.b - own.b) / 2)));
+    if(d > bestDraw){ bestDraw = d; best = w; }
+  }
+  return best;
+}
+
 /* A teaching moment, in this way, on this topic. */
 function mindTaught(skill, way, c){
   const dom = mindDomain(skill);

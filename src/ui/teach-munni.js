@@ -164,16 +164,28 @@ function teachAfter(){
   teachSay();
 }
 
-/* A gap → taught again this child's way (core/mind.js), then Munni forgets again. */
+/* A gap → taught again, this child's way but not the way just used (the
+   mind's second choice, core/mind.js mindChooseOther()), then Munni forgets again. */
 function teachRemedy(){
   if(!TEACH || !TEACH.sum) return;
   const s = TEACH.s, gap = s.items.find(x => x.state !== 'covered');
   teachMarkRetaught(s);
-  const skill = gap && (gap.aim.skill || s.unit.skill);
+  const skill = gap && (gap.aim.skill || s.unit.skill), dom = skill && mindDomain(skill);
   TEACH = null;
-  if(skill && mindDomain(skill) === 'math'){ mindGoWay(skill, mindChoose(skill, mindMathWays(skill))); return; }
-  if(skill && mindDomain(skill) === 'shape'){ mindGoWay(skill, mindChoose(skill, typeof planBuiltin === 'function' && planBuiltin(skill) ? ['show', 'story'] : ['story'])); return; }
-  if(s.unit.lessonId){ go('lessons'); startLesson(s.unit.lessonId); return; }
+  const say = (from, to) => { if(typeof log === 'function') log(0, `Teach Munni · teaching ${skill} again a different way: ${from || '—'} → ${to}`); };
+  const was = skill && typeof mindOf === 'function' ? ((mindOf().plan[skill] || {}).way || (mindOf().pending[skill] || {}).way) : null;
+  if(dom === 'math'){ const w = mindChooseOther(skill, mindMathWays(skill)); say(was, w); mindGoWay(skill, w); return; }
+  if(dom === 'shape'){ const w = mindChooseOther(skill, typeof planBuiltin === 'function' && planBuiltin(skill) ? ['show', 'story'] : ['story']); say(was, w); mindGoWay(skill, w); return; }
+  if(s.unit.lessonId){
+    go('lessons'); startLesson(s.unit.lessonId);
+    // a reading lesson: the same passage, read another way (Munni first, in pieces, or on your own)
+    if(dom === 'read' && S.lesson){
+      const w = mindChooseOther(skill, ['model', 'chunks', 'solo']);
+      say(S.lesson.readWay || was, w);
+      S.lesson.readWay = w; mindTaught(skill, w); render();
+    }
+    return;
+  }
   go('lessons');
 }
 function teachLeave(){

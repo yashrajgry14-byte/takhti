@@ -222,6 +222,13 @@ check('…with nothing in it a child said, read or wrote (only the keys w, k, g,
     for(let i = 0; i < 50 && !E(`!!S.lesson`); i++) await wait(10);
     check('…for a child Munni-reads-first works for, Munni reads the passage itself aloud first',
       E(`S.lesson && S.lesson.readWay`) === 'model' && /Listen — I will read it first\. Meena has a red kite/.test(win.document.querySelector('.lescap').textContent), win.document.querySelector('.lescap') && win.document.querySelector('.lescap').textContent);
+    // a point the child couldn't explain is taught again — the same passage, another reading way
+    E(`(() => { const u = teachUnitFor(schoolLessons().find(l => l.id === S.lesson.id)); const s = teachBegin(u); s.items.forEach(x => { x.state = 'gap'; }); TEACH = { s, sum: teachFinish(s) }; })()`);
+    const before = E(`JSON.stringify([S.lesson.id, S.mind.plan.read5 || null])`);
+    E(`teachRemedy()`); await wait(20);
+    check('"Let\'s learn it again" on a reading point: the same school lesson, read another way than Munni-reads-first — and the child\'s plan is left alone',
+      E(`S.lesson && S.lesson.id`) === JSON.parse(before)[0] && ['chunks', 'solo'].includes(E(`S.lesson.readWay`)) && E(`S.mind.pending.read5 && S.mind.pending.read5.way`) === E(`S.lesson.readWay`)
+        && E(`JSON.stringify(S.mind.plan.read5 || null)`) === JSON.stringify(JSON.parse(before)[1]), E(`JSON.stringify([S.lesson && S.lesson.readWay, S.mind.pending, S.mind.plan])`) + ' ' + before);
     // maths: the cartoon first
     E(`endLesson(); sylSave('CLS001', [sylClean(${JSON.stringify(SUB)}, { band: 'developing' }).lesson]);
        S.mind = { v: 1, arms: { carry: { cartoon: { a: 12, b: 0 }, story: { a: 0, b: 12 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} }; go('lessons')`);

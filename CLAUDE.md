@@ -86,7 +86,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v64` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v65` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -1056,8 +1056,10 @@ protégé effect, and the one place a child gets to *say* what they learnt.
   sessions), never into the twin's numbers — a child who can do it but
   can't yet say it is not a child who can't do it.
 - **Gaps come back**: the summary's *Let's learn it again* teaches the
-  gap's skill the child's way (`mindGoWay()` with `mindChoose()`; a school
-  aim replays its lesson), and the Story Fire shows **"Munni forgot
+  gap's skill the child's way but **not the way just used** (`mindGoWay()` with
+  `mindChooseOther()`: the best of the other ways; the plan itself stays, the
+  next answers on their own still decide); a school reading aim replays its
+  lesson in another reading way (Munni first, in pieces, on your own), and the Story Fire shows **"Munni forgot
   again!"** (`teachAgainHTML()`), which asks only the aims still to teach.
 - **How Munni hears** (`teachMic()`): online under the current reading terms
   (`S.voiceTerms.v >= VOICE_TERMS_V`, v3; the parent page offers the new
