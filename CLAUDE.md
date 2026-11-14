@@ -546,11 +546,16 @@ network and no waiting in the week.
   children the same way (the class mirror, then the class sync). The plan
   is the teacher phone's own setting (`S.libPlan`, a device field like the
   sync keys) and is never sent. No network is used for any of it.
-- **In the library now**: NCERT *Maths Mela* Class 3 — 43 lessons across
-  all 14 chapters (built 13–14 Nov, all drafted by flash-lite). 16 of the 43
-  are taught only by a sentence to read (measuring, weighing, time,
-  symmetry, a map): Takhti has no picture for those topics, and the teacher
-  is warned on each (`sylLessonWarnings()`).
+- **In the library now**: NCERT *Maths Mela* Class 3 — 41 lessons across
+  all 14 chapters (built 13–14 Nov, all drafted by flash-lite). Chapter 13
+  (time) was rebuilt with clocks on 14 Nov: 2 clock lessons, read off the
+  hands, instead of 4 sentences to read; its months and birth-date lessons
+  wait for a calendar picture. 12 lessons are still taught only by a
+  sentence to read (measuring, weighing, symmetry, a map; and three in
+  chapters 1 and 9 tagged with a reading skill): Takhti has no picture for
+  those topics yet, and the teacher is warned on the nine with a maths skill
+  (`sylLessonWarnings()`) — the three tagged with a reading skill get no
+  warning.
 
 ## This child's path — `core/planner.js`
 
@@ -1659,11 +1664,17 @@ Honest edges of what's built:
    are only the centre-of-a-circle ones; the teacher sees a child's path
    only through the class mirror or the class sync (not in progress codes).
 17. **The library is new (13 Nov 2026).** One book, *Maths Mela* Class 3:
-   43 lessons in all 14 chapters; chapters 3 and 6 (numbers to 200 and
-   300) kept only one lesson each. 16 of the kept lessons teach a maths topic
-   by a sentence to read, because Takhti can't draw clocks, coins, scales,
-   measuring jugs, mirror lines or maps — they pass the checks but check
-   reading, not doing; the teacher sees a warning. The builder drafts
+   41 lessons in all 14 chapters; chapters 3 and 6 (numbers to 200 and
+   300) kept only one lesson each, and chapter 13 two (clocks; its calendar
+   lessons were rejected as sentences to read). 12 of the kept lessons
+   teach a maths topic by a sentence to read, because Takhti can't yet draw
+   scales, measuring jugs, rulers, mirror lines, maps or calendars — they
+   pass the checks but check reading, not doing; the teacher sees a warning
+   on the nine tagged with a maths skill, none on the three tagged with a
+   reading skill (ch1 "Animal Names and Letters", "Grouping Objects", ch9
+   "Word Numerals"). Clocks are drawn now (content/clock.js); the teacher
+   card (`ui/teacher.js`) shows a clock beat only by its words, not as
+   "[clock 7:15]" like a shape — the report (`<ch>.report.md`) does. The builder drafts
    one chapter at a time with live calls (about three minutes each while
    the faster models are busy) — the half-price Batch API isn't used yet.
    The term is a list of chapters, one a week; a chapter taking two weeks
