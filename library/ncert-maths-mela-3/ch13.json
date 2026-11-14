@@ -5,7 +5,7 @@
     "en": "Time Goes On",
     "hi": "Time Goes On"
   },
-  "built": "2026-11-14T14:21:36.809Z",
+  "built": "2026-11-14T15:19:03.052Z",
   "model": "gemini-3.5-flash-lite",
   "lessons": [
     {
@@ -13,53 +13,55 @@
       "school": true,
       "ic": "🕒",
       "title": {
-        "en": "Reading the clock",
+        "en": "Reading O'Clock",
         "hi": "घड़ी पढ़ना"
       },
       "sub": {
-        "en": "Hour and minute hands",
-        "hi": "घंटे और मिनट की सुई"
+        "en": "The short hand and long hand",
+        "hi": "छोटी सुई और बड़ी सुई"
       },
-      "skillId": "time3",
+      "skillId": "time2",
       "source": "Page 171",
       "aims": [
         {
-          "id": "sjmx3kx.0",
+          "id": "smspgau.0",
           "kind": "explain",
           "short": {
-            "en": "Read minute hand",
-            "hi": "मिनट सुई पढ़ो"
+            "en": "Read o'clock",
+            "hi": "बजे पढ़ो"
           },
           "point": {
-            "en": "The child can read minutes on an analog clock.",
-            "hi": "बच्चा एनालॉग घड़ी पर मिनट पढ़ सकता है।"
+            "en": "The child can read the hour on an analog clock.",
+            "hi": "बच्चा एनालॉग घड़ी पर घंटे का समय पढ़ सकता है।"
           },
           "forget": {
-            "en": "I forgot! How do I count the minutes when the long hand moves?",
-            "hi": "मैं भूल गई! जब बड़ी सुई हिलती है, तो मिनट कैसे गिनूँ?"
+            "en": "I forgot! How do I know what hour it is on the clock?",
+            "hi": "मैं भूल गई! घड़ी में कैसे पता करूँ कि कितने बजे हैं?"
           },
           "hints": [
             {
-              "en": "Look at where the pointer is pointing on the face.",
-              "hi": "देखो कि काँटा घड़ी के चेहरे पर कहाँ इशारा कर रहा है।"
+              "en": "Which hand points straight at the number?",
+              "hi": "कौन सी सुई सीधे अंक की ओर इशारा करती है?"
             },
             {
-              "en": "Do you count by ones or in jumps?",
-              "hi": "क्या तुम एक-एक गिनते हो या छलांग लगाकर?"
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
             }
           ],
           "ideas": [
             {
-              "en": "multiply each position by five for minutes",
-              "hi": "मिनट के लिए हर स्थिति को पाँच से गुणा करो",
+              "en": "look at the short hand for the time when the long hand is at twelve",
+              "hi": "जब बड़ी सुई बारह पर हो तो समय के लिए छोटी सुई देखो",
               "words": [
-                "five minutes",
-                "count by five",
-                "position",
-                "पाँच मिनट",
-                "पाँच-पाँच",
-                "स्थिति",
-                "panch minute"
+                "short hand",
+                "twelve",
+                "time",
+                "छोटी सुई",
+                "बारह",
+                "समय",
+                "chhoti sui",
+                "barah",
+                "samay"
               ]
             }
           ]
@@ -69,23 +71,23 @@
         {
           "t": "intro",
           "say": {
-            "en": "Let us learn to read time on the clock face.",
+            "en": "Let us learn to read the time on the clock.",
             "hi": "आओ घड़ी पर समय पढ़ना सीखें।"
+          }
+        },
+        {
+          "t": "clock",
+          "h": 3,
+          "m": 0,
+          "say": {
+            "en": "The short hand is at 3 and the long hand is at 12.",
+            "hi": "छोटी सुई 3 पर है और बड़ी सुई 12 पर है।"
           }
         },
         {
           "t": "clock",
           "h": 7,
           "m": 0,
-          "say": {
-            "en": "Look at the short hour hand and the long minute hand.",
-            "hi": "छोटी घंटे की सुई और बड़ी मिनट की सुई को देखो।"
-          }
-        },
-        {
-          "t": "clock",
-          "h": 7,
-          "m": 15,
           "ask": "time"
         },
         {
@@ -95,83 +97,108 @@
             "hi": "कितने बजे हैं?"
           },
           "opts": [
-            "7:15",
-            "7:03"
+            "7 o'clock",
+            "12 o'clock"
           ],
           "hiOpts": [
-            "7:15",
-            "7:03"
+            "7 बजे",
+            "12 बजे"
           ],
           "correct": 0,
           "why": {
-            "en": "Children read the number the long hand points at directly as minutes, instead of multiplying by five.",
-            "hi": "बच्चे बड़ी सुई के अंक को सीधा मिनट पढ़ लेते हैं, पाँच से गुना किए बिना।"
+            "en": "Children confuse the hour hand with the minute hand pointing at 12.",
+            "hi": "बच्चे घंटे वाली सुई को 12 पर खड़ी मिनट वाली सुई समझ लेते हैं।"
+          }
+        },
+        {
+          "t": "clock",
+          "h": 5,
+          "m": 0,
+          "ask": "time"
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "What time does this clock show?",
+            "hi": "यह घड़ी क्या समय दिखाती है?"
+          },
+          "opts": [
+            "5 o'clock",
+            "12 o'clock"
+          ],
+          "hiOpts": [
+            "5 बजे",
+            "12 बजे"
+          ],
+          "correct": 0,
+          "why": {
+            "en": "Children look only at the long hand instead of the short hand.",
+            "hi": "बच्चे छोटी सुई के बजाय केवल बड़ी सुई को देखते हैं।"
           }
         },
         {
           "t": "win",
           "say": {
-            "en": "Count five minutes for every step the long hand passes.",
-            "hi": "बड़ी सुई के हर पार किए कदम के लिए पाँच मिनट गिनो।"
+            "en": "Short hand tells the time when long hand is at 12.",
+            "hi": "जब बड़ी सुई 12 पर हो तो छोटी सुई समय बताती है।"
           }
         }
       ],
       "subject": "math",
-      "id": "sch-jmx3kx"
+      "id": "sch-mspgau"
     },
     {
       "band": "developing",
       "school": true,
       "ic": "⏱️",
       "title": {
-        "en": "Minutes passed",
+        "en": "Minutes Passed",
         "hi": "बीते हुए मिनट"
       },
       "sub": {
-        "en": "Time taken for activities",
-        "hi": "गतिविधियों में लगा समय"
+        "en": "Count by fives on the clock",
+        "hi": "घड़ी पर पाँच-पाँच करके गिनो"
       },
       "skillId": "time3",
       "source": "Page 175",
       "aims": [
         {
-          "id": "s1viws1e.0",
+          "id": "s55nv4r.0",
           "kind": "explain",
           "short": {
-            "en": "Find time taken",
-            "hi": "लगा समय खोजो"
+            "en": "Count minutes",
+            "hi": "मिनट गिनो"
           },
           "point": {
-            "en": "The child can find how many minutes passed between two clock times.",
-            "hi": "बच्चा दो घड़ी के समय के बीच बीते मिनट बता सकता है।"
+            "en": "The child can find how many minutes passed by counting by fives.",
+            "hi": "बच्चा पाँच-पाँच गिनकर बता सकता है कि कितने मिनट बीते।"
           },
           "forget": {
-            "en": "I forgot! How do I find out how many minutes passed?",
-            "hi": "मैं भूल गई! कैसे पता करूँ कि कितने मिनट बीत गए?"
+            "en": "I forgot! How do I count the minutes when the long hand moves?",
+            "hi": "मैं भूल गई! जब बड़ी सुई हिलती है तो मिनट कैसे गिनूँ?"
           },
           "hints": [
             {
-              "en": "Look at where the long hand started and where it went.",
-              "hi": "देखो कि बड़ी सुई कहाँ से शुरू हुई और कहाँ गई।"
+              "en": "How many minutes does each number on the clock count as?",
+              "hi": "घड़ी पर हर अंक कितने मिनट का होता है?"
             },
             {
-              "en": "Show me with your finger, then tell me what you did.",
-              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+              "en": "What do you skip count by?",
+              "hi": "तुम किस संख्या से आगे गिनते हो?"
             }
           ],
           "ideas": [
             {
-              "en": "count the space between start and end by fives",
-              "hi": "शुरू और अंत के बीच की खाली जगह को पाँच-पाँच गिनो",
+              "en": "count five minutes for each number the long hand passes",
+              "hi": "बड़ी सुई जितने अंक पार करे, हर एक के पाँच मिनट गिनो",
               "words": [
-                "space",
-                "start and end",
-                "count by five",
-                "जगह",
-                "शुरू और अंत",
-                "पाँच-पाँच",
-                "jagah",
-                "ginna"
+                "five minutes",
+                "pass",
+                "पाँच मिनट",
+                "पार",
+                "panch minute",
+                "gin",
+                "paar"
               ]
             }
           ]
@@ -181,34 +208,34 @@
         {
           "t": "intro",
           "say": {
-            "en": "Let us see how much time passes on the clock.",
-            "hi": "आओ देखें कि घड़ी पर कितना समय बीतता है।"
+            "en": "Each number on the clock is five minutes.",
+            "hi": "घड़ी पर हर अंक पाँच मिनट का होता है।"
           }
         },
         {
           "t": "clocks",
           "from": {
-            "h": 7,
+            "h": 2,
             "m": 0
           },
           "to": {
-            "h": 7,
-            "m": 5
+            "h": 2,
+            "m": 15
           },
           "say": {
-            "en": "The long hand moves from 12 to 1. That is five minutes.",
-            "hi": "बड़ी सुई 12 से 1 पर जाती है। यह पाँच मिनट हैं।"
+            "en": "The long hand moved from 12 to 3. That is 15 minutes.",
+            "hi": "बड़ी सुई 12 से 3 पर गई। यह 15 मिनट हैं।"
           }
         },
         {
           "t": "clocks",
           "from": {
-            "h": 7,
+            "h": 4,
             "m": 0
           },
           "to": {
-            "h": 7,
-            "m": 15
+            "h": 4,
+            "m": 20
           },
           "ask": "minutes"
         },
@@ -219,49 +246,224 @@
             "hi": "कितने मिनट बीते?"
           },
           "opts": [
-            "3",
-            "15"
+            "4",
+            "20"
           ],
           "hiOpts": [
-            "3",
-            "15"
+            "4",
+            "20"
           ],
           "correct": 1,
           "why": {
-            "en": "Children count the number of digits the hand passed instead of multiplying by five.",
-            "hi": "बच्चे पार किए गए अंकों की संख्या गिनते हैं, पाँच से गुणा करने के बजाय।"
+            "en": "Children count the number the hand points to instead of multiplying by five.",
+            "hi": "बच्चे सुई के अंक को ही मिनट मान लेते हैं, पाँच से गुणा नहीं करते।"
+          }
+        },
+        {
+          "t": "clocks",
+          "from": {
+            "h": 5,
+            "m": 0
+          },
+          "to": {
+            "h": 5,
+            "m": 10
+          },
+          "ask": "minutes"
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "How many minutes passed now?",
+            "hi": "अब कितने मिनट बीते?"
+          },
+          "opts": [
+            "2",
+            "10"
+          ],
+          "hiOpts": [
+            "2",
+            "10"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children read the number 2 on the clock face instead of counting by fives.",
+            "hi": "बच्चे पाँच-पाँच गिनने के बजाय घड़ी पर 2 अंक पढ़ लेते हैं।"
           }
         },
         {
           "t": "win",
           "say": {
-            "en": "Multiply the jumped numbers by five to get minutes.",
-            "hi": "मिनट निकालने के लिए कूदे हुए अंकों को पाँच से गुणा करो।"
+            "en": "Count five minutes for every step the long hand takes.",
+            "hi": "बड़ी सुई के हर कदम पर पाँच मिनट गिनो।"
           }
         }
       ],
       "subject": "math",
-      "id": "sch-1viws1e"
+      "id": "sch-55nv4r"
+    },
+    {
+      "band": "developing",
+      "school": true,
+      "ic": "📅",
+      "title": {
+        "en": "Month in a Date",
+        "hi": "तारीख में महीना"
+      },
+      "sub": {
+        "en": "Day, month and year",
+        "hi": "दिन, महीना और साल"
+      },
+      "skillId": "calendar3",
+      "source": "Page 169",
+      "aims": [
+        {
+          "id": "s1yvj21r.0",
+          "kind": "explain",
+          "short": {
+            "en": "Find the month",
+            "hi": "महीना ढूँढो"
+          },
+          "point": {
+            "en": "The child can find the month from a date written with numbers.",
+            "hi": "बच्चा अंकों से लिखी तारीख में से महीना ढूँढ सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! Which part of the date tells us the month?",
+            "hi": "मैं भूल गई! तारीख का कौन सा हिस्सा हमें महीना बताता है?"
+          },
+          "hints": [
+            {
+              "en": "Is the month first, middle, or last in the date?",
+              "hi": "तारीख में महीना पहले, बीच में या आखिरी में होता है?"
+            },
+            {
+              "en": "Look at the number right after the day.",
+              "hi": "दिन के ठीक बाद वाली संख्या को देखो।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "the middle number in the date shows the month",
+              "hi": "तारीख में बीच वाली संख्या महीना दिखाती है",
+              "words": [
+                "middle number",
+                "second number",
+                "बीच वाली संख्या",
+                "दूसरी संख्या",
+                "beech wali",
+                "doosri"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Dates are written as day, month, and year.",
+            "hi": "तारीख दिन, महीना और साल के रूप में लिखी जाती है।"
+          }
+        },
+        {
+          "t": "months",
+          "m": 6,
+          "date": "15/06/2016",
+          "say": {
+            "en": "In 15/06/2016, the middle number 6 means June.",
+            "hi": "15/06/2016 में, बीच की संख्या 6 का मतलब जून है।"
+          }
+        },
+        {
+          "t": "months",
+          "m": 5,
+          "date": "02/05/2015",
+          "say": {
+            "en": "In 02/05/2015, the middle number is 5 for May.",
+            "hi": "02/05/2015 में, बीच की संख्या 5 मई के लिए है।"
+          }
+        },
+        {
+          "t": "months",
+          "m": 3,
+          "date": "12/03/2018",
+          "ask": "name",
+          "say": {
+            "en": "Let us check the month in this date.",
+            "hi": "आओ इस तारीख में महीना देखें।"
+          }
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "Which month is in this date 12/03/2018?",
+            "hi": "इस तारीख 12/03/2018 में कौन सा महीना है?"
+          },
+          "opts": [
+            "December",
+            "March"
+          ],
+          "hiOpts": [
+            "दिसंबर",
+            "मार्च"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children pick the first number or confuse month with day.",
+            "hi": "बच्चे पहली संख्या चुन लेते हैं या दिन और महीने में भ्रमित हो जाते हैं।"
+          }
+        },
+        {
+          "t": "months",
+          "m": 9,
+          "date": "20/09/2019",
+          "ask": "name",
+          "say": {
+            "en": "Let us find the month in this date too.",
+            "hi": "आओ इस तारीख में भी महीना ढूँढें।"
+          }
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "Which month is in the date 20/09/2019?",
+            "hi": "तारीख 20/09/2019 में कौन सा महीना है?"
+          },
+          "opts": [
+            "January",
+            "September"
+          ],
+          "hiOpts": [
+            "जनवरी",
+            "सितंबर"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children read the first number as the month instead of the middle one.",
+            "hi": "बच्चे बीच वाले नंबर के बजाय पहले नंबर को महीना पढ़ लेते हैं।"
+          }
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "The middle number in the date is the month.",
+            "hi": "तारीख में बीच वाली संख्या ही महीना होती है।"
+          }
+        }
+      ],
+      "subject": "math",
+      "id": "sch-1yvj21r"
     }
   ],
   "notUsed": [
     {
       "title": {
-        "en": "Months in a year",
-        "hi": "साल के महीने"
+        "en": "Time Taken",
+        "hi": "लगा समय"
       },
       "errors": [
-        "beat 3: the right answer \"12\" isn't in the passage",
-        "beat 3: the lines just before this question say the answer \"12\" (in the intro) — let the child work it out"
-      ]
-    },
-    {
-      "title": {
-        "en": "Birth certificate",
-        "hi": "जन्म प्रमाण पत्र"
-      },
-      "errors": [
-        "beat 3: the right answer \"May\" isn't in the passage"
+        "beat 3: the right answer \"months\" isn't in the passage"
       ]
     }
   ]

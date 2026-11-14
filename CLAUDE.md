@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v66` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v67` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -561,12 +561,15 @@ network and no waiting in the week.
   children the same way (the class mirror, then the class sync). The plan
   is the teacher phone's own setting (`S.libPlan`, a device field like the
   sync keys) and is never sent. No network is used for any of it.
-- **In the library now**: NCERT *Maths Mela* Class 3 — 41 lessons across
-  all 14 chapters (built 13–14 Nov, all drafted by flash-lite). Chapter 13
-  (time) was rebuilt with clocks on 14 Nov: 2 clock lessons, read off the
-  hands, instead of 4 sentences to read; its months and birth-date lessons
-  wait for a calendar picture. 12 lessons are still taught only by a
-  sentence to read (measuring, weighing, symmetry, a map; and three in
+- **In the library now**: NCERT *Maths Mela* Class 3 — 42 lessons across
+  all 14 chapters (built 13–15 Nov, all drafted by flash-lite). Chapter 13
+  (time) was rebuilt with clocks and calendars on 15 Nov: 3 lessons, each
+  with two questions read off the drawing (o'clock, minutes passed, the month
+  in a date), instead of 4 sentences to read — the best of the builds allowed
+  (another kept 2; two more were busy or a runaway draft and built nothing).
+  Chapters 2 and 5 still keep 4 one-question picture lessons each from their
+  older builds: the library's two-question rule rejects those on the next
+  rebuild. 12 lessons are still taught only by a sentence to read (measuring, weighing, symmetry, a map; and three in
   chapters 1 and 9 tagged with a reading skill): Takhti has no picture for
   those topics yet, and the teacher is warned on the nine with a maths skill
   (`sylLessonWarnings()`) — the three tagged with a reading skill get no
@@ -1736,11 +1739,12 @@ Honest edges of what's built:
    are only the centre-of-a-circle ones; the teacher sees a child's path
    only through the class mirror or the class sync (not in progress codes).
 17. **The library is new (13 Nov 2026).** One book, *Maths Mela* Class 3:
-   41 lessons in all 14 chapters; chapters 3 and 6 (numbers to 200 and
-   300) kept only one lesson each, and chapter 13 two (clocks; its calendar
-   lessons were rejected as sentences to read). 12 of the kept lessons
+   42 lessons in all 14 chapters; chapters 3 and 6 (numbers to 200 and
+   300) kept only one lesson each, and chapter 13 three (a fourth, how long
+   activities take — minutes or months — came back as a sentence to read
+   and was rejected; nothing in Takhti draws that comparison yet). 12 of the kept lessons
    teach a maths topic by a sentence to read, because Takhti can't yet draw
-   scales, measuring jugs, rulers, mirror lines, maps or calendars — they
+   scales, measuring jugs, rulers, mirror lines or maps — they
    pass the checks but check reading, not doing; the teacher sees a warning
    on the nine tagged with a maths skill, none on the three tagged with a
    reading skill (ch1 "Animal Names and Letters", "Grouping Objects", ch9
