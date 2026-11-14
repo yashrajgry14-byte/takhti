@@ -2,7 +2,8 @@
 
 A foundational literacy and numeracy tutor for Indian children aged 3–10
 (four age bands in `content/ages.js`: 3–4, 5–6, 7–8, 9–10).
-Built for the iQOO Hackathon 2026, Smart Education track. This repo is the web
+Started for the iQOO Hackathon 2026 (Smart Education track); now the team's
+entry to the Google Startup Buildathon India 2026. This repo is the web
 prototype; the Android build ports the same logic to Kotlin + Compose.
 
 This file describes the repo **as it actually stands** — verified against the

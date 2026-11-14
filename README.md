@@ -1,27 +1,57 @@
 # तख़्ती · Takhti
 
-**A tutor that learns how each child thinks.**
+**The school's lesson, taught the way each child learns — and then the child
+teaches it back.**
 
-Schools give every child a Takhti account. From then on, an AI builds a
-*digital mind* of that child from their own answers: it names the exact
-mistake behind each wrong answer, knows what they're forgetting, predicts
-their next answer, and keeps finding better ways to teach them. It works
-offline on any phone, and over a plain phone call for children who have no
-smartphone or data. The child's school, teacher, parents and tutor stay in
-step on one learning goal a week.
+*Google Startup Buildathon India 2026 · team Gladiators*
 
-> The network loads tomorrow. It never serves today.
+One teacher, thirty children, one way of teaching, and no way to see *why*
+each child got it wrong. Takhti closes that loop for every child, on any
+phone, offline:
 
-**Teaching today:** ages 3–10 (Nursery to Class 5) — reading, writing and
-arithmetic, in Hindi and English: letters to reading with understanding,
-tracing to writing, counting to carrying, tables and BODMAS.
-**Next:** up to Class 10 and every Indian language. Lessons from each
-school's own syllabus have started: a teacher uploads a chapter, Gemini
-drafts the week's lessons, Takhti checks every one.
+1. **The school's book becomes lessons.** The teacher picks the class's
+   textbook. Gemini drafted every chapter ahead of time and Takhti checked every
+   answer against its own sum or drawing; the teacher approves the week's aims
+   in a few plain points. In the library now: NCERT *Maths Mela* Class 3, all
+   14 chapters.
+2. **Each child gets their own path to those aims**, worked out on the phone
+   from their own answers: already knows it → show it; a gap underneath → that
+   first; otherwise the way that has worked for *this* child — pictures, a
+   cartoon or the story; Munni reading first, or hard words in pieces.
+3. **Then the child teaches it back.** Munni the elephant "forgets" the lesson,
+   and the child explains it out loud. For a sum, Munni makes the child's *own*
+   habitual mistake, and the child has to catch it. Gemini judges which points
+   the explanation covered, and must quote the child for each.
+4. **Gaps come back.** A point the child couldn't explain is taught again their
+   way, and Munni asks again. The teacher sees it per point, by name: who
+   explained it first time, who couldn't, who was taught again and then
+   could.
 
-**Build status:** web prototype on `main` (offline shell `takhti-v61`, 43 test
-suites); the voice server has had its first live Bolna call. The Android app
-ports the same logic to Kotlin (`ANDROID.md`).
+**Who pays:** schools, and government or CSR programmes; families get Takhti
+through their child's school.
+
+**Where Google's AI is:**
+
+| | |
+|---|---|
+| Lessons from the textbook | Gemini drafts them in Takhti's lesson format; Takhti's checker tests every answer; the teacher approves. Gemini never decides what a child sees. |
+| Teach Munni | Gemini writes down the child's explanation and judges it, quoting the child for every point it credits (checked again on the phone). |
+| Munni's voice | Gemini TTS, built ahead and shipped offline. |
+| Hearing a child read | Sarvam (verbatim). Our tests on deliberate misreadings (14 Nov) found Gemini writing the right word over a child's slip, so readings go to Sarvam and Gemini stays on what it judges well. |
+
+> The network loads tomorrow. It never serves today. Everything a child does
+> in a lesson runs on the phone; the cloud prepares next week.
+
+**Teaching today:** ages 3–10 (Nursery to Class 5): reading, writing,
+arithmetic and shapes, in Hindi and English. **Next:** more books, more
+classes, every Indian language.
+
+**Build status:** web prototype on `main` (offline shell `takhti-v64`, 44 test
+suites). The lesson library was built with live Gemini calls; Gemini's hearing,
+judging and voice have been run live (`tools/live-check.mjs`); the voice server
+has had its first live Bolna call. Nothing has been tried with real children
+yet. The Android app ports the same logic to Kotlin (`ANDROID.md`).
+`DEMO.md` is the step-by-step demo script.
 
 ---
 
@@ -65,15 +95,29 @@ Story Fire (story lessons and homework), the Play Clearing (six games), the
 Picture Hut (cartoon episodes for one maths skill each) and Munni's Pond.
 Lessons are generated and checked on the phone; nothing waits for a network.
 
-### Hearing a child read — Gemini (Sarvam as backup)
+### Hearing a child read — Sarvam, with Gemini for explanations
 With the reading terms a parent accepts at sign-up, a line the child reads is
-written down by Google's Gemini — what was said, not a tidied sentence — and
-graded on the phone. Sarvam (verbatim mode) is the backup, and one setting
-(`SPEECH_PROVIDER=sarvam`) makes it the reading check again; a day-1 script
-(`tools/compare-speech.mjs`) compares the two on real children's recordings.
-Munni's voice is built ahead with Gemini TTS and ships offline. **Say it with Munni:** after a slip, Munni
-teaches the word in pieces (भा · ई), slowly, then whole, the child says it, and
-it's checked again. Offline, the phone's own recognizer takes over.
+written down by a speech service — what was said, not a tidied sentence — and
+graded on the phone. Which service is one setting (`SPEECH_PROVIDER`), chosen
+on evidence: `tools/compare-speech.mjs` runs real recordings with deliberate
+slips through Gemini and Sarvam, and `tools/live-check.mjs` times every Gemini
+call against the phone's budget. On 14 Nov Sarvam kept the English slips and
+Gemini tidied them, so readings go to Sarvam; a Teach Munni explanation is
+judged on meaning, so Gemini still hears those (`TAKHTI_TEACH_HEAR`). Munni's
+voice is built ahead with Gemini TTS and ships offline. **Say it with Munni:**
+after a slip, Munni teaches the word in pieces (भा · ई), slowly, then whole,
+the child says it, and it's checked again. Offline, the phone's own recognizer
+takes over.
+
+### The lesson library — one book, built ahead
+A school says which book it teaches from; every chapter of that book is
+already drafted by Gemini, checked by Takhti and kept only if it passes
+(`tools/build-library.mjs`). The teacher lays out the term, opens this week's
+chapter, approves its aims, and the class has its lessons with no network and
+no waiting. NCERT *Maths Mela* Class 3 is in: all 14 chapters. Some topics —
+time, measuring, weighing, symmetry, maps — still need their own pictures
+(a clock face is being built now), and the teacher is warned on each lesson
+that teaches only in words. → `library/`, `src/core/library.js`
 
 ### Lessons from the school's own syllabus — Gemini
 A teacher uploads a chapter: a PDF, a photo of the textbook page, or the text.
@@ -101,7 +145,9 @@ the child catches it and explains it. Two hints at most, then "we'll figure it
 out together later"; the gap is taught again the child's way and Munni forgets
 it again. Online, Gemini judges which aims the explanation covered and must
 quote the child for each; offline, Takhti's own rubric does. Parents see how
-their child explains; the teacher sees which aims the class could explain.
+their child explains; the teacher sees which aims the class could explain,
+and for each child who couldn't at first, whether they could after being
+taught again.
 → `src/core/teachback.js`, `src/ui/teach-munni.js`, `api/teachback.mjs`
 
 ### Munni on a phone call — Bolna
@@ -135,7 +181,7 @@ not kept. No streaks, no reminders to children (India's DPDP Act s.9).
 
 ```bash
 npm run dev                                   # the app, on http://localhost:5173
-npm test                                      # 38 test suites
+npm test                                      # 44 test suites
 npm run voice:sim -- --auto --mistakes        # a whole Munni phone call, in the terminal
 ```
 
