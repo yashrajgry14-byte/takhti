@@ -34,7 +34,7 @@ optional live step (4b).
 | 7 | Tap the lesson. It opens a **picture lesson** first. Play it, then the school's lesson. | "Pictures first, then the school's own lesson as the check." |
 | 8 | At the end tap **🐘 Teach Munni**. Type or say an explanation. | "Now Munni 'forgets', and the child teaches her back. What the child can't explain becomes next week's gap — never a 'wrong'." |
 | 9 | Switch to **Kabir (demo)** → **The Story Fire**. | "Kabir, same lesson — no pictures step. The story works for him." |
-| 10 | *(maths, if a sums chapter is approved)* Kabir → Teach Munni on a borrowing lesson. | "Munni makes Kabir's own mistake — taking the smaller digit from the bigger — and he has to catch it." |
+| 10 | *(maths, if a sums chapter is approved)* Kabir → Teach Munni on chapter 12's *Taking away tens and ones* (or chapter 4's *Finding Hidden Seeds*). | "Munni makes Kabir's own mistake — taking the smaller digit from the bigger — and he has to catch it." |
 | 11 | Back to the teacher view → **What the class could explain**. | "The teacher sees, per aim, who could explain it. That closes the loop: explain back → weak points → re-teaching." |
 
 ## If something goes off-script

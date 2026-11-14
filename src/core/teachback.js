@@ -225,7 +225,13 @@ function teachUnitFor(les){
   if(!les || typeof band !== 'function' || band().id === 'pre') return null;
   if(les.school && Array.isArray(les.aims) && les.aims.length){
     const aims = les.aims.slice();
-    const fix = les.skillId && teachUnitBuiltin(les.skillId);
+    // Munni's sum is aimed at THIS child's habit. A habit is kept on the skill it was
+    // seen in, which is often the next one up (borrowing builds on two-digit taking
+    // away, and a sub2 sum never borrows), so a habit there moves her sum up a step.
+    const up = les.skillId && typeof twinHabit === 'function' && typeof SKILLS !== 'undefined'
+      ? SKILLS.filter(s => (s.pre || []).includes(les.skillId)).map(s => s.id)
+          .find(id => twinHabit(id) && skillHasProblem(id) && TEACH_ACTS[twinHabit(id).id]) : null;
+    const fix = les.skillId && (teachUnitBuiltin(up || les.skillId) || teachUnitBuiltin(les.skillId));
     const f = fix && fix.aims.find(a => a.kind === 'fix');
     if(f) aims.push({ ...f, id: (les.id.replace(/^sch-/, 's') + '.fix').slice(0, 32) });
     return { id: les.id, skill: les.skillId || null, title: les.title, aims, lessonId: les.id };

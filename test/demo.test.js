@@ -62,6 +62,17 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     E(`switchProfile(S.profiles.findIndex(p => p.name === 'Kabir (demo)'))`); await wait(20);
     E(`go('lessons')`); await wait(20);
     check('…and Kabir\'s shows no pictures step', E(`S.name`) === 'Kabir (demo)' && !/Pictures first/.test(screen()) && /school/i.test(screen()), screen().slice(0, 300));
+    // The book's subtraction lessons are tagged sub2, whose sums never borrow; Kabir's habit
+    // is on borrowing — Munni's sum must still be his own mistake, and Asha's the usual one.
+    const fixOn = who => JSON.parse(E(`(() => { const i = S.profiles.findIndex(p => p.name === '${who}'); if(S.activeProfile !== i) switchProfile(i);
+      const les = { id: 'sch-sub2demo', school: true, skillId: 'sub2', title: { en: 'Taking away', hi: 'घटाना' },
+        aims: [{ id: 'a1', point: { en: 'can take away', hi: 'घटा सकते हैं' } }] };
+      const u = teachUnitFor(les), f = u.aims.find(a => a.kind === 'fix'), s = teachBegin(u);
+      const it = s && s.items.find(x => x.fix); return JSON.stringify({ skill: f && f.skill, m: it && it.fix.mistake, habit: it && it.fix.habit }); })()`));
+    const kf = fixOn('Kabir (demo)'), af = fixOn('Asha (demo)');
+    check('on the book\'s two-digit taking-away lesson (sub2, no borrowing), Munni acts out Kabir\'s own borrowing habit — and Asha gets the usual mistake',
+      kf.skill === 'borrow' && kf.m === 'smallbig' && kf.habit === true && af.skill === 'sub2' && af.m !== 'smallbig' && !af.habit, JSON.stringify([kf, af]));
+    E(`switchProfile(S.profiles.findIndex(p => p.name === 'Kabir (demo)'))`); await wait(20);
     check('the class sync would send neither demo child (sync is off for both)', E(`typeof syncBody === 'function' ? Object.keys((syncBody('DEMO01') || {}).children || {}).length : S.profiles.filter(p => p.demo && p.syncOn).length`) === 0, '');
     E(`S.ctx.tcode = 'DEMO01'; S.lang = 'hi'; go('teacher')`); await wait(20);
     check('the demo card is in Hindi too, and now offers to remove them', /डेमो कक्षा/.test(screen()) && !!btn(/डेमो बच्चे हटाएँ/), screen().slice(-400));

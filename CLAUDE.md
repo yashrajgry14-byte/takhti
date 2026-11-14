@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v61` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v62` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -1024,7 +1024,8 @@ protégé effect, and the one place a child gets to *say* what they learnt.
   one goes through it (the test checks all of them).
 - **Munni's sum** (`kind:'fix'`, `teachFixFor()`): a `skillProblem()` sum
   worked with a real mistake — **this child's own habit** when the twin has
-  one (`twinHabit()`), else the skill's commonest (`TEACH_FIX_DEFAULT`) —
+  one (`twinHabit()`; on a school lesson, a habit on the next skill up counts —
+  borrowing for a two-digit taking-away lesson, whose own sums never borrow), else the skill's commonest (`TEACH_FIX_DEFAULT`) —
   in her own words (`TEACH_ACTS`, never the right answer: checked over
   every skill, three ages and many sums). The child taps the right answer
   of three, then explains her slip, judged against what that mistake needs
