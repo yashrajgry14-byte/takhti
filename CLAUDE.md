@@ -47,7 +47,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 43 test suites (see Testing)
+npm test           # all 44 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -176,6 +176,7 @@ tools/build-audio.mjs       build-time narration into audio/, played offline: le
 tools/try-syllabus.mjs      one chapter, live: Gemini drafts (draftCore) → the phone's own checks (sylClean in a vm) → one repair round → syllabus-run/report.md and raw.json (with every model's outcome); the key from voice/.env, never written; --recheck raw.json checks a saved run again with today's checker, no Gemini
 tools/build-library.mjs     the lesson library: every chapter of a book in library/<book>/book.json drafted (try-syllabus's pipeline), checked, repaired once, only the passing lessons kept in <ch>.json (+ raw, report); --import a try-syllabus run, --recheck, then bundled into src/content/library.js
 library/<book>/             book.json (the book and its chapters, written by a person), <ch>.json / .raw.json / .report.md (built); the PDFs are never committed
+tools/live-check.mjs        Gemini live, before a demo: Munni's voice, hearing lines read with a planted slip (TTS-made), judging four explanations, judging from a recording — per model in the chain, timed against the phone's budget; says what to set (GEMINI_SPEECH_MODEL, TAKHTI_TEACH_MODEL); live-check/report.md, never the key
 tools/compare-speech.mjs    day 1: a folder of children's recordings through both speech providers; where each misjudged a word, and whether to switch the reading check back to Sarvam
 ```
 
@@ -1051,7 +1052,8 @@ protégé effect, and the one place a child gets to *say* what they learnt.
   terms to an older family): the recording (`cloudListen()` with
   a longer turn) goes to `POST /teach/judge` on the voice server, written
   down by the speech adapter (`voice/speech.js`: Gemini, Sarvam as backup), then judged
-  by Gemini (`api/teachback.mjs`, `judgeCore()`). Otherwise the phone's
+  by Gemini (`api/teachback.mjs`, `judgeCore()`; its model is `TAKHTI_TEACH_MODEL`,
+  else `GEMINI_MODEL`, since it must answer in 9 s and drafting can wait). Otherwise the phone's
   on-device recognizer or typing, and the **offline judge**
   (`teachRubric()`: covered when every idea has a word). Typed words go to
   the judge too when the terms allow it. No answer in time → the honest
@@ -1345,7 +1347,7 @@ app is a client of it, and only when a parent says so.
 
 ## Testing
 
-`npm test` runs 43 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 44 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -1391,6 +1393,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `planner` | vm + jsdom | two children, the same approved shapes aims, two different paths from their own records (pictures first / the school's story), each step's why in EN/HI, the plan held; maths: the cartoon first or the school's story, the cartoon done once watched, the school's lesson after it the check, a skipped step not coming back; reading: three children, three ways inside the same lesson (Munni reads first / pieces / you first), each counted as that way; already knows it → show it, teach Munni; a gap underneath first (perimeter → add2) with a built-in lesson; status from what the child really did; labelling (pictures, the story, the check labels nothing), the answers settling it, two misses switching the way and the plan following; in the app: the Story Fire's path and why (EN/HI), the button starting the next step, then the school lesson as the check; a reading lesson's passage in pieces, or read aloud by Munni first; a maths lesson's button opening the cartoon (seeded sampling, so every run is the same); what goes to the teacher (short codes only, the mirror carrying it, the server keeping a well-formed path and dropping the rest), the teacher's card grouping four children by path (EN/HI), the parent's notice naming it |
 | `library` | Node + jsdom | the builder against a stand-in Gemini with the seventh live run's own drafts: only passing lessons kept, the failure named with why, the title from the chapter, a missing PDF skipped and said, raw and report written, the key in no file, a built chapter skipped (no call), `--force --only`, `--recheck` and `--import` with no call; `--scan` (a whole book's PDFs in natural order, front matter and answers left out, a listed chapter's title kept, a built chapter now on another file warned about); a chapter Gemini can't do doesn't stop the book, and `summary.md` says so; a bad book.json refused with each fault; the bundle (every chapter in order, one not built yet with no lessons, no raw drafts); the shipped `src/content/library.js` exactly what `library/` builds; PDFs ignored; in the app, offline: no book for Class 2 said, Maths Mela offered for Class 3, the term laid out with this week's chapter, the plan kept on the phone, this week's lessons in the approval card (every one checked again, no network), approved into the class, the child's "From your school" with their path; a chapter added later at the end, ↑ ↓, a not-built week said, next week; a lesson edited after it was built not offered; Hindi; no fetch at all |
 | `demo` | jsdom | the demo card says what it is; two labelled demo children join the class with sync off; their records come from the mind's own rounds and a real twin habit for Kabir (none for Asha); the library's chapter approved → two different paths for the same lesson; the teacher's path card names both; switching to each goes to the map and shows their own Story Fire; removal deletes exactly them (phone and mirror) and restores the real child; no room → said, none added; Hindi |
+| `live-check` | Node | `tools/live-check.mjs` against a stand-in Gemini with a good, a slip-tidying and a down model: slips kept or "wrote the line", every case failing with its reason when down, the judge's four cases (a credit-anything judge fails, an echo of Munni's question downgraded by the quote check), judging from a recording, the advice naming the settings, the key in no output, no key → nobody called; the judge's own model setting (`TAKHTI_TEACH_MODEL`, else `GEMINI_MODEL`) |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers
@@ -1627,7 +1630,9 @@ Honest edges of what's built:
    phone's `audio/webm` (Opus) clips haven't been tried against the live
    API. The TTS request follows the docs, which are inconsistent about the
    voice field (`voiceConfig.voice` vs `prebuiltVoiceConfig.voiceName`) —
-   one retry covers both; the Batch API's job state and inline answers
+   one retry covers both. `tools/live-check.mjs` (14 Nov) runs hearing, judging and
+   TTS live, per model, before a demo — with an adult TTS voice, so passing is
+   necessary, not enough; the Batch API's job state and inline answers
    appear under two field names in the docs, and both are read. Phone
    calls (Bolna) use the transcriber set in Bolna's dashboard — unchanged.
    The v3 terms wording is for the lawyer, not final.

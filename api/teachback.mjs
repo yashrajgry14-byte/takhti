@@ -118,7 +118,8 @@ Answer with JSON only, in the given schema, one entry per point.`;
 
 async function callGemini(payload, ages, env, fetchImpl){
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
-  const model = env.GEMINI_MODEL || 'gemini-3.8-flash';
+  // its own model when set: the judge must answer in the phone's 9 s, drafting can wait
+  const model = env.TAKHTI_TEACH_MODEL || env.GEMINI_MODEL || 'gemini-3.8-flash';
   const url = `${env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   const base = { systemInstruction: { parts: [{ text: instructions(ages) }] }, contents: [{ role: 'user', parts: [{ text: JSON.stringify(payload) }] }] };
   // the current structured-output field first, then the older one (as api/syllabus.mjs)
