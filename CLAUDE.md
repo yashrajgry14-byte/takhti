@@ -86,7 +86,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v72` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v73` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -518,7 +518,8 @@ child sees.
   lesson with one question gets a second at play time (`lesYourTurn()`):
   "your turn", the same skill's `skillProblem()` at the child's band (right
   by construction), two answers, the other a real mistake, with its own
-  `sum` so Ask Munni explains that sum — the approved lesson and its id
+  `sum` so Ask Munni explains that sum (one whose own steps would land on
+  its answer is passed over) — the approved lesson and its id
   unchanged; shapes, clocks, reading and two-operation skills get none
   (the teacher's card says which). Under each
   lesson the child sees **their own path** to its aims (`planFor()`, see
@@ -1124,7 +1125,9 @@ only knows this one question.
   number, multiply first — or a hard word in akshara pieces then the whole
   line. Munni says each line (`speak()`) as it appears in the help sheet.
   **She never says the final answer**: the last line asks it, and the
-  child answers on screen. No network, so it works offline.
+  child answers on screen; a step that lands on the answer by itself
+  (65 − 25: the tens leave 40) is asked, not told, and "put them
+  together" then names no numbers. No network, so it works offline.
 - **Still stuck? Munni calls.** With the parent's Talking Munni switch on
   and a signal, *Still stuck? Talk to Munni* opens the same live web call
   as Talking Munni (`talkHelp()`), about this one question. The server

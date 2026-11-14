@@ -35,6 +35,7 @@ const XL = {
   carry:      { en: '{o} has one more ten in it, so the tens become {t2}, and {o2} ones are left.', hi: '{o} में एक और दहाई है, तो दहाई {t2} हो गई, और इकाई में {o2} बचे।' },
   carryQ:     { en: '{o} has one more ten in it. What is {t} and ten?', hi: '{o} में एक और दहाई है। {t} और दस कितने?' },
   joinUp:     { en: 'Now put {t} and {o} together.', hi: 'अब {t} और {o} को मिलाओ।' },
+  joinPlain:  { en: 'Now put the tens and the ones together.', hi: 'अब दहाई और इकाई को मिलाओ।' },
   // subtraction
   foldDown:   { en: 'Hold up {a} fingers. Now fold down {b} of them.', hi: '{a} उँगलियाँ उठाओ। अब उनमें से {b} नीचे करो।' },
   countUp:    { en: 'Count the fingers that are still up.', hi: 'अब गिनो, कितनी उँगलियाँ अभी भी उठी हैं।' },
@@ -56,6 +57,7 @@ const XL = {
   mulPartQ:   { en: 'What is {x} times {b}?', hi: '{x} गुणा {b} कितने?' },
   mulPart:    { en: '{x} times {b} is {p}.', hi: '{x} गुणा {b} बराबर {p}।' },
   addParts:   { en: 'Now add {p} and {q}.', hi: 'अब {p} और {q} जोड़ो।' },
+  addPlain:   { en: 'Now add the two parts together.', hi: 'अब दोनों हिस्सों को जोड़ो।' },
   share:      { en: 'Share {a} into {b} equal groups. Think: {b} times what makes {a}?', hi: '{a} को {b} बराबर हिस्सों में बाँटो। सोचो: {b} गुणा कितना करें तो {a} बने?' },
   countIn:    { en: 'Count in {b}s: {list}… and stop at {a}. How many {b}s did you count?', hi: '{b}-{b} करके गिनो: {list}… और {a} पर रुको। कितनी बार {b} गिना?' },
   mulFirst:   { en: 'Multiply first! {b} times {c} is {m}.', hi: 'पहले गुणा करते हैं! {b} गुणा {c} बराबर {m}।' },
@@ -185,6 +187,17 @@ function explainMath(pIn){
     }
     final = { tpl: XL.finalDiv, vals: { a, b } };
   } else return null;
+
+  // A step can land on the final answer by itself (65 − 25: the tens leave 40, the ones 0;
+  // 30 × 4: the ones part is 0). Munni never says it: such a step is told as its question,
+  // and a "put them together" line with a zero part names no numbers.
+  for(const st of steps){
+    const said = Object.keys(st.vals).filter(k => (st.tell.en || '').includes('{' + k + '}'));
+    if(!said.some(k => st.vals[k] === ans)) continue;
+    if(st.ask) st.tell = st.ask;
+    else if(st.tell === XL.joinUp) st.tell = XL.joinPlain;
+    else if(st.tell === XL.addParts) st.tell = XL.addPlain;
+  }
 
   return { kind: 'math', a, b, c, op, ans, text: c != null ? `${a} + ${b} × ${c}` : `${a} ${op} ${b}`, steps, final };
 }

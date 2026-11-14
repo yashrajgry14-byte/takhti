@@ -199,8 +199,17 @@ function lesYourTurn(les){
   if(!les || !les.school || les.subject === 'read' || !les.skillId || typeof skillProblem !== 'function') return les;
   if(SKILL_OPS[les.skillId] === 'mix' || !skillHasProblem(les.skillId)) return les;
   if(les.beats.filter(b => b.t === 'ask').length !== 1) return les;
-  const f = skillProblem(les.skillId, seedOf(les.id + '|turn|' + (S.id || '')));
-  if(!f || f.c != null) return les;
+  // a sum whose own steps would land on its answer (65 − 25: the tens leave 40) is passed over,
+  // so Ask Munni's help on it can't give the answer away; the seed keeps it the same for this child
+  let f = null;
+  for(let k = 0; k < 12; k++){
+    const g = skillProblem(les.skillId, seedOf(les.id + '|turn|' + (S.id || '') + (k ? '|' + k : '')));
+    if(!g || g.c != null) continue;
+    if(!f) f = g;
+    const x = typeof explainMath === 'function' ? explainMath({ a: g.a, b: g.b, op: g.op }) : null;
+    if(!x || !x.steps.some(st => st.ans === g.ans || Object.values(st.vals).includes(g.ans))){ f = g; break; }
+  }
+  if(!f) return les;
   const wrong = f.opts.find(o => Number(o) !== f.ans);
   if(wrong == null) return les;
   const first = seedOf(les.id) % 2 === 0, opts = first ? [String(f.ans), wrong] : [wrong, String(f.ans)];

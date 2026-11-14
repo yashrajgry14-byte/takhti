@@ -73,6 +73,16 @@ const fakeBolna = http.createServer((req, res) => {
   }
   check(`explainMath covers ${cases.length} sums of every kind, in both languages`, missing === 0, missing + ' unexplained');
   check('…never says the final answer, never a raw template', leaks.length === 0, leaks.slice(0, 3).join('\n'));
+  // a step that lands on the final answer by itself (65 − 25: the tens leave 40, the ones 0) is told
+  // as its question, so no line ever states a worked-out number that IS the answer
+  const landed = [];
+  for(let a = 11; a <= 99; a++) for(let b = 1; b <= 99; b++) for(const op of ['+', '−', '×']){
+    if((op === '−' && b > a) || (op === '×' && (a > 25 || b > 13))) continue;
+    const y = X.explainMath({ a, b, op });
+    if(y) for(const s of y.steps) for(const k of ['t', 'o', 'p', 'q', 'm', 't2', 'o2']) if((s.tell.en || '').includes('{' + k + '}') && s.vals[k] === y.ans) landed.push(`${y.text}: ${s.tell.en}`);
+  }
+  check('…and a step that lands on the answer itself (65 − 25, 30 × 4) never says it — it is asked, or put together without numbers', landed.length === 0
+    && !X.explainLines(X.explainMath({ a: 65, b: 25, op: '−' }), 'en').some(l => /\b40\b/.test(l)) && !X.explainLines(X.explainMath({ a: 30, b: 4, op: '×' }), 'hi').some(l => /\b120\b/.test(l)), landed.slice(0, 3).join('\n'));
   check('…every small question it asks has a real whole-number answer', wrongAsks.length === 0, wrongAsks.slice(0, 3).join(', '));
   const x = X.explainMath({ a: 38, b: 24, op: '+' });
   check('38 + 24 is tens, then ones, then the carried ten, then the child\'s own answer',

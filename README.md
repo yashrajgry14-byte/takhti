@@ -48,7 +48,7 @@ through their child's school.
 arithmetic and shapes, in Hindi and English. **Next:** more books, more
 classes, every Indian language.
 
-**Build status:** web prototype on `main` (offline shell `takhti-v71`, 46 test
+**Build status:** web prototype on `main` (offline shell `takhti-v73`, 46 test
 suites). The lesson library was built with live Gemini calls; Gemini's hearing,
 judging and voice have been run live (`tools/live-check.mjs`); the voice server
 has had its first live Bolna call. Nothing has been tried with real children
