@@ -119,13 +119,25 @@ for(const lang of ['hi', 'en']) for(const p of PROVIDERS){
   if(!t.words && !t.failed) continue;
   console.log(`  ${lang === 'hi' ? 'Hindi  ' : 'English'} ${p.padEnd(6)}: ${t.missed} missed + ${t.invented} invented of ${t.words} words (${pct(t.missed + t.invented, t.words)})${t.failed ? `, ${t.failed} clip(s) failed` : ''}`);
 }
-const gh = tot.gemini.hi, sh = tot.sarvam.hi;
 const bad = x => x.missed + x.invented;
-let verdict;
-if(!gh.words) verdict = 'No Hindi clips with a truth file — add some (with .truth.txt) to decide.';
-else if(!sh.words) verdict = 'Sarvam gave no answers to compare against (is SARVAM_API_KEY set?).';
-else if(bad(gh) > bad(sh) * 1.25 + 1 || gh.missed > sh.missed + 1)
-  verdict = 'Gemini misjudges children reading Hindi clearly more than Sarvam (or hides more slips). Switch: SPEECH_PROVIDER=sarvam in voice/.env.';
-else verdict = 'Gemini is not clearly worse on Hindi here. Keep SPEECH_PROVIDER=gemini, and keep testing with more children.';
+// one verdict per language, then one for the setting (which covers both): hiding a
+// slip is the worse error (the child isn't taught), so missed slips weigh first
+const judge = lang => {
+  const g = tot.gemini[lang], sv = tot.sarvam[lang], name = lang === 'hi' ? 'Hindi' : 'English';
+  if(!g.words && !sv.words) return { name, pick: null, say: `No ${name} clips with a truth file.` };
+  if(!sv.words) return { name, pick: 'gemini', say: `${name}: Sarvam gave no answers (is SARVAM_API_KEY set?).` };
+  if(!g.words) return { name, pick: 'sarvam', say: `${name}: Gemini gave no answers.` };
+  if(g.missed > sv.missed || (g.missed === sv.missed && bad(g) > bad(sv) * 1.25 + 1)) return { name, pick: 'sarvam', say: `${name}: Sarvam is better (Gemini hid ${g.missed} slip(s), Sarvam ${sv.missed}).` };
+  if(sv.missed > g.missed || (g.missed === sv.missed && bad(sv) > bad(g) * 1.25 + 1)) return { name, pick: 'gemini', say: `${name}: Gemini is better (Sarvam hid ${sv.missed} slip(s), Gemini ${g.missed}).` };
+  return { name, pick: null, say: `${name}: no clear difference.` };
+};
+const jh = judge('hi'), je = judge('en');
+const picks = [jh.pick, je.pick].filter(Boolean);
+let verdict = [jh.say, je.say].join('\n') + '\n';
+if(picks.includes('sarvam') && !picks.includes('gemini')) verdict += 'Use SPEECH_PROVIDER=sarvam in voice/.env.';
+else if(picks.includes('gemini') && !picks.includes('sarvam')) verdict += 'Keep SPEECH_PROVIDER=gemini.';
+else if(picks.length) verdict += 'The languages disagree: hiding a slip in Hindi matters most for these children — follow the Hindi line, and record more clips.';
+else verdict += 'No clear winner yet — keep the SPEECH_PROVIDER you have, and record more clips (with .truth.txt), especially slips.';
+verdict += `\n(${Object.values(tot.gemini).reduce((a, x) => a + x.words, 0)} words judged. A handful of clips is a hint, not a decision.)`;
 console.log('\n' + verdict);
 if(jsonOut){ fs.writeFileSync(jsonOut, JSON.stringify({ totals: tot, verdict, clips: report }, null, 2)); console.log(`(written to ${jsonOut})`); }

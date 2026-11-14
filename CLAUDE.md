@@ -1666,7 +1666,13 @@ Honest edges of what's built:
    Flash models were still 503 or silent. So, for now: readings to Sarvam
    (`SPEECH_PROVIDER=sarvam`), Teach Munni explanations still heard by
    Gemini (`TAKHTI_TEACH_HEAR=gemini` — judged on meaning, where a tidied word
-   costs nothing) and judged by flash-lite (`TAKHTI_TEACH_MODEL`); the Batch API's job state and inline answers
+   costs nothing) and judged by flash-lite (`TAKHTI_TEACH_MODEL`). The first
+   run of `tools/compare-speech.mjs` on a person's own recordings (14 Nov,
+   four clips, deliberate slips) found Sarvam's verbatim mode writing English
+   in Devanagari ("द डॉग रन टू द पार्क" — "run" heard right, but unmatchable),
+   so English lines now go to Sarvam as `codemix` (`SARVAM_EN_MODE`); Gemini
+   hid "run" and invented "apple"; both wrote "भाई" for a "बाई" — too few
+   clips to decide Hindi, and its verdict is now per language; the Batch API's job state and inline answers
    appear under two field names in the docs, and both are read. Phone
    calls (Bolna) use the transcriber set in Bolna's dashboard — unchanged.
    The v3 terms wording is for the lawyer, not final.

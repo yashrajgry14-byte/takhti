@@ -59,6 +59,9 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   check('a cut-off or bogus recording is refused before it goes anywhere', (await sarvam.handle({ consent: true, audio: 'not audio!' }, '1.1.1.3')).status === 400 && seen.length === 1, '');
   await sarvam.handle({ consent: true, lang: 'en', audio }, '9.9.9.9'); await sarvam.handle({ consent: true, lang: 'en', audio }, '9.9.9.9'); await sarvam.handle({ consent: true, lang: 'en', audio }, '9.9.9.9');
   check('a limit per address', (await sarvam.handle({ consent: true, lang: 'en', audio }, '9.9.9.9')).status === 429, '');
+  const enCall = seen.filter(x => x.lang === 'en-IN')[0];
+  check('an English line goes to Sarvam in codemix mode (verbatim would write it in Devanagari: "द डॉग रन"), Hindi stays verbatim',
+    enCall && enCall.mode === 'codemix' && seen[0].mode === 'verbatim', JSON.stringify(seen.map(x => [x.lang, x.mode])));
   check('no speech service set up: an honest 503', (await createAsr({}).handle({ consent: true, audio }, '1.1.1.4')).status === 503, '');
   const whisper = createAsr({ WHISPER_API_KEY: 'wk', WHISPER_URL: base + '/v1/audio/transcriptions' });
   const w = await whisper.handle({ consent: true, lang: 'en', mime: 'audio/webm', audio }, '2.2.2.2');

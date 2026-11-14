@@ -50,7 +50,11 @@ async function transcribe(buf, mime, lang, env) {
     url = (env.SARVAM_API_BASE || 'https://api.sarvam.ai') + '/speech-to-text';
     headers = { 'api-subscription-key': env.SARVAM_API_KEY };
     form.append('model', env.SARVAM_STT_MODEL || 'saaras:v3');
-    form.append('mode', 'verbatim');                       // what was said, not what was meant
+    // what was said, not what was meant. Verbatim writes in the language's own
+    // script, so an English line came back in Devanagari ("द डॉग रन") and the
+    // phone's matcher couldn't match it (compare-speech, 14 Nov); for English,
+    // codemix keeps English words in English letters.
+    form.append('mode', lang === 'en' ? (env.SARVAM_EN_MODE || 'codemix') : (env.SARVAM_HI_MODE || 'verbatim'));
     form.append('language_code', LANGS[lang] || 'hi-IN');
   } else {
     url = env.WHISPER_URL || 'https://api.openai.com/v1/audio/transcriptions';

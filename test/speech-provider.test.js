@@ -340,10 +340,10 @@ const stand = http.createServer((req, res) => {
   check('tools/compare-speech.mjs: each clip through both providers, and where each misjudged — Gemini "MISSED A SLIP" on भाई, Sarvam judged every word right',
     c.code === 0 && /riya-00\.webm[\s\S]*?gemini[^\n]*MISSED A SLIP on भाई/.test(c.out) && /riya-00\.webm[\s\S]*?sarvam[^\n]*judged every word right/.test(c.out), c.out + c.err);
   check('…a clip without a truth file shows where the two disagree, not who is right', /cat\.webm[\s\S]*?(they disagree on|they agree on every word)/.test(c.out), c.out);
-  check('…and when Gemini hides children\'s Hindi slips, it says to switch: SPEECH_PROVIDER=sarvam', /Switch: SPEECH_PROVIDER=sarvam/.test(c.out), c.out.split('\n').slice(-4).join(' | '));
+  check('…and when Gemini hides children\'s Hindi slips, it says to switch: SPEECH_PROVIDER=sarvam', /Hindi: Sarvam is better/.test(c.out) && /Use SPEECH_PROVIDER=sarvam/.test(c.out), c.out.split('\n').slice(-4).join(' | '));
   G.said = 'मेरा बाई स्कूल जाता है';
   c = await cmp();
-  check('…when Gemini hears the slips as well, it says keep Gemini', /Keep SPEECH_PROVIDER=gemini/.test(c.out), c.out.split('\n').slice(-4).join(' | '));
+  check('…when Gemini hears the slips as well, it names no winner and asks for more clips (never a switch on a tie)', /Hindi: no clear difference/.test(c.out) && /No clear winner yet/.test(c.out) && !/Use SPEECH_PROVIDER/.test(c.out), c.out.split('\n').slice(-4).join(' | '));
 
   stand.close();
   console.log('\n' + '-'.repeat(70) + `\n${passes}/${passes + failures} checks passed`);
