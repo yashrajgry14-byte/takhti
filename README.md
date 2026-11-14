@@ -17,7 +17,9 @@ phone, offline:
 2. **Each child gets their own path to those aims**, worked out on the phone
    from their own answers: already knows it → show it; a gap underneath → that
    first; otherwise the way that has worked for *this* child — pictures, a
-   cartoon or the story; Munni reading first, or hard words in pieces.
+   cartoon or the story; Munni reading first, or hard words in pieces. After
+   the school's lesson, one more question a step harder or easier, from how
+   their answers went.
 3. **Then the child teaches it back.** Munni the elephant "forgets" the lesson,
    and the child explains it out loud. For a sum, Munni makes the child's *own*
    habitual mistake, and the child has to catch it. Gemini judges which points
@@ -25,7 +27,7 @@ phone, offline:
 4. **Gaps come back.** A point the child couldn't explain is taught again their
    way, and Munni asks again. The teacher sees it per point, by name: who
    explained it first time, who couldn't, who was taught again and then
-   could.
+   could — and who gets the questions right but can't explain it yet.
 
 **Who pays:** schools, and government or CSR programmes; families get Takhti
 through their child's school.
