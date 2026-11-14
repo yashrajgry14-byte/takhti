@@ -373,17 +373,17 @@ function validateLesson(les){
     if(!GEN_BEATS.includes(x.t)) errs.push(`beat ${i}: unknown type "${x.t}"`);
     if(x.say) bi(x.say, `beat ${i} say`);
 
-    // a shape (content/geometry.js): drawable, inside the band, and the
-    // question after it is checked against the answer worked out from it
-    const geo = typeof GEO_TYPES !== 'undefined' && GEO_TYPES.includes(x.t);
+    // a picture (a shape, a clock… — content/geometry.js's registry): drawable,
+    // inside the band, and the question after it is checked against the answer
+    // worked out from the drawing
+    const geo = typeof picIs === 'function' && picIs(x.t);
     if(geo){
-      last = null; for(const e of geoErrors(x, b.maxNumber)) errs.push(`beat ${i}: ${e}`);
-      const asks = x.t === 'figures' || x.ask != null;
-      if(!asks) taughtPics.push(geoSig(x));
-      else if(taughtPics.includes(geoSig(x))) errs.push(`beat ${i}: the question's picture is the teaching picture again (which shows the answer) — ask about a different shape or size`);
+      last = null; for(const e of picErrors(x, b)) errs.push(`beat ${i}: ${e}`);
+      if(!picAsks(x)) taughtPics.push(picSig(x));
+      else if(taughtPics.includes(picSig(x))) errs.push(`beat ${i}: the question's picture is the teaching picture again (which shows the answer) — ${picKind(x).again}`);
     }
     if(x.t !== 'ask') pic = geo ? x : null;
-    if(x.t === 'ask' && pic){ const e = geoAskError(pic, x); if(e) errs.push(`beat ${i}: ${e}`); }
+    if(x.t === 'ask' && pic){ const e = picAskError(pic, x); if(e) errs.push(`beat ${i}: ${e}`); }
 
     // every number a child meets must sit inside their age band
     for(const k of ['a','b','n']){

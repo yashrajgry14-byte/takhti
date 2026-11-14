@@ -117,18 +117,6 @@ function litArt(b){
       return `<div class="lit-shapes">${(b.shapes||[]).map((s,i)=>
         `<span style="animation-delay:${i*0.16}s">${s}</span>`).join('')}</div>`;
 
-    case 'clock':
-      return `<svg class="lit-clock" viewBox="0 0 120 120">
-        <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" stroke-width="3" opacity=".5"/>
-        ${[...Array(12)].map((_,i)=>{const a=(i*30-90)*Math.PI/180;
-          return `<text x="${60+Math.cos(a)*40}" y="${64+Math.sin(a)*40}" font-size="11"
-                   text-anchor="middle" fill="currentColor" opacity=".7">${i||12}</text>`;}).join('')}
-        <line x1="60" y1="60" x2="${60+Math.cos((b.h%12*30-90)*Math.PI/180)*24}"
-              y2="${60+Math.sin((b.h%12*30-90)*Math.PI/180)*24}"
-              stroke="var(--marigold)" stroke-width="5" stroke-linecap="round"/>
-        <line x1="60" y1="60" x2="60" y2="22" stroke="var(--marigold)" stroke-width="3" stroke-linecap="round" opacity=".6"/>
-        <circle cx="60" cy="60" r="4" fill="var(--marigold)"/>
-      </svg>`;
     default:
       return null;      // not ours — let the arithmetic renderer handle it
   }
@@ -144,8 +132,7 @@ const LIT_SAY = {
   readline:{en:'Now you read this line out.',              hi:'अब तुम यह पंक्ति पढ़ो।' },
   sortbin:{ en:'Put each one where it belongs.',           hi:'हर एक को उसकी जगह रखो।' },
   pattern:{ en:'Look at the order. What comes next?',      hi:'क्रम देखो। आगे क्या आएगा?' },
-  shape:  { en:'Look at the shapes. Count their sides.',   hi:'आकार देखो। भुजाएँ गिनो।' },
-  clock:  { en:'The short hand points to {h}. It is {h} o clock.', hi:'छोटी सुई {h} पर है। {h} बजे हैं।' }
+  shape:  { en:'Look at the shapes. Count their sides.',   hi:'आकार देखो। भुजाएँ गिनो।' }
 };
 function litSay(b){
   const tpl = LIT_SAY[b.t];
@@ -342,26 +329,15 @@ const LIT_CONCEPTS = [
     {t:'line', a:Math.max(0,p.n-2), b:1, hops:3},
     {t:'ask', q:gq(`What comes after ${p.n}?`, `${p.n} के बाद क्या?`), ...genOpts(p.n+1,'count')},
     {t:'win', say:gq('Every number has a place in the line.', 'हर संख्या की एक जगह होती है।')}
-  ]},
-
-{ id:'clockhour', key:(p)=>'clock-' + p.h, band:'early', ic:'🕐', strand:'num',
-  title:(p)=>gq(`${p.h} o'clock`, `${p.h} बजे`),
-  sub:()=>gq('Reading the short hand', 'छोटी सुई पढ़ना'),
-  space:()=>[1,2,3,4,5,6,7,8,9,10,11,12].map(h=>({h})),
-  beats:(p)=>[
-    {t:'clock', h:p.h},
-    {t:'ask', derived:true, q:gq('What time is it?', 'क्या समय हुआ?'),
-      opts:[`${p.h} o'clock`, `${p.h===12?1:p.h+1} o'clock`],
-      hiOpts:[`${p.h} बजे`, `${p.h===12?1:p.h+1} बजे`], correct:0},
-    {t:'win', say:gq('The short hand tells the hour.', 'छोटी सुई घंटा बताती है।')}
   ]}
+  // (o'clock lessons moved to content/clock.js, where clocks are drawn and their answers read off the hands)
 ];
 
 /* The validator rejects any beat type it does not know — which is exactly
    what it should do, and it caught all 147 of these on the first run. New
    primitives have to be declared, not just drawn. */
 const LIT_BEAT_TYPES = ['letter','sound','blend','word','rhyme','readline',
-                        'sortbin','pattern','shape','clock'];
+                        'sortbin','pattern','shape'];
 if(typeof GEN_BEATS !== 'undefined')
   for(const t of LIT_BEAT_TYPES) if(!GEN_BEATS.includes(t)) GEN_BEATS.push(t);
 
@@ -376,7 +352,7 @@ const LIT_SKILL_MAP = {
   matra:['u-matra1','h1-matra'],
   hiblend:[], hisight:[], sanyukt:['h2-sanyukt'],
   sorting:['n-sort'], shapes:['n-shapes','shapes2d'],
-  patterns:['l-pattern'], ordering:['u-order'], clockhour:['time2']
+  patterns:['l-pattern'], ordering:['u-order']
 };
 
 if(typeof CONCEPTS !== 'undefined') CONCEPTS.push(...LIT_CONCEPTS);

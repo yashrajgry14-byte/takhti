@@ -35,7 +35,7 @@ const LOAD_LIST = ['src/core/matcher.js','src/core/readability.js','src/content/
                 'src/content/games.js','src/content/themes.js','src/content/facts.js','src/content/ages.js',
                 'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
                 'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-                'src/content/comprehension.js','src/content/geometry.js',
+                'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js',
                 'src/core/diagnose.js'];
 for(const f of LOAD_LIST)
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
@@ -92,11 +92,13 @@ console.log(`absorbed (read*/write* duplicates removed from the count): ${cov.ab
 // gaps moves 55→48. All re-verified against the real merged graph (this
 // file loads curriculum-early.js, literacy.js AND comprehension.js, same
 // order as index.html — see the self-check above).
-check('103 skills counted after dedup (126 raw − 23 read/write-absorbed duplicates)', cov.total===103, `got ${cov.total}`);
-check('55% teachable today (57/103) — comprehension.js closed 7 gaps on top of the 47% (48/103), geometry.js 2 more (perimeter, angles)',
-  cov.pct===55 && cov.taught===57, `got ${cov.pct}% (${cov.taught})`);
+// (14 Nov 2026: content/clock.js adds the Class 3 skill time3 — time to five minutes,
+// and how long — and teaches it: 104 skills, 58 taught)
+check('104 skills counted after dedup (127 raw − 23 read/write-absorbed duplicates; time3 added with clock.js)', cov.total===104, `got ${cov.total}`);
+check('56% teachable today (58/104) — comprehension.js closed 7 gaps on top of the 47% (48/103), geometry.js 2 more (perimeter, angles), clock.js the new time3',
+  cov.pct===56 && cov.taught===58, `got ${cov.pct}% (${cov.taught})`);
 check("geometry.js's shape lessons closed perimeter and angles", !cov.gaps.includes('4·perimeter') && !cov.gaps.includes('4·angles'), JSON.stringify(cov.gaps.filter(g => /perimeter|angles/.test(g))));
-check("literacy.js's own concepts closed two PRE-EXISTING maths gaps (shapes2d, time2)",
+check("two PRE-EXISTING maths gaps stay closed: shapes2d (literacy.js) and time2 (the o'clock lessons, now in clock.js)",
   !cov.gaps.includes('1·shapes2d') && !cov.gaps.includes('2·time2'),
   JSON.stringify(cov.gaps.filter(g=>/shapes2d|time2/.test(g))));
 check("comprehension.js's own 7 concepts closed their matching gaps (e2-compre, e2-noun, e3-compre, e3-verb, e3-para, h3-compre, h3-vyakaran) — this is the exact drift the stale version of this file missed",

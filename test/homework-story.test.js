@@ -19,7 +19,7 @@ const LOAD_LIST = [
   'src/content/games.js','src/content/themes.js','src/content/facts.js','src/content/ages.js',
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
   'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-  'src/content/comprehension.js','src/content/geometry.js','src/core/diagnose.js','src/core/mathgen.js'
+  'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/core/diagnose.js','src/core/mathgen.js'
 ];
 for(const f of LOAD_LIST) vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
 vm.runInContext(`globalThis.__ = { genHomeworkStory, genGameSvg, gameById, S };`, ctx);

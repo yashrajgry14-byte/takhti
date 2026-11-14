@@ -26,6 +26,44 @@
    perimeter; Gemini's school lessons use the same beats
    (core/syllabus.js).
    ================================================================== */
+/* ---------------- pictures: every beat whose answer is read off its drawing ----------------
+   Shapes are the first kind; content/clock.js and the beats after it register
+   the same way. Everything that draws, checks, narrates or helps with a picture
+   — validateLesson(), the school checks (core/syllabus.js), the lesson player,
+   Ask Munni, the games' pool — asks these, so a new kind of picture is wired
+   everywhere a shape is. A kind gives: expect (the answer from the drawing),
+   errors (what can't be drawn, or is over the band), askError (the question
+   after it, both languages), sig (what it looks like), asks (a question's
+   picture, not a teaching one), art, sayBoth / say (Munni's words, never the
+   answer of a question's picture), hint (Ask Munni: how to look), clean (a
+   drafted beat, known fields only); optionally said (does a line say its
+   answer), tidy, aimKeys / aimNeed and warnings for the teacher. */
+const PICTURES = {};
+function picRegister(types, kind){ for(const t of types) PICTURES[t] = kind; }
+function picIs(t){ return Object.prototype.hasOwnProperty.call(PICTURES, t); }
+function picKind(b){ return b && picIs(b.t) ? PICTURES[b.t] : null; }
+function picErrors(b, band){ const k = picKind(b); return k ? k.errors(b, band || AGE_BANDS.developing) : []; }
+function picAskError(pic, ask){ const k = picKind(pic); return k ? k.askError(pic, ask) : null; }
+function picSig(b){ const k = picKind(b); return k ? k.sig(b) : ''; }
+function picAsks(b){ const k = picKind(b); return !!k && k.asks(b); }
+function picArt(b){ const k = picKind(b); return k ? k.art(b) : null; }
+function picSayBoth(b){ const k = picKind(b); return k ? k.sayBoth(b) : null; }
+function picSay(b){ const k = picKind(b); return k ? k.say(b) : null; }
+function picClean(x){ return picKind(x).clean(x); }
+function picSaid(text, pic){ const k = picKind(pic); return !!(k && k.said && text && k.said(String(text), pic)); }
+/* The picture a question at beat i is about, if it is one. */
+function picFor(les, i){
+  for(let k = i - 1; k >= 0; k--){
+    const b = les.beats[k];
+    if(b.t === 'ask') continue;
+    return picIs(b.t) ? b : null;
+  }
+  return null;
+}
+function picHint(les, i){ const p = picFor(les, i), k = picKind(p); return k ? k.hint(les, i) : null; }
+/* the kinds of picture a lesson uses (each once) */
+function picKindsIn(beats){ return [...new Set((beats || []).filter(b => b && picIs(b.t)).map(b => PICTURES[b.t]))]; }
+
 const GEO_TYPES = ['figure', 'corner', 'figures'];
 const GEO_KINDS = ['square', 'rectangle', 'triangle', 'circle'];
 const GEO_ASKS = ['name', 'sides', 'corners', 'perimeter', 'equal', 'meet'];
@@ -454,6 +492,11 @@ const GEO_CONCEPTS = [
 ];
 
 /* ---------------- register ---------------- */
+picRegister(GEO_TYPES, {
+  name: 'shape', expect: geoExpect, errors: (b, band) => geoErrors(b, band.maxNumber), askError: geoAskError, sig: geoSig,
+  asks: b => b.t === 'figures' || b.ask != null, again: 'ask about a different shape or size',
+  art: geoArt, sayBoth: geoSayBoth, say: geoSay, hint: geoHint, clean: geoClean
+});
 if(typeof GEN_BEATS !== 'undefined') for(const t of GEO_TYPES) if(!GEN_BEATS.includes(t)) GEN_BEATS.push(t);
 if(typeof CONCEPTS !== 'undefined') CONCEPTS.push(...GEO_CONCEPTS);
 const GEO_SKILL_MAP = { sides:['shapes2d'], whichshape:['shapes2d'], squarecorner:['angles'], centre:['shapes2d'], perim:['perimeter'] };

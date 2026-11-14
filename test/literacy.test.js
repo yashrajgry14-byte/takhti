@@ -25,11 +25,13 @@ if(rejected.length) rejected.slice(0,6).forEach(r=>console.log('   ', r.id, '→
 const lit=lessons.filter(l=>X.LIT_CONCEPTS.some(c=>c.id===l.concept));
 console.log('literacy/early :', lit.length);
 
-check('34 concepts (19 original arithmetic + 15 literacy/early-numeracy)', X.CONCEPTS.length===34, `got ${X.CONCEPTS.length}`);
-check('467 lessons generated', lessons.length===467, `got ${lessons.length}`);
+// (14 Nov 2026: the o'clock concept, clockhour — 12 lessons — moved to content/clock.js,
+// where clocks are drawn and their answers read off the hands; this file tests literacy.js alone)
+check('33 concepts (19 original arithmetic + 14 literacy/early-numeracy)', X.CONCEPTS.length===33, `got ${X.CONCEPTS.length}`);
+check('455 lessons generated', lessons.length===455, `got ${lessons.length}`);
 check('0 rejected — every generated literacy lesson passed the validator first try', rejected.length===0,
   `${rejected.length} rejected: ${rejected.slice(0,3).map(r=>r.id+' → '+r.errors[0]).join(' | ')}`);
-check('148 of the 467 lessons come from the new literacy/early-numeracy concepts', lit.length===148, `got ${lit.length}`);
+check('136 of the 455 lessons come from the literacy/early-numeracy concepts (148 before clockhour moved to clock.js)', lit.length===136, `got ${lit.length}`);
 
 // every new beat must render and narrate
 const seen=new Set(); let noArt=0, noSay=0;
@@ -50,8 +52,9 @@ check('every literacy beat renders non-empty HTML via litArt()', noArt===0, `${n
 check('every literacy beat narrates in both languages via litSay()', noSay===0, `${noSay} beat/language combination(s) missing narration`);
 // literacy.js's own LIT_BEAT_TYPES array lists 10 entries, not the 9 the
 // brief described — verified by counting the actual array, not assumed.
-const LIT_TYPES = ['letter','sound','blend','word','rhyme','readline','sortbin','pattern','shape','clock'];
-check(`all ${LIT_TYPES.length} new beat types actually got exercised by the generated lessons (brief said 9; LIT_BEAT_TYPES itself has ${LIT_TYPES.length})`,
+// (its clock beat went to content/clock.js with the o'clock lessons — 9 now)
+const LIT_TYPES = ['letter','sound','blend','word','rhyme','readline','sortbin','pattern','shape'];
+check(`all ${LIT_TYPES.length} of literacy.js's own beat types actually got exercised by the generated lessons`,
   LIT_TYPES.filter(t=>seen.has(t)).length===LIT_TYPES.length,
   `saw: ${[...seen].join(', ')}`);
 
@@ -100,8 +103,11 @@ console.log('still missing:', gaps3.map(s=>s.id).join(', ') || 'none');
 // inflated the subject figure from 89% to 91%. With the ladder properly
 // separated, the subject-only figure lands exactly on the brief's
 // original 89% — re-verified by running it, not assumed.
-check('Nursery-Class 3 subject coverage (EVS and the ladder both excluded) is 89% — the discrepancy from the earlier session is now fully explained and closed',
-  pct3===89, `got ${pct3}%`);
+// (14 Nov 2026: 86% for literacy.js alone — telling the hour (time2) is now taught by
+// content/clock.js, not loaded here, and the new Class 3 time3 skill is one more to teach;
+// with clock.js both are taught — see test/diagnose.test.js and test/pictures.test.js)
+check('Nursery-Class 3 subject coverage (EVS and the ladder both excluded) is 86% for literacy.js alone (89% before the o\'clock lessons moved to clock.js)',
+  pct3===86, `got ${pct3}%`);
 
 // The blended figure — subject skills plus both ladders folded back in —
 // is the earlier session's 91%, unchanged, but now arrived at
@@ -111,8 +117,8 @@ const combinedDone = d3.length + ladders.reduce((a,l)=>a+l.done,0);
 const combinedTotal = upto3.length + ladders.reduce((a,l)=>a+l.n,0);
 const combinedPct = Math.round(combinedDone/combinedTotal*100);
 console.log(`\nOverall (subject + both ladders), Nursery-Class 3: ${combinedDone}/${combinedTotal} = ${combinedPct}%`);
-check('overall Nursery-Class 3 figure (subject matrix + both ladders) is 91% — same total as before, now composed transparently instead of conflated',
-  combinedPct===91, `got ${combinedPct}%`);
+check('overall Nursery-Class 3 figure (subject matrix + both ladders) is 88% for literacy.js alone (91% before the o\'clock lessons moved to clock.js)',
+  combinedPct===88, `got ${combinedPct}%`);
 
 // contentQueue() and diagnosis must still see the ladder in full — the
 // strand split only changes how it's REPORTED, not what's teachable or

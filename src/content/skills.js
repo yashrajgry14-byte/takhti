@@ -110,6 +110,7 @@ const SKILLS = [
 {id:'fracunit',   g:3, en:'Halves and quarters',      hi:'आधा और चौथाई',        pre:['divshare'],             concepts:['frac','half']},
 {id:'measure3',   g:3, en:'Length in cm and m',       hi:'सेमी और मीटर',        pre:['skip'],                 concepts:['measure']},
 {id:'twostep3',   g:3, en:'Two-step problems',        hi:'दो चरण के सवाल',      pre:['add2','sub2'],          concepts:['twostep']},
+{id:'time3',      g:3, en:'Time to five minutes, and how long', hi:'पाँच-पाँच मिनट में समय, और कितना समय लगा', pre:['time2','skip'], concepts:[]},   // concepts: content/clock.js
 
 /* ---------------- Class 4 ---------------- */
 {id:'mult2x1',    g:4, en:'Multiplying by one digit', hi:'एक अंक से गुणा',      pre:['tables','place3'],      concepts:['array','table']},

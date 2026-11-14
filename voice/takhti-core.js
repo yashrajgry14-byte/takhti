@@ -30,7 +30,7 @@ const FILES = [
   'state.js',
   'content/sentences.js', 'content/games.js', 'content/themes.js', 'content/facts.js', 'content/ages.js',
   'content/skills.js', 'content/curriculum-early.js', 'content/lessons.js', 'core/lesson-gen.js',
-  'content/literacy.js', 'content/comprehension.js', 'content/geometry.js',
+  'content/literacy.js', 'content/comprehension.js', 'content/geometry.js', 'content/clock.js',
   'core/diagnose.js', 'core/class-share.js', 'core/srs.js',
   'content/competencies.js',
   'core/profiles.js', 'core/matcher.js', 'core/adaptive.js',

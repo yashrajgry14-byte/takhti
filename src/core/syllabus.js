@@ -140,6 +140,10 @@ function sylTidy(beats){
     if(x.t === 'figure' && x.ask == null) x.ask = sylInferAsk(x, next);
     if(x.t === 'figures' && x.find == null) x.find = sylInferFind(next);
   });
+  // the other kinds of picture tidy their own beats the same way (a clock's
+  // missing ask read from its question, a time written as a note) — only
+  // what is certain, and still checked against the drawing afterwards
+  out.forEach((x, i) => { const k = picKind(x); if(k && k.tidy) k.tidy(x, out[i + 1]); });
   // folds a circle needs: "where do the folds meet?" can't be asked without
   // two or more, and a teaching circle whose words are about folds must show
   // them. The answer (the centre) is the same for any number from 2, so they
@@ -348,18 +352,22 @@ function sylInferAsk(fig, q){
    these words don't cover is left to the teacher's reading. */
 function sylAimGaps(les){
   const beats = (les && les.beats) || [];
-  if(!beats.some(b => GEO_TYPES.includes(b.t))) return [];
+  if(!beats.some(b => picIs(b.t))) return [];
   const asked = new Set();
   beats.forEach((b, i) => {
     if(!beats[i + 1] || beats[i + 1].t !== 'ask') return;
     if(b.t === 'figure' && b.ask) asked.add(b.ask);
     if(b.t === 'corner') asked.add('kind');
     if(b.t === 'figures'){ asked.add('row'); if(b.find === 'squarecorner') asked.add('kind'); }
+    const k = picKind(b); if(k && k.aimKeys) k.aimKeys(b).forEach(x => asked.add(x));   // a clock's "what time?", "how long?"
   });
+  const kinds = picKindsIn(beats).filter(k => k.aimNeed);
   const need = en => {
     const t = String(en || '').toLowerCase();
     // (the ninth run: "find the centre … by folding" — the question checks where folds meet, not the folding)
     if(/\b(fold|cut|tear|draw|trace)\b\s+(a|an|the|it|this|round|paper)|\bpaper\b|\b(by\s+)?folding\b(?!\s+lines?)|\bcut(ting)?\s+out\b|\bcutting\b/.test(t)) return ['(a screen can\'t check this)'];
+    // the aims of the other pictures this lesson draws (a clock: reading the time, time passed)
+    for(const k of kinds){ const n = k.aimNeed(t); if(n) return n; }
     if(/perimeter|distance round|all the way round/.test(t)) return ['perimeter'];
     if(/square corner|right angle/.test(t)) return ['kind'];
     if(/cent(re|er)|fold/.test(t)) return ['meet'];
@@ -392,16 +400,18 @@ function sylLessonWarnings(les){
   // a maths topic taught only by a sentence to read: the question checks that
   // the child read the sentence, not that they can do the maths (the first
   // whole-book build: a clock chapter's "The short hand is the hour hand.
-  // Which hand is the hour hand?"). Takhti can't draw clocks, coins or scales yet.
+  // Which hand is the hour hand?" — clocks are drawn now, content/clock.js).
   const sk = typeof SKILLS !== 'undefined' && les && SKILLS.find(k => k.id === les.skillId);
   const mathsTopic = sk && !['lit', 'eng', 'hin'].includes(sk.strand || '');
-  if(mathsTopic && asks && !beats.some(b => b && (SYL_MATH.includes(b.t) || ['figure', 'corner', 'figures'].includes(b.t))))
+  if(mathsTopic && asks && !beats.some(b => b && (SYL_MATH.includes(b.t) || picIs(b.t))))
     out.push({ en:'This maths topic is taught only by a sentence to read — the questions check that the child read it, not that they can do it. Takhti has no picture for this topic yet.',
                hi:'गणित का यह विषय केवल पढ़ने के वाक्य से सिखाया गया है — प्रश्न यह जाँचते हैं कि बच्चे ने वाक्य पढ़ा, यह नहीं कि वह कर सकता है। तख़्ती के पास इस विषय का चित्र अभी नहीं है।' });
   // every question with the same right answer (the ninth run: 4 sides, then 4 corners)
   const rights = beats.filter(b => b && b.t === 'ask' && Array.isArray(b.opts)).map(b => String(b.opts[b.correct]).trim().toLowerCase());
   if(rights.length >= 2 && new Set(rights).size === 1) out.push({ en:`Every question's right answer is "${rights[0]}" — a child who learnt that one answer passes them all.`,
     hi:`हर प्रश्न का सही उत्तर "${rights[0]}" है — एक ही उत्तर याद रखने वाला बच्चा सब में पास हो जाएगा।` });
+  // what each kind of picture knows a lesson can't tell (a clock: every time on the hour)
+  for(const k of picKindsIn(beats)) if(k.warnings) out.push(...k.warnings(beats));
   // Hindi words drafts get wrong in this setting (a short list from the live runs, for the teacher to look at — never changed by Takhti)
   const hiText = [];
   const walk = v => { if(!v) return; if(typeof v === 'string') hiText.push(v); else if(Array.isArray(v)) v.forEach(walk); else if(typeof v === 'object'){ if(typeof v.hi === 'string') hiText.push(v.hi); for(const k of ['hints', 'hiOpts']) if(v[k]) walk(v[k]); } };
@@ -478,26 +488,28 @@ function sylClean(raw, opts){
   beats.forEach((x, i) => {
     x = x && typeof x === 'object' ? x : {};
     const t = x.t;
-    // a shape (content/geometry.js): only what can be drawn; validateLesson()
-    // then checks the question after it against the answer read off the drawing
-    if(GEO_TYPES.includes(t)){
-      const g = geoClean(x);
+    // a picture (a shape, a clock… — content/geometry.js's registry): only what
+    // can be drawn; validateLesson() then checks the question after it against
+    // the answer read off the drawing
+    if(picIs(t)){
+      const g = picClean(x);
       g.errors.forEach(e => errs.push(`beat ${i}: ${e}`));
       if(x.say){ const s = bi(x.say, `beat ${i}'s narration`, 200); if(s) g.beat.say = s; }
-      // a teaching picture with no words: Munni says the shape's facts herself
-      // ("A rectangle: 4 sides and 4 square corners") — write them in, so the
-      // teacher reads what the child will hear and the giveaway check hears it too
-      // (the fifth live run passed two lessons whose counting answer she'd have said)
-      if(!g.beat.say && t !== 'figures' && g.beat.ask == null){ const o = geoSayBoth(g.beat); if(o) g.beat.say = { en: o.en, hi: o.hi }; }
+      // a teaching picture with no words: Munni says its facts herself
+      // ("A rectangle: 4 sides and 4 square corners", "It is half past 3") — write
+      // them in, so the teacher reads what the child will hear and the giveaway
+      // check hears it too (the fifth live run passed two lessons whose counting
+      // answer she'd have said)
+      if(!g.beat.say && !picAsks(g.beat)){ const o = picSayBoth(g.beat); if(o) g.beat.say = { en: o.en, hi: o.hi }; }
       // a teaching circle that talks about its folds must draw them (the fourth
       // live run: "the point where fold lines meet is the centre" over a plain circle)
       if(g.beat.kind === 'circle' && g.beat.ask == null && g.beat.say && !(g.beat.folds >= 2)
          && /fold|meet|cent(re|er)|तह|मिल|केंद्र|केन्द्र/i.test(g.beat.say.en + ' ' + g.beat.say.hi))
         errs.push(`beat ${i}: the picture doesn't show the folds its narration talks about — give the circle folds: 2 or more`);
       // remember whether this picture teaches or is a question's picture
-      if(g.beat.say) lead.push({ ...g.beat.say, pic: t !== 'figures' && g.beat.ask == null ? 'teach' : 'question', at: i });
+      if(g.beat.say) lead.push({ ...g.beat.say, pic: picAsks(g.beat) ? 'question' : 'teach', at: i });
       les.beats.push(g.beat); lastShown = t; shown = g.beat;
-      if(t !== 'figures' && g.beat.ask == null) taught = true;           // a teaching picture
+      if(!picAsks(g.beat)) taught = true;                                // a teaching picture
       return;
     }
     const fields = SYL_FIELDS[t];
@@ -554,7 +566,8 @@ function sylClean(raw, opts){
     if(t === 'ask'){
       const opts = out.opts || [], hiOpts = out.hiOpts || [];
       if(opts.length !== 2) errs.push(`beat ${i}: a question needs exactly 2 answers`);
-      if(hiOpts.some(o => !/^\d+$/.test(o) && !/[ऀ-ॿ]/.test(o))) errs.push(`beat ${i}: the Hindi answers must be in Devanagari (Yes/No → हाँ/नहीं)`);
+      // (a number, or a time written in digits — "3:30" — is the same in Hindi)
+      if(hiOpts.some(o => !/^\d+$/.test(o) && !/^\d{1,2}:\d{2}$/.test(o) && !/[ऀ-ॿ]/.test(o))) errs.push(`beat ${i}: the Hindi answers must be in Devanagari (Yes/No → हाँ/नहीं)`);
       if(!asked && !taught) errs.push(`beat ${i}: teach before you ask — put a teaching picture, a worked example or a passage before the first question`);
       asked = true;
       const right = opts[out.correct];
@@ -564,8 +577,8 @@ function sylClean(raw, opts){
         else if(sylExpect(shown) != null && Number(right) !== sylExpect(shown))
           errs.push(`beat ${i}: marked ${right} right, but the picture before it shows ${sylExpect(shown)}`);
         checks.push('sum');
-      } else if(lastShown && GEO_TYPES.includes(lastShown)){
-        checks.push('shape');                          // validateLesson() reads the answer off the drawing
+      } else if(lastShown && picIs(lastShown)){
+        checks.push('shape');                          // validateLesson() reads the answer off the drawing (a shape's, a clock's…)
         // "Are all sides equal in this square?" — the question mustn't name the shape it asks about;
         // nor "How many sides does this triangle have?" — the name gives the count, so nobody counts
         const names = k => GEO_WORDS[k] && out.q && GEO_WORDS[k].some(r => r.test(out.q.en) || r.test(out.q.hi));
@@ -590,11 +603,13 @@ function sylClean(raw, opts){
       // intro too — except that a teaching picture may name the idea it
       // teaches ("this is the centre") when the answer is a word; a number
       // said there ("it has 4 sides") still gives a count away
-      const geoQ = lastShown && GEO_TYPES.includes(lastShown);
+      const geoQ = lastShown && picIs(lastShown);
       const said = geoQ ? lead.filter(s => s.pic !== 'teach' || /^\d+$/.test(String(right))) : lead;
       // named where it was said, so the repair round changes that line (the
-      // sixth live run's repair rewrote the teaching words and left the intro's)
-      const gave = right != null && !opts.every(o => /^(yes|no)$/i.test(o)) && said.find(s => sylSaysIt(s.en, right) || sylSaysIt(s.hi, hiOpts[out.correct]));
+      // sixth live run's repair rewrote the teaching words and left the intro's);
+      // a picture also reads the line its own way ("साढ़े छह बजे" says 6:30, "half an hour" says 30)
+      const gave = right != null && !opts.every(o => /^(yes|no)$/i.test(o))
+        && said.find(s => sylSaysIt(s.en, right) || sylSaysIt(s.hi, hiOpts[out.correct]) || (geoQ && (picSaid(s.en, shown) || picSaid(s.hi, shown))));
       if(gave) errs.push(`beat ${i}: the lines just before this question say the answer "${right}" (${gave.at === 'intro' ? 'in the intro' : `in beat ${gave.at}'s words`}) — let the child work it out`);
       lead = [];
     } else if(t !== 'intro' && t !== 'win'){
@@ -608,7 +623,7 @@ function sylClean(raw, opts){
 
   if(les.beats.length && les.beats[les.beats.length - 1].t !== 'win')
     les.beats.push({ t:'win', say:{ en:'Well done. You learnt it today.', hi:'शाबाश! आज तुमने यह सीख लिया।' } });
-  les.subject = les.beats.some(b => SYL_MATH.includes(b.t) || GEO_TYPES.includes(b.t)) ? 'math' : 'read';
+  les.subject = les.beats.some(b => SYL_MATH.includes(b.t) || picIs(b.t)) ? 'math' : 'read';
   // the right answer isn't always first: a stable shuffle, by the lesson's own content
   // (the aims are inside the id, without their ids: an aim edited on the way changes it)
   const id = 'sch-' + sylHash({ t: les.title, s: les.sub, k: les.skillId, a: les.aims.map(a => ({ ...a, id: undefined })), b: les.beats.map(b => ({ ...b, correct: undefined, hiOpts: undefined,
