@@ -13,7 +13,9 @@ const calls = [];
 function standIn(url, init){
   const model = decodeURIComponent(url.match(/models\/([^:]+):/)[1]);
   const body = JSON.parse(init.body);
-  calls.push({ model, key: init.headers['x-goog-api-key'] });
+  const think = body.generationConfig && body.generationConfig.thinkingConfig;
+  calls.push({ model, key: init.headers['x-goog-api-key'], think: think ? think.thinkingLevel : null });
+  if(model === 'nothink-model' && think) return Promise.resolve({ ok: false, status: 400, json: () => Promise.resolve({}) });
   const json = d => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(d) });
   if(model === 'down-model') return Promise.resolve({ ok: false, status: 503, json: () => Promise.resolve({}) });
   const parts = body.contents[0].parts;
@@ -54,13 +56,18 @@ function standIn(url, init){
   const tidy = hear('tidy-model').rows;
   check('a model that writes the line instead of what was said fails on each slip, and says so ("wrote … — the line")',
     tidy.filter(r => !r.pass).length === 3 && /the line, not what was said/.test(tidy.find(r => r.case === 'hi-slip').why) && tidy.find(r => r.case === 'hi-clean').pass, JSON.stringify(tidy));
-  check('a model that is down fails every case, with the reason', hear('down-model').rows.every(r => !r.pass && /503/.test(r.why)), JSON.stringify(hear('down-model').rows));
+  check('…and without the line the same model writes what was said: the line is what pulled it into correcting',
+    tidy.every(r => r.noLine && r.noLine.pass), JSON.stringify(tidy.map(r => r.noLine)));
+  const down = hear('down-model').rows;
+  check('a model that is down fails with the reason, and after two calls with no answer its other cases are skipped',
+    !down[0].pass && /503/.test(down[0].why) && down.slice(2).every(r => r.skipped), JSON.stringify(down));
+  check('hearing and judging ask for low thinking (and Munni\'s voice does not)', calls.filter(c => c.model !== 'tts-model').every(c => c.think === 'low') && calls.filter(c => c.model === 'tts-model').every(c => !c.think), JSON.stringify(calls.slice(0, 8)));
   check('the good judge: both full explanations covered, the vague and the echo not', judge('good-model').rows.every(r => r.pass), JSON.stringify(judge('good-model').rows));
   check('a judge that credits anything fails the vague explanation (its quote check can\'t save it when the quote is real)',
     !judge('tidy-model').rows.find(r => r.case === 'vague').pass, JSON.stringify(judge('tidy-model').rows));
   check('…and repeating Munni\'s own question back is downgraded for that point by the quote check, whatever the judge said',
     /borrow\.when=partly/.test(judge('tidy-model').rows.find(r => r.case === 'echo-munni').verdicts), JSON.stringify(judge('tidy-model').rows));
-  check('a judge that is down gives no judgement — the phone\'s rubric would decide', judge('down-model').rows.every(r => !r.pass && /rubric/.test(r.why)), JSON.stringify(judge('down-model').rows));
+  check('a judge that is down gives no judgement — the phone\'s rubric would decide — and after two its other cases are skipped', judge('down-model').rows.every(r => !r.pass && /rubric|skipped/.test(r.why)) && judge('down-model').rows.slice(2).every(r => /skipped/.test(r.why)), JSON.stringify(judge('down-model').rows));
   check('judging from a recording: heard by the good hearer, judged by the good judge, both points covered',
     out.judgeAudio && out.judgeAudio.pass && out.judgeAudio.hearModel === 'good-model' && out.judgeAudio.judgeModel === 'good-model', JSON.stringify(out.judgeAudio));
   check('the advice names the settings to change', out.advice.some(a => /GEMINI_SPEECH_MODEL=good-model/.test(a)) && out.advice.some(a => /TAKHTI_TEACH_MODEL=good-model/.test(a)), out.advice.join(' | '));
@@ -76,6 +83,22 @@ function standIn(url, init){
   await judgeCore(body, { GEMINI_API_KEY: KEY, GEMINI_MODEL: 'draft-model', TAKHTI_TEACH_MODEL: 'good-model' }, 't1', standIn);
   await judgeCore(body, { GEMINI_API_KEY: KEY, GEMINI_MODEL: 'good-model' }, 't2', standIn);
   check('Teach Munni\'s judge uses TAKHTI_TEACH_MODEL when set, else GEMINI_MODEL', calls[0].model === 'good-model' && calls[1].model === 'good-model' && calls.length === 2, JSON.stringify(calls));
+
+  // only a tidier that hears well without the line → the advice says to send no line
+  const out2 = await lc.run({ env, models: 'tidy-model', quiet: true }, standIn);
+  check('when the only hearer writes the line, but hears right without it, the advice says GEMINI_HEAR_LINE=0',
+    out2.advice.some(a => /GEMINI_SPEECH_MODEL=tidy-model and GEMINI_HEAR_LINE=0/.test(a)), out2.advice.join(' | '));
+  // a model that refuses the thinking field still answers, without it
+  calls.length = 0;
+  const { checkReading } = require('../voice/speech.js');
+  const clip = { buf: Buffer.concat([Buffer.alloc(44), Buffer.from('The dog run to the park')]), mime: 'audio/wav' };
+  const r = await checkReading(clip, 'The dog ran to the park', 'en', { env: { GEMINI_API_KEY: KEY, GEMINI_SPEECH_MODEL: 'nothink-model' }, fetch: standIn, provider: 'gemini' });
+  check('a model that refuses thinkingLevel (400) is asked again without it, and hears', r.transcript === 'The dog run to the park' && calls[0].think === 'low' && calls.some(c => c.think === null), JSON.stringify([r, calls]));
+  const r2 = await judgeCore(body, { GEMINI_API_KEY: KEY, TAKHTI_TEACH_MODEL: 'nothink-model' }, 't3', standIn);
+  check('…and so is the judge', r2.json && r2.json.judge && r2.json.judge.aims.length === 1, JSON.stringify(r2.json));
+  calls.length = 0;
+  await checkReading(clip, 'The dog ran to the park', 'en', { env: { GEMINI_API_KEY: KEY, GEMINI_SPEECH_MODEL: 'good-model', TAKHTI_THINKING: 'off' }, fetch: standIn, provider: 'gemini' });
+  check('TAKHTI_THINKING=off sends no thinking field', calls.length === 1 && calls[0].think === null, JSON.stringify(calls));
 
   let threw = '';
   try{ await lc.run({ env: { GEMINI_API_KEY: '', GOOGLE_API_KEY: '' }, quiet: true }, () => { throw new Error('called'); }); }catch(e){ threw = e.message; }

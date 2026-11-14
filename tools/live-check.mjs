@@ -19,6 +19,8 @@
    3. The judge: four explanations of borrowing (full English, full Hinglish,
       vague, only repeating Munni) must come out covered / covered / not
       covered / not covered.
+      Each clip is heard with the line (as the app sends it) and without it;
+      a model that gives no answer twice is skipped for the rest of a part.
    4. The judge from a recording: the full explanation spoken, heard, judged.
    5. With --clip: your own recording heard against --line.
 
@@ -92,7 +94,7 @@ export async function run(opts, fetchImpl){
   const env = { ...env0, TAKHTI_SPEECH_BUDGET_MS: '40000', GEMINI_SPEECH_TIMEOUT_MS: '35000', TAKHTI_TEACH_TIMEOUT_MS: '35000', GEMINI_TTS_TIMEOUT_MS: '40000', TAKHTI_TEACH_PER_HOUR: '1000' };
   const models = chain(env0, opts.models);
   const say = opts.quiet ? () => {} : (...a) => console.log(...a);
-  const out = { at: new Date().toISOString(), models, tts: null, hear: [], judge: [], judgeAudio: null, clip: null };
+  const out = { at: new Date().toISOString(), thinking: env.TAKHTI_THINKING || 'low', models, tts: null, hear: [], judge: [], judgeAudio: null, clip: null };
   let ip = 0;
 
   // 1. Munni's voice — also makes the clips for 2 and 4
@@ -114,35 +116,49 @@ export async function run(opts, fetchImpl){
     if(!r.error) clips.explain = { buf: Buffer.from(r.audio, 'base64'), mime: r.mime };
   }
 
-  // 2. hearing, per model
-  say(`\n2. Hearing a reading (the phone waits ${BUDGET.hear / 1000} s)`);
+  // 2. hearing, per model — with the line (as the app sends it) and without it
+  say(`\n2. Hearing a reading (the phone waits ${BUDGET.hear / 1000} s; thinking ${env.TAKHTI_THINKING || 'low'})`);
   if(!Object.keys(clips).length) say('   — skipped: no clips (Munni\'s voice failed). Use --clip with your own recording.');
+  const DOWN = 2;   // calls with no answer before a model's remaining cases are skipped
   for(const model of models){
-    const rows = [];
+    const rows = []; let dead = 0;
     for(const c of HEAR_CASES){
       if(!clips[c.id]) continue;
-      t0 = Date.now();
-      const r = await checkReading(clips[c.id], c.line, c.lang, { env: { ...env, GEMINI_SPEECH_MODEL: model }, fetch: fetchImpl, provider: 'gemini' });
-      const v = r.error ? { pass: false, why: (r.tried || [r.error]).join('; ') } : hearVerdict(c, r.transcript);
-      rows.push({ case: c.id, what: c.what, ms: ms(t0), heard: r.transcript || '', ...v, error: !!r.error });
+      if(dead >= DOWN){ rows.push({ case: c.id, what: c.what, ms: 0, heard: '', pass: false, why: 'skipped: no answer twice', error: true, skipped: true }); continue; }
+      const hearOnce = async line => {
+        const t = Date.now();
+        const r = await checkReading(clips[c.id], c.line, c.lang, { env: { ...env, GEMINI_SPEECH_MODEL: model, GEMINI_HEAR_LINE: line ? '1' : '0' }, fetch: fetchImpl, provider: 'gemini' });
+        const v = r.error ? { pass: false, why: (r.tried || [r.error]).join('; ') } : hearVerdict(c, r.transcript);
+        return { ms: ms(t), heard: r.transcript || '', ...v, error: !!r.error };
+      };
+      const w = await hearOnce(true);
+      const n = w.error && dead + 1 >= DOWN ? { ms: 0, heard: '', pass: false, why: 'skipped', error: true } : await hearOnce(false);
+      dead = w.error && n.error ? dead + 1 : 0;
+      rows.push({ case: c.id, what: c.what, ...w, noLine: n });
     }
     if(!rows.length) continue;
     out.hear.push({ model, rows });
     say(`   ${model}`);
-    for(const x of rows) say(`     ${x.pass ? '✓' : '✗'} ${x.case.padEnd(9)} ${String(x.ms).padStart(6)} ms${x.ms > BUDGET.hear ? ' (too slow)' : ''}  heard "${x.heard}"${x.pass ? '' : '  — ' + x.why}`);
+    for(const x of rows){
+      if(x.skipped){ say(`     – ${x.case.padEnd(9)} skipped (no answer twice)`); continue; }
+      say(`     ${x.pass ? '✓' : '✗'} ${x.case.padEnd(9)} with line ${String(x.ms).padStart(6)} ms${x.ms > BUDGET.hear ? ' (too slow)' : ''}  "${x.heard}"${x.pass ? '' : '  — ' + x.why}`);
+      say(`     ${x.noLine.pass ? '✓' : '✗'} ${''.padEnd(9)} no line   ${String(x.noLine.ms).padStart(6)} ms${x.noLine.ms > BUDGET.hear ? ' (too slow)' : ''}  "${x.noLine.heard}"${x.noLine.pass ? '' : '  — ' + x.noLine.why}`);
+    }
   }
 
   // 3. the judge, per model
   say(`\n3. Judging a Teach Munni explanation (the phone waits ${BUDGET.judge / 1000} s)`);
   for(const model of models){
-    const rows = [];
+    const rows = []; let dead = 0;
     for(const c of JUDGE_CASES){
+      if(dead >= DOWN){ rows.push({ case: c.id, ms: 0, verdicts: '', pass: false, why: 'skipped: no answer twice', error: 'skipped' }); continue; }
       t0 = Date.now();
       const r = await judgeCore({ consent: true, lang: c.lang, ages: [7, 8], ask: AIMS[0].id, aims: AIMS, transcript: c.said },
         { ...env, TAKHTI_TEACH_MODEL: model }, 'live-check-' + (ip++), fetchImpl);
       const j = r.json || {};
       const v = judgeVerdict(c, j.judge);
       rows.push({ case: c.id, ms: ms(t0), verdicts: (j.judge && j.judge.aims || []).map(a => `${a.id}=${a.verdict}`).join(' '), ...v, error: j.error || null });
+      dead = j.judge ? 0 : dead + 1;
     }
     out.judge.push({ model, rows });
     say(`   ${model}`);
@@ -151,7 +167,7 @@ export async function run(opts, fetchImpl){
 
   // 4. the judge from a recording, with the first model that judged everything right
   const judgeOk = out.judge.find(m => m.rows.every(x => x.pass && x.ms <= BUDGET.judge)) || out.judge.find(m => m.rows.every(x => x.pass));
-  const hearOk = out.hear.find(m => m.rows.every(x => x.pass && x.ms <= BUDGET.hear)) || out.hear.find(m => m.rows.every(x => x.pass));
+  const hearOk = hearPick(out.hear, true) || hearPick(out.hear, false);
   say('\n4. Judging from a recording');
   if(clips.explain && judgeOk){
     const hearModel = hearOk ? hearOk.model : models[0];
@@ -181,29 +197,41 @@ export async function run(opts, fetchImpl){
   return out;
 }
 
+/* The first model that heard every case right, in one way (with the line,
+   as the app sends it, or without it), within the phone's time if `fast`. */
+export function hearPick(hear, fast){
+  for(const mode of ['line', 'noline'])
+    for(const m of hear){
+      const rs = m.rows.map(x => mode === 'line' ? x : x.noLine).filter(Boolean);
+      if(rs.length && rs.every(x => x.pass && (!fast || x.ms <= BUDGET.hear))) return { model: m.model, line: mode === 'line' };
+    }
+  return null;
+}
+
 export function advise(out, env, models){
   const a = [];
   const fits = (m, b) => m.rows.length && m.rows.every(x => x.pass && x.ms <= b);
   const works = m => m.rows.length && m.rows.every(x => x.pass);
-  const hear = out.hear.find(m => fits(m, BUDGET.hear)), hearSlow = out.hear.find(works);
+  const hear = hearPick(out.hear, true), hearSlow = hearPick(out.hear, false);
   const judge = out.judge.find(m => fits(m, BUDGET.judge)), judgeSlow = out.judge.find(works);
   const curHear = env.GEMINI_SPEECH_MODEL || 'gemini-3.8-flash', curJudge = env.TAKHTI_TEACH_MODEL || env.GEMINI_MODEL || 'gemini-3.8-flash';
   if(!out.tts || !out.tts.ok) a.push(`Munni's voice (${out.tts && out.tts.model}) failed: ${out.tts && out.tts.error}. The offline pack can't be built with Gemini until it works; tools/build-audio.mjs --provider sarvam still can.`);
-  if(hear) a.push(hear.model === curHear ? `Hearing: ${curHear} works and fits the phone's time. Nothing to change.` : `Hearing: set GEMINI_SPEECH_MODEL=${hear.model} in voice/.env (${curHear} ${out.hear.some(m => m.model === curHear) ? 'failed or was too slow' : 'was not tried'}).`);
-  else if(hearSlow) a.push(`Hearing: only ${hearSlow.model} heard every slip, and too slowly for the phone's 6 s. Readings would fall back to Sarvam; consider SPEECH_PROVIDER=sarvam until a faster model hears as well.`);
-  else if(out.hear.length) a.push('Hearing: no model kept every slip. Set SPEECH_PROVIDER=sarvam in voice/.env and run tools/compare-speech.mjs on real recordings before deciding.');
+  const lineNote = h => h.line ? '' : ' and GEMINI_HEAR_LINE=0 (with the line, it wrote the line instead of what was said)';
+  if(hear) a.push(hear.model === curHear && hear.line ? `Hearing: ${curHear} works and fits the phone's time. Nothing to change.` : `Hearing: set GEMINI_SPEECH_MODEL=${hear.model}${lineNote(hear)} in voice/.env.`);
+  else if(hearSlow) a.push(`Hearing: only ${hearSlow.model}${hearSlow.line ? '' : ' without the line'} heard every slip, and too slowly for the phone's 6 s. Readings would wait and then fall back to Sarvam: set SPEECH_PROVIDER=sarvam for now.`);
+  else if(out.hear.length) a.push('Hearing: no model kept every slip in time. Set SPEECH_PROVIDER=sarvam in voice/.env for now, and run tools/compare-speech.mjs on real recordings before deciding.');
   if(judge) a.push(judge.model === curJudge ? `Judge: ${curJudge} works and fits. Nothing to change.` : `Judge: set TAKHTI_TEACH_MODEL=${judge.model} in voice/.env (${curJudge} failed or was too slow; lesson drafting keeps its own setting).`);
   else if(judgeSlow) a.push(`Judge: only ${judgeSlow.model} judged all four right, and too slowly for the phone's 9 s; the phone's own rubric would decide instead.`);
-  else a.push('Judge: no model judged all four right; the phone\'s own rubric decides. Send live-check/report.md to Claude.');
+  else a.push('Judge: no model judged all four right; the phone\'s own rubric decides (safe: it hints, never says wrong).');
   a.push('Send live-check/report.md to Claude. It holds no key and no child\'s voice.');
   return a;
 }
 
 export function report(out){
-  const L = [`# Live check — ${out.at}`, '', `Models tried: ${out.models.join(', ')}`, '',
+  const L = [`# Live check — ${out.at}`, '', `Models tried: ${out.models.join(', ')}; thinking: ${out.thinking}`, '',
     `## Munni's voice`, out.tts ? `${out.tts.model}: ${out.tts.ok ? 'ok' : 'failed — ' + out.tts.error} (${out.tts.ms} ms)` : 'not run', '',
     `## Hearing (phone budget ${BUDGET.hear} ms)`];
-  for(const m of out.hear){ L.push(`### ${m.model}`); for(const x of m.rows) L.push(`- ${x.pass ? '✓' : '✗'} ${x.case} — ${x.what}: ${x.ms} ms, heard "${x.heard}"${x.pass ? '' : ' — ' + x.why}`); }
+  for(const m of out.hear){ L.push(`### ${m.model}`); for(const x of m.rows){ L.push(`- ${x.pass ? '✓' : '✗'} ${x.case} — ${x.what}, with the line: ${x.ms} ms, heard "${x.heard}"${x.pass ? '' : ' — ' + x.why}`); if(x.noLine) L.push(`  - ${x.noLine.pass ? '✓' : '✗'} without the line: ${x.noLine.ms} ms, heard "${x.noLine.heard}"${x.noLine.pass ? '' : ' — ' + x.noLine.why}`); } }
   L.push('', `## Judge (phone budget ${BUDGET.judge} ms)`);
   for(const m of out.judge){ L.push(`### ${m.model}`); for(const x of m.rows) L.push(`- ${x.pass ? '✓' : '✗'} ${x.case}: ${x.ms} ms, ${x.verdicts || x.error || 'no answer'}${x.pass ? '' : ' — ' + x.why}`); }
   L.push('', '## Judge from a recording', out.judgeAudio ? `${out.judgeAudio.pass ? '✓' : '✗'} heard by ${out.judgeAudio.hearModel}, judged by ${out.judgeAudio.judgeModel}: ${out.judgeAudio.ms} ms, heard "${out.judgeAudio.heard}"${out.judgeAudio.pass ? '' : ' — ' + out.judgeAudio.why}` : 'not run');

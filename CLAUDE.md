@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v62` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v63` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -895,7 +895,10 @@ Sarvam stays as the backup — its code is `voice/asr.js`, unchanged, and is
 the whole reading check again the moment the setting says `sarvam`.
 - **Gemini hears** (`GEMINI_SPEECH_MODEL`, default `gemini-3.8-flash`): the
   clip as inline audio, structured output `{ said, words:[{word, said}] }`,
-  told to write what it HEARS ("बाई" for "भाई" stays "बाई"). The response
+  told to write what it HEARS ("बाई" for "भाई" stays "बाई"). Asked to think
+  little (`thinkingConfig.thinkingLevel`, `TAKHTI_THINKING`, default `low`; a model
+  that refuses the field is asked again without it) — the judge too; and
+  `GEMINI_HEAR_LINE=0` sends no line at all. The response
   keeps the shape the reading check always had — `{ transcript, provider }`,
   `words` extra — and the phone still grades it with its own matcher.
 - **The passage is the server's own**: the phone names the line it showed;
@@ -1632,7 +1635,15 @@ Honest edges of what's built:
    voice field (`voiceConfig.voice` vs `prebuiltVoiceConfig.voiceName`) —
    one retry covers both. `tools/live-check.mjs` (14 Nov) runs hearing, judging and
    TTS live, per model, before a demo — with an adult TTS voice, so passing is
-   necessary, not enough; the Batch API's job state and inline answers
+   necessary, not enough. Its first run (14 Nov, paid key): TTS worked (4.8 s);
+   `gemini-3.8-flash` and `gemini-3.7-flash` answered 503 or nothing in 35 s
+   for every hearing and judging call; flash-lite answered but heard in 10–11 s
+   (the phone allows 6), judged in 7–8.5 s, kept "run" for "ran" but wrote
+   "red" back into "I like to eat apples" — the line pulled it into
+   correcting — and judged the Hinglish ten-ones explanation only "partly".
+   Those requests set no thinking level then (the newer Flash models think at
+   length by default); now they ask for low, and the check hears each clip
+   without the line too; the Batch API's job state and inline answers
    appear under two field names in the docs, and both are read. Phone
    calls (Bolna) use the transcriber set in Bolna's dashboard — unchanged.
    The v3 terms wording is for the lawyer, not final.
