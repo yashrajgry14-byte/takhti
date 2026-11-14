@@ -100,7 +100,8 @@ const BEAT_SCHEMA = { anyOf: [
   beat('word',    { word:{ type:'string' }, art:{ type:'string' }, say: bi }, ['word', 'art']),
   beat('readline',{ text:{ type:'string' }, say: bi }, ['text']),
   beat('ask',     { q: bi, opts:{ type:'array', items:{ type:'string' }, minItems:2, maxItems:2 }, hiOpts:{ type:'array', items:{ type:'string' }, minItems:2, maxItems:2 },
-                    correct:{ type:'integer', minimum:0, maximum:1 }, why:{ ...bi, description:'For the teacher only: the real mistake behind the wrong option.' } },
+                    correct:{ type:'integer', minimum:0, maximum:1 }, why:{ ...bi, description:'For the teacher only: the real mistake behind the wrong option.' },
+                    aim:{ type:'integer', minimum:1, maximum:4, description:'Which aim this question checks: 1 for the first aim, 2 for the second…' } },
                   ['q', 'opts', 'hiOpts', 'correct', 'why']),
   { ...beat('figure', { kind:{ type:'string', enum:['square'] }, s: int, ask: SHAPE_ASK, say: bi }, ['kind', 's']), description:'A square: s is its side.' },
   { ...beat('figure', { kind:{ type:'string', enum:['rectangle'] }, w: int, h: int, ask: SHAPE_ASK, say: bi }, ['kind', 'w', 'h']), description:'A rectangle: w and h, two different numbers.' },
@@ -195,7 +196,7 @@ An example of one good lesson (the shape of it, not its content):
  "beats":[{"t":"intro","say":{"en":"Shapes have sides. Let us count them.","hi":"आकृतियों की भुजाएँ होती हैं। आओ गिनें।"}},
   {"t":"figure","kind":"square","s":4,"say":{"en":"Put your finger on one corner and go round, counting each side.","hi":"एक कोने पर उँगली रखो और हर भुजा गिनते हुए घूमो।"}},
   {"t":"figure","kind":"triangle","sides":[5,5,5],"ask":"sides"},
-  {"t":"ask","q":{"en":"How many sides does it have?","hi":"इसकी कितनी भुजाएँ हैं?"},"opts":["3","4"],"hiOpts":["3","4"],"correct":0,
+  {"t":"ask","q":{"en":"How many sides does it have?","hi":"इसकी कितनी भुजाएँ हैं?"},"opts":["3","4"],"hiOpts":["3","4"],"correct":0,"aim":1,
    "why":{"en":"Children who just saw the square expect every shape to have 4 sides.","hi":"वर्ग देखने के बाद बच्चे हर आकृति की 4 भुजाएँ मान लेते हैं।"}},
   {"t":"win","say":{"en":"Go round once and count each side.","hi":"एक बार पूरा घूमो और हर भुजा गिनो।"}}]}`;
 }
@@ -210,6 +211,7 @@ function rulesText(rules){
 6b. TEACH ON ONE SHAPE, ASK ON ANOTHER: a question's picture is never a teaching picture again (a teaching picture marks the answer). Teach with a 6 × 3 rectangle, ask about a 4 × 2 one; teach a square corner, ask about a smaller or bigger corner; teach a circle with 2 folds, ask with 3. A teaching circle that talks about folds draws them (folds 2 or more).
 6d. Teach one kind, count another: after teaching a rectangle, count a triangle's sides (not another rectangle's — what Munni said about the first is the answer).
 6c. Ask TWO questions per lesson: the first to recognise, the second about a NEW example (another shape, a numbered row, an odd one out). With two answers each, one question alone is a coin toss — the teacher is shown that. For "are all its sides equal?", ask it of one shape whose answer is Yes AND one whose answer is No (a square and a rectangle): a child who always says Yes must not pass.
+6e. Every ask names the aim it checks in "aim" (1 = the first aim). Each aim is checked by at least one question, so the teacher can see who can DO each point, next to who can EXPLAIN it to Munni.
 7. The wrong option is a mistake a child really makes — never silly, never equal to the right one. Its why names that mistake ("children count only the top two corners"), not "they might guess". For "where do the folds meet?" the real wrong answer is Edge (किनारा). In a row, put a look-alike next to the right shape (a square among rectangles, a thin triangle like 2-6-7) and make the wrong answer the look-alike's number — not a picture nobody would pick.
 8. Every number a child meets is at most ${rules.maxNumber}.
 9. Every say and q is at most ${rules.sayWords} words in Hindi; short, warm, concrete; speak to the child as "तुम", never "आप"; never scold, never the word "wrong".

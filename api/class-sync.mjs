@@ -48,6 +48,10 @@ function cleanChild(c){
   const explained = {};
   for(const [id, v] of Object.entries(c.explained && typeof c.explained === 'object' ? c.explained : {}).slice(0, 60))
     if(/^[a-z0-9.-]{1,32}$/.test(id) && ['c', 'p', 'g'].includes(v)) explained[id] = v;
+  // can the child DO each point (y/n from their first answers) — letters only
+  const did = {};
+  for(const [id, v] of Object.entries(c.did && typeof c.did === 'object' ? c.did : {}).slice(0, 60))
+    if(/^[a-z0-9.-]{1,32}$/.test(id) && (v === 'y' || v === 'n')) did[id] = v;
   // and each point's loop: first try, taught again, now — letters only (core/teachback.js)
   const loop = {};
   for(const [id, v] of Object.entries(c.loop && typeof c.loop === 'object' ? c.loop : {}).slice(0, 60))
@@ -60,7 +64,7 @@ function cleanChild(c){
     const n = int(p.n, 6);
     paths[id] = { w, ...(p.k ? { k: 1 } : {}), ...(SKILL.test(p.g || '') ? { g: p.g } : {}), d: Math.min(n, int(p.d, 6)), n };
   }
-  return { childName: String(c.childName || '?').slice(0, 40), skillHistory, ...(Object.keys(explained).length ? { explained } : {}), ...(Object.keys(loop).length ? { loop } : {}),
+  return { childName: String(c.childName || '?').slice(0, 40), skillHistory, ...(Object.keys(explained).length ? { explained } : {}), ...(Object.keys(loop).length ? { loop } : {}), ...(Object.keys(did).length ? { did } : {}),
     ...(Object.keys(paths).length ? { paths } : {}), at: int(c.at, 9e15) };
 }
 function cleanHomework(h){

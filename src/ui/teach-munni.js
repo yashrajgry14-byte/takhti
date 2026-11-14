@@ -292,11 +292,12 @@ function teachAimLabel(id, code){
   return { en: id, hi: id };
 }
 function teachTeacherHTML(code){
-  const all = readClassShared(code), hi = S.lang === 'hi', rows = {}, loops = {};
+  const all = readClassShared(code), hi = S.lang === 'hi', rows = {}, loops = {}, dids = {};
   for(const [id, c] of Object.entries(all)){
     if(id.startsWith('_') || !c || !c.explained) continue;
     for(const [aim, v] of Object.entries(c.explained)){ const r = rows[aim] = rows[aim] || { c: 0, p: 0, g: 0 }; if(r[v] != null) r[v]++; }
     for(const [aim, v] of Object.entries(c.loop || {})) (loops[aim] = loops[aim] || []).push({ v, name: c.childName || '?' });
+    for(const [aim, v] of Object.entries(c.did || {})) (dids[aim] = dids[aim] || []).push({ v, said: c.explained[aim], name: c.childName || '?' });
   }
   const list = Object.entries(rows).sort((x, y) => (y[1].g + y[1].p) / (y[1].c + y[1].p + y[1].g) - (x[1].g + x[1].p) / (x[1].c + x[1].p + x[1].g)).slice(0, 12);
   if(!list.length) return '';
@@ -320,6 +321,22 @@ function teachTeacherHTML(code){
     ].filter(Boolean);
     return `<div class="teachloop">↻ ${parts.join(' · ')}</div>`;
   };
+  // doing it next to explaining it: a child who answers right but can't say why, and a
+  // child who can say why but whose answers aren't right yet, need different help
+  const didLine = aim => {
+    const xs = (dids[aim] || []).filter(x => x.said);
+    if(!xs.length) return '';
+    const who = f => xs.filter(f).map(x => attr(x.name)).join(', ');
+    const both = who(x => x.v === 'y' && x.said === 'c'), doOnly = who(x => x.v === 'y' && x.said !== 'c'),
+          sayOnly = who(x => x.v === 'n' && x.said === 'c'), neither = who(x => x.v === 'n' && x.said !== 'c');
+    const parts = [
+      both && (hi ? `करते भी हैं, समझाते भी: ${both}` : `does it and explains it: ${both}`),
+      doOnly && (hi ? `सही करते हैं, पर अभी समझा नहीं पाते: ${doOnly}` : `gets it right, can't explain it yet: ${doOnly}`),
+      sayOnly && (hi ? `समझा लेते हैं, पर जवाब अभी सही नहीं: ${sayOnly}` : `explains it, answers not right yet: ${sayOnly}`),
+      neither && (hi ? `अभी दोनों बाक़ी: ${neither}` : `neither yet: ${neither}`)
+    ].filter(Boolean);
+    return parts.length ? `<div class="teachdid">✎ ${parts.join(' · ')}</div>` : '';
+  };
   return `<div class="paper" style="margin-top:12px">
     <div class="kicker2">🐘 ${hi ? 'बच्चे क्या समझा पाए ("मुन्नी को सिखाओ")' : 'WHAT THE CLASS COULD EXPLAIN (TEACH MUNNI)'}</div>
     <div style="font-size:12.5px;opacity:.75;margin-bottom:6px">${hi ? 'हर बात के लिए: कितने बच्चों ने अपने शब्दों में समझाई, कितनों ने थोड़ी, कितनों के लिए मुन्नी फिर पूछेगी — और जो पहली बार नहीं समझा पाए, उनका आगे क्या हुआ।' : 'For each point: how many children explained it in their own words, partly, or still to come — and, for those who couldn\'t at first, what happened next.'}</div>
@@ -327,7 +344,7 @@ function teachTeacherHTML(code){
     ${list.map(([aim, r]) => { const n = r.c + r.p + r.g; return `<div class="teachrow">
       <div style="font-size:13px">${TMW(teachAimLabel(aim, code))}</div>
       <div class="teachbar"><i class="c" style="width:${r.c / n * 100}%"></i><i class="p" style="width:${r.p / n * 100}%"></i><i class="g" style="width:${r.g / n * 100}%"></i></div>
-      <div style="font-size:11.5px;opacity:.75">${hi ? `${r.c} ने समझाई · ${r.p} ने थोड़ी · ${r.g} बाक़ी` : `${r.c} explained · ${r.p} partly · ${r.g} still to come`}</div>${loopLine(aim)}</div>`; }).join('')}
+      <div style="font-size:11.5px;opacity:.75">${hi ? `${r.c} ने समझाई · ${r.p} ने थोड़ी · ${r.g} बाक़ी` : `${r.c} explained · ${r.p} partly · ${r.g} still to come`}</div>${didLine(aim)}${loopLine(aim)}</div>`; }).join('')}
   </div>`;
 }
 

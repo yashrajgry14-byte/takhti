@@ -41,7 +41,7 @@ const SYL_FIELDS = {
   intro:[], count:['n'], add:['a','b'], take:['a','b'], group:['a','ask'], line:['a','b','hops'],
   array:['a','b'], share:['a','b'], bar:['a','b'], frac:['b'],
   passage:['p','art'], word:['w','art'], readline:['text'],
-  ask:['q','opts','hiOpts','correct','why'], win:[]
+  ask:['q','opts','hiOpts','correct','why','aim'], win:[]
 };
 const SYL_MATH = ['count','add','take','group','line','array','share','bar','frac'];
 const SYL_READ = ['passage','word','readline'];
@@ -513,6 +513,11 @@ function sylClean(raw, opts){
       } else if(k === 'ask'){
         if(v === 'tens' || v === 'ones') out.ask = v;
         else errs.push(`beat ${i}: a group's ask is "tens" or "ones" (leave it out to ask for the whole number)`);
+      } else if(k === 'aim'){
+        // which aim this question checks (1 = the first), moved with the aims a check dropped;
+        // a number that names no usable aim is left out, never a reason to reject the lesson
+        const at = Number.isInteger(v) && ta.kept ? ta.kept.indexOf(v - 1) : -1;
+        if(at >= 0) out.aim = at + 1;
       } else if(k === 'why'){
         const s = bi(v, `beat ${i}'s note for the teacher`, 220); if(s) out.why = s;   // never shown to a child
       } else if(k === 'p' || k === 'q'){

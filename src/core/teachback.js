@@ -40,6 +40,7 @@ function teachOf(c){
   const ch = c || S;
   if(!ch.teach || ch.teach.v !== 1) ch.teach = { v: 1, units: {}, log: [], explained: {} };
   if(!ch.teach.loop) ch.teach.loop = {};
+  if(!ch.teach.did) ch.teach.did = {};
   return ch.teach;
 }
 
@@ -138,7 +139,7 @@ const TEACH_NUDGES = [
   { en: 'Show me with your finger, then tell me what you did.', hi: 'उँगली से दिखाओ, फिर बताओ तुमने क्या किया।' }
 ];
 function teachCleanAims(raw, lessonId, opts){
-  const aims = [], errors = [], fixes = [];
+  const aims = [], errors = [], fixes = [], kept = [];
   (Array.isArray(raw) ? raw : []).slice(0, 4).forEach((r, k) => {
     r = r && typeof r === 'object' ? r : {};
     const pick = o => o && typeof o === 'object' ? { en: String(o.en || '').trim(), hi: String(o.hi || '').trim() } : null;
@@ -173,11 +174,11 @@ function teachCleanAims(raw, lessonId, opts){
       if(!errs.length) fixes.push(`aim ${k + 1}: ${was} — replaced with a general nudge`);
     }
     if(errs.length) errors.push(`aim ${k + 1}: ${errs[0]}`);
-    else aims.push(a);
+    else { aims.push(a); kept.push(k); }
   });
   // ids by place among the usable ones, so checking a checked lesson changes nothing
   aims.forEach((a, k) => { a.id = ('s' + String(lessonId || '').replace(/^sch-/, '') + '.' + k).slice(0, 32); });
-  return { aims, errors, fixes };
+  return { aims, errors, fixes, kept };   // kept: each usable aim's place in what was drafted (a question's `aim` follows it)
 }
 
 /* ---------- 'fix': Munni's mistake ---------- */
@@ -413,6 +414,39 @@ function teachMarkRetaught(s, c){
   if(typeof mirrorToClass === 'function') mirrorToClass(c || S);
   if(typeof saveSoon === 'function') saveSoon();
 }
+/* ---------- can do it, next to can explain it ----------
+   Which aim a school lesson's question checks: the `aim` the draft gave it;
+   a lesson with one aim, that one; otherwise the aim whose point shares the
+   most words with the question — only when one aim clearly does (2+ words,
+   no tie). Unknown → null: better unlinked than linked to the wrong aim. */
+function teachAimOfAsk(les, i){
+  const aims = les && les.school && les.aims, b = les && les.beats && les.beats[i];
+  if(!aims || !aims.length || !b || b.t !== 'ask') return null;
+  if(Number.isInteger(b.aim) && b.aim >= 1 && b.aim <= aims.length) return aims[b.aim - 1].id;
+  if(aims.length === 1) return aims[0].id;
+  const q = new Set(teachTokens(((b.q || {}).en || '') + ' ' + ((b.q || {}).hi || '')).filter(w => w.length >= 4));
+  const score = aims.map(a => teachTokens(((a.point || {}).en || '') + ' ' + ((a.point || {}).hi || '') + ' ' + (a.ideas || []).map(x => x.en || '').join(' '))
+    .filter((w, j, all) => w.length >= 4 && all.indexOf(w) === j && q.has(w)).length);
+  const best = Math.max(...score);
+  return best >= 2 && score.filter(x => x === best).length === 1 ? aims[score.indexOf(best)].id : null;
+}
+/* A first answer on its own (never a helped one) to a school lesson's question. */
+function teachDid(les, i, ok, c){
+  const id = teachAimOfAsk(les, i);
+  if(!id) return null;
+  const t = teachOf(c), r = t.did[id] = t.did[id] || [0, 0];
+  r[1]++; if(ok) r[0]++;
+  const keys = Object.keys(t.did); for(const k of keys.slice(0, Math.max(0, keys.length - 60))) delete t.did[k];
+  if(typeof mirrorToClass === 'function') mirrorToClass(c || S);
+  return id;
+}
+/* For the class: y = most first answers on this aim right, n = not yet. Letters only. */
+function teachDidOf(c){
+  const d = (c && c.teach && c.teach.did) || {}, out = {};
+  for(const [id, r] of Object.entries(d)) if(Array.isArray(r) && r[1] > 0) out[id] = r[0] * 2 >= r[1] ? 'y' : 'n';
+  return out;
+}
+
 /* One class's loops, counted: for the teacher's card. */
 function teachLoopCounts(loops){
   const k = { first: 0, after: 0, alone: 0, waiting: 0, working: 0, notyet: 0 };

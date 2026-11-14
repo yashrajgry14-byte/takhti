@@ -86,7 +86,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v66` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v67` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -1105,9 +1105,17 @@ protégé effect, and the one place a child gets to *say* what they learnt.
   re-taught then asked; `gc` asked again without re-teaching), counted by
   `teachLoopCounts()` into one line for the class ("points children couldn't
   explain the first time (3): 1 explained after Munni taught them again…")
-  and, per point, who is where by name. The class mirror and the class sync
-  carry `explained {aimId: c|p|g}` and `loop {aimId: code}` — ids and
-  letters, nothing said (`teachExplainedOf()`; the server keeps only
+  and, per point, who is where by name. **Doing it next to explaining it**:
+  a school lesson's question names the aim it checks (`aim`, 1 = the first;
+  drafted by Gemini, renumbered with the aims a check drops, left out when
+  it names none — never a rejection); a one-aim lesson's questions are that
+  aim's; otherwise `teachAimOfAsk()` links a question only to the one aim it
+  clearly shares words with. First answers on their own go to `S.teach.did`
+  (`teachDid()`, from the lesson player), and the card says per point who
+  does it and explains it, who gets it right but can't explain it yet, who
+  explains it but whose answers aren't right yet. The class mirror and the
+  class sync carry `explained {aimId: c|p|g}`, `loop {aimId: code}` and
+  `did {aimId: y|n}` (`teachDidOf()`) — ids and letters, nothing said (`teachExplainedOf()`; the server keeps only
   well-formed ids and codes); the parent's sync notice says so in both
   languages.
 

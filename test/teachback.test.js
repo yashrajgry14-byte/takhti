@@ -186,6 +186,23 @@ function box(){
   check('…a point edited on the way gives the lesson a different id (so a phone won\'t show it)',
     E(`(() => { const x = JSON.parse(JSON.stringify(SC.lesson)); x.aims[0].forget.en = 'Where? Tell me!'; return sylClean(x, { band: 'developing' }).lesson.id !== SC.lesson.id; })()`), '');
   check('…and its unit is the teacher\'s points', E(`(() => { const u = teachUnitFor(SC.lesson); return u && u.id === SC.lesson.id && u.aims.length === 1 && u.aims[0].kind === 'explain'; })()`), '');
+  // can do it, per aim: which aim each question checks
+  const TAGGED = JSON.parse(JSON.stringify(READ)); TAGGED.aims = [LEAK, GOOD]; TAGGED.beats[1].aim = 2;
+  E(`var TG = sylClean(${JSON.stringify(TAGGED)}, { band: 'developing' })`);
+  check('a question names the aim it checks, and the number follows the aims when a check drops one (aim 2 → 1)',
+    E(`TG.ok && TG.lesson.aims.length === 1 && TG.lesson.beats.find(b => b.t === 'ask').aim === 1 && sylClean(JSON.parse(JSON.stringify(TG.lesson)), { band: 'developing' }).lesson.id === TG.lesson.id`), E(`JSON.stringify([TG.errors, TG.lesson && TG.lesson.beats])`));
+  const POINTED = JSON.parse(JSON.stringify(TAGGED)); POINTED.beats[1].aim = 1;
+  check('…a question pointing at a dropped aim just loses the number — the lesson is not rejected for it',
+    E(`(() => { const r = sylClean(${JSON.stringify(POINTED)}, { band: 'developing' }); return r.ok && r.lesson.beats.find(b => b.t === 'ask').aim == null; })()`), '');
+  const SHP = { school: true, aims: [{ id: 's1.0', point: { en: 'The child can count the sides of a shape', hi: '' }, ideas: [] }, { id: 's1.1', point: { en: 'The child can find a square corner in a row', hi: '' }, ideas: [] }],
+    beats: [{ t: 'ask', q: { en: 'How many sides does this shape have?', hi: '' } }, { t: 'ask', q: { en: 'Which one has a square corner?', hi: '' } }, { t: 'ask', q: { en: 'Is it big?', hi: '' } }, { t: 'ask', q: { en: 'x', hi: '' }, aim: 2 }] };
+  check('without a number, a question goes to the aim it clearly shares words with — and to none when it is unclear',
+    E(`JSON.stringify([0, 1, 2, 3].map(i => teachAimOfAsk(${JSON.stringify(SHP)}, i)))`) === JSON.stringify(['s1.0', 's1.1', null, 's1.1'])
+      && E(`teachAimOfAsk({ school: true, aims: [{ id: 'o.0', point: { en: 'one' } }], beats: [{ t: 'ask', q: { en: 'anything' } }] }, 0)`) === 'o.0', E(`JSON.stringify([0, 1, 2, 3].map(i => teachAimOfAsk(${JSON.stringify(SHP)}, i)))`));
+  E(`S.teach.did = {}; teachDid(${JSON.stringify(SHP)}, 0, true); teachDid(${JSON.stringify(SHP)}, 0, true); teachDid(${JSON.stringify(SHP)}, 1, false); teachDid(${JSON.stringify(SHP)}, 2, true)`);
+  check('first answers are kept per aim, and only letters go to the class (y: mostly right, n: not yet)',
+    E(`JSON.stringify(S.teach.did)`) === JSON.stringify({ 's1.0': [2, 2], 's1.1': [0, 1] }) && E(`JSON.stringify(teachDidOf(S))`) === JSON.stringify({ 's1.0': 'y', 's1.1': 'n' }), E(`JSON.stringify(S.teach.did)`));
+  E(`S.teach.did = {}`);
 
   /* ================= 2. the judge ================= */
   const { judgeCore, grounded } = await import(pathToFileURL(path.join(root, 'api/teachback.mjs')).href);
@@ -337,12 +354,13 @@ function box(){
     app.E(`S.lang = 'en'`);
 
     // the class: the points reach the mirror and the teacher's view
+    app.E(`S.teach.did = { 'borrow.when': [0, 2] }`);   // explains when to borrow, but the answers aren't right yet
     app.E(`S.classCode = 'CLS777'; mirrorToClassNow(S)`);
     check('the loop: Jai couldn\'t explain a point, took "Let\'s learn it again", then taught it — "grc"; the first-time point stays "c"',
       app.E(`S.teach.loop['borrow.ten'] === 'grc' && S.teach.loop['borrow.when'] === 'c'`), app.E(`JSON.stringify(S.teach.loop)`));
     check('the class mirror carries which points were explained (ids and c/p/g only)',
       app.E(`(() => { const r = readClassShared('CLS777')[S.id]; return r && r.explained && r.explained['borrow.when'] === 'c' && Object.values(r.explained).every(v => ['c','p','g'].includes(v)); })()`), app.E(`JSON.stringify(readClassShared('CLS777'))`));
-    app.E(`classMirrorUpdate('CLS777', all => { all['c-other'] = { childName: 'Asha', skillHistory: {}, explained: { 'borrow.when': 'g', 'borrow.ten': 'p' }, at: Date.now() }; })`);
+    app.E(`classMirrorUpdate('CLS777', all => { all['c-other'] = { childName: 'Asha', skillHistory: {}, explained: { 'borrow.when': 'g', 'borrow.ten': 'p' }, did: { 'borrow.when': 'y' }, at: Date.now() }; })`);
     app.E(`classMirrorUpdate('CLS777', all => { all['c-third'] = { childName: 'Ravi', skillHistory: {}, explained: { 'borrow.ten': 'g', 'borrow.when': 'g' }, loop: { 'borrow.ten': 'gr', 'borrow.when': 'g' }, at: Date.now() }; })`);
     app.E(`go('teacher'); S.ctx.tcode = 'CLS777'; render()`);
     const tv = app.screen();
@@ -351,8 +369,10 @@ function box(){
       /couldn't explain the first time \(3\): 1 explained after Munni taught them again/.test(tv) && /1 re-taught and still to be asked/.test(tv) && /1 not re-taught yet/.test(tv), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 700));
     check('…and per point, by name: explained after re-teaching (Jai), re-taught and to ask again (Ravi), not re-taught yet (Ravi)',
       /explained after re-teaching: Jai/.test(tv) && /re-taught, to ask again: Ravi/.test(tv) && /not re-taught yet: Ravi/.test(tv) && !!app.$('.teachloop-sum'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 900));
+    check('doing it next to explaining it, per point and by name: Asha gets it right but can\'t explain it yet; Jai explains it but his answers aren\'t right yet',
+      /gets it right, can't explain it yet: Asha/.test(tv) && /explains it, answers not right yet: Jai/.test(tv) && !!app.$('.teachdid'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 900));
     app.E(`S.lang = 'hi'; render()`);
-    check('…in Hindi too', /मुन्नी के फिर सिखाने के बाद समझा पाए/.test(app.screen()) && /फिर सिखाने के बाद समझाई: Jai/.test(app.screen()), app.screen().slice(app.screen().indexOf('मुन्नी को सिखाओ'), app.screen().indexOf('मुन्नी को सिखाओ') + 500));
+    check('…in Hindi too', /मुन्नी के फिर सिखाने के बाद समझा पाए/.test(app.screen()) && /फिर सिखाने के बाद समझाई: Jai/.test(app.screen()) && /सही करते हैं, पर अभी समझा नहीं पाते: Asha/.test(app.screen()), app.screen().slice(app.screen().indexOf('मुन्नी को सिखाओ'), app.screen().indexOf('मुन्नी को सिखाओ') + 500));
     app.E(`S.lang = 'en'; render()`);
     check('the teacher view: what the class could explain, point by point (the hardest first)',
       /WHAT THE CLASS COULD EXPLAIN/.test(tv) && /Knows to borrow when the top ones digit is smaller/.test(tv) && /1 explained · 0 partly · 2 still to come/.test(tv) && !!app.$('.teachbar'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 400));
@@ -360,6 +380,8 @@ function box(){
     const mem = new Map(), st = { get: async k => mem.get(k) || null, setJSON: async (k, v) => mem.set(k, JSON.parse(JSON.stringify(v))) };
     const sy = await syncCore(st, { code: 'CLS777', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.when': 'c', 'Bad Id!': 'c', 'borrow.ten': 'yes' }, at: 5, said: 'x' } } });
     const sy2 = await syncCore(st, { code: 'CLS778', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.ten': 'c' }, loop: { 'borrow.ten': 'grc', 'borrow.when': 'cgr', 'x.y': 'I said twelve', 'Bad!': 'c' }, at: 5 } } });
+    const sy3 = await syncCore(st, { code: 'CLS779', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.ten': 'c' }, did: { 'borrow.ten': 'y', 'borrow.when': 'maybe', 'Bad!': 'y' }, at: 5 } } });
+    check('…and only y/n per well-formed point for what the child could do', JSON.stringify(sy3.json.children['c-1'].did) === '{"borrow.ten":"y"}', JSON.stringify(sy3.json.children['c-1']));
     check('the class sync keeps only well-formed loops (ids and the letters)', JSON.stringify(sy2.json.children['c-1'].loop) === '{"borrow.ten":"grc"}', JSON.stringify(sy2.json.children['c-1']));
     check('the class sync keeps only well-formed point ids and c/p/g — nothing the child said', JSON.stringify(sy.json.children['c-1'].explained) === '{"borrow.when":"c"}' && !sy.json.children['c-1'].said, JSON.stringify(sy.json));
 

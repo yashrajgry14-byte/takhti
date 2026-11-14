@@ -113,7 +113,8 @@ function classMirrorKey(code){ return 'takhti-class-' + code; }
    and each point's loop (teachLoopNext(): first try, taught again, now). */
 function teachExplainedOf(c){
   const e = c && c.teach && c.teach.explained, l = c && c.teach && c.teach.loop;
-  return e && Object.keys(e).length ? { explained: e, ...(l && Object.keys(l).length ? { loop: l } : {}) } : {};
+  const d = typeof teachDidOf === 'function' ? teachDidOf(c) : {};
+  return { ...(e && Object.keys(e).length ? { explained: e } : {}), ...(e && l && Object.keys(l).length ? { loop: l } : {}), ...(Object.keys(d).length ? { did: d } : {}) };
 }
 function mirrorToClassNow(child){
   const c = child || S;

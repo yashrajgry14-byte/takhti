@@ -284,6 +284,7 @@ function lesAnswer(k){
   const les = S.lesson.data;
   const helped = S.lesson.helpedAt === S.lesson.i;      // Ask Munni explained this one: help, not evidence
   if(typeof twinAnswerLesson === 'function') twinAnswerLesson(les, S.lesson.i, k, ok, helped);
+  if(!helped && typeof teachDid === 'function') teachDid(les, S.lesson.i, ok);   // can do it, per aim — next to can explain it
   if(!helped && les.skillId) noteSkillAttempt(les.skillId, ok);
   else if(!helped && les.concept) noteSkillFromConcept(les.concept, ok);
   render();
