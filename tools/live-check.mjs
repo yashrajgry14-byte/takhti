@@ -209,7 +209,7 @@ export async function run(opts, fetchImpl){
   // 5. the user's own recording
   if(opts.clip){
     const buf = fs.readFileSync(opts.clip), ext = path.extname(opts.clip).slice(1).toLowerCase();
-    const mime = { webm: 'audio/webm', wav: 'audio/wav', mp3: 'audio/mpeg', m4a: 'audio/mp4', ogg: 'audio/ogg', opus: 'audio/ogg' }[ext] || 'audio/webm';
+    const mime = { webm: 'audio/webm', wav: 'audio/wav', mp3: 'audio/mpeg', m4a: 'audio/mp4', mp4: 'audio/mp4', aac: 'audio/aac', ogg: 'audio/ogg', opus: 'audio/ogg' }[ext] || 'audio/webm';
     const model = hearOk ? hearOk.model : models[0];
     t0 = Date.now();
     const r = await checkReading({ buf, mime }, opts.line || null, opts.lang === 'en' ? 'en' : 'hi', { env: { ...env, GEMINI_SPEECH_MODEL: model }, fetch: fetchImpl, provider: 'gemini' });

@@ -59,9 +59,9 @@ vm.runInContext(fs.readFileSync(path.join(ROOT, 'src/core/matcher.js'), 'utf8') 
 const grade = (line, said, lang) => mctx.G(line, String(said || ''), lang).tokens.map(t => t.state);
 const okState = s => s === 'ok';
 
-const MIME = { '.webm': 'audio/webm', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4' };
+const MIME = { '.webm': 'audio/webm', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.mp4': 'audio/mp4', '.aac': 'audio/aac' };
 const clips = fs.readdirSync(dir).filter(f => MIME[path.extname(f).toLowerCase()]).sort();
-if(!clips.length){ console.error('no recordings (webm, ogg, wav, mp3, m4a) in ' + dir); process.exit(2); }
+if(!clips.length){ console.error('no recordings (webm, ogg, wav, mp3, m4a, mp4, aac) in ' + dir); process.exit(2); }
 const env = { ...process.env, TAKHTI_SPEECH_BUDGET_MS: process.env.TAKHTI_SPEECH_BUDGET_MS || '30000' };   // no phone waiting here
 const PROVIDERS = ['gemini', 'sarvam'];
 const tot = {}; for(const p of PROVIDERS) tot[p] = { hi: { words: 0, missed: 0, invented: 0, failed: 0 }, en: { words: 0, missed: 0, invented: 0, failed: 0 } };
