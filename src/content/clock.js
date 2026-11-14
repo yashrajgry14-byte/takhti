@@ -237,10 +237,6 @@ function clockFace(t, cx, cy, r, opt){
     const big = i % 5 === 0, [x1, y1] = at(i * 6, r * (big ? 0.86 : 0.91)), [x2, y2] = at(i * 6, r * 0.96);
     s += `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="currentColor" stroke-width="${big ? 2 : 1}" opacity="${big ? 0.7 : 0.35}"/>`;
   }
-  for(let n = 1; n <= 12; n++){
-    const [x, y] = at(n * 30, r * 0.72);
-    s += `<text x="${f(x)}" y="${f(y)}" font-size="${f(r * 0.19)}" text-anchor="middle" dominant-baseline="central" fill="currentColor" font-weight="600">${n}</text>`;
-  }
   // a teaching picture between two clocks shades the minutes that passed
   if(opt.sweep != null && opt.sweep > 0 && opt.sweep < 60){
     const a0 = (t.m - opt.sweep) * 6, [x0, y0] = at(a0, r * 0.62), [x1, y1] = at(t.m * 6, r * 0.62);
@@ -249,6 +245,12 @@ function clockFace(t, cx, cy, r, opt){
   const [hx, hy] = at(((t.h % 12) + t.m / 60) * 30, r * 0.48), [mx, my] = at(t.m * 6, r * 0.8);
   s += `<line x1="${cx}" y1="${cy}" x2="${f(hx)}" y2="${f(hy)}" stroke="currentColor" stroke-width="${f(r * 0.075)}" stroke-linecap="round"/>`;
   s += `<line x1="${cx}" y1="${cy}" x2="${f(mx)}" y2="${f(my)}" stroke="var(--rani)" stroke-width="${f(r * 0.04)}" stroke-linecap="round"/>`;
+  // the numbers on top, ringed in the face's colour (styles.css .geo.clock .num): the
+  // number a hand points at stays readable (at 360 px the long hand hid its "12" and "4")
+  for(let n = 1; n <= 12; n++){
+    const [x, y] = at(n * 30, r * 0.72);
+    s += `<text class="num" x="${f(x)}" y="${f(y)}" font-size="${f(r * 0.21)}" text-anchor="middle" dominant-baseline="central" fill="currentColor" font-weight="700">${n}</text>`;
+  }
   return s + `<circle cx="${cx}" cy="${cy}" r="${f(r * 0.06)}" fill="currentColor"/>`;
 }
 function clockArt(b){
@@ -261,9 +263,9 @@ function clockArt(b){
     const hi = S.lang === 'hi', d = clockPassed(b);
     const lab = (x, t) => `<text x="${x}" y="222" font-size="17" text-anchor="middle" fill="currentColor" opacity=".8">${t}</text>`;
     return `<svg class="geo clock" viewBox="0 0 420 232" width="320" role="img" aria-label="${hi ? 'दो घड़ियाँ: शुरू और अंत' : 'two clocks: start and end'}">`
-      + clockFace(b.from, 100, 100, 92) + clockFace(b.to, 320, 100, 92, { sweep: b.ask == null ? d : null })
-      + `<path d="M196 100 H224 M214 90 L226 100 L214 110" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>`
-      + lab(100, hi ? 'शुरू' : 'start') + lab(320, hi ? 'अंत' : 'end') + `</svg>`;
+      + clockFace(b.from, 98, 100, 90) + clockFace(b.to, 322, 100, 90, { sweep: b.ask == null ? d : null })
+      + `<path d="M194 100 H222 M212 90 L224 100 L212 110" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>`
+      + lab(98, hi ? 'शुरू' : 'start') + lab(322, hi ? 'अंत' : 'end') + `</svg>`;
   }
   return null;
 }

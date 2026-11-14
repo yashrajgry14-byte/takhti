@@ -43,6 +43,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { run, recheck, report } from './try-syllabus.mjs';
+/* A library lesson with a picture asks at least two questions — with two
+   answers, one question is a coin toss; such a lesson is not kept (a
+   teacher's own upload still gets the warning instead). */
+const LIB_MIN_QUESTIONS = 2;
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const LIB = path.join(root, 'library');
@@ -101,13 +105,13 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
       if(meta.id !== opts.import.ch) continue;
       const r = readJSON(opts.import.file);
       if(r.cls && r.cls !== book.cls) throw new Error(`that run was for ${r.cls}, the book is ${book.cls}`);
-      const ch = saveChapter(dir, meta, recheck({ ...r, cls: book.cls, band: r.band }));
+      const ch = saveChapter(dir, meta, recheck({ ...r, cls: book.cls, band: r.band }, { minQuestions: LIB_MIN_QUESTIONS }));
       say(`${meta.id}: imported — ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
       out.push(ch); continue;
     }
     if(opts.recheck){
       if(!fs.existsSync(raw)){ say(`${meta.id}: not built yet — skipped`); continue; }
-      const ch = saveChapter(dir, meta, recheck(readJSON(raw)));
+      const ch = saveChapter(dir, meta, recheck(readJSON(raw), { minQuestions: LIB_MIN_QUESTIONS }));
       say(`${meta.id}: checked again — ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
       out.push(ch); continue;
     }
@@ -122,7 +126,7 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
     // a file it can't read) is said and left for the next run, which picks
     // it up because it has no <ch>.json yet — the rest carry on
     try{
-      const r = await run({ file, cls: book.cls, count: meta.count || 4, note: meta.note || '', env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
+      const r = await run({ file, cls: book.cls, count: meta.count || 4, note: meta.note || '', minQuestions: LIB_MIN_QUESTIONS, env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
       const ch = saveChapter(dir, meta, r);
       say(`${meta.id}: ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
       out.push(ch);

@@ -232,6 +232,7 @@ body{
 }
 
 .geo{color:#2A2118}
+.geo.clock .num{stroke:#FAECD4}
 
 /* Teach Munni (ui/teach-munni.js): her speech is a bubble like the others */
 .teachbubble{background:#16302B;color:#F3EEE0;border-color:transparent}

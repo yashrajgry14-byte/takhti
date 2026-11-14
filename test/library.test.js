@@ -19,7 +19,18 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   const lib = await import(pathToFileURL(path.join(root, 'tools/build-library.mjs')).href);
   // the seventh live run's own drafts (Maths Mela Class 3, shapes) — what a real Gemini sends
   const run7 = JSON.parse(fs.readFileSync(path.join(root, 'library/ncert-maths-mela-3/ch5.raw.json'), 'utf8'));
-  const firsts = run7.drafts.map(d => d.raw), fixes = run7.drafts.filter(d => !d.first.ok).map(d => d.repairRaw);
+  // the library keeps a picture lesson only with two or more questions (14 Nov 2026) and those
+  // drafts ask one: the stand-in sends each with its question asked a second time, so every
+  // other decision below is the drafts' own (the one-question drafts themselves: section 1b)
+  const twoQ = l => {
+    if(!l || !Array.isArray(l.beats)) return l;
+    const b = l.beats, at = b.map(x => x && x.t).lastIndexOf('ask');
+    if(at < 1) return l;
+    const win = b.findIndex(x => x && x.t === 'win'), out = b.slice();
+    out.splice(win >= 0 ? win : out.length, 0, JSON.parse(JSON.stringify(b[at - 1])), JSON.parse(JSON.stringify(b[at])));
+    return { ...l, beats: out };
+  };
+  const firsts = run7.drafts.map(d => twoQ(d.raw)), fixes = run7.drafts.filter(d => !d.first.ok).map(d => twoQ(d.repairRaw));
 
   /* ---------- 1. the builder, against a stand-in Gemini ---------- */
   try{
@@ -59,9 +70,19 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     const c0 = calls;
     const re = await lib.buildBook(dir, { recheck: true });
     fs.unlinkSync(path.join(dir, 'ch5.json'));
-    await lib.buildBook(dir, { import: { ch: 'ch5', file: path.join(root, 'library/ncert-maths-mela-3/ch5.raw.json') } });
+    const run7two = { ...run7, drafts: run7.drafts.map(d => ({ ...d, raw: twoQ(d.raw), repairRaw: twoQ(d.repairRaw) })) };
+    fs.writeFileSync(path.join(tmp, 'run7-two.json'), JSON.stringify(run7two));
+    await lib.buildBook(dir, { import: { ch: 'ch5', file: path.join(tmp, 'run7-two.json') } });
     check('--recheck checks the saved drafts again and --import turns a try-syllabus run into a chapter — neither calls Gemini',
       calls === c0 && re.length === 1 && JSON.parse(fs.readFileSync(path.join(dir, 'ch5.json'), 'utf8')).lessons.length === 4, calls - c0);
+    // 1b. the seventh run's own drafts ask one question each: the library keeps none of them now
+    fs.unlinkSync(path.join(dir, 'ch5.json'));
+    await lib.buildBook(dir, { import: { ch: 'ch5', file: path.join(root, 'library/ncert-maths-mela-3/ch5.raw.json') } });
+    const one = JSON.parse(fs.readFileSync(path.join(dir, 'ch5.json'), 'utf8'));
+    check('a picture lesson with one question (a coin toss) is not kept in the library, each named with why — the same drafts with two questions keep 4',
+      calls === c0 && one.lessons.length === 0 && one.notUsed.length === 4 && one.notUsed.every(n => n.errors.some(e => /asks at least 2 questions/.test(e))), JSON.stringify(one.notUsed.map(n => n.errors)));
+    fs.unlinkSync(path.join(dir, 'ch5.json'));
+    await lib.buildBook(dir, { import: { ch: 'ch5', file: path.join(tmp, 'run7-two.json') } });
     // a whole book: --scan lists every chapter PDF in order, leaving front matter and answers out
     const whole = path.join(tmp, 'whole');
     fs.mkdirSync(whole);

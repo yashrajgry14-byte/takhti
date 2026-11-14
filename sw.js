@@ -9,7 +9,7 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v71';
+const CACHE = 'takhti-v72';
 // Recorded audio clips are content-hashed (see core/voice.js) — a given
 // filename can never change, so they live in a cache of their own that
 // the version cleanup below never touches. Bumping CACHE on a normal
@@ -23,7 +23,7 @@ const SHELL = [
   './src/content/games.js', './src/content/themes.js', './src/content/facts.js',
   './src/content/ages.js', './src/content/skills.js', './src/content/curriculum-early.js',
   './src/content/lessons.js', './src/core/lesson-gen.js', './src/content/literacy.js',
-  './src/content/comprehension.js', './src/content/geometry.js', './src/content/clock.js', './src/core/diagnose.js', './src/core/class-share.js',
+  './src/content/comprehension.js', './src/content/geometry.js', './src/content/clock.js', './src/content/calendar.js', './src/core/diagnose.js', './src/core/class-share.js',
   './src/core/class-sync.js', './src/core/syllabus.js', './src/content/library.js', './src/core/library.js', './src/core/generative-brain.js', './src/core/video-library-catalog.js', './src/core/cartoon-series.js',
   './src/core/srs.js', './src/core/sfx.js', './src/games/game-core.js',
   './src/content/anim.js', './src/content/copy.js', './src/content/competencies.js',

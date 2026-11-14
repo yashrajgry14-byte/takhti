@@ -35,7 +35,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 const LOAD = ['src/state.js','src/core/matcher.js','src/core/readability.js','src/content/sentences.js','src/content/games.js','src/content/facts.js','src/content/ages.js',
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js','src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-  'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'];
+  'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/content/calendar.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'];
 const { verifyLoadListHasAllContent } = require('./_helpers/load-order');
 const lo = verifyLoadListHasAllContent(LOAD, 'src/core/diagnose.js');
 check('this suite loads every content file index.html loads before diagnose.js', lo.pass, lo.missing.join(', '));
@@ -44,6 +44,7 @@ vm.createContext(ctx);
 for(const f of LOAD) vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
 ctx.log = () => {};
 const X = vm.runInContext(`({ clockExpect, clockAskError, clockErrors, clockSays, clockRead, clockArt, clockSay, clockHint, clockClean, clockSaid, clockWords,
+  calExpect, calAskError, calErrors, calSays, calMonthRead, calDayRead, calArt, calSay, calHint, calClean, calSaid, calDate, CAL_CONCEPTS, CAL_TYPES,
   picFor, picIs, validateLesson, generateLessons, gameBuildPool, CLOCK_CONCEPTS, CLOCK_TYPES, AGE_BANDS, S, skillById })`, ctx);
 
 /* ---------- 1. the answer, from the hands ---------- */
@@ -122,6 +123,57 @@ check('no clock question goes into an arcade game (no picture there)', !pool.som
 const draft = X.clockClean({ t:'clock', h:3, m:'30', ask:'time', evil:'<script>' });
 check('a drafted clock keeps only known fields, typed', !('evil' in draft.beat) && draft.errors.some(e => /minutes m/.test(e)), JSON.stringify(draft));
 
+/* ================= CALENDARS (src/content/calendar.js) ================= */
+const C = b => X.calExpect(b);
+check('the months: the name of month 5 (May), the month in a printed date, the number of a month, the month after/before (across the year end), k months later, months between',
+  C({ t:'months', m:5, ask:'name' }) === 'month:5' && C({ t:'months', date:'02/05/2015', ask:'name' }) === 'month:5' && C({ t:'months', m:8, ask:'number' }) === 8
+  && C({ t:'months', m:12, ask:'after' }) === 'month:1' && C({ t:'months', m:1, ask:'before' }) === 'month:12' && C({ t:'months', m:11, k:3, ask:'later' }) === 'month:2'
+  && C({ t:'months', m:10, m2:2, ask:'count' }) === 4 && C({ t:'months', m:5 }) === null, '');
+check("a month's page: the day of a date, how many Sundays, a week later",
+  C({ t:'calendar', days:31, start:3, d:16, ask:'weekday' }) === 'day:4' && C({ t:'calendar', days:31, start:5, w:0, ask:'count' }) === 5 && C({ t:'calendar', days:28, start:0, w:4, ask:'count' }) === 4
+  && C({ t:'calendar', days:31, start:2, d:9, k:7, ask:'later' }) === 16, '');
+check('months and days read in English and Hindi (May / मई, फ़रवरी / फरवरी, सितंबर / सितम्बर, Sunday / रविवार / इतवार) — and an answer naming two is neither',
+  X.calMonthRead('May') === 5 && X.calMonthRead('मई') === 5 && X.calMonthRead('फरवरी') === 2 && X.calMonthRead('फ़रवरी') === 2 && X.calMonthRead('सितम्बर') === 9 && X.calMonthRead('Sept') === 9
+  && X.calMonthRead('May or June') === null && X.calDayRead('Sunday') === 0 && X.calDayRead('इतवार') === 0 && X.calDayRead('गुरुवार') === 4 && X.calSays('5 Sundays', 5) && X.calSays('४ महीने', 4)
+  && X.calDate('02/05/2015').m === 5 && X.calDate('31/02/2015') === null, '');
+const calL = (pic, opts, hiOpts, correct, band, q) => ({ id:'t', band: band || 'developing', title:{ en:'Months', hi:'महीने' }, sub:{ en:'Look', hi:'देखो' },
+  beats:[{ t:'intro', say:{ en:'Look.', hi:'देखो।' } }, pic, { t:'ask', q: q || { en:'Which month?', hi:'कौन सा महीना?' }, opts, hiOpts: hiOpts || opts, correct }, { t:'win', say:{ en:'Well done.', hi:'शाबाश।' } }] });
+const goodC = V(calL({ t:'months', date:'02/05/2015', ask:'name' }, ['May', 'February'], ['मई', 'फ़रवरी'], 0));
+check('a right "which month is in this date?" passes', goodC.ok, JSON.stringify(goodC.errors));
+const LATER = { en:'Which month is it 3 months after the marked one?', hi:'निशान वाले महीने से 3 महीने बाद कौन सा महीना?' };
+check('a right "3 months later" passes (the question says the 3)', V(calL({ t:'months', m:6, k:3, ask:'later' }, ['September', 'August'], ['सितंबर', 'अगस्त'], 0, null, LATER)).ok, '');
+bad('the day read as the month (02/05/2015 → February) is rejected', calL({ t:'months', date:'02/05/2015', ask:'name' }, ['February', 'May'], ['फ़रवरी', 'मई'], 0), /isn't what the calendar shows/);
+bad('a Hindi month that disagrees is rejected', calL({ t:'months', date:'02/05/2015', ask:'name' }, ['May', 'February'], ['फ़रवरी', 'मई'], 0), /Hindi answer/);
+bad('"later" whose question doesn\'t say how much later is rejected (the picture can\'t show it)', calL({ t:'months', m:6, k:3, ask:'later' }, ['September', 'August'], ['सितंबर', 'अगस्त'], 0), /must say how much later/);
+bad('a date whose month isn\'t the m it marks is rejected', calL({ t:'months', date:'02/05/2015', m:7, ask:'name' }, ['May', 'July'], ['मई', 'जुलाई'], 0), /date's month is 5, not 7/);
+bad("a calendar page for 5–6 year olds is rejected (dates to 31, their ceiling is 20)", calL({ t:'calendar', days:31, start:0, d:3, ask:'weekday' }, ['Tuesday', 'Monday'], ['मंगलवार', 'सोमवार'], 0, 'early'), /ceiling of 20/);
+bad('a week later past the end of the month is rejected', calL({ t:'calendar', days:30, start:0, d:28, k:7, ask:'later' }, ['35', '29'], null, 0, null, { en:'One week later?', hi:'एक हफ़्ते बाद?' }), /past the end of the month/);
+const { lessons: allL } = X.generateLessons({ report: true });
+const cal = allL.filter(l => X.CAL_CONCEPTS.some(c => c.id === l.concept));
+check('20 built-in calendar lessons, all passing the checker, each with two questions', cal.length === 20 && cal.every(l => l.beats.filter(b => b.t === 'ask').length === 2), cal.length);
+check('they make the new "Months and the calendar" (calendar3) teachable', X.skillById('calendar3') && X.skillById('calendar3').concepts.some(c => X.CAL_CONCEPTS.some(g => g.id === c)), '');
+let cLeaks = [], cAsks = 0;
+for(const les of cal) les.beats.forEach((b, i) => {
+  if(b.t !== 'ask') return;
+  const pic = X.picFor(les, i); if(!pic) return;
+  cAsks++;
+  for(const lang of ['en', 'hi']){
+    X.S.lang = lang;
+    const said = X.calSay(pic) || '', hint = X.calHint(les, i) || '', right = (lang === 'hi' ? b.hiOpts : b.opts)[b.correct];
+    if(X.calSaid(said, pic) || X.calSaid(hint, pic) || said.includes(right) || hint.includes(right)) cLeaks.push(`${les.id} ${lang}: "${said}" / "${hint}"`);
+  }
+});
+X.S.lang = 'en';
+check(`a question's calendar is never read aloud, and Ask Munni's hint never names the answer (${cAsks} questions, both languages)`, cAsks === 40 && !cLeaks.length, cLeaks.join(' | '));
+const cArt = cal.flatMap(l => l.beats.filter(b => X.CAL_TYPES.includes(b.t)).map(b => X.calArt(b)));
+check('every calendar is a clean SVG (no NaN, no undefined)', cArt.length === 60 && cArt.every(s => /^<svg class="geo cal"/.test(s) && !/NaN|undefined|Infinity/.test(s)), cArt.find(s => /NaN|undefined/.test(s)) || cArt.length);
+const numQ = X.calArt({ t:'months', m:8, ask:'number' }), nameQ = X.calArt({ t:'months', m:5, ask:'name' });
+check('a "what number?" question hides the numbers, a "which month is number 5?" hides that name — never the answer on screen',
+  !/>8</.test(numQ) && />\?</.test(numQ) && />August</.test(numQ) && !/>May</.test(nameQ) && />\?</.test(nameQ), '');
+check('no calendar question goes into an arcade game', !pool.some(it => cal.some(l => it.id.startsWith(l.id + ':'))), '');
+const cDraft = X.calClean({ t:'months', m:5, ask:'name', evil:'<b>' });
+check('a drafted calendar beat keeps only known fields', !('evil' in cDraft.beat) && cDraft.beat.m === 5, JSON.stringify(cDraft));
+
 /* ---------- 4 and 5: the app ---------- */
 const AIM = { short:{ en:'Read half past', hi:'साढ़े पढ़ो' }, point:{ en:'The child can read a half past time on a clock.', hi:'बच्चा घड़ी पर साढ़े का समय पढ़ सकता है।' },
   forget:{ en:'I forgot! How do I read a clock when the long hand is at the 6?', hi:'मैं भूल गई! जब बड़ी सुई 6 पर हो, तो घड़ी कैसे पढ़ूँ?' },
@@ -174,6 +226,14 @@ const TEACH = { t:'clock', h:4, m:30, say:{ en:'The short hand has passed the 4.
     const tidy = clean(raw([INTRO, TEACH, { t:'clock', text:'9:30' }, Q(['half past 9', '9:06'], ['साढ़े 9 बजे', '9:06'], 0), WIN]));
     check('a clock missing its ask gets it from the question ("What time is it?"), its time from a note ("9:30") — and "9:06" is a fine Hindi answer',
       tidy.ok && tidy.lesson.beats[2].h === 9 && tidy.lesson.beats[2].m === 30 && tidy.lesson.beats[2].ask === 'time' && !('text' in tidy.lesson.beats[2]), JSON.stringify([tidy.errors, tidy.lesson.beats[2]]));
+    // only an exact time in digits (H:MM) is let through the Hindi-answer rule — nothing looser
+    const loose = hiRight => clean(raw([INTRO, TEACH, { t:'clock', h:3, m:30, ask:'time' }, Q(['half past 3', 'half past 4'], [hiRight, 'साढ़े 4 बजे'], 0), WIN]));
+    const l1 = loose('3 बजे 30'), l2 = loose('330'), l3 = loose('3:30');
+    const devanagari = o => JSON.parse(A(`JSON.stringify(sylClean(${JSON.stringify(raw([INTRO, TEACH, { t:'clock', h:3, m:30, ask:'time' }, Q(['half past 3', 'half past 4'], [o, 'साढ़े 4 बजे'], 0), WIN]))}, { band:'developing' }).errors.some(e => /must be in Devanagari/.test(e)))`));
+    check('a Hindi answer "3 बजे 30" or "330" still fails for a 3:30 clock (neither says 3:30); only the exact "3:30" passes',
+      !l1.ok && l1.errors.some(e => /Hindi answer "3 बजे 30"/.test(e)) && !l2.ok && l2.errors.some(e => /Hindi answer "330"/.test(e)) && l3.ok, JSON.stringify([l1.errors, l2.errors, l3.errors]));
+    check('…and the Devanagari rule lets through only digits or an exact H:MM — not "3.30", "3:3", "03:300" or "3:30 pm"',
+      ['3.30', '3:3', '03:300', '3:30 pm'].every(devanagari) && !devanagari('3:30') && !devanagari('12:05') && !devanagari('20'), '');
     const hourly = clean(raw([INTRO, { t:'clock', h:4, m:0 }, { t:'clock', h:7, m:0, ask:'time' }, Q(["7 o'clock", "12 o'clock"], ['7 बजे', '12 बजे'], 0), WIN]));
     const warns = JSON.parse(A(`JSON.stringify(sylLessonWarnings(${JSON.stringify(hourly.lesson)}).map(w => w.en))`));
     check('the teacher is warned when every clock question is on the hour (only the short hand is tested) — not a rejection',
@@ -187,6 +247,25 @@ const TEACH = { t:'clock', h:4, m:30, say:{ en:'The short hand has passed the 4.
     const ex = clean(JSON.parse(exSrc));
     check("the clock example in Gemini's prompt passes Takhti's own checker (so the example and the rules can't drift apart), its aims all checked",
       ex.ok && ex.checks.join() === 'shape,shape' && JSON.parse(A(`JSON.stringify(sylAimGaps(${JSON.stringify(ex.lesson)}))`)).length === 0, JSON.stringify(ex.errors));
+
+    const calSrc = fs.readFileSync(path.join(root, 'api/syllabus.mjs'), 'utf8').replace(/\r\n/g, '\n').match(/An example of a calendar lesson[^\n]*\n([^\n]+)\n/)[1];
+    const cex = clean(JSON.parse(calSrc));
+    check("the calendar example in Gemini's prompt passes Takhti's own checker, two questions, its aims all checked",
+      cex.ok && cex.checks.join() === 'shape,shape' && JSON.parse(A(`JSON.stringify(sylAimGaps(${JSON.stringify(cex.lesson)}))`)).length === 0, JSON.stringify(cex.errors));
+    // a calendar lesson drafted with the months asked as a sentence to read still gets the sentence warning; drawn, it doesn't
+    const toldMonth = clean({ ...JSON.parse(calSrc), beats: JSON.parse(calSrc).beats.map((b, i) => i === 0 ? { ...b, say:{ en:'A birth certificate writes the date as day, month, year: May is month 5.', hi:'जन्म प्रमाण पत्र पर तारीख दिन, महीना, साल लिखी जाती है: मई पाँचवाँ महीना है।' } } : b) });
+    check('an intro that names the month asked about ("May") is caught as saying the answer, in either language', !toldMonth.ok && toldMonth.errors.some(e => /say the answer "May" \(in the intro\)/.test(e)), JSON.stringify(toldMonth.errors));
+
+    /* ---------- the library's rule: a picture lesson asks two questions ---------- */
+    const oneQ = raw([INTRO, TEACH, { t:'clock', h:9, m:30, ask:'time' }, Q(['half past 9', 'half past 10'], ['साढ़े 9 बजे', 'साढ़े 10 बजे'], 0), WIN]);
+    const forLib = JSON.parse(A(`JSON.stringify(sylClean(${JSON.stringify(oneQ)}, { band:'developing', skills: sylSkills(sylClass('c3')), minQuestions: 2 }))`));
+    const forTeacher = clean(oneQ);
+    check('a library build rejects a picture lesson with one question (a coin toss), with why; a teacher\'s own upload keeps it, with the warning',
+      !forLib.ok && forLib.errors.some(e => /asks at least 2 questions — this one asks 1/.test(e)) && forTeacher.ok
+      && JSON.parse(A(`JSON.stringify(sylLessonWarnings(${JSON.stringify(forTeacher.lesson)}).map(w => w.en))`)).some(w => /half the time/.test(w)), JSON.stringify([forLib.errors, forTeacher.errors]));
+    check('…and the prompt says so: every lesson asks at least two questions', /EVERY lesson asks AT LEAST TWO questions/.test(fs.readFileSync(path.join(root, 'api/syllabus.mjs'), 'utf8')), '');
+    const libSrc = fs.readFileSync(path.join(root, 'tools/build-library.mjs'), 'utf8');
+    check('…and the library builder sets it on every draft, repair and re-check', /const LIB_MIN_QUESTIONS = 2/.test(libSrc) && (libSrc.match(/minQuestions: LIB_MIN_QUESTIONS/g) || []).length === 3, '');
 
     /* ---------- 5. the app ---------- */
     A(`S.game = S.game || 'cricket'; S.age = 8; S.online = false; go('lessons')`);
@@ -207,6 +286,17 @@ const TEACH = { t:'clock', h:4, m:30, say:{ en:'The short hand has passed the 4.
     const hiArt = A(`clockArt({ t:'clocks', from:{ h:2, m:0 }, to:{ h:2, m:30 } })`);
     check('in Hindi the clocks are labelled शुरू and अंत', /शुरू/.test(hiArt) && /अंत/.test(hiArt), hiArt.slice(-200));
     A(`S.lang = 'en'`);
+    const cid = A(`lessonBank().find(l => l.concept === 'datemonth').id`);
+    A(`startLesson('${cid}')`);
+    for(let i = 0; i < 50 && !(A(`!!S.lesson && S.lesson.data.id === '${cid}'`)); i++) await wait(10);
+    A(`S.lesson.i = 3; render()`);
+    check('a calendar question keeps its strip of months and the printed date on screen', !!screen().querySelector('.lesart svg.cal') && /\d{2}\/\d{2}\/\d{4}/.test(screen().querySelector('.lesart svg.cal').textContent) && /Which month is in this date/.test(screen().textContent), screen().innerHTML.slice(0, 300));
+    const ctg = A(`JSON.stringify(askTarget())`);
+    check('Ask Munni on it: find the middle number of the date', /middle number of the date/.test(ctg), ctg.slice(0, 300));
+    const n1 = A(`(S.skillHistory.calendar3 || { n:0 }).n`);
+    A(`lesAnswer(S.lesson.data.beats[3].correct)`);
+    check('the answer counts for calendar3', A(`(S.skillHistory.calendar3 || { n:0 }).n`) === n1 + 1, A(`JSON.stringify(S.skillHistory)`));
+    A(`endLesson()`);
     check('no uncaught script errors', jsErrors.length === 0, jsErrors.join(' | '));
   }catch(e){ check('the app run finished', false, e.stack); }
   srv.close(); win.close();

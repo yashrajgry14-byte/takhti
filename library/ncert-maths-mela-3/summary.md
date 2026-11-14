@@ -1,6 +1,6 @@
 # Maths Mela — c3
 
-14 of 14 chapters built · 41 lessons ready
+14 of 14 chapters built · 42 lessons ready
 
 | # | chapter | title | lessons |
 |---|---|---|---|
@@ -16,5 +16,5 @@
 | 10 | ch10 | Fun at Class Party! | 2 kept · 2 not used |
 | 11 | ch11 | Filling and Lifting | 4 kept · 0 not used |
 | 12 | ch12 | Give and Take | 4 kept · 0 not used |
-| 13 | ch13 | Time Goes On | 2 kept · 2 not used |
+| 13 | ch13 | Time Goes On | 3 kept · 1 not used |
 | 14 | ch14 | The Surajkund Fair | 3 kept · 1 not used |
