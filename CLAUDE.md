@@ -85,7 +85,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v60` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v61` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -533,9 +533,8 @@ network and no waiting in the week.
   children the same way (the class mirror, then the class sync). The plan
   is the teacher phone's own setting (`S.libPlan`, a device field like the
   sync keys) and is never sent. No network is used for any of it.
-- **In the library now**: NCERT *Maths Mela* Class 3 — 32 lessons across 10
-  of its 14 chapters (the first whole-book build, 13 Nov, all drafted by
-  flash-lite; chapters 4, 6, 7, 8 not built — Gemini busy). 16 of the 32
+- **In the library now**: NCERT *Maths Mela* Class 3 — 43 lessons across
+  all 14 chapters (built 13–14 Nov, all drafted by flash-lite). 16 of the 43
   are taught only by a sentence to read (measuring, weighing, time,
   symmetry, a map): Takhti has no picture for those topics, and the teacher
   is warned on each (`sylLessonWarnings()`).
@@ -1602,8 +1601,8 @@ Honest edges of what's built:
    are only the centre-of-a-circle ones; the teacher sees a child's path
    only through the class mirror or the class sync (not in progress codes).
 17. **The library is new (13 Nov 2026).** One book, *Maths Mela* Class 3:
-   32 lessons in 10 of 14 chapters; four chapters not built yet, and
-   chapter 3 kept only one lesson. Half the kept lessons teach a maths topic
+   43 lessons in all 14 chapters; chapters 3 and 6 (numbers to 200 and
+   300) kept only one lesson each. 16 of the kept lessons teach a maths topic
    by a sentence to read, because Takhti can't draw clocks, coins, scales,
    measuring jugs, mirror lines or maps — they pass the checks but check
    reading, not doing; the teacher sees a warning. The builder drafts
