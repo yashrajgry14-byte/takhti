@@ -344,6 +344,10 @@ const stand = http.createServer((req, res) => {
   G.said = 'मेरा बाई स्कूल जाता है';
   c = await cmp();
   check('…when Gemini hears the slips as well, it names no winner and asks for more clips (never a switch on a tie)', /Hindi: no clear difference/.test(c.out) && /No clear winner yet/.test(c.out) && !/Use SPEECH_PROVIDER/.test(c.out), c.out.split('\n').slice(-4).join(' | '));
+  G.hear = 'fail';
+  c = await cmp();
+  check('…and a provider that gave no answers never wins a language: the verdict counts only clips both answered', /no clip that both answered/.test(c.out) && !/Use SPEECH_PROVIDER/.test(c.out), c.out.split('\n').slice(-5).join(' | '));
+  G.hear = 'ok';
 
   stand.close();
   console.log('\n' + '-'.repeat(70) + `\n${passes}/${passes + failures} checks passed`);

@@ -66,6 +66,9 @@ const env = { ...process.env, TAKHTI_SPEECH_BUDGET_MS: process.env.TAKHTI_SPEECH
 const PROVIDERS = ['gemini', 'sarvam'];
 const tot = {}; for(const p of PROVIDERS) tot[p] = { hi: { words: 0, missed: 0, invented: 0, failed: 0 }, en: { words: 0, missed: 0, invented: 0, failed: 0 } };
 const report = [];
+// the verdict counts only clips BOTH providers answered: a provider that timed out on a
+// clip must not win it by not being judged there
+const pair = {}; for(const p of PROVIDERS) pair[p] = { hi: { words: 0, missed: 0, invented: 0 }, en: { words: 0, missed: 0, invented: 0 } };
 
 console.log(`Comparing ${clips.length} recording(s) — Gemini (${env.GEMINI_SPEECH_MODEL || 'gemini-3.8-flash'}) and Sarvam (${env.SARVAM_STT_MODEL || 'saaras:v3'}, verbatim)\n`);
 for(const f of clips){
@@ -102,6 +105,8 @@ for(const f of clips){
       : '';
     console.log(`  ${p.padEnd(6)}: ${r.transcript || '(nothing heard)'}${marks ? '  → ' + marks : ''}`);
   }
+  if(truthStates && PROVIDERS.every(p => row.providers[p] && !row.providers[p].error))
+    for(const p of PROVIDERS){ const t = pair[p][lang]; t.words += words.length; t.missed += row.providers[p].missed.length; t.invented += row.providers[p].invented.length; }
   const g = row.providers.gemini, s = row.providers.sarvam;
   if(!truthStates && g && s && g.states && s.states){
     const differ = words.filter((w, k) => okState(g.states[k]) !== okState(s.states[k]));
@@ -123,10 +128,9 @@ const bad = x => x.missed + x.invented;
 // one verdict per language, then one for the setting (which covers both): hiding a
 // slip is the worse error (the child isn't taught), so missed slips weigh first
 const judge = lang => {
-  const g = tot.gemini[lang], sv = tot.sarvam[lang], name = lang === 'hi' ? 'Hindi' : 'English';
-  if(!g.words && !sv.words) return { name, pick: null, say: `No ${name} clips with a truth file.` };
-  if(!sv.words) return { name, pick: 'gemini', say: `${name}: Sarvam gave no answers (is SARVAM_API_KEY set?).` };
-  if(!g.words) return { name, pick: 'sarvam', say: `${name}: Gemini gave no answers.` };
+  const g = pair.gemini[lang], sv = pair.sarvam[lang], name = lang === 'hi' ? 'Hindi' : 'English';
+  const failed = tot.gemini[lang].failed + tot.sarvam[lang].failed;
+  if(!g.words) return { name, pick: null, say: failed ? `${name}: no clip that both answered (${failed} answer(s) missing) — run it again.` : `No ${name} clips with a truth file.` };
   if(g.missed > sv.missed || (g.missed === sv.missed && bad(g) > bad(sv) * 1.25 + 1)) return { name, pick: 'sarvam', say: `${name}: Sarvam is better (Gemini hid ${g.missed} slip(s), Sarvam ${sv.missed}).` };
   if(sv.missed > g.missed || (g.missed === sv.missed && bad(sv) > bad(g) * 1.25 + 1)) return { name, pick: 'gemini', say: `${name}: Gemini is better (Sarvam hid ${sv.missed} slip(s), Gemini ${g.missed}).` };
   return { name, pick: null, say: `${name}: no clear difference.` };
@@ -138,6 +142,6 @@ if(picks.includes('sarvam') && !picks.includes('gemini')) verdict += 'Use SPEECH
 else if(picks.includes('gemini') && !picks.includes('sarvam')) verdict += 'Keep SPEECH_PROVIDER=gemini.';
 else if(picks.length) verdict += 'The languages disagree: hiding a slip in Hindi matters most for these children — follow the Hindi line, and record more clips.';
 else verdict += 'No clear winner yet — keep the SPEECH_PROVIDER you have, and record more clips (with .truth.txt), especially slips.';
-verdict += `\n(${Object.values(tot.gemini).reduce((a, x) => a + x.words, 0)} words judged. A handful of clips is a hint, not a decision.)`;
+verdict += `\n(Judged on clips both answered: ${pair.gemini.hi.words + pair.gemini.en.words} words. A handful of clips is a hint, not a decision.)`;
 console.log('\n' + verdict);
 if(jsonOut){ fs.writeFileSync(jsonOut, JSON.stringify({ totals: tot, verdict, clips: report }, null, 2)); console.log(`(written to ${jsonOut})`); }

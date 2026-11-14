@@ -1672,8 +1672,12 @@ Honest edges of what's built:
    four clips, deliberate slips) found Sarvam's verbatim mode writing English
    in Devanagari ("द डॉग रन टू द पार्क" — "run" heard right, but unmatchable),
    so English lines now go to Sarvam as `codemix` (`SARVAM_EN_MODE`); Gemini
-   hid "run" and invented "apple"; both wrote "भाई" for a "बाई" — too few
-   clips to decide Hindi, and its verdict is now per language; the Batch API's job state and inline answers
+   hid "run" and invented "apple"; both wrote "भाई" for a "बाई", and did again
+   for a fifth clip with a deliberately hard ब — so neither hears the ब/भ
+   (aspiration) slip in an adult's voice, and Takhti can't yet catch that
+   slip from speech (typed-back writing and "say it with Munni" still teach
+   it). Its verdict is per language and counts only clips both providers
+   answered (Gemini timed out on three in the second run); the Batch API's job state and inline answers
    appear under two field names in the docs, and both are read. Phone
    calls (Bolna) use the transcriber set in Bolna's dashboard — unchanged.
    The v3 terms wording is for the lawyer, not final.
