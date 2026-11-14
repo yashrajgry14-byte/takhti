@@ -106,10 +106,16 @@ export async function run(opts, fetchImpl){
   out.tts = { model: ttsModel, ok: !munni.error, ms: ms(t0), error: munni.error || null };
   if(!munni.error && opts.dir){ fs.writeFileSync(path.join(opts.dir, 'munni.wav'), Buffer.from(munni.audio, 'base64')); }
   say(munni.error ? `   ✗ ${munni.error}` : `   ✓ ${out.tts.ms} ms${opts.dir ? ' — listen: live-check/munni.wav' : ''}`);
+  if(!munni.error && opts.dir) say('   the reading clips are saved too (live-check/hi-slip.wav …): listen that each really says the slip');
   if(!munni.error){
     for(const c of HEAR_CASES){
       const r = await narrate(c.spoken, c.lang, { env, fetch: fetchImpl, provider: 'gemini', pace: 0.9 });
-      if(!r.error) clips[c.id] = { buf: Buffer.from(r.audio, 'base64'), mime: r.mime };
+      if(!r.error){
+        clips[c.id] = { buf: Buffer.from(r.audio, 'base64'), mime: r.mime };
+        // kept so a person can listen: the voice that reads the slip is a model too, and may
+        // say the right word instead ("भाई" for "बाई") — then the hearer was never tested
+        if(opts.dir) fs.writeFileSync(path.join(opts.dir, c.id + (r.mime === 'audio/wav' ? '.wav' : '.audio')), clips[c.id].buf);
+      }
     }
     const full = JUDGE_CASES[0];
     const r = await narrate(full.said, 'en', { env, fetch: fetchImpl, provider: 'gemini' });
