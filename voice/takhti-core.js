@@ -34,7 +34,10 @@ const FILES = [
   'core/diagnose.js', 'core/class-share.js', 'core/srs.js',
   'content/competencies.js',
   'core/profiles.js', 'core/matcher.js', 'core/adaptive.js',
-  'core/daily-engine.js', 'core/mathgen.js', 'core/readability.js', 'core/explain.js', 'core/mind.js', 'core/twin.js', 'core/lang-mistakes.js'
+  'core/daily-engine.js', 'core/mathgen.js', 'core/readability.js', 'core/explain.js', 'core/mind.js', 'core/twin.js', 'core/lang-mistakes.js',
+  // Teach Munni: the same aims, the same rubric and the same session as the
+  // app, so a phone call teaches back exactly what the app does
+  'content/teach.js', 'core/teachback.js'
 ];
 
 /* The class mirror (core/diagnose.js) and homework (class-share.js) live
@@ -90,6 +93,7 @@ function createCore(opts) {
     personalizeContentForHomework, getAssignedHomework, importHomework, classReportCode, SKILLS, diagnose, assignHomework, clearHomework, homeworkCode, prereqChain,
     mirrorToClassNow, getDueSrsItems, explainMath, explainRead, explainLessonBeat, explainLines, xfill, parseProblem,
     MISTAKES, mistakeAnswers, whichMistake, mistakeTip, mistakeExplain, mistakeLabel, procValid, procMatches, twinAnswer, twinHabit, twinMastery, twinPredict, twinOf, twinNote, twinProfile, twinCleanProfile, twinPrompt,
+    TEACH_UNITS, TEACH_LINES, teachBegin, teachHeard, teachAdvance, teachFinish, teachRubric, teachOf, teachCheckAim,
     LMISTAKES, lineMistakes, wordMistake, langTip, wordChunks, WAYS, mindChoose,
     CONCEPTS, validateLesson, lessonBank, newProfile, PROFILE_FIELDS,
     syncProfileIn, syncProfileOut, COMPETENCY, seedOf, rng, SENTENCES

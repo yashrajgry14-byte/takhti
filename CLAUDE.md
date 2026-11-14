@@ -48,7 +48,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 44 test suites (see Testing)
+npm test           # all 45 test suites (see Testing)
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -86,7 +86,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v67` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v68` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -1085,6 +1085,27 @@ protégé effect, and the one place a child gets to *say* what they learnt.
   decides. The Netlify function (`api/teachback`) takes a transcript only.
 - **What the phone sends**: the points still to teach, the band's ages,
   the audio or words — no name, no id.
+- **On a phone call** (`voice/session.js`, the `teach` slot, 13 Nov 2026):
+  `voice/takhti-core.js` loads `content/teach.js` and `core/teachback.js`
+  unchanged, so a call runs the app's own session — `teachBegin()`,
+  `teachHeard()` (the offline rubric on the words the voice model passes),
+  `teachFinish()` into the child's own `profile.teach`. `planSession()` adds
+  `teach` as the last slot (ages 5+) when a built-in unit fits the child's
+  band, on the first of: the call's homework skill, the twin's habit, the
+  Friday check's skill, then a unit skill the child has practised ≥ 3 times
+  (most practised first) — with at most two `explain` aims not yet covered
+  (`s.teach_plan`); no `fix` aims on a call (a phone can't show three
+  answers). Covered → praise; partly or missing → hint 1, hint 2; still not
+  → "later"; not heard twice → "let's try the next thing", nothing counted.
+  Never evidence of mastery (the skill history is untouched — the test
+  checks). The parent report says how many points the child taught Munni
+  (`teachAll`/`teachSome`/`teachNone`, never "wrong").
+- **At home** (`voice/circle.js`, `homeAim()`): when the week's step has a
+  built-in unit, the circle's Wednesday "teach" activity is Munni's own
+  question for one aim, her first hint as a clue and what a full answer says
+  (the aim's ideas), in both languages, with `aim` on the activity — a point
+  the child's record (`profile.teach`, which calls now fill) says they
+  couldn't yet explain comes first. Other steps keep the old activity.
 - **School lessons' aims** (`core/syllabus.js`): one format for both jobs —
   the syllabus prompt asks Gemini for 1–4 aims per lesson (required), each
   a `point` the teacher approves plus Munni's lines; `sylClean()` runs
@@ -1378,7 +1399,7 @@ app is a client of it, and only when a parent says so.
 
 ## Testing
 
-`npm test` runs 44 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 45 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -1420,6 +1441,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `syllabus` | vm + HTTP + jsdom | the server against a stand-in Gemini (key in a header on the server only, the PDF and the band's rules and schema in the request, the older field names, 503 with no key, the school key, PDF/photo only, a limit per address, the repair round with the checker's reasons, the voice server's `POST /syllabus`); one beat schema per type with its required fields (an ask's two answers, a rectangle's w and h, a circle's folds), the flat one last after a 400; `tools/try-syllabus.mjs` through the same pipeline (passed / repaired / not used, the report, every model's outcome, `--recheck` with no call to Gemini, the key in neither file, no key → nobody called, busy → once more by itself); the sixth run's lessons moved onto another shape (the question's other option right, the teacher's note naming the repeat), a question naming a shape never moved, the reason saying where the answer was said; the class sync carries lessons from the teacher's key only; the phone's checks (a good maths and reading lesson pass; a wrong sum, an answer not in the passage, markup, over the band's ceiling, an undrawable beat, an unequal share, non-Devanagari Hindi, a non-number maths answer all fail with a reason; idempotent; shuffled); in the app: draft → one repaired, one "not used" → approve → remove; offline honest; the child's "From your school" (EN/HI), played, never rewritten, evidence for its skill; an edited lesson not shown; the sync sends them |
 | `geometry` | vm + jsdom | answers read off the drawing (sides, corners, names, perimeter, equal sides, the centre, corner kinds, a numbered row, the odd one out), in English and Hindi; the checker rejects a wrong marked answer, a disagreeing Hindi answer, two right answers, a figure that doesn't say what it asks, an equal-sided "rectangle", an impossible triangle, a row with two matches, a number over the ceiling, an undrawable shape; the 27 built-in lessons pass, a question's picture is never named or measured aloud, Ask Munni's hint never says the answer, clean SVGs, labels hidden while counting, no shape question in the games, drafted fields sanitised; in the app: the picture stays on screen during the question, the answer counts for the skill, Ask Munni's how-to-look help, a drafted shape lesson checked against its drawing |
 | `teachback` | vm + HTTP + jsdom | every built-in aim passes its check; the checker rejects a question or hint that gives the explanation, no Hindi, markup; the offline judge (covered/partly/missing/unsure, EN/HI/romanised, Devanagari digits); Munni's sum for every skill, three ages, many sums: never the right answer in her working, a real named mistake, the right option there; the child's own habit acted out; a whole session (hints, "later", never "wrong", unsure costs nothing, one explanation teaching two aims, the first tap as evidence and an agreed mistake into the twin, a nudged tap not); what is kept; "forgot again" asks only the gaps; the judge's credit needs a real quote of the child; Gemini's school aims cleaned, inside the lesson's id, idempotent; a topic word Munni's question and the point share taken out of the explanation words (centre), but a question that says the answer still dropped; a giveaway hint named with its words, mended to a general nudge only after the repair round, a giveaway question never; the repair gets every dropped aim's reason; the judge against a stand-in Gemini (key in a header, schema, the server's own aim text not the phone's, words as data, fix ideas from the mistake id, downgrade, 403/400, no key → no judge, failing Gemini → no judge, per-address limit) and through the voice server with a stand-in speech service; in the app: the end-of-lesson button, chips, Munni's sum, the summary, learn it again, "Munni forgot again", the parent's "How … explains" (EN/HI), the teacher's results per aim, the class mirror and sync carrying only ids and c/p/g; with a voice server: nothing sent on v1 terms, the new terms offered, then the recording and typed words judged with no name, an unquoted credit refused; no button for 3–4 |
+| `voice-teach` | vm (the voice brain) | Teach Munni on a call: the `teach` slot only for a practised topic in the child's band (none for 3–4, none for a 7–8 topic at 5–6); Munni forgets, a muddled answer gets her written hint, an explanation thanks, never "wrong"; kept in `profile.teach`, the skill history untouched; Hindi lines; not heard twice → the next point, nothing credited; a point taught isn't asked on the next call; the report line (EN/HI); the circle's Wednesday activity carries Munni's question, clue and full answer, a gap first, and an aim-less topic keeps the old activity |
 | `speech-provider` | vm + HTTP + jsdom + child processes | one stand-in for Gemini (hearing, TTS, Batch API) and Sarvam: the switch both ways (unset/gemini → Gemini; sarvam → Sarvam only, Gemini never called); Gemini's request (the model, key in a header, inline audio, structured output, "write what you hear"); the answer's shape; the passage only from the server's own lines; Gemini failing or slow → Sarvam inside the budget; neither → skipped at once; sarvam set and down → skipped, no Gemini; live `/reading/tts` never Gemini; per-address limit; Teach Munni hears the same way; nothing kept in the data folder; Gemini TTS (model, voice, WAV, PCM wrapped, the older voice field after a 400); `tools/build-audio.mjs` through the Batch API (WAV without ffmpeg, mp3 with it, carries on where it stopped, `--provider sarvam`); on the phone: pack → live backup → device voice, a `.wav` pack, v2 terms send nothing, a skipped check never blocks (message, typing, the line comes back, no recording kept); `tools/compare-speech.mjs` names the slip Gemini missed and advises switching back, or keeping Gemini |
 | `planner` | vm + jsdom | two children, the same approved shapes aims, two different paths from their own records (pictures first / the school's story), each step's why in EN/HI, the plan held; maths: the cartoon first or the school's story, the cartoon done once watched, the school's lesson after it the check, a skipped step not coming back; reading: three children, three ways inside the same lesson (Munni reads first / pieces / you first), each counted as that way; already knows it → show it, teach Munni; a gap underneath first (perimeter → add2) with a built-in lesson; status from what the child really did; labelling (pictures, the story, the check labels nothing), the answers settling it, two misses switching the way and the plan following; in the app: the Story Fire's path and why (EN/HI), the button starting the next step, then the school lesson as the check; a reading lesson's passage in pieces, or read aloud by Munni first; a maths lesson's button opening the cartoon (seeded sampling, so every run is the same); what goes to the teacher (short codes only, the mirror carrying it, the server keeping a well-formed path and dropping the rest), the teacher's card grouping four children by path (EN/HI), the parent's notice naming it |
 | `library` | Node + jsdom | the builder against a stand-in Gemini with the seventh live run's own drafts: only passing lessons kept, the failure named with why, the title from the chapter, a missing PDF skipped and said, raw and report written, the key in no file, a built chapter skipped (no call), `--force --only`, `--recheck` and `--import` with no call; `--scan` (a whole book's PDFs in natural order, front matter and answers left out, a listed chapter's title kept, a built chapter now on another file warned about); a chapter Gemini can't do doesn't stop the book, and `summary.md` says so; a bad book.json refused with each fault; the bundle (every chapter in order, one not built yet with no lessons, no raw drafts); the shipped `src/content/library.js` exactly what `library/` builds; PDFs ignored; in the app, offline: no book for Class 2 said, Maths Mela offered for Class 3, the term laid out with this week's chapter, the plan kept on the phone, this week's lessons in the approval card (every one checked again, no network), approved into the class, the child's "From your school" with their path; a chapter added later at the end, ↑ ↓, a not-built week said, next week; a lesson edited after it was built not offered; Hindi; no fetch at all |
@@ -1625,8 +1647,12 @@ Honest edges of what's built:
    voice server only). Built-in aims cover
    four maths topics; reading topics get aims only from school lessons.
    The explained points travel with the class sync, not in progress codes.
-   On calls there is no Teach Munni yet (a `teach` slot in `planSession()`
-   would suit a voice-only phone).
+   On calls Teach Munni uses only the built-in units' `explain` aims (no
+   school lesson's aims, no Munni's sum), is judged live by the rubric only
+   (Gemini doesn't re-judge it from Bolna's transcript yet), and lands in the
+   voice server's copy of the child (`profile.teach`) — which feeds the home
+   activity, but doesn't travel back to the app's own record; a Talking
+   Munni talk's teach result isn't replayed into the app either.
 16. **The child's path is new (13 Nov 2026).** Its thresholds (knows ≥ 0.85
    over 4 answers, a gap < 0.5 over 3) inherit the twin's uncalibrated
    numbers; a maths school lesson can only choose the cartoon or the

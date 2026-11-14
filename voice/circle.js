@@ -579,10 +579,30 @@ function createCircle(brain, envIn) {
     const letters = child.focus_letters && Date.parse(child.focus_letters.until) > Date.now() ? child.focus_letters.letters.join(', ') : '';
     const v = { name: child.name, letters: letters || (child.lang === 'hi' ? 'आज के' : "this week's") };
     const H = HOME[g];
+    const aim = homeAim(child, w.skill);
+    const teach = aim
+      ? { id: `${w.key}-teach`, kind: 'teach', day: 3, group: g, aim: aim.id, topic: H.topic,
+          text: { en: fillName(`Munni forgot something! Ask {name}: "${aim.forget.en}" A full answer says: ${aim.ideas.map(i => i.en).join('; ')}. If {name} gets stuck, give a clue: "${aim.hints[0].en}"`, v),
+                  hi: fillName(`मुन्नी कुछ भूल गई! {name} से पूछें: "${aim.forget.hi}" पूरा जवाब यह बताता है: ${aim.ideas.map(i => i.hi).join('; ')}। अगर {name} अटके, तो इशारा दें: "${aim.hints[0].hi}"`, v) } }
+      : { id: `${w.key}-teach`, kind: 'teach', day: 3, group: g, text: { en: fillName(H.teach.en, v), hi: fillName(H.teach.hi, v) }, topic: H.topic };
     return [
       { id: `${w.key}-do`, kind: 'do', day: 1, group: g, text: { en: fillName(H.do.en, v), hi: fillName(H.do.hi, v) }, topic: H.topic },
-      { id: `${w.key}-teach`, kind: 'teach', day: 3, group: g, text: { en: fillName(H.teach.en, v), hi: fillName(H.teach.hi, v) }, topic: H.topic }
+      teach
     ];
+  }
+  /* The Wednesday "teach" activity uses Teach Munni's own aims (content/
+     teach.js) when the week's step has them — the same question Munni asks
+     in the app and on calls, the same clue, and what a full answer says,
+     so a parent can listen like Munni does. A point the child couldn't yet
+     explain to Munni comes first (the record calls keep, profile.teach). */
+  function homeAim(child, skill) {
+    const u = T.TEACH_UNITS && T.TEACH_UNITS[skill];
+    if (!u) return null;
+    const aims = u.aims.filter(a => a.kind === 'explain' && a.forget && a.hints && a.hints[0] && a.ideas && a.ideas.length);
+    if (!aims.length) return null;
+    const t = child.profile && child.profile.teach && child.profile.teach.v === 1 ? child.profile.teach : null;
+    const seen = (t && t.units[skill] && t.units[skill].aims) || {};
+    return aims.find(a => seen[a.id] && seen[a.id] !== 'covered') || aims.find(a => !seen[a.id]) || aims[0];
   }
   function homeDone(childIn, id, by) {
     const child = brain.getChild(childIn.id) || childIn;

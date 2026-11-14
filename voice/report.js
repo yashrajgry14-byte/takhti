@@ -307,6 +307,9 @@ const R = {
   tipEnglish:{ en: 'Tip for today: ask {name} to say "{w}" in English when you see one.', hi: 'आज की सलाह: जब भी दिखे, {name} से उसका अंग्रेज़ी नाम "{w}" बुलवाएँ।' },
   homework: { en: "{name} also did a question from the teacher's homework.", hi: '{name} ने टीचर के होमवर्क का एक सवाल भी किया।' },
   focusDone: { en: '{name} also practised something the teacher asked for.', hi: '{name} ने वह भी अभ्यास किया जो टीचर ने कहा था।' },
+  teachAll: { en: '{name} taught Munni everything she "forgot" about {topic}, out loud.', hi: '{name} ने मुन्नी को {topic} की वे सब बातें बोलकर सिखाईं जो वह "भूल" गई थी।' },
+  teachSome:{ en: '{name} taught Munni {c} of {m} things about {topic}. Munni will ask the rest again another day.', hi: '{name} ने मुन्नी को {topic} की {m} में से {c} बातें सिखाईं। बाक़ी मुन्नी किसी और दिन फिर पूछेगी।' },
+  teachNone:{ en: '{name} tried to teach Munni about {topic}. Explaining is hard; Munni will ask again another day.', hi: '{name} ने मुन्नी को {topic} सिखाने की कोशिश की। समझाना मुश्किल होता है; मुन्नी किसी और दिन फिर पूछेगी।' },
   teacher:  { en: 'To share this practice with the teacher, send them this code:', hi: 'यह अभ्यास टीचर तक पहुँचाने के लिए उन्हें यह कोड भेजें:' },
   footer:   { en: '— Takhti', hi: '— तख़्ती' }
 };
@@ -359,6 +362,12 @@ function buildReport(core, child, session) {
 
   const hw = session.items.find(x => x.kind === 'homework' && x.outcome && x.outcome !== 'unsure' && x.outcome !== 'silent');
   if (hw) lines.push(t(hw.focus ? 'focusDone' : 'homework', lang, { name }));
+  // Teach Munni on the call: how many points the child taught her
+  const taught = session.items.find(x => x.kind === 'teach' && x.teach_result);
+  if (taught) {
+    const tr = taught.teach_result, topic = (tr.title && (tr.title[lang] || tr.title.en)) || '';
+    lines.push(t(tr.covered === tr.m ? 'teachAll' : tr.covered ? 'teachSome' : 'teachNone', lang, { name, c: tr.covered, m: tr.m, topic: lang === 'hi' ? topic : topic.toLowerCase() }));
+  }
   if (session.ended_by === 'stop') lines.push(t('stopped', lang, { name }));
   const q = session.silence;
   if (q && q.ended_in_silence) lines.push(t('quietEnd', lang, { name }));

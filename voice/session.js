@@ -112,6 +112,7 @@ const L = {
                    hi: 'मुझे सुनाई नहीं दिया। हाँ या नहीं बोलो, या हाँ के लिए एक और नहीं के लिए दो दबाओ।' },
   notHeardRd: { en: "I couldn't hear clearly. Read it once more?", hi: 'मुझे ठीक से सुनाई नहीं दिया। एक बार फिर पढ़ो?' },
   moveOn:     { en: "Let's try a new one.", hi: 'चलो, नया सवाल।' },
+  teachNext:  { en: "Let's try the next thing.", hi: 'चलो, अगली बात।' },
   next:       { en: 'Next one.', hi: 'अगला।' },
   readFirst:  { en: "Now look at today's card. Read line 1 to me.", hi: 'अब आज का कार्ड देखो। पहली लाइन पढ़कर सुनाओ।' },
   readNext:   { en: 'Now read line {k}.', hi: 'अब {k} लाइन पढ़ो।' },
@@ -325,7 +326,26 @@ function planSession(core, child, opts) {
       const sp = T.skillHasProblem(sk) ? T.skillProblem(sk, 1) : null;
       if (sp && SPOKEN_OPS[sp.op] && sp.c == null && slots.includes('math') && sk !== homework) { slots[slots.indexOf('math')] = 'twin'; twin = sk; break; }
     }
-    return { band: b.id, slots, lines, english: null, homework, focus, ease, check, home, levels: { ...T.S.levels }, profile: prof, twin };
+    // Teach Munni, last: Munni "forgets" up to two points and the child
+    // teaches them back out loud — the app's own aims (content/teach.js),
+    // on a topic this call or this child is really working on, and only
+    // points the child hasn't taught her yet. A voice-only phone is where
+    // explaining matters most: there is nothing to tap.
+    let teach = null;
+    if (b.id !== 'pre') {
+      const order = ['pre', 'early', 'developing', 'fluent'];
+      const hist = T.S.skillHistory || {};
+      const t = T.S.teach && T.S.teach.v === 1 ? T.S.teach : { units: {} };
+      const tried = Object.keys(T.TEACH_UNITS).filter(sk => (hist[sk] || {}).n >= 3).sort((x, y) => hist[y].n - hist[x].n);
+      for (const sk of [homework, twin, check && check.skill].concat(tried)) {
+        const u = sk && T.TEACH_UNITS[sk];
+        if (!u || order.indexOf(u.band) > order.indexOf(b.id)) continue;
+        const done = (t.units[sk] || {}).aims || {};
+        const aims = u.aims.filter(a => a.kind === 'explain' && done[a.id] !== 'covered').slice(0, 2).map(a => a.id);
+        if (aims.length) { teach = { skill: sk, aims }; slots.push('teach'); break; }
+      }
+    }
+    return { band: b.id, slots, lines, english: null, homework, focus, ease, check, home, levels: { ...T.S.levels }, profile: prof, twin, teach };
   });
   return {
     id, child_id: child.id, lang, seed, kind,
@@ -336,7 +356,7 @@ function planSession(core, child, opts) {
     // telephony provider passes keys through (not Exotel / Vobiz)
     keypad: (opts.channel || 'call') !== 'app' && opts.keypad !== false,
     band: out.band, slots: out.slots, lines: out.lines, homework_skill: out.homework, focus_source: out.focus || null,
-    profile: out.profile || null, twin_skill: out.twin || null,
+    profile: out.profile || null, twin_skill: out.twin || null, teach_plan: out.teach || null,
     ease: out.ease ? 'after a quiet call' : null,
     circle_check: out.check || null, circle_home: out.home || null,
     levels_before: out.levels,
@@ -430,6 +450,15 @@ function buildItem(core, child, s, slot, storyBank) {
     if (slot === 'home') {
       const h = s.circle_home;
       return { kind: 'home', expect: 'yesno', home_id: h.id, answer: true, prompt: fill(L.homeAsk, lang, { topic: h.topic[lang] || h.topic.en }) };
+    }
+    if (slot === 'teach') {
+      // the app's own Teach Munni session (core/teachback.js), started here
+      const tp = s.teach_plan, u = tp && T.TEACH_UNITS[tp.skill];
+      if (!u) return null;
+      const aims = u.aims.filter(a => tp.aims.includes(a.id)).map(a => Object.assign({}, a, { skill: tp.skill }));
+      const ts = T.teachBegin({ id: tp.skill, skill: tp.skill, title: u.title, aims }, {}, T.S);
+      if (!ts) return null;
+      return { kind: 'teach', skill: tp.skill, expect: 'explain', ts: JSON.parse(JSON.stringify(ts)), prompt: ts.line[lang] };
     }
     if (slot === 'homework') {
       /* The teacher's homework, personalised by the app's own diagnose():
@@ -612,6 +641,30 @@ function answer(core, child, s, storyBank, said) {
     const yn = parseYesNo(said);
     it.home_answer = yn === true ? 'yes' : yn === false ? 'no' : 'unclear';
     return done('answered', yn === true ? L.homeYes[lang] : L.homeNo[lang]);
+  }
+
+  /* ---- Teach Munni: the child explains a point Munni "forgot" ----
+     The app's own session (core/teachback.js): covered → thanks; partly or
+     missing → hint 1, then hint 2; still not → "we'll figure it out
+     together later". Never "wrong", and never evidence of mastery: a
+     child who can do it but can't yet say it is not a child who can't do
+     it. What was explained goes to the child's own record (profile.teach),
+     the same one the app's "How … explains" reads. */
+  if (it.kind === 'teach') {
+    if (intent === 'stop') return stopNow();
+    if (intent === 'repeat') return again();
+    const { out } = core.withChild(child.profile, { lang }, T => {
+      const ts = it.ts;
+      const v = T.teachHeard(ts, said, null, s.channel === 'app' ? 'talk' : 'call');
+      // not heard twice: on to the next point, nothing recorded for this one
+      const cur = !ts.done && ts.items[ts.i];
+      if (v === 'unsure' && cur && cur.unsure >= 2) T.teachAdvance(ts, L.teachNext);
+      if (ts.done) it.teach_result = JSON.parse(JSON.stringify(T.teachFinish(ts, T.S)));
+      return { line: ts.line[lang], done: ts.done, v };
+    });
+    it.verdicts = (it.verdicts || []).concat(out.v || 'none');
+    if (out.done) return done('taught', out.line);
+    return ask(out.line);
   }
 
   /* ---- numbers and yes/no ---- */
