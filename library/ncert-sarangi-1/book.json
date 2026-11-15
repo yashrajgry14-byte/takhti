@@ -8,5 +8,17 @@
   "edition": "2024-25",
   "cls": "c1",
   "subject": "hindi",
-  "chapters": []
+  "chapters": [
+    {
+      "id": "ch7",
+      "n": 7,
+      "file": "ahsr107.pdf",
+      "count": 3,
+      "title": {
+        "en": "Wah, My Horse!",
+        "hi": "वाह, मेरे घोड़े!"
+      },
+      "note": "A Class 1 poem about a horse. Teach rhyming words that end the same way (like -aal: taal, chaal, daal), hearing the first and the last sound of a word, and the letters त, घ and ड़. Write your own short rhyme and words; never copy the poem's lines."
+    }
+  ]
 }
