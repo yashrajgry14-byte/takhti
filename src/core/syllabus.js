@@ -66,10 +66,13 @@ function sylRules(bandId){
 /* the skills a lesson for this class may name: its own grade first, then
    the grades around it — a Class 3 shapes chapter practises flat shapes
    (graded Class 1) and square corners and perimeter (Class 4), and its
-   answers should count for them */
-function sylSkills(cls){
-  const near = s => s.g === cls.g ? 0 : s.g === cls.g - 1 ? 1 : s.g === cls.g + 1 ? 2 : 3;
-  return SKILLS.filter(s => s.g >= cls.g - 2 && s.g <= cls.g + 1 && s.strand !== 'evs')
+   answers should count for them. An EVS book (subject 'evs') offers its
+   EVS skills first, so a lesson on food going bad counts as health and
+   hygiene, not as reading; every other book leaves EVS out */
+function sylSkills(cls, subject){
+  const evs = subject === 'evs';
+  const near = s => (evs && s.strand !== 'evs' ? 4 : 0) + (s.g === cls.g ? 0 : s.g === cls.g - 1 ? 1 : s.g === cls.g + 1 ? 2 : 3);
+  return SKILLS.filter(s => s.g >= cls.g - 2 && s.g <= cls.g + 1 && (evs || s.strand !== 'evs'))
     .sort((a, b) => near(a) - near(b)).slice(0, 60).map(s => ({ id: s.id, en: s.en }));
 }
 

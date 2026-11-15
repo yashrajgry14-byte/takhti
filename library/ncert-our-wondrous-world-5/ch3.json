@@ -5,9 +5,9 @@
     "en": "The Mystery of Food",
     "hi": "भोजन का रहस्य"
   },
-  "built": "2026-11-15T06:22:35.784Z",
+  "built": "2026-11-15T11:27:27.082Z",
   "model": "claude (hand-written draft)",
-  "rechecked": "2026-11-15T06:22:35.784Z",
+  "rechecked": "2026-11-15T11:27:27.082Z",
   "lessons": [
     {
       "band": "fluent",
@@ -21,11 +21,11 @@
         "en": "Microbes and mould",
         "hi": "सूक्ष्मजीव और फफूँद"
       },
-      "skillId": "e5-compre",
+      "skillId": "v5-health",
       "source": "Pages 40–42",
       "aims": [
         {
-          "id": "s1t89qdt.0",
+          "id": "s1q38kb2.0",
           "kind": "explain",
           "short": {
             "en": "Why food spoils",
@@ -94,14 +94,14 @@
             "hi": "उत्तपम पर रंगीन धब्बे क्या थे?"
           },
           "opts": [
-            "Salt",
-            "Mould"
+            "Mould",
+            "Salt"
           ],
           "hiOpts": [
-            "नमक",
-            "फफूँद"
+            "फफूँद",
+            "नमक"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "A child who skims may pick a familiar food word instead of the new word, mould.",
             "hi": "जल्दी पढ़ने वाला बच्चा नए शब्द फफूँद की जगह कोई जाना-पहचाना शब्द चुन सकता है।"
@@ -115,14 +115,14 @@
             "hi": "सूक्ष्मजीव देखने के लिए हमें क्या चाहिए?"
           },
           "opts": [
-            "A microscope",
-            "Bright sunlight"
+            "Bright sunlight",
+            "A microscope"
           ],
           "hiOpts": [
-            "सूक्ष्मदर्शी",
-            "तेज़ धूप"
+            "तेज़ धूप",
+            "सूक्ष्मदर्शी"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Children often think anything small can be seen in good light.",
             "hi": "बच्चे अक्सर सोचते हैं कि छोटी चीज़ अच्छी रोशनी में दिख जाती है।"
@@ -138,7 +138,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-1t89qdt"
+      "id": "sch-1q38kb2"
     },
     {
       "band": "fluent",
@@ -152,11 +152,11 @@
         "en": "What microbes need to grow",
         "hi": "सूक्ष्मजीवों को बढ़ने के लिए क्या चाहिए"
       },
-      "skillId": "e5-compre",
+      "skillId": "v5-health",
       "source": "Pages 43–44",
       "aims": [
         {
-          "id": "sw66i9q.0",
+          "id": "s1hz2wb3.0",
           "kind": "explain",
           "short": {
             "en": "What microbes need",
@@ -236,14 +236,14 @@
             "hi": "पाटी का अचार दो महीने बाद भी अच्छा क्यों था?"
           },
           "opts": [
-            "It was covered with oil",
-            "It was kept on the balcony"
+            "It was kept on the balcony",
+            "It was covered with oil"
           ],
           "hiOpts": [
-            "वह तेल से ढका था",
-            "वह बालकनी में रखा था"
+            "वह बालकनी में रखा था",
+            "वह तेल से ढका था"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Children may remember the balcony from the bread and mix up the two foods.",
             "hi": "बच्चे ब्रेड वाली बालकनी याद रखकर दोनों चीज़ों को मिला सकते हैं।"
@@ -257,14 +257,14 @@
             "hi": "सूक्ष्मजीवों को बढ़ने के लिए क्या चाहिए?"
           },
           "opts": [
-            "Sugar, salt and spices",
-            "Moisture, air and the right temperature"
+            "Moisture, air and the right temperature",
+            "Sugar, salt and spices"
           ],
           "hiOpts": [
-            "चीनी, नमक और मसाले",
-            "नमी, हवा और सही तापमान"
+            "नमी, हवा और सही तापमान",
+            "चीनी, नमक और मसाले"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children often think microbes need food flavours, not water and air.",
             "hi": "बच्चे अक्सर सोचते हैं कि सूक्ष्मजीवों को स्वाद चाहिए, पानी और हवा नहीं।"
@@ -280,7 +280,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-w66i9q"
+      "id": "sch-1hz2wb3"
     },
     {
       "band": "fluent",
@@ -294,11 +294,11 @@
         "en": "Drying, oil and cold",
         "hi": "सुखाना, तेल और ठंडक"
       },
-      "skillId": "e5-compre",
+      "skillId": "v5-health",
       "source": "Pages 44–47",
       "aims": [
         {
-          "id": "s1dtf66b.0",
+          "id": "slad51c.0",
           "kind": "explain",
           "short": {
             "en": "Why we dry food",
@@ -341,7 +341,7 @@
           ]
         },
         {
-          "id": "s1dtf66b.1",
+          "id": "slad51c.1",
           "kind": "explain",
           "short": {
             "en": "Why oil in pickle",
@@ -402,14 +402,14 @@
             "hi": "मिर्चें धूप में क्यों सुखाई जाती हैं?"
           },
           "opts": [
-            "To make them red",
-            "To remove moisture"
+            "To remove moisture",
+            "To make them red"
           ],
           "hiOpts": [
-            "उन्हें लाल करने के लिए",
-            "नमी निकालने के लिए"
+            "नमी निकालने के लिए",
+            "उन्हें लाल करने के लिए"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children see the chillies change colour and think that is the reason.",
             "hi": "बच्चे मिर्च का रंग बदलते देखते हैं और उसी को कारण मान लेते हैं।"
@@ -423,14 +423,14 @@
             "hi": "फ्रिज की ठंडक सूक्ष्मजीवों के साथ क्या करती है?"
           },
           "opts": [
-            "It slows them down",
-            "It helps them grow"
+            "It helps them grow",
+            "It slows them down"
           ],
           "hiOpts": [
-            "उन्हें धीमा कर देती है",
-            "उन्हें बढ़ने में मदद करती है"
+            "उन्हें बढ़ने में मदद करती है",
+            "उन्हें धीमा कर देती है"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Children may think every kind of weather helps living things grow.",
             "hi": "बच्चे सोच सकते हैं कि हर मौसम जीवों को बढ़ने में मदद करता है।"
@@ -446,7 +446,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-1dtf66b"
+      "id": "sch-lad51c"
     },
     {
       "band": "fluent",
@@ -460,11 +460,11 @@
         "en": "Curd, idli and digestion",
         "hi": "दही, इडली और पाचन"
       },
-      "skillId": "e5-compre",
+      "skillId": "v5-health",
       "source": "Pages 47–48",
       "aims": [
         {
-          "id": "s17145z3.0",
+          "id": "s1mqdmfq.0",
           "kind": "explain",
           "short": {
             "en": "Good microbes",
@@ -576,7 +576,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-17145z3"
+      "id": "sch-1mqdmfq"
     },
     {
       "band": "fluent",
@@ -590,11 +590,11 @@
         "en": "Our teeth and saliva",
         "hi": "हमारे दाँत और लार"
       },
-      "skillId": "e5-compre",
+      "skillId": "v5-health",
       "source": "Pages 50–52",
       "aims": [
         {
-          "id": "swwjspo.0",
+          "id": "s1b700r9.0",
           "kind": "explain",
           "short": {
             "en": "Why chew well",
@@ -662,14 +662,14 @@
             "hi": "कौन-से दाँत खाना पीसते हैं?"
           },
           "opts": [
-            "Molars",
-            "Incisors"
+            "Incisors",
+            "Molars"
           ],
           "hiOpts": [
-            "चर्वणक",
-            "कृंतक"
+            "कृंतक",
+            "चर्वणक"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Incisors are the teeth children see first, so they guess them for every job.",
             "hi": "कृंतक दाँत सबसे पहले दिखते हैं, इसलिए बच्चे हर काम के लिए उन्हीं को चुन लेते हैं।"
@@ -683,14 +683,14 @@
             "hi": "चबाने से क्या निकलता है जो खाना पचाने में मदद करता है?"
           },
           "opts": [
-            "Sweets",
-            "Saliva"
+            "Saliva",
+            "Sweets"
           ],
           "hiOpts": [
-            "मिठाई",
-            "लार"
+            "लार",
+            "मिठाई"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children may pick a word they recognise from the end of the passage.",
             "hi": "बच्चे पाठ के आख़िर में पढ़ा कोई जाना-पहचाना शब्द चुन सकते हैं।"
@@ -706,7 +706,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-wwjspo"
+      "id": "sch-1b700r9"
     }
   ],
   "notUsed": []
