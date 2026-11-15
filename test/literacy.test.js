@@ -27,11 +27,11 @@ console.log('literacy/early :', lit.length);
 
 // (14 Nov 2026: the o'clock concept, clockhour — 12 lessons — moved to content/clock.js,
 // where clocks are drawn and their answers read off the hands; this file tests literacy.js alone)
-check('33 concepts (19 original arithmetic + 14 literacy/early-numeracy)', X.CONCEPTS.length===33, `got ${X.CONCEPTS.length}`);
-check('455 lessons generated', lessons.length===455, `got ${lessons.length}`);
+check('35 concepts (19 original arithmetic + 16 literacy/early-numeracy — the body words and first sounds from Mridang Class 1 added)', X.CONCEPTS.length===35, `got ${X.CONCEPTS.length}`);
+check('467 lessons generated (455 + 6 body words + 5 first sounds + the sight word "one")', lessons.length===467, `got ${lessons.length}`);
 check('0 rejected — every generated literacy lesson passed the validator first try', rejected.length===0,
   `${rejected.length} rejected: ${rejected.slice(0,3).map(r=>r.id+' → '+r.errors[0]).join(' | ')}`);
-check('136 of the 455 lessons come from the literacy/early-numeracy concepts (148 before clockhour moved to clock.js)', lit.length===136, `got ${lit.length}`);
+check('148 of the 467 lessons come from the literacy/early-numeracy concepts (136 before the Mridang Class 1 additions)', lit.length===148, `got ${lit.length}`);
 
 // every new beat must render and narrate
 const seen=new Set(); let noArt=0, noSay=0;

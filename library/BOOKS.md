@@ -13,7 +13,7 @@ their PDFs:
 | Class 2 | maths | Joyful Mathematics (आनंदमय गणित) | `library/ncert-joyful-maths-2` | `bejm1` (check) |
 | Class 4 | maths | Maths Mela (गणित मेला) | `library/ncert-maths-mela-4` | `demm1` (check) |
 | Class 5 | maths | Maths Mela (गणित मेला) | `library/ncert-maths-mela-5` | `eemm1` |
-| Class 1 | english | Mridang (मृदंग) | `library/ncert-mridang-1` | `aemr1` (check) |
+| Class 1 | english | Mridang (मृदंग) | `library/ncert-mridang-1` | `aemr1` (chapter 1 is `aemr101.pdf`, listed) |
 | Class 2 | english | Mridang (मृदंग) | `library/ncert-mridang-2` | `bemr1` (check) |
 | Class 3 | english | Santoor (संतूर) | `library/ncert-santoor-3` | `cesa1` (check) |
 | Class 4 | english | Santoor (संतूर) | `library/ncert-santoor-4` | `desa1` (check) |
