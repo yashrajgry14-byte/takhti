@@ -132,6 +132,127 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     fs.rmSync(tmp, { recursive: true });
   }catch(e){ check('the builder ran', false, e.stack); }
 
+  /* ---------- 1c. the whole book through the Batch API (half price) ---------- */
+  try{
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'takhti-batch-'));
+    const dir = path.join(tmp, 'bk');
+    fs.mkdirSync(dir);
+    fs.writeFileSync(path.join(dir, 'book.json'), JSON.stringify({ id:'bk-test', title:{ en:'Maths Mela', hi:'गणित मेला' }, cls:'c3', chapters:[{ id:'ch5', n:5, file:'ch5.pdf', count:4 }] }));
+    fs.writeFileSync(path.join(dir, 'ch5.pdf'), Buffer.from('%PDF-1.4 ' + 'x'.repeat(400)));
+    const batchStand = o => {
+      const log = { uploads: 0, deletes: [], submits: [], gets: 0 }, jobs = {};
+      let n = 0;
+      const reply = (status, body, headers = {}) => ({ ok: status < 300, status, headers: { get: k => headers[k.toLowerCase()] }, json: async () => body });
+      const fetch = async (url, opt = {}) => {
+        const u = String(url), H = opt.headers || {};
+        if(u.endsWith('/upload/v1beta/files')){ log.start = H; return reply(200, {}, { 'x-goog-upload-url': 'https://up.example/u1' }); }
+        if(u.startsWith('https://up.example/')){ log.uploads++; log.uploadHeaders = H; return reply(200, { file: { name: 'files/f1', uri: 'https://gen.example/files/f1', state: 'PROCESSING', displayName: 'ch5.pdf' } }); }
+        if(/\/v1beta\/files\/f1$/.test(u) && opt.method === 'DELETE'){ log.deletes.push('files/f1'); return reply(200, {}); }
+        if(/\/v1beta\/files\/f1$/.test(u)) return reply(200, { name: 'files/f1', uri: 'https://gen.example/files/f1', state: 'ACTIVE' });
+        if(/:batchGenerateContent$/.test(u)){
+          const b = JSON.parse(opt.body), name = 'batches/b' + (++n);
+          log.submits.push({ url: u, body: b, key: H['x-goog-api-key'] }); jobs[name] = { body: b, polls: 0 };
+          return reply(200, { name, metadata: { state: 'BATCH_STATE_PENDING' } });
+        }
+        if(/\/v1beta\/batches\//.test(u)){
+          log.gets++;
+          const name = u.split('/v1beta/')[1], jb = jobs[name];
+          if(++jb.polls <= (o.pendingPolls || 0)) return reply(200, { name, metadata: { state: 'BATCH_STATE_RUNNING' } });
+          const inl = jb.body.batch.input_config.requests.requests.map(r => {
+            if(o.badShape0 && r.request.generationConfig.responseFormat) return { metadata: r.metadata, error: { code: 400, status: 'INVALID_ARGUMENT', message: 'unknown field responseFormat' } };
+            const text = r.request.contents[0].parts.map(p => p.text || '').join(''), repair = /"lessons"\s*:/.test(text) && /errors/.test(text);
+            const out = repair ? { lessons: o.repairs } : { chapter: 'Fun with Shapes', lessons: o.firsts };
+            return { metadata: r.metadata, response: { candidates: [{ content: { parts: [{ text: JSON.stringify(out) }] } }], usageMetadata: { promptTokenCount: 1000, candidatesTokenCount: 300, totalTokenCount: 1300 } } };
+          });
+          return reply(200, { name, metadata: { state: 'BATCH_STATE_SUCCEEDED' }, response: { inlinedResponses: { inlinedResponses: inl } } });
+        }
+        return reply(404, {});
+      };
+      return { log, fetch };
+    };
+    const env = { GEMINI_API_KEY: 'gk-batch-secret', TAKHTI_SYLLABUS_LOG: '0' };
+    const said = [];
+    // the job is still running when the first run stops waiting; the second run collects it
+    const sa = batchStand({ firsts, repairs: fixes, pendingPolls: 1 });
+    const first = await lib.batchBook(dir, { env, pollMs: 0, waitMs: 0, say: s => said.push(s) }, sa.fetch);
+    const state = fs.existsSync(path.join(dir, '.batch.json')) ? JSON.parse(fs.readFileSync(path.join(dir, '.batch.json'), 'utf8')) : null;
+    check('--batch: the chapter PDF goes up once through the Files API (resumable upload, the key in a header) and the drafts go as one batch job to the full Flash model — never the PDF inline',
+      sa.log.uploads === 1 && sa.log.start['X-Goog-Upload-Protocol'] === 'resumable' && sa.log.start['x-goog-api-key'] === 'gk-batch-secret'
+        && sa.log.submits.length === 1 && /models\/gemini-3\.8-flash:batchGenerateContent$/.test(sa.log.submits[0].url)
+        && JSON.stringify(sa.log.submits[0].body).includes('"file_uri":"https://gen.example/files/f1"') && !JSON.stringify(sa.log.submits[0].body).includes('inline_data'),
+      JSON.stringify({ up: sa.log.uploads, subs: sa.log.submits.map(x => x.url) }));
+    const { buildRequest } = await import(pathToFileURL(path.join(root, 'api/syllabus.mjs')).href);
+    const req0 = sa.log.submits[0].body.batch.input_config.requests.requests[0];
+    check('…each request is exactly the live one (api/syllabus.mjs buildRequest: the same prompt, the band\'s rules, the strict schema), keyed by its chapter',
+      req0.metadata.key === 'ch5' && /Write 4 lesson\(s\)/.test(JSON.stringify(req0.request.contents)) && /You write short practice lessons for Takhti/.test(req0.request.systemInstruction.parts[0].text)
+        && !!req0.request.generationConfig.responseFormat && typeof buildRequest === 'function', JSON.stringify(req0.request).slice(0, 300));
+    check('…when the job isn\'t done by --wait, the run says so and keeps its name in .batch.json (no chapter written, nothing lost)',
+      first.length === 0 && state && state.drafts && /^batches\//.test(state.drafts.job) && !fs.existsSync(path.join(dir, 'ch5.json')) && said.some(x => /still running on Google's side.*Run the same command again later/.test(x)),
+      JSON.stringify({ state, said }));
+    const sa2 = { ...sa };
+    const got = await lib.batchBook(dir, { env, pollMs: 0, waitMs: 60000, say: s => said.push(s) }, sa.fetch);
+    const ch5 = JSON.parse(fs.readFileSync(path.join(dir, 'ch5.json'), 'utf8')), raw = JSON.parse(fs.readFileSync(path.join(dir, 'ch5.raw.json'), 'utf8'));
+    check('…the same command again collects it — no second upload, no second draft job — checks every draft on the phone, sends the failures back as one repair job, and keeps what passed (4 of 4)',
+      got.length === 1 && sa.log.uploads === 1 && sa.log.submits.length === 2 && /errors/.test(JSON.stringify(sa.log.submits[1].body)) && ch5.lessons.length === 4 && ch5.notUsed.length === 0,
+      JSON.stringify({ subs: sa.log.submits.length, kept: ch5.lessons.length }));
+    check('…the chapter\'s report says it came by batch and what it used, the upload is deleted afterwards, .batch.json is gone, and the key is in no file',
+      raw.batch && /^batches\//.test(raw.batch.drafts) && raw.tried[0].outcome === 'batch' && raw.tried[0].tokens.in === 1000 && /gemini-3\.8-flash batch/.test(fs.readFileSync(path.join(dir, 'ch5.report.md'), 'utf8'))
+        && sa.log.deletes.length === 1 && !fs.existsSync(path.join(dir, '.batch.json')) && fs.readdirSync(dir).every(f => !fs.readFileSync(path.join(dir, f)).toString().includes('gk-batch-secret')),
+      JSON.stringify({ batch: raw.batch, tried: raw.tried, del: sa.log.deletes, files: fs.readdirSync(dir) }));
+    // a rebuild that comes back weaker never replaces the chapter
+    const sb = batchStand({ firsts, repairs: [] });
+    const weaker = await lib.batchBook(dir, { env, pollMs: 0, force: true, say: s => said.push(s) }, sb.fetch);
+    const still = JSON.parse(fs.readFileSync(path.join(dir, 'ch5.json'), 'utf8')), cand = JSON.parse(fs.readFileSync(path.join(dir, 'ch5.candidate.json'), 'utf8'));
+    check('a rebuild that keeps fewer lessons than the chapter already has never replaces it: the chapter stays as it was, the new build is saved beside it as a candidate, and the run says so',
+      still.lessons.length === 4 && cand.lessons.length < 4 && weaker[0].candidate && fs.existsSync(path.join(dir, 'ch5.candidate.report.md')) && said.some(x => /fewer than the 4 already built.*--replace/.test(x)),
+      JSON.stringify({ still: still.lessons.length, cand: cand.lessons.length, said: said.slice(-2) }));
+    const sc = batchStand({ firsts, repairs: [] });
+    await lib.batchBook(dir, { env, pollMs: 0, force: true, replace: true }, sc.fetch);
+    check('…--replace takes it (and the candidate files go)', JSON.parse(fs.readFileSync(path.join(dir, 'ch5.json'), 'utf8')).lessons.length === cand.lessons.length && !fs.existsSync(path.join(dir, 'ch5.candidate.json')), '');
+    // a request shape the API refuses → the older field names, as live
+    const sd = batchStand({ firsts, repairs: fixes, badShape0: true });
+    await lib.batchBook(dir, { env: { ...env, GEMINI_BATCH_MODEL: 'gemini-batch-test' }, pollMs: 0, force: true }, sd.fetch);
+    check('…every request refused as a bad request (the field names) → the batch is sent again with the older ones, as a live draft does; GEMINI_BATCH_MODEL picks the model',
+      sd.log.submits.length === 3 && !!sd.log.submits[1].body.batch.input_config.requests.requests[0].request.generationConfig.responseJsonSchema && /gemini-batch-test:batch/.test(sd.log.submits[0].url)
+        && JSON.parse(fs.readFileSync(path.join(dir, 'ch5.json'), 'utf8')).lessons.length === 4, sd.log.submits.map(x => x.url).join(' | '));
+    let nokey = '';
+    try{ await lib.batchBook(dir, { env: { GEMINI_API_KEY: '' }, force: true }, async () => { throw new Error('called'); }); }catch(e){ nokey = e.message; }
+    check('…no key → said plainly, nobody called', /no Gemini key/.test(nokey), nokey);
+    // a reader holds every lesson to two questions; a maths book only its picture lessons
+    const { phoneChecker } = await import(pathToFileURL(path.join(root, 'tools/try-syllabus.mjs')).href);
+    const ph = phoneChecker(), cl = ph.cls('c3'), sk = ph.skills('c3');
+    const READ1 = { title:{ en:"Meena's kite", hi:'मीना की पतंग' }, sub:{ en:'Read and answer', hi:'पढ़ो और जवाब दो' }, ic:'🪁', skill:'read5', source:'Lesson 6',
+      aims:[{ short:{ en:'Find where', hi:'कहाँ, ढूँढो' }, point:{ en:'The child can find where something happens in a short story.', hi:'बच्चा छोटी कहानी में ढूँढ सकता है कि कुछ कहाँ होता है।' },
+        forget:{ en:'I forgot where Meena flies her kite! How can I find out?', hi:'मैं भूल गई मीना पतंग कहाँ उड़ाती है! कैसे पता करूँ?' },
+        hints:[{ en:'Where is the answer hiding — in your head, or somewhere you can look?', hi:'जवाब कहाँ छिपा है — दिमाग़ में, या कहीं जहाँ देख सकते हो?' }, { en:'Which part of it talks about a place?', hi:'कौन सा हिस्सा किसी जगह की बात करता है?' }],
+        ideas:[{ en:'look back in the story for the sentence that says where', hi:'कहानी में वापस देखो, वह वाक्य जो जगह बताता है', words:['story','read again','look back','sentence','kahani','dekho','कहानी','पढ़','देखो','वाक्य'] }] }],
+      beats:[ { t:'passage', art:'🪁', p:{ en:'Meena has a red kite. She flies it on the roof. The wind is strong today.', hi:'मीना के पास लाल पतंग है। वह छत पर उड़ाती है। आज हवा तेज़ है।' } },
+        { t:'ask', q:{ en:'Where does Meena fly the kite?', hi:'मीना पतंग कहाँ उड़ाती है?' }, opts:['On the roof','In the park'], hiOpts:['छत पर','पार्क में'], correct:0 },
+        { t:'win', say:{ en:'The answer was in the story.', hi:'जवाब कहानी में था।' } } ] };
+    const asMaths = ph.clean(READ1, cl.band, sk, false, 2, false), asReader = ph.clean(READ1, cl.band, sk, false, 2, true);
+    const READ2 = JSON.parse(JSON.stringify(READ1));
+    READ2.beats.splice(2, 0, { t:'ask', q:{ en:'What colour is the kite?', hi:'पतंग किस रंग की है?' }, opts:['Blue','Red'], hiOpts:['नीली','लाल'], correct:1 });
+    check('a reader\'s library (Santoor, Veena…) holds every lesson to two questions — a passage with one two-answer question is a coin toss too; in a maths book only picture lessons are held to it; two questions pass',
+      asMaths.ok && !asReader.ok && asReader.errors.some(e => /^a lesson asks at least 2 questions/.test(e)) && ph.clean(READ2, cl.band, sk, false, 2, true).ok,
+      JSON.stringify([asMaths.errors, asReader.errors, ph.clean(READ2, cl.band, sk, false, 2, true).errors]));
+    // a book set up but not built isn't bundled
+    const lt = path.join(tmp, 'lib');
+    fs.mkdirSync(path.join(lt, 'ready-book'), { recursive: true }); fs.mkdirSync(path.join(lt, 'new-book')); fs.mkdirSync(path.join(lt, 'scanned-book'));
+    fs.writeFileSync(path.join(lt, 'ready-book', 'book.json'), JSON.stringify({ id:'ready-book', title:{ en:'A', hi:'अ' }, cls:'c3', subject:'maths', chapters:[{ id:'ch1', n:1 }] }));
+    fs.writeFileSync(path.join(lt, 'ready-book', 'ch1.json'), JSON.stringify({ id:'ch1', lessons:[], notUsed:[] }));
+    fs.writeFileSync(path.join(lt, 'new-book', 'book.json'), JSON.stringify({ id:'new-book', title:{ en:'B', hi:'ब' }, cls:'c4', subject:'english', chapters:[] }));
+    fs.writeFileSync(path.join(lt, 'scanned-book', 'book.json'), JSON.stringify({ id:'scanned-book', title:{ en:'C', hi:'स' }, cls:'c5', subject:'hindi', chapters:[{ id:'ch1', n:1, file:'x.pdf' }] }));
+    const lb = lib.bundle(lt, path.join(tmp, 'lb.js')), lsrc = fs.readFileSync(path.join(tmp, 'lb.js'), 'utf8');
+    check('a book set up but not built yet (no chapters listed, or none built) is left out of the bundle, so a teacher is never offered an empty book',
+      lb.books === 1 && /ready-book/.test(lsrc) && !/new-book|scanned-book/.test(lsrc), lsrc.slice(-200));
+    const books = fs.readdirSync(path.join(root, 'library')).filter(d => fs.existsSync(path.join(root, 'library', d, 'book.json')));
+    const ok = books.every(d => { const b = JSON.parse(fs.readFileSync(path.join(root, 'library', d, 'book.json'), 'utf8')); return /^(maths|english|hindi)$/.test(b.subject) && b.title.hi && /^c[1-5]$/.test(b.cls); });
+    check('the NCERT books for Classes 1–5 are set up and waiting (maths, English and Hindi readers, each with its class and both titles), with library/BOOKS.md saying how to build one',
+      books.length >= 15 && ok && fs.existsSync(path.join(root, 'library/BOOKS.md')) && /--batch/.test(fs.readFileSync(path.join(root, 'library/BOOKS.md'), 'utf8')), books.join());
+    check('….batch.json is never committed (.gitignore)', /library\/\*\*\/\.batch\.json/.test(fs.readFileSync(path.join(root, '.gitignore'), 'utf8')), '');
+    fs.rmSync(tmp, { recursive: true });
+  }catch(e){ check('the batch builder ran', false, e.stack); }
+
   /* ---------- 2. the teacher's side, through real taps ---------- */
   const MIME = { '.html':'text/html', '.js':'application/javascript', '.css':'text/css', '.json':'application/json', '.svg':'image/svg+xml', '.webmanifest':'application/manifest+json' };
   const appServer = http.createServer((req, res) => {
