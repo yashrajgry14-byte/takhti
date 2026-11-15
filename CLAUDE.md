@@ -88,7 +88,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v75` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v76` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -556,9 +556,39 @@ network and no waiting in the week.
   rest carry on; `summary.md` lists every chapter in order with what it
   has. At the end it bundles every book
   into `src/content/library.js` (`LIBRARY`): each chapter in order, a
-  chapter not built yet with no lessons, only the kept lessons — the test
-  regenerates it and fails if the file was edited by hand. Sequential live
-  calls for now; the half-price Batch API is the next step.
+  chapter not built yet with no lessons, only the kept lessons, and no book
+  with nothing built yet — the test regenerates it and fails if the file was
+  edited by hand.
+- **Half price, through the Batch API** (`--batch`, `batchBook()`): each
+  chapter's PDF goes up once through the Files API (resumable upload, up to
+  50 MB — no 12 MB inline limit), the drafts go as one batch job and the
+  phone's checker reads every one, the failures go back as a second job with
+  its reasons — the same one repair round. The requests are exactly the live
+  ones: `api/syllabus.mjs` now builds both (`buildRequest()`, `GEN_SHAPES`,
+  `answerJSON()`, `lessonsFrom()`; `draftCore()` is a thin wrapper), and a
+  batch whose every request is refused as a bad request is sent again with
+  the older field names. The model is `GEMINI_BATCH_MODEL` (default
+  `gemini-3.8-flash`: a batch waits for capacity, so the full Flash model
+  that is too busy live can draft the library). The job runs on Google's
+  side: its name is kept in `<book>/.batch.json` (never committed), so a
+  run that stops waiting (`--wait` minutes, default 60) picks it up again;
+  the uploads are deleted when it is done.
+- **A rebuild never makes a chapter worse**: a new build from Gemini (live
+  or batch) that keeps fewer lessons than the chapter already has is saved
+  beside it as `<ch>.candidate.json` with its report, and the chapter stays
+  as it was until `--replace` — so a busy day can't empty a chapter a
+  school, or the demo, uses. `--recheck` and `--import` are deliberate and
+  replace as before.
+- **The rules a library lesson meets**: everything an upload meets, and two
+  questions — every picture lesson in a maths book, and **every** lesson in
+  a reader (`sylClean(…, { minAll })` for a book whose `subject` isn't
+  maths): a passage with one two-answer question is a coin toss too.
+- **The books** (`library/BOOKS.md`): NCERT for Classes 1–5 are set up and
+  waiting for their PDFs — *Joyful Mathematics* 1–2, *Maths Mela* 3–5,
+  *Mridang* 1–2 and *Santoor* 3–5 (English), *Sarangi* 1–2 and *Veena* 3–5
+  (Hindi) — each `book.json` with its class, subject and both titles, no
+  chapters until `--scan`. BOOKS.md says where to download each and the four
+  commands (unzip, `--scan`, `--batch`, read the reports).
 - **On the phone** (`core/library.js`, the teacher view's `libraryHTML()`
   inside the syllabus card): the teacher picks the class's book once
   (`libSetBook()`); its chapters make the term in the book's order, which
@@ -1603,7 +1633,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `voice-teach` | vm (the voice brain) | Teach Munni on a call: the `teach` slot only for a practised topic in the child's band (none for 3–4, none for a 7–8 topic at 5–6); Munni forgets, a muddled answer gets her written hint, an explanation thanks, never "wrong"; kept in `profile.teach`, the skill history untouched; Hindi lines; not heard twice → the next point, nothing credited; a point taught isn't asked on the next call; the report line (EN/HI); the circle's Wednesday activity carries Munni's question, clue and full answer, a gap first, and an aim-less topic keeps the old activity |
 | `speech-provider` | vm + HTTP + jsdom + child processes | one stand-in for Gemini (hearing, TTS, Batch API) and Sarvam: the switch both ways (unset/gemini → Gemini; sarvam → Sarvam only, Gemini never called); Gemini's request (the model, key in a header, inline audio, structured output, "write what you hear"); the answer's shape; the passage only from the server's own lines; Gemini failing or slow → Sarvam inside the budget; neither → skipped at once; sarvam set and down → skipped, no Gemini; live `/reading/tts` never Gemini; per-address limit; Teach Munni hears the same way; nothing kept in the data folder; Gemini TTS (model, voice, WAV, PCM wrapped, the older voice field after a 400); `tools/build-audio.mjs` through the Batch API (WAV without ffmpeg, mp3 with it, carries on where it stopped, `--provider sarvam`); on the phone: pack → live backup → device voice, a `.wav` pack, v2 terms send nothing, a skipped check never blocks (message, typing, the line comes back, no recording kept); `tools/compare-speech.mjs` names the slip Gemini missed and advises switching back, or keeping Gemini |
 | `planner` | vm + jsdom | two children, the same approved shapes aims, two different paths from their own records (pictures first / the school's story), each step's why in EN/HI, the plan held; maths: the cartoon first or the school's story, the cartoon done once watched, the school's lesson after it the check, a skipped step not coming back; reading: three children, three ways inside the same lesson (Munni reads first / pieces / you first), each counted as that way; already knows it → show it, teach Munni; a gap underneath first (perimeter → add2) with a built-in lesson; status from what the child really did; labelling (pictures, the story, the check labels nothing), the answers settling it, two misses switching the way and the plan following; in the app: the Story Fire's path and why (EN/HI), the button starting the next step, then the school lesson as the check; a reading lesson's passage in pieces, or read aloud by Munni first; a maths lesson's button opening the cartoon (seeded sampling, so every run is the same); what goes to the teacher (short codes only, the mirror carrying it, the server keeping a well-formed path and dropping the rest), the teacher's card grouping four children by path (EN/HI), the parent's notice naming it |
-| `library` | Node + jsdom | the builder against a stand-in Gemini with the seventh live run's own drafts (each question asked a second time — the drafts as they are ask one, and none is kept: a picture lesson with one question isn't, with why): only passing lessons kept, the failure named with why, the title from the chapter, a missing PDF skipped and said, raw and report written, the key in no file, a built chapter skipped (no call), `--force --only`, `--recheck` and `--import` with no call; `--scan` (a whole book's PDFs in natural order, front matter and answers left out, a listed chapter's title kept, a built chapter now on another file warned about); a chapter Gemini can't do doesn't stop the book, and `summary.md` says so; a bad book.json refused with each fault; the bundle (every chapter in order, one not built yet with no lessons, no raw drafts); the shipped `src/content/library.js` exactly what `library/` builds; PDFs ignored; in the app, offline: no book for Class 2 said, Maths Mela offered for Class 3, the term laid out with this week's chapter, the plan kept on the phone, this week's lessons in the approval card (every one checked again, no network), approved into the class, the child's "From your school" with their path; a chapter added later at the end, ↑ ↓, a not-built week said, next week; a lesson edited after it was built not offered; Hindi; no fetch at all |
+| `library` | Node + jsdom | the Batch API builder against a stand-in Files API and Batch API (the PDF uploaded once by resumable upload, the key in a header, one draft job to the full Flash model with no PDF inline, each request exactly `buildRequest()`'s; a job not done by `--wait` kept in `.batch.json` and collected by the next run with no second upload or job; one repair job; the report saying batch and its tokens; the upload deleted, the key in no file; a weaker rebuild saved as a candidate, `--replace` taking it; a refused request shape sent again with the older names; `GEMINI_BATCH_MODEL`); a reader holding every lesson to two questions; a book not built yet left out of the bundle; the fourteen NCERT books set up; the builder against a stand-in Gemini with the seventh live run's own drafts (each question asked a second time — the drafts as they are ask one, and none is kept: a picture lesson with one question isn't, with why): only passing lessons kept, the failure named with why, the title from the chapter, a missing PDF skipped and said, raw and report written, the key in no file, a built chapter skipped (no call), `--force --only`, `--recheck` and `--import` with no call; `--scan` (a whole book's PDFs in natural order, front matter and answers left out, a listed chapter's title kept, a built chapter now on another file warned about); a chapter Gemini can't do doesn't stop the book, and `summary.md` says so; a bad book.json refused with each fault; the bundle (every chapter in order, one not built yet with no lessons, no raw drafts); the shipped `src/content/library.js` exactly what `library/` builds; PDFs ignored; in the app, offline: no book for Class 2 said, Maths Mela offered for Class 3, the term laid out with this week's chapter, the plan kept on the phone, this week's lessons in the approval card (every one checked again, no network), approved into the class, the child's "From your school" with their path; a chapter added later at the end, ↑ ↓, a not-built week said, next week; a lesson edited after it was built not offered; Hindi; no fetch at all |
 | `demo` | jsdom | the demo card says what it is; two labelled demo children join the class with sync off; their records come from the mind's own rounds and a real twin habit for Kabir (none for Asha); the library's chapter approved → two different paths for the same lesson; the teacher's path card names both; switching to each goes to the map and shows their own Story Fire; removal deletes exactly them (phone and mirror) and restores the real child; no room → said, none added; Hindi |
 | `live-check` | Node | `tools/live-check.mjs` against a stand-in Gemini with a good, a slip-tidying and a down model: slips kept or "wrote the line", every case failing with its reason when down, the judge's four cases (a credit-anything judge fails, an echo of Munni's question downgraded by the quote check), judging from a recording, the advice naming the settings, the key in no output, no key → nobody called; the judge's own model setting (`TAKHTI_TEACH_MODEL`, else `GEMINI_MODEL`), each model measured alone (`TAKHTI_TEACH_FALLBACK: 'none'`) |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
@@ -1709,9 +1739,17 @@ Honest edges of what's built:
    and the DPDP Rules' verifiable parental consent (same caveat as 8);
    Gemini (paid tier) and Sarvam each need a data-processing agreement.
    Children's speech through either is untested on real children. Builds without a voice server keep
-   the old path (the browser's own recognizer online). Hindi narration is
-   rendered (15 Nov 2026: 1,315 lines, Gemini TTS, mp3, 16.6 MB); English
-   has 439 lines of the old set.
+   the old path (the browser's own recognizer online). The recorded
+   narration: Hindi is complete — 1,315 lines made with Gemini TTS (15 Nov
+   2026; mp3, 21 MB in `audio/hi/`); English has only 439 of the 1,332
+   lines `build-audio.mjs --lang en --dry-run` asks for, from the 1 Sep
+   build that predates Gemini (a different voice, no `v` in the manifest),
+   and the other 893 play in the phone's own voice until
+   `tools/build-audio.mjs --lang en` is run. Neither pack downloads at
+   install: `sw.js` keeps each clip in `takhti-audio-v1` the first time it
+   plays, so a line never heard online plays in the phone's own voice
+   offline. Sarvam (or ElevenLabs) can still build either pack with
+   `--provider sarvam`.
 
 13. **Lessons from the syllabus are new.** Gemini drafting is tested
    against a stand-in, not yet against real chapters in an account: the

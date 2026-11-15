@@ -170,6 +170,16 @@ const lessonsSchema = beatSchema => ({
 });
 const SCHEMA = lessonsSchema(BEAT_SCHEMA);
 const SCHEMA_FLAT = lessonsSchema(BEAT_SCHEMA_FLAT);
+/* The structured-output request, in the order it is tried: the current
+   field first; older deployments of the API take responseMimeType/
+   responseJsonSchema; the flattened schema last, for an API that refuses
+   anyOf. A 400 moves to the next. Exported so the library builder's Batch
+   API requests are exactly the live ones (tools/build-library.mjs). */
+export const GEN_SHAPES = [
+  { generationConfig:{ temperature:0.4, responseFormat:{ text:{ mimeType:'APPLICATION_JSON', schema: SCHEMA } } } },
+  { generationConfig:{ temperature:0.4, responseMimeType:'application/json', responseJsonSchema: SCHEMA } },
+  { generationConfig:{ temperature:0.4, responseMimeType:'application/json', responseJsonSchema: SCHEMA_FLAT } }
+];
 
 /* What Takhti can draw, and the rules its checker holds a lesson to —
    one text, used by the draft AND the repair round (the first live run's
@@ -278,6 +288,12 @@ Answer with JSON only, in the given schema.`;
 }
 
 const wait = ms => new Promise(r => setTimeout(r, ms));
+/* A generateContent answer's JSON, or null — the live call's and a batch
+   response's alike. */
+export function answerJSON(d){
+  const text = ((((d && d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('').replace(/```json|```/g, '').trim();
+  try{ const o = JSON.parse(text); return o && typeof o === 'object' ? o : null; }catch(e){ return null; }
+}
 /* A model that just hung or said "busy" rests for a few minutes
    (TAKHTI_GEMINI_REST_MS, default 5 min): the repair round and the next
    chapter go straight to the fallback instead of waiting on it again — on
@@ -302,11 +318,7 @@ async function callGemini(parts, system, env, fetchImpl){
   // take responseMimeType/responseJsonSchema — one retry covers both
   // a 400 moves to the next shape: the strict schema in both field names
   // first, then the old flattened one (an API that refuses anyOf still works)
-  const shapes = [
-    { generationConfig:{ temperature:0.4, responseFormat:{ text:{ mimeType:'APPLICATION_JSON', schema: SCHEMA } } } },
-    { generationConfig:{ temperature:0.4, responseMimeType:'application/json', responseJsonSchema: SCHEMA } },
-    { generationConfig:{ temperature:0.4, responseMimeType:'application/json', responseJsonSchema: SCHEMA_FLAT } }
-  ];
+  const shapes = GEN_SHAPES;
   // the whole request has TAKHTI_SYLLABUS_TIMEOUT_MS (55 s on a serverless host, 180 s on the
   // voice server); one model may take at most 60% of it, so a model that hangs
   // still leaves time for the fallback (the first live run's health check hung for 55 s)
@@ -378,9 +390,8 @@ async function callGemini(parts, system, env, fetchImpl){
     if(!res.ok) return res.hung ? { error:'Gemini did not answer in time', status: 504, tried }
                                 : { error: res.status === 429 ? "this Gemini key's limit is used up for now — try again later, or check the key's quota in AI Studio"
                                     : res.status === 503 ? 'Gemini is busy right now — try again in a few minutes' : `Gemini said ${res.status}`, status: 502, tried };
-    const text = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('').replace(/```json|```/g, '').trim();
-    let out;
-    try{ out = JSON.parse(text); }catch(e){ return { error:'Gemini did not answer in the lesson format', status: 502, tried }; }
+    const out = answerJSON(d);
+    if(!out) return { error:'Gemini did not answer in the lesson format', status: 502, tried };
     return { out, model, tried };
   }catch(e){
     if(env.TAKHTI_SYLLABUS_LOG !== '0') console.log('[syllabus] models:', tried.map(x => `${x.model} ${x.outcome} ${(x.ms / 1000).toFixed(1)}s`).join(' → '));
@@ -395,46 +406,63 @@ export async function draftCore(body, env, ip, fetchImpl){
   if(!(env.GEMINI_API_KEY || env.GOOGLE_API_KEY)) return { status:503, json:{ error:'Gemini is not set up on this server' } };
   if(env.TAKHTI_SYLLABUS_KEY && !(await same(body.schoolKey, env.TAKHTI_SYLLABUS_KEY))) return { status:403, json:{ error:'school key needed' } };
   if(!rateOk(ip || '?', env)) return { status:429, json:{ error:'enough for now — try again in a while' } };
-  const rules = cleanRules(body.rules);
+  const q = buildRequest(body, { env });
+  if(q.error) return { status: q.status, json: { error: q.error, ...(q.maxMb ? { maxMb: q.maxMb } : {}) } };
+  const r = await callGemini(q.parts, q.system, env, fetchImpl);
+  if(r.error) return { status: r.status, json:{ error: r.error, tried: r.tried } };
+  return { status:200, json: lessonsFrom(r.out, q, r) };
+}
 
+/* The prompt for a draft or a repair, built from clamped inputs only — the
+   live endpoint's (draftCore) and the library builder's Batch API requests
+   alike, so the two can't drift. A chapter is inline data (a PDF or photo
+   within this server's limit), pasted text, or — for the library builder
+   only, never from a phone — a file it uploaded to the Gemini Files API
+   (opts.fileUri), which lifts the 12 MB limit. */
+export function buildRequest(body, opts = {}){
+  body = body || {};
+  const env = opts.env || {};
+  const rules = cleanRules(body.rules);
   if(body.mode === 'repair'){
     const items = (Array.isArray(body.repair) ? body.repair : []).slice(0, 5)
       .filter(x => x && typeof x.lesson === 'object' && JSON.stringify(x.lesson).length < 12000)
       .map(x => ({ lesson: x.lesson, errors: (Array.isArray(x.errors) ? x.errors : []).slice(0, 10).map(e => plain(e, 240)) }));
-    if(!items.length) return { status:400, json:{ error:'nothing to repair' } };
-    const r = await callGemini([{ text: JSON.stringify({ lessons: items }) }], repairInstructions(rules), env, fetchImpl);
-    if(r.error) return { status: r.status, json:{ error: r.error, tried: r.tried } };
-    return { status:200, json:{ lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, items.length), model: r.model, tried: r.tried } };
+    if(!items.length) return { status:400, error:'nothing to repair' };
+    return { mode:'repair', count: items.length, system: repairInstructions(rules), parts:[{ text: JSON.stringify({ lessons: items }) }] };
   }
-
   const ch = body.chapter || {};
   const parts = [];
-  if(ch.file){
+  if(opts.fileUri){
+    const mime = String(opts.mime || '');
+    if(!FILE_TYPES.includes(mime)) return { status:400, error:'a PDF or a photo (PNG, JPEG, WebP) of the chapter' };
+    parts.push({ file_data:{ mime_type: mime, file_uri: String(opts.fileUri) } });
+  } else if(ch.file){
     const mime = String(ch.mime || '');
-    if(!FILE_TYPES.includes(mime)) return { status:400, json:{ error:'a PDF or a photo (PNG, JPEG, WebP) of the chapter' } };
+    if(!FILE_TYPES.includes(mime)) return { status:400, error:'a PDF or a photo (PNG, JPEG, WebP) of the chapter' };
     const b64 = String(ch.file);
-    if(b64.length > maxB64(env)) return { status:413, json:{ error:`that file is too big for this server (up to ${maxMb(env)} MB) — send one chapter, or fewer pages`, maxMb: maxMb(env) } };
+    if(b64.length > maxB64(env)) return { status:413, error:`that file is too big for this server (up to ${maxMb(env)} MB) — send one chapter, or fewer pages`, maxMb: maxMb(env) };
     // look for one bad character rather than matching the whole string: a
     // whole-string pattern overflows the stack on a multi-megabyte chapter
-    if(b64.length < 100 || /[^A-Za-z0-9+/=]/.test(b64)) return { status:400, json:{ error:'that file could not be read' } };
+    if(b64.length < 100 || /[^A-Za-z0-9+/=]/.test(b64)) return { status:400, error:'that file could not be read' };
     parts.push({ inline_data:{ mime_type: mime, data: b64 } });
   }
   const text = plain(ch.text, MAX_TEXT).trim();
   if(text) parts.push({ text: 'The chapter:\n' + text });
-  if(!parts.length) return { status:400, json:{ error:'no chapter — paste its text or attach a PDF or photo' } };
+  if(!parts.length) return { status:400, error:'no chapter — paste its text or attach a PDF or photo' };
   const count = clamp(body.count, 1, 5, 3);
   const skills = (Array.isArray(body.skills) ? body.skills : []).filter(s => s && SKILL.test(s.id)).slice(0, 60)
     .map(s => ({ id: s.id, en: plain(s.en, 60) }));
   const note = plain(body.note, 200).trim();
   parts.push({ text: `Write ${count} lesson(s) from this chapter.` });
+  return { mode:'draft', count, system: instructions(rules, count, skills, note), parts };
+}
 
-  const r = await callGemini(parts, instructions(rules, count, skills, note), env, fetchImpl);
-  if(r.error) return { status: r.status, json:{ error: r.error, tried: r.tried } };
-  return { status:200, json:{
-    chapter: plain(r.out.chapter, 80),
-    lessons: (Array.isArray(r.out.lessons) ? r.out.lessons : []).filter(l => l && typeof l === 'object').slice(0, count),
-    model: r.model, tried: r.tried
-  } };
+/* What Gemini sent, as the endpoint answers it: lessons only, at most as
+   many as asked for, each still to be checked on the phone. */
+export function lessonsFrom(out, q, r = {}){
+  const lessons = (Array.isArray(out && out.lessons) ? out.lessons : []).filter(l => l && typeof l === 'object').slice(0, q.count);
+  return q.mode === 'repair' ? { lessons, model: r.model, tried: r.tried }
+    : { chapter: plain(out && out.chapter, 80), lessons, model: r.model, tried: r.tried };
 }
 
 /* Netlify passes (Request, context); Vercel passes (req, res). */

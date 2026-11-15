@@ -18,6 +18,7 @@
      node tools/build-library.mjs --book library/ncert-maths-mela-3 --import ch5 syllabus-run/raw.json
      node tools/build-library.mjs --book library/ncert-maths-mela-3 --recheck
      node tools/build-library.mjs --bundle
+     node tools/build-library.mjs --book library/ncert-maths-mela-3 --batch
 
      node tools/build-library.mjs --book library/ncert-maths-mela-3 --scan
 
@@ -30,6 +31,15 @@
    --import <ch> <raw.json>   a try-syllabus run becomes that chapter (no Gemini)
    --recheck         every built chapter checked again by today's checker (no Gemini)
    --bundle          only rewrite src/content/library.js
+  --batch           every chapter to build through the Gemini Batch API
+                    (half price; the full Flash model, which is too busy
+                    live; PDFs up to 50 MB through the Files API). The job
+                    runs on Google's side: if it isn't done within --wait
+                    minutes (default 60), run the same command again later
+                    and it collects it (library/<book>/.batch.json)
+  --replace         a new build replaces a chapter even when it keeps fewer
+                    lessons than the one already built (otherwise the new
+                    one is saved beside it as <ch>.candidate.json, to read)
 
    A chapter already built is skipped (so a run cut short carries on where
    it stopped). For each chapter it writes <ch>.json (the lessons that
@@ -41,12 +51,16 @@
    ================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { run, recheck, report } from './try-syllabus.mjs';
 /* A library lesson with a picture asks at least two questions — with two
    answers, one question is a coin toss; such a lesson is not kept (a
    teacher's own upload still gets the warning instead). */
 const LIB_MIN_QUESTIONS = 2;
+/* a reader (any book that isn't maths — Santoor, Veena, Mridang, Sarangi)
+   holds every lesson to it: its lessons are passages, and a passage with one
+   two-answer question is the same coin toss */
+const minAllOf = book => !!book.subject && book.subject !== 'maths';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const LIB = path.join(root, 'library');
@@ -86,13 +100,32 @@ export function chapterOf(meta, r){
   };
 }
 
-function saveChapter(dir, meta, r){
+function saveChapter(dir, meta, r, opts = {}){
   const ch = chapterOf(meta, r);
+  // a new build from Gemini never quietly makes a chapter worse: one that keeps
+  // fewer lessons than the chapter already built is saved beside it, to read
+  // and take with --replace — so a busy day can't empty a chapter a school
+  // (or tonight's demo) already uses. --recheck and --import are deliberate
+  // and replace as before.
+  const was = path.join(dir, `${meta.id}.json`);
+  if(opts.guard && !opts.replace && fs.existsSync(was)){
+    const old = readJSON(was);
+    if(ch.lessons.length < (old.lessons || []).length){
+      writeJSON(path.join(dir, `${meta.id}.candidate.raw.json`), r);
+      writeJSON(path.join(dir, `${meta.id}.candidate.json`), ch);
+      fs.writeFileSync(path.join(dir, `${meta.id}.candidate.report.md`), report(r));
+      return { ...ch, candidate: true, had: old.lessons.length };
+    }
+  }
   writeJSON(path.join(dir, `${meta.id}.raw.json`), r);
-  writeJSON(path.join(dir, `${meta.id}.json`), ch);
+  writeJSON(was, ch);
   fs.writeFileSync(path.join(dir, `${meta.id}.report.md`), report(r));
+  for(const f of ['candidate.json', 'candidate.raw.json', 'candidate.report.md']){ const c = path.join(dir, `${meta.id}.${f}`); if(fs.existsSync(c)) fs.unlinkSync(c); }
   return ch;
 }
+const keptSay = ch => ch.candidate
+  ? `${ch.lessons.length} lesson(s) — fewer than the ${ch.had} already built, so the chapter is kept as it was; the new build is in ${ch.id}.candidate.report.md (take it with --replace)`
+  : `${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`;
 
 /* Every chapter of a book, drafted (or imported, or checked again). */
 export async function buildBook(dirArg, opts = {}, fetchImpl){
@@ -105,13 +138,13 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
       if(meta.id !== opts.import.ch) continue;
       const r = readJSON(opts.import.file);
       if(r.cls && r.cls !== book.cls) throw new Error(`that run was for ${r.cls}, the book is ${book.cls}`);
-      const ch = saveChapter(dir, meta, recheck({ ...r, cls: book.cls, band: r.band }, { minQuestions: LIB_MIN_QUESTIONS }));
+      const ch = saveChapter(dir, meta, recheck({ ...r, cls: book.cls, band: r.band }, { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book) }));
       say(`${meta.id}: imported — ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
       out.push(ch); continue;
     }
     if(opts.recheck){
       if(!fs.existsSync(raw)){ say(`${meta.id}: not built yet — skipped`); continue; }
-      const ch = saveChapter(dir, meta, recheck(readJSON(raw), { minQuestions: LIB_MIN_QUESTIONS }));
+      const ch = saveChapter(dir, meta, recheck(readJSON(raw), { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book) }));
       say(`${meta.id}: checked again — ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
       out.push(ch); continue;
     }
@@ -126,9 +159,9 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
     // a file it can't read) is said and left for the next run, which picks
     // it up because it has no <ch>.json yet — the rest carry on
     try{
-      const r = await run({ file, cls: book.cls, count: meta.count || 4, note: meta.note || '', minQuestions: LIB_MIN_QUESTIONS, env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
-      const ch = saveChapter(dir, meta, r);
-      say(`${meta.id}: ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
+      const r = await run({ file, cls: book.cls, count: meta.count || 4, note: meta.note || '', minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
+      const ch = saveChapter(dir, meta, r, { guard: true, replace: opts.replace });
+      say(`${meta.id}: ${keptSay(ch)}`);
       out.push(ch);
     }catch(e){
       if(/no Gemini key/.test(e.message)) throw e;            // nothing else can work either
@@ -136,6 +169,204 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
       failed.push({ id: meta.id, why: e.message });
     }
   }
+  summary(dir, book, failed);
+  return out;
+}
+
+/* ---------- the whole book through the Gemini Batch API ----------
+   Half price, and the requests are exactly the live ones (api/syllabus.mjs
+   buildRequest, GEN_SHAPES). Each chapter's PDF goes up once through the
+   Files API (no 12 MB inline limit — up to 50 MB), the drafts go as one
+   batch job, the phone's own checker reads every draft (two questions for
+   a picture lesson), and the failures go back as a second job with the
+   checker's reasons — the same one repair round as a live build. The job
+   runs on Google's side: its name is kept in <book>/.batch.json, so a run
+   that stops waiting picks it up again. The default model is the full
+   Flash one, which has been too busy for live calls (the eighth and ninth
+   live runs) — a batch waits for capacity instead of failing. */
+const BATCH_MAX_MB = 50;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const stateOf = j => (j && ((j.metadata && j.metadata.state) || j.state)) || '';
+const batchKeyed = j => {
+  const r = (j && (j.response || j.dest || (j.metadata && j.metadata.output))) || {};
+  const list = (r.inlinedResponses && (r.inlinedResponses.inlinedResponses || r.inlinedResponses)) || [];
+  return Array.isArray(list) ? list : [];
+};
+function gemini(env, fetchImpl){
+  const base = env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com';
+  const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
+  const headers = { 'x-goog-api-key': key };
+  const json = async (res, what) => {
+    const d = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error(`${what}: Gemini said ${res.status}${d && d.error && d.error.message ? ' — ' + String(d.error.message).slice(0, 160) : ''}`);
+    return d;
+  };
+  return {
+    /* the Files API's resumable upload: start, then the bytes */
+    async upload(file, mime){
+      const bytes = fs.readFileSync(file);
+      const start = await fetchImpl(`${base}/upload/v1beta/files`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json',
+        'X-Goog-Upload-Protocol': 'resumable', 'X-Goog-Upload-Command': 'start',
+        'X-Goog-Upload-Header-Content-Length': String(bytes.length), 'X-Goog-Upload-Header-Content-Type': mime },
+        body: JSON.stringify({ file: { display_name: path.basename(file) } }) });
+      const url = start.headers && (start.headers.get ? start.headers.get('x-goog-upload-url') : start.headers['x-goog-upload-url']);
+      if(!start.ok || !url) throw new Error(`uploading ${path.basename(file)}: the Files API said ${start.status}`);
+      const done = await fetchImpl(url, { method: 'POST', headers: { 'Content-Length': String(bytes.length), 'X-Goog-Upload-Offset': '0', 'X-Goog-Upload-Command': 'upload, finalize' }, body: bytes });
+      const d = await json(done, `uploading ${path.basename(file)}`);
+      return d.file || d;
+    },
+    /* a PDF is read before it can be used: wait until it is ACTIVE */
+    async ready(f, pollMs, until){
+      let cur = f;
+      while(cur.state && cur.state !== 'ACTIVE'){
+        if(cur.state === 'FAILED') throw new Error(`Gemini couldn't read ${cur.displayName || cur.name}`);
+        if(Date.now() > until) throw new Error(`${cur.displayName || cur.name} is still being read — run again later`);
+        await sleep(pollMs);
+        cur = await json(await fetchImpl(`${base}/v1beta/${cur.name}`, { headers }), 'reading the file');
+      }
+      return cur;
+    },
+    async forget(name){ try{ await fetchImpl(`${base}/v1beta/${name}`, { method: 'DELETE', headers }); }catch(e){} },
+    async submit(model, name, requests){
+      const res = await fetchImpl(`${base}/v1beta/models/${encodeURIComponent(model)}:batchGenerateContent`, { method: 'POST', headers: { ...headers, 'content-type': 'application/json' },
+        body: JSON.stringify({ batch: { display_name: name, input_config: { requests: { requests } } } }) });
+      const job = await json(res, 'the batch');
+      if(!job.name) throw new Error('the batch was not accepted (no job name)');
+      return job;
+    },
+    async get(name){ return json(await fetchImpl(`${base}/v1beta/${name}`, { headers }), 'the batch'); }
+  };
+}
+/* Wait for a job; null when it is still running at the deadline. */
+async function waitJob(g, name, pollMs, until, say){
+  let j = await g.get(name), last = '';
+  while(!/SUCCEEDED|FAILED|CANCELLED|EXPIRED/.test(stateOf(j))){
+    if(Date.now() > until) return null;
+    const st = stateOf(j) || 'pending';
+    if(st !== last){ say(`  the batch is ${st.replace(/^(JOB|BATCH)_STATE_/, '').toLowerCase()}…`); last = st; }
+    await sleep(pollMs);
+    j = await g.get(name);
+  }
+  if(!/SUCCEEDED/.test(stateOf(j))) throw new Error(`the batch ended ${stateOf(j)}`);
+  return j;
+}
+const tokensOf = d => { const u = d && d.usageMetadata, n = v => Number.isFinite(v) ? v : 0; return u ? { in: n(u.promptTokenCount), out: n(u.candidatesTokenCount) + n(u.thoughtsTokenCount), total: n(u.totalTokenCount) } : null; };
+
+export async function batchBook(dirArg, opts = {}, fetchImpl){
+  fetchImpl = fetchImpl || fetch;
+  const dir = bookDir(dirArg), book = readBook(dir), say = opts.say || (() => {});
+  const { readEnv, phoneChecker } = await import('./try-syllabus.mjs');
+  const { buildRequest, lessonsFrom, answerJSON, GEN_SHAPES } = await import(pathToFileURL(path.join(root, 'api', 'syllabus.mjs')).href);
+  const env = { ...readEnv(path.join(root, 'voice', '.env'), process.env), ...(opts.env || {}) };
+  if(!(env.GEMINI_API_KEY || env.GOOGLE_API_KEY)) throw new Error('no Gemini key: put GEMINI_API_KEY=… in voice/.env (see voice/.env.example)');
+  const model = env.GEMINI_BATCH_MODEL || env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const g = gemini(env, fetchImpl), pollMs = Number(opts.pollMs != null ? opts.pollMs : 30000);
+  const until = Date.now() + Number(opts.waitMs != null ? opts.waitMs : 60 * 60000);
+  const ph = phoneChecker(), cls = ph.cls(book.cls), rules = ph.rules(cls.band), skills = ph.skills(cls.id);
+  const statePath = path.join(dir, '.batch.json');
+  let st = fs.existsSync(statePath) ? readJSON(statePath) : null;
+  const save = () => writeJSON(statePath, st);
+  const failed = [], out = [];
+
+  if(!st){
+    // which chapters: the same choice as a live build
+    const todo = [];
+    for(const meta of book.chapters){
+      if(opts.only && meta.id !== opts.only) continue;
+      if(fs.existsSync(path.join(dir, `${meta.id}.json`)) && !opts.force){ say(`${meta.id}: already built — skipped (--force to build again)`); continue; }
+      if(!meta.file){ say(`${meta.id}: no file in book.json — skipped`); continue; }
+      const file = path.resolve(opts.pdfs || dir, meta.file);
+      if(!fs.existsSync(file)){ say(`${meta.id}: ${file} not found — skipped`); continue; }
+      const mb = fs.statSync(file).size / 1048576;
+      if(mb > BATCH_MAX_MB){ say(`${meta.id}: ${path.basename(file)} is ${mb.toFixed(1)} MB — over the ${BATCH_MAX_MB} MB the Files API takes; split it — skipped`); failed.push({ id: meta.id, why: `file over ${BATCH_MAX_MB} MB` }); continue; }
+      todo.push({ meta, file });
+    }
+    if(!todo.length){ say('nothing to build'); summary(dir, book, failed); return out; }
+    st = { v: 1, model, shape: 0, stage: 'upload', at: new Date().toISOString(), chapters: [] };
+    for(const { meta, file } of todo){
+      say(`${meta.id}: sending ${path.basename(file)} to the Files API…`);
+      try{
+        const mime = /\.pdf$/i.test(file) ? 'application/pdf' : /\.png$/i.test(file) ? 'image/png' : /\.webp$/i.test(file) ? 'image/webp' : 'image/jpeg';
+        const f = await g.ready(await g.upload(file, mime), Math.min(pollMs, 5000), Date.now() + 10 * 60000);   // reading a PDF takes seconds to minutes — its own deadline, not --wait's
+        st.chapters.push({ id: meta.id, file: path.basename(file), mime, uri: f.uri, name: f.name });
+      }catch(e){ say(`${meta.id}: not sent — ${e.message}`); failed.push({ id: meta.id, why: e.message }); }
+    }
+    if(!st.chapters.length){ summary(dir, book, failed); return out; }
+    st.stage = 'draft'; save();
+  }
+
+  const metaOf = id => book.chapters.find(c => c.id === id) || { id };
+  const draftReq = c => { const meta = metaOf(c.id); return buildRequest({ mode: 'draft', rules, count: meta.count || 4, skills, note: meta.note || '' }, { fileUri: c.uri, mime: c.mime }); };
+  const asRequest = (q, shape) => ({ systemInstruction: { parts: [{ text: q.system }] }, contents: [{ role: 'user', parts: q.parts }], ...GEN_SHAPES[shape] });
+  // every request erred as a bad request (the field names) → the next request shape, once each
+  const allBad = list => list.length && list.every(x => x.error && (x.error.code === 400 || /INVALID_ARGUMENT/.test(x.error.status || '')));
+
+  /* one job: submit it (or pick up the one already running), wait, read it */
+  async function job(kind, build){
+    for(;;){
+      if(!st[kind]){
+        const reqs = build().map(([k, q]) => ({ request: asRequest(q, st.shape), metadata: { key: k } }));
+        if(!reqs.length) return {};
+        const j = await g.submit(st.model, `takhti-${book.id}-${kind}`, reqs);
+        st[kind] = { job: j.name, at: new Date().toISOString(), keys: reqs.map(r => r.metadata.key) }; save();
+        say(`${kind === 'drafts' ? 'Drafts' : 'Repairs'}: ${reqs.length} request(s) sent to ${st.model} as one batch (${j.name})`);
+      }
+      const j = await waitJob(g, st[kind].job, pollMs, until, say);
+      if(!j) return null;
+      const list = batchKeyed(j);
+      if(allBad(list) && st.shape < GEN_SHAPES.length - 1){ st.shape++; st[kind] = null; save(); say(`  the request shape was refused — sending again with the older field names`); continue; }
+      const by = {};
+      list.forEach((x, i) => { const k = (x.metadata && x.metadata.key) || st[kind].keys[i]; if(k) by[k] = x; });
+      st[kind].done = true; save();
+      return by;
+    }
+  }
+
+  // 1. the drafts
+  const drafts = await job('drafts', () => st.chapters.map(c => [c.id, draftReq(c)]).filter(([, q]) => !q.error));
+  if(drafts === null){ say(`The drafts are still running on Google's side (${st.drafts.job}). Run the same command again later — it picks the job up.`); return out; }
+  if(!st.checked){
+    st.checked = {};
+    for(const c of st.chapters){
+      const x = drafts[c.id], d = x && x.response, o = d && answerJSON(d);
+      if(!o){ st.checked[c.id] = { error: (x && x.error && x.error.message) || 'no answer in the lesson format' }; continue; }
+      const q = draftReq(c), got = lessonsFrom(o, q, { model: st.model });
+      st.checked[c.id] = { chapter: got.chapter, tokens: tokensOf(d),
+        drafts: got.lessons.map(raw => ({ raw, first: ph.clean(raw, cls.band, skills, false, LIB_MIN_QUESTIONS, minAllOf(book)) })) };
+    }
+    save();
+    const n = Object.values(st.checked).reduce((a, c) => a + (c.drafts ? c.drafts.length : 0), 0), ok = Object.values(st.checked).reduce((a, c) => a + (c.drafts ? c.drafts.filter(x => x.first.ok).length : 0), 0);
+    say(`Drafted ${n} lesson(s) across ${st.chapters.length} chapter(s) · ${ok} passed the checker first time`);
+  }
+
+  // 2. one repair round, every chapter's failures in the same batch
+  const toFix = id => (st.checked[id].drafts || []).map((x, i) => ({ x, i })).filter(({ x }) => !x.first.ok);
+  const repairReq = id => buildRequest({ mode: 'repair', rules, repair: toFix(id).map(({ x }) => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })) });
+  const repairs = await job('repairs', () => st.chapters.filter(c => st.checked[c.id].drafts && toFix(c.id).length).map(c => [c.id, repairReq(c.id)]).filter(([, q]) => !q.error));
+  if(repairs === null){ say(`The repairs are still running on Google's side (${st.repairs.job}). Run the same command again later — it picks the job up.`); return out; }
+
+  // 3. each chapter, as a live build saves it — never making a chapter worse
+  for(const c of st.chapters){
+    const meta = metaOf(c.id), k = st.checked[c.id];
+    if(k.error){ say(`${c.id}: not built — ${k.error}`); failed.push({ id: c.id, why: k.error }); continue; }
+    const rx = repairs[c.id], rd = rx && rx.response, ro = rd && answerJSON(rd);
+    const fixes = toFix(c.id);
+    if(ro){ const got = lessonsFrom(ro, { mode: 'repair', count: fixes.length }); got.lessons.forEach((raw, j) => { const f = fixes[j]; if(f){ f.x.repairRaw = raw; f.x.second = ph.clean(raw, cls.band, skills, true, LIB_MIN_QUESTIONS, minAllOf(book)); } }); }
+    const r = {
+      at: new Date().toISOString(), cls: cls.id, band: cls.band, rules, note: meta.note || '', source: c.file, model: st.model, chapter: k.chapter,
+      draftMs: 0, batch: { drafts: st.drafts && st.drafts.job, repairs: st.repairs && st.repairs.job || null },
+      tried: [{ model: st.model, outcome: 'batch', ms: 0, ...(k.tokens ? { tokens: k.tokens } : {}) }],
+      repair: fixes.length ? { status: ro ? 200 : 502, model: st.model, error: ro ? '' : ((rx && rx.error && rx.error.message) || 'no answer'), ms: 0,
+        tried: [{ model: st.model, outcome: 'batch', ms: 0, ...(tokensOf(rd) ? { tokens: tokensOf(rd) } : {}) }] } : null,
+      drafts: k.drafts.map(x => ({ raw: x.raw, first: x.first, repairRaw: x.repairRaw || null, second: x.second || null,
+        verdict: x.first.ok ? 'passed' : x.second && x.second.ok ? 'repaired' : 'not used' }))
+    };
+    const ch = saveChapter(dir, meta, r, { guard: true, replace: opts.replace });
+    say(`${c.id}: ${keptSay(ch)}`);
+    out.push(ch);
+  }
+  for(const c of st.chapters) await g.forget(c.name);       // the uploads aren't needed any more
+  fs.unlinkSync(statePath);
   summary(dir, book, failed);
   return out;
 }
@@ -197,7 +428,11 @@ export function bundle(libDir = LIB, outFile = path.join(root, 'src', 'content',
   const books = [];
   const dirs = fs.existsSync(libDir) ? fs.readdirSync(libDir).filter(d => fs.existsSync(path.join(libDir, d, 'book.json'))).sort() : [];
   for(const d of dirs){
-    const dir = path.join(libDir, d), b = readBook(dir);
+    const dir = path.join(libDir, d), raw = readJSON(path.join(dir, 'book.json'));
+    // a book set up but not built yet (library/BOOKS.md) isn't offered to a
+    // teacher: no chapters listed, or none built
+    if(!(raw.chapters || []).some(c => c && fs.existsSync(path.join(dir, `${c.id}.json`)))) continue;
+    const b = readBook(dir);
     books.push({ id: b.id, board: b.board || '', title: b.title, edition: b.edition || '', cls: b.cls, subject: b.subject || '',
       chapters: b.chapters.map(meta => {
         const f = path.join(dir, `${meta.id}.json`);
@@ -232,6 +467,9 @@ function args(argv){
     else if(k === '--recheck') o.recheck = true;
     else if(k === '--bundle') o.bundleOnly = true;
     else if(k === '--scan') o.scan = true;
+    else if(k === '--batch') o.batch = true;
+    else if(k === '--replace') o.replace = true;
+    else if(k === '--wait') o.waitMs = Number(argv[++i]) * 60000;
     else if(k === '--import'){ o.import = { ch: argv[++i], file: argv[++i] }; }
     else if(k === '--help' || k === '-h') o.help = true;
   }
@@ -242,6 +480,7 @@ if(process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.met
   if(o.help || (!o.book && !o.bundleOnly)){
     console.log('node tools/build-library.mjs --book library/<book> --scan          (list every chapter PDF in the folder)');
     console.log('node tools/build-library.mjs --book library/<book> [--pdfs folder] [--only ch] [--force] [--recheck] [--import ch raw.json]');
+    console.log('node tools/build-library.mjs --book library/<book> --batch [--wait 60] [--only ch] [--force] [--replace]   (half price, through the Batch API)');
     console.log('node tools/build-library.mjs --bundle');
     process.exit(o.help ? 0 : 1);
   }
@@ -254,7 +493,8 @@ if(process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.met
       console.log('\nThen build:  node tools/build-library.mjs --book ' + o.book);
       return;
     }
-    if(o.book) await buildBook(o.book, { ...o, say: s => console.log('· ' + s) });
+    if(o.book && o.batch) await batchBook(o.book, { ...o, say: s => console.log('· ' + s) });
+    else if(o.book) await buildBook(o.book, { ...o, say: s => console.log('· ' + s) });
     const b = bundle();
     console.log(`\nsrc/content/library.js: ${b.books} book(s), ${b.lessons} lesson(s). Bump CACHE in sw.js before you ship it.`);
   })().catch(e => { console.error('\n✗ ' + e.message); process.exit(1); });

@@ -65,7 +65,8 @@ export function phoneChecker(){
     rules: band => call(`sylRules(${JSON.stringify(band)})`),
     skills: id => call(`sylSkills(sylClass(${JSON.stringify(id)}))`),
     // min: the questions a picture lesson must ask (the library builder sets 2 — a coin toss isn't kept)
-    clean: (raw, band, skills, mend, min) => call(`sylClean(${JSON.stringify(raw)}, { band: ${JSON.stringify(band)}, skills: ${JSON.stringify(skills)}, mendHints: ${!!mend}, minQuestions: ${Number(min) || 0} })`)
+    // all: every lesson, not only a picture one (a reader's library — Santoor, Veena)
+    clean: (raw, band, skills, mend, min, all) => call(`sylClean(${JSON.stringify(raw)}, { band: ${JSON.stringify(band)}, skills: ${JSON.stringify(skills)}, mendHints: ${!!mend}, minQuestions: ${Number(min) || 0}, minAll: ${!!all} })`)
   };
 }
 
@@ -102,8 +103,8 @@ export async function run(opts, fetchImpl){
   const draftMs = Date.now() - t0;
   if(d.status !== 200) throw new Error(`Gemini's draft failed (${d.status}): ${d.json.error}`);
   const raws = d.json.lessons || [];
-  const min = opts.minQuestions || 0;
-  const drafts = raws.map(raw => ({ raw, first: ph.clean(raw, cls.band, skills, false, min) }));
+  const min = opts.minQuestions || 0, all = !!opts.minAll;
+  const drafts = raws.map(raw => ({ raw, first: ph.clean(raw, cls.band, skills, false, min, all) }));
   say(`Drafted ${raws.length} in ${(draftMs / 1000).toFixed(0)} s (${d.json.model}) · ${drafts.filter(x => x.first.ok).length} passed the checker first time`);
 
   const failed = drafts.filter(x => !x.first.ok);
@@ -112,7 +113,7 @@ export async function run(opts, fetchImpl){
     const t1 = Date.now();
     const r = await draftCore({ mode:'repair', repair: failed.map(x => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })), rules }, env, 'try-syllabus', fetchImpl);
     repair = { status: r.status, model: r.json.model || '', error: r.json.error || '', ms: Date.now() - t1, tried: r.json.tried || [] };
-    if(r.status === 200) (r.json.lessons || []).forEach((raw, k) => { if(failed[k]){ failed[k].repairRaw = raw; failed[k].second = ph.clean(raw, cls.band, skills, true, min); } });
+    if(r.status === 200) (r.json.lessons || []).forEach((raw, k) => { if(failed[k]){ failed[k].repairRaw = raw; failed[k].second = ph.clean(raw, cls.band, skills, true, min, all); } });
     say(`Sent ${failed.length} back with the checker's reasons · ${failed.filter(x => x.second && x.second.ok).length} fixed`);
   }
   const result = {
@@ -127,10 +128,10 @@ export async function run(opts, fetchImpl){
 /* A saved run checked again by today's checker — no Gemini, no key. After a
    change to the checks, this says what the same drafts would get now. */
 export function recheck(r, opts){
-  const min = (opts && opts.minQuestions) || 0;
+  const min = (opts && opts.minQuestions) || 0, all = !!(opts && opts.minAll);
   const ph = phoneChecker(), skills = ph.skills(r.cls);
   const drafts = r.drafts.map(x => {
-    const first = ph.clean(x.raw, r.band, skills, false, min), second = x.repairRaw ? ph.clean(x.repairRaw, r.band, skills, true, min) : null;
+    const first = ph.clean(x.raw, r.band, skills, false, min, all), second = x.repairRaw ? ph.clean(x.repairRaw, r.band, skills, true, min, all) : null;
     return { ...x, first, second, verdict: first.ok ? 'passed' : second && second.ok ? 'repaired' : 'not used' };
   });
   return { ...r, rechecked: new Date().toISOString(), drafts };

@@ -629,8 +629,9 @@ function sylClean(raw, opts){
   // answers, one question is a coin toss (opts.minQuestions — the library
   // builder sets it; a teacher's own upload still gets the warning instead)
   const asksN = les.beats.filter(b => b.t === 'ask').length;
-  if(opts.minQuestions && asksN < opts.minQuestions && les.beats.some(b => picIs(b.t)))
-    errs.push(`a lesson with a picture asks at least ${opts.minQuestions} questions — this one asks ${asksN} (with two answers, one question is a coin toss): add a question about a new example`);
+  // a reader's library lessons (opts.minAll — Santoor, Veena…) hold every lesson to it: a passage with one two-answer question is a coin toss too
+  if(opts.minQuestions && asksN < opts.minQuestions && (opts.minAll || les.beats.some(b => picIs(b.t))))
+    errs.push(`a lesson ${opts.minAll ? '' : 'with a picture '}asks at least ${opts.minQuestions} questions — this one asks ${asksN} (with two answers, one question is a coin toss): add a question about a new example`);
   if(les.beats.length && les.beats[les.beats.length - 1].t !== 'win')
     les.beats.push({ t:'win', say:{ en:'Well done. You learnt it today.', hi:'शाबाश! आज तुमने यह सीख लिया।' } });
   les.subject = les.beats.some(b => SYL_MATH.includes(b.t) || picIs(b.t)) ? 'math' : 'read';
