@@ -69,9 +69,9 @@ console.log('lessons  :', lessons.length);
 console.log('rejected :', rejected.length);
 rejected.slice(0,8).forEach(r=>console.log('   ', r.id, '→', r.errors[0]));
 
-check('55 concepts (33 before comprehension.js + 7 comprehension/grammar + 5 shape concepts from geometry.js + 5 clock concepts from clock.js + 5 calendar concepts from calendar.js)',
-  X.CONCEPTS.length===55, `got ${X.CONCEPTS.length}`);
-check('552 lessons generated (477 + 27 shape lessons + 28 clock lessons + 20 calendar lessons)', lessons.length===552, `got ${lessons.length}`);
+check('57 concepts (35 before comprehension.js + 7 comprehension/grammar + 5 shape concepts from geometry.js + 5 clock concepts from clock.js + 5 calendar concepts from calendar.js)',
+  X.CONCEPTS.length===57, `got ${X.CONCEPTS.length}`);
+check('564 lessons generated (489 + 27 shape lessons + 28 clock lessons + 20 calendar lessons)', lessons.length===564, `got ${lessons.length}`);
 check('0 rejected — every generated comprehension/grammar lesson passed the validator first try',
   rejected.length===0, `${rejected.length} rejected: ${rejected.slice(0,3).map(r=>r.id+' → '+r.errors[0]).join(' | ')}`);
 
@@ -80,8 +80,8 @@ const geoLes = lessons.filter(l => X.GEO_CONCEPTS.some(c=>c.id===l.concept));
 const clockLes = lessons.filter(l => X.CLOCK_CONCEPTS.some(c=>c.id===l.concept));
 const calLes = lessons.filter(l => X.CAL_CONCEPTS.some(c=>c.id===l.concept));
 console.log('comprehension/grammar lessons:', comp.length, '· shape lessons:', geoLes.length);
-check('comprehension.js\'s 7 concepts, geometry.js\'s 5, clock.js\'s 5 and calendar.js\'s 5 account for every lesson beyond the pre-existing 455 (467 before the o\'clock lessons moved to clock.js)',
-  comp.length + geoLes.length + clockLes.length + calLes.length === lessons.length - 455 && geoLes.length === 27 && clockLes.length === 28 && calLes.length === 20, `got ${comp.length} + ${geoLes.length} + ${clockLes.length} + ${calLes.length}, expected ${lessons.length-455}`);
+check('comprehension.js\'s 7 concepts, geometry.js\'s 5, clock.js\'s 5 and calendar.js\'s 5 account for every lesson beyond the pre-existing 467 (455 before the Mridang Class 1 additions)',
+  comp.length + geoLes.length + clockLes.length + calLes.length === lessons.length - 467 && geoLes.length === 27 && clockLes.length === 28 && calLes.length === 20, `got ${comp.length} + ${geoLes.length} + ${clockLes.length} + ${calLes.length}, expected ${lessons.length-467}`);
 
 console.log('\n=== the last Class 2-3 gaps ===');
 const closedIds = ['e2-compre','e2-noun','e3-compre','e3-verb','e3-para','h3-compre','h3-vyakaran'];

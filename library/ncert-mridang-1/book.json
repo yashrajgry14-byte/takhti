@@ -8,5 +8,17 @@
   "edition": "2024-25",
   "cls": "c1",
   "subject": "english",
-  "chapters": []
+  "chapters": [
+    {
+      "id": "ch1",
+      "n": 1,
+      "file": "aemr101.pdf",
+      "count": 4,
+      "title": {
+        "en": "Two Little Hands",
+        "hi": "दो छोटे हाथ"
+      },
+      "note": "Parts of the body and what each does; the sight words one and to; the first sound of a word (a to e). Keep the English words the child reads in English in the Hindi lines too."
+    }
+  ]
 }

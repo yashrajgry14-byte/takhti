@@ -44,7 +44,15 @@ const LIT = {
              ['c','u','p','cup','🥤'], ['h','a','t','hat','🎩'], ['n','e','t','net','🥅'],
              ['b','u','s','bus','🚌'], ['f','a','n','fan','🌀'], ['j','a','m','jam','🍓']],
     sight: [['the','🔤'],['is','🔤'],['a','🔤'],['and','🔤'],['to','🔤'],['my','🔤'],
-            ['you','🧒'],['we','👨‍👩‍👧'],['it','🔤'],['in','📥'],['on','⬆️'],['at','📍']],
+            ['you','🧒'],['we','👨‍👩‍👧'],['it','🔤'],['in','📥'],['on','⬆️'],['at','📍'],
+            ['one','☝️']],
+    // the body and what each part does (Class 1 English opens here — NCERT Mridang, chapter 1)
+    body: [['eyes','👀','see','hear','आँखें','देखना','सुनना'], ['ears','👂','hear','smell','कान','सुनना','सूँघना'],
+           ['nose','👃','smell','see','नाक','सूँघना','देखना'],  ['mouth','👄','eat','walk','मुँह','खाना','चलना'],
+           ['hands','👏','clap','smell','हाथ','ताली बजाना','सूँघना'], ['legs','🦵','walk','hear','पैर','चलना','सुनना']],
+    // two words that start with the letter, and one that doesn't: hear the first sound
+    oddsound: [['b',['bag','bus'],'cap','🎒'], ['a',['ant','arm'],'dog','🐜'], ['c',['cat','cup'],'bed','🐱'],
+               ['d',['dog','door'],'egg','🐕'], ['e',['egg','elephant'],'sun','🥚']],
     rhymes: [['cat','bat','hat','🐱'], ['sun','fun','run','☀️'], ['bed','red','head','🛏️'],
              ['pig','big','dig','🐷'], ['top','hop','mop','🌳']]
   },
@@ -135,6 +143,7 @@ const LIT_SAY = {
   shape:  { en:'Look at the shapes. Count their sides.',   hi:'आकार देखो। भुजाएँ गिनो।' }
 };
 function litSay(b){
+  if(b.say) return b.say[S.lang] || b.say.en;      // a beat that says its own line
   const tpl = LIT_SAY[b.t];
   if(!tpl) return null;
   const v = { ch:b.ch, word:b.word, w:b.w, h:b.h, words:(b.words||[]).join(', ') };
@@ -185,6 +194,29 @@ const LIT_CONCEPTS = [
       opts:['Yes','Not yet'], hiOpts:['हाँ','अभी नहीं'], correct:0},
     {t:'win', say:gq('Some words you read whole, without sounding out.',
                      'कुछ शब्द पूरे पढ़े जाते हैं, तोड़कर नहीं।')}
+  ]},
+
+{ id:'bodywords', key:(p)=>'body-' + p.w, band:'early', ic:'🧍', strand:'eng',
+  title:(p)=>gq(`My ${p.w}`, `मेरे अंग: ${p.hi}`),
+  sub:()=>gq('Parts of the body', 'शरीर के अंग'),
+  space:()=>LIT.en.body.map(([w,art,verb,alt,hi,hiVerb,hiAlt])=>({w,art,verb,alt,hi,hiVerb,hiAlt})),
+  beats:(p)=>[
+    {t:'word', w:p.w, art:p.art, say:gq(`This word is ${p.w}. Point to your ${p.w}.`, `यह शब्द ${p.w} है — ${p.hi}। ${p.hi} छूकर दिखाओ।`)},
+    {t:'readline', text:`My ${p.w} can ${p.verb}.`},
+    {t:'ask', derived:true, q:gq(`What can your ${p.w} do?`, `हम ${p.hi} से क्या करते हैं?`),
+      opts:[p.verb, p.alt], hiOpts:[p.hiVerb, p.hiAlt], correct:0},
+    {t:'win', say:gq('Every part of your body has a job.', 'शरीर के हर अंग का एक काम है।')}
+  ]},
+
+{ id:'oddsound', key:(p)=>'oddsound-' + p.ch, band:'early', ic:'👂', strand:'eng',
+  title:(p)=>gq(`Which one is not ${p.ch}?`, `कौन सा ${p.ch} से नहीं है?`),
+  sub:()=>gq('Hear the first sound', 'पहली ध्वनि सुनो'),
+  space:()=>LIT.en.oddsound.map(([ch,words,odd,art])=>({ch,words,odd,art})),
+  beats:(p)=>[
+    {t:'sound', ch:p.ch, words:p.words, art:p.art},
+    {t:'ask', derived:true, q:gq(`Which word does not start with ${p.ch}?`, `कौन सा शब्द ${p.ch} से शुरू नहीं होता?`),
+      opts:[p.odd, p.words[1]], hiOpts:[p.odd, p.words[1]], correct:0},
+    {t:'win', say:gq('Listen to the first sound, and you can tell.', 'पहली ध्वनि सुनो, तो पता चल जाता है।')}
   ]},
 
 { id:'rhyming', key:(p)=>'rhyme-' + p.words[0], band:'pre', ic:'🎵', strand:'eng',
@@ -347,6 +379,7 @@ const LIT_SKILL_MAP = {
   blending:['u-blend','e1-decode'],
   sightword:['u-sight'],
   rhyming:['n-rhyme','n-listen'],
+  bodywords:['e1-read','u-sight'], oddsound:['l-sound','n-listen'],
   swar:['l-swar','l-matra0'],
   vyanjan:['u-vyanjan'],
   matra:['u-matra1','h1-matra'],

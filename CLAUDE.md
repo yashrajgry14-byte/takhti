@@ -88,7 +88,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v77` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v78` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -109,7 +109,7 @@ src/
     skills.js               the skill graph + skillCoverage()
     curriculum-early.js     Nursery→Class 5 skills; coverageMatrix()/ladderCoverage()/contentQueue()
     lessons.js              hand-authored lessons (lesson-gen.js generates the rest)
-    literacy.js             literacy + early-numeracy beats
+    literacy.js             literacy + early-numeracy beats (incl. Class 1 English from NCERT Mridang ch. 1, in our own words: the body words and what each part does, the first sound of a word, the sight word "one")
     comprehension.js        comprehension + grammar beats (the last gaps below Class 4)
     geometry.js             the picture registry (picIs/picArt/picFor/… — every beat whose answer is read off its drawing) and shapes: figure / corner / figures beats drawn as SVG, geoExpect() reads each answer off the drawing; 27 built-in lessons
     clock.js                clocks: clock (one face, "what time is it?") and clocks (start and end, "how long?") drawn as SVG with the hands where they really are, clockExpect() reads the answer off the hands; times read in English and Hindi; 28 built-in lessons
@@ -602,6 +602,10 @@ network and no waiting in the week.
   children the same way (the class mirror, then the class sync). The plan
   is the teacher phone's own setting (`S.libPlan`, a device field like the
   sync keys) and is never sent. No network is used for any of it.
+- **Listed, not built yet**: NCERT *Mridang* Class 1 (English), chapter 1
+  *Two Little Hands* (`aemr101.pdf`) — the library's first English chapter;
+  build it with `--only ch1` once the PDF is in `library/ncert-mridang-1/`.
+  A book with nothing built isn't offered to a teacher.
 - **In the library now**: NCERT *Maths Mela* Class 3 — 42 lessons across
   all 14 chapters (built 13–15 Nov, all drafted by flash-lite). Chapter 13
   (time) was rebuilt with clocks and calendars on 15 Nov: 3 lessons, each
@@ -835,10 +839,10 @@ capture → normalize → align → grade → confidence gate → score.
 `SKILLS` (`skills.js`, extended by `curriculum-early.js`) tags every attempt
 with the skill it really exercises, so a failed BODMAS question can be traced
 to the prerequisite underneath. **Verified numbers** (`test/comprehension.test.js`,
-the one suite that loads the full graph): 55 concepts → 552 lessons, 0
+the one suite that loads the full graph): 57 concepts → 564 lessons, 0
 rejected; 105 skills after dedup (128 raw, 23 absorbed); 59/105 = 56%
 teachable (`test/diagnose.test.js`); Nursery–Class 3 subject coverage 63/63;
-reading and writing ladders 6/6 each; 505 game-pool items (shape, clock and
+reading and writing ladders 6/6 each; 517 game-pool items (shape, clock and
 calendar questions stay out of the games — their answer is in a picture a game can't
 show; the 12 o'clock questions that were in the pool are out now).
 
