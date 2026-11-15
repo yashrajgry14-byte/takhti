@@ -237,6 +237,51 @@ function box(){
   for(let i = 0; i < 4; i++) if((await judgeCore({ consent: true, ask: 'borrow.when', transcript: 'x', aims: [forged] }, { TAKHTI_TEACH_PER_HOUR: '3' }, '7.7.7.7')).status === 429) limited++;
   check('a limit per address', limited === 1, limited);
 
+  // the judge's models: a short turn for the first, then flash-lite (the live checks found the full Flash models busy or silent)
+  const { judgeModels } = await import(pathToFileURL(path.join(root, 'api/teachback.mjs')).href);
+  check('the judge\'s models: TAKHTI_TEACH_MODEL (else GEMINI_MODEL, else 3.8-flash), then flash-lite; "none" switches the fallback off',
+    JSON.stringify(judgeModels({})) === JSON.stringify(['gemini-3.8-flash', 'gemini-3.5-flash-lite']) && JSON.stringify(judgeModels({ TAKHTI_TEACH_MODEL: 'gemini-3.5-flash-lite' })) === JSON.stringify(['gemini-3.5-flash-lite'])
+      && JSON.stringify(judgeModels({ GEMINI_MODEL: 'g', TAKHTI_TEACH_FALLBACK: 'none' })) === JSON.stringify(['g']), JSON.stringify(judgeModels({})));
+  const byModel = (behave) => async (url, o) => {
+    const m = decodeURIComponent(url.match(/models\/([^:]+):/)[1]); calls.push({ model: m });
+    const b = behave[m];
+    if(b === 'hang') return new Promise((_, no) => o.signal.addEventListener('abort', () => no(new Error('aborted'))));
+    if(typeof b === 'number') return { ok: false, status: b, json: async () => ({}) };
+    return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: JSON.stringify({ aims: [{ id: 'borrow.when', verdict: 'covered', quote: 'borrow one ten from the five' }] }) }] } }] }) };
+  };
+  const ok1 = { consent: true, lang: 'en', ask: 'borrow.when', transcript: 'you borrow one ten from the five', aims: [forged] };
+  calls.length = 0;
+  const busy = await judgeCore(ok1, { GEMINI_API_KEY: 'k', TAKHTI_TEACH_PER_HOUR: '999' }, '8.8.8.1', byModel({ 'gemini-3.8-flash': 503 }));
+  check('…the first model busy (503): flash-lite judges at once, and the answer names the model that judged',
+    busy.json.judge && busy.json.judge.aims[0].verdict === 'covered' && busy.json.model === 'gemini-3.5-flash-lite' && calls[0].model === 'gemini-3.8-flash', JSON.stringify([busy.json, calls]));
+  calls.length = 0;
+  const t0 = Date.now();
+  const hung = await judgeCore(ok1, { GEMINI_API_KEY: 'k', TAKHTI_TEACH_FIRST_MS: '300', TAKHTI_THINKING: 'off' }, '8.8.8.2', byModel({ 'gemini-3.8-flash': 'hang' }));
+  check('…the first model silent: its short turn ends and flash-lite still answers well inside the phone\'s time',
+    hung.json.judge && hung.json.model === 'gemini-3.5-flash-lite' && Date.now() - t0 < 2000, JSON.stringify([hung.json, Date.now() - t0]));
+  const allDown = await judgeCore(ok1, { GEMINI_API_KEY: 'k', TAKHTI_TEACH_FIRST_MS: '200', TAKHTI_TEACH_TIMEOUT_MS: '1500', TAKHTI_THINKING: 'off' }, '8.8.8.3',
+    byModel({ 'gemini-3.8-flash': 'hang', 'gemini-3.5-flash-lite': 'hang' }));
+  check('…every model silent: no judge inside the time limit — the phone\'s rubric decides', allDown.status === 200 && allDown.json.judge === null, JSON.stringify(allDown.json));
+
+  // the Netlify function, laid out as Netlify ships it: the built-in points found under the function's root
+  const lam = fs.mkdtempSync(path.join(os.tmpdir(), 'takhti-lambda-'));
+  fs.mkdirSync(path.join(lam, 'fn')); fs.mkdirSync(path.join(lam, 'src/content'), { recursive: true });
+  fs.copyFileSync(path.join(root, 'api/teachback.mjs'), path.join(lam, 'fn/teachback.mjs'));
+  fs.copyFileSync(path.join(root, 'src/content/teach.js'), path.join(lam, 'src/content/teach.js'));
+  const oldRoot = process.env.LAMBDA_TASK_ROOT, oldKey = process.env.GEMINI_API_KEY;
+  process.env.LAMBDA_TASK_ROOT = lam; delete process.env.GEMINI_API_KEY;
+  const nl = await import(pathToFileURL(path.join(lam, 'fn/teachback.mjs')).href);
+  const nreq = new Request('http://x/api/teachback', { method: 'POST', headers: { 'content-type': 'application/json', 'x-nf-client-connection-ip': '9.9.9.9' },
+    body: JSON.stringify({ consent: true, lang: 'en', ask: 'borrow.fix', transcript: 'the tens should go one less', aims: [{ id: 'borrow.fix', kind: 'fix', mistake: 'noborrowback' }] }) });
+  const nres = await nl.default(nreq), nj = await nres.json();
+  check('the Netlify function: the built-in points are found where netlify.toml ships them (included_files), so Munni\'s-sum points can be judged there; no key → no judge, the phone decides',
+    !!nl.knownAims() && nres.status === 200 && nj.transcript === 'the tens should go one less' && nj.judge === null
+      && /included_files\s*=\s*\["src\/content\/teach\.js"\]/.test(fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8')), JSON.stringify([nres.status, nj]));
+  const nrec = await nl.default(new Request('http://x/api/teachback', { method: 'POST', body: JSON.stringify({ consent: true, ask: 'borrow.when', audio: 'A'.repeat(400), aims: [forged] }) }));
+  check('…and it takes words only, never a recording', nrec.status === 400, nrec.status);
+  if(oldRoot == null) delete process.env.LAMBDA_TASK_ROOT; else process.env.LAMBDA_TASK_ROOT = oldRoot;
+  if(oldKey != null) process.env.GEMINI_API_KEY = oldKey;
+
   // through the voice server, with a stand-in speech service
   const svc = http.createServer((req, res) => { req.resume(); req.on('end', () => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ transcript: 'पाँच से एक दहाई उधार लो' })); }); });
   await new Promise(r => svc.listen(0, '127.0.0.1', r));
@@ -279,7 +324,15 @@ function box(){
         win.navigator.mediaDevices = { getUserMedia: async () => ({ getTracks: () => [{ stop(){} }] }) };
         win.MediaRecorder = class { constructor(){ this.state = 'inactive'; this.mimeType = 'audio/webm'; } start(){ this.state = 'recording'; setTimeout(() => this.stop(), 30); }
           stop(){ if(this.state !== 'recording') return; this.state = 'inactive'; this.ondataavailable({ data: new win.Blob([new Uint8Array(5000)], { type: 'audio/webm' }) }); setTimeout(() => this.onstop(), 0); } };
-        if(voice){
+        if(voice === 'netlify'){
+          // no voice server: the host's own function at /api/teachback, words only
+          win.fetch = (url, o) => {
+            if(String(url) !== '/api/teachback') return Promise.reject(new Error('offline'));
+            const body = JSON.parse(o.body);
+            sent.push({ url: '/api/teachback', body });
+            return Promise.resolve({ ok: true, status: 200, json: async () => judgeReply(body) });
+          };
+        } else if(voice){
           win.TAKHTI_VOICE = 'http://voice.test';
           win.fetch = (url, o) => {
             if(!String(url).startsWith('http://voice.test')) return Promise.reject(new Error('offline'));
@@ -410,6 +463,50 @@ function box(){
     await tell(v, 'it stays two I think');
     check('…typed words go to the judge too — and a credit whose quote is not in what the child said is not given', v.sent.some(x => x.url === '/teach/judge' && x.body.transcript === 'it stays two I think') && v.$$('.teachchip.is-covered').length === 1 && v.E(`TEACH.s.items[1].hints`) === 1, v.screen().slice(0, 200));
     check('no uncaught script errors (with a voice server)', v.jsErrors.length === 0, v.jsErrors.join(' | '));
+
+    // the Netlify link: no voice server — the words go to the host's own judge, under the words terms
+    let nAnswer = { aims: [{ id: 'borrow.when', verdict: 'covered', quote: 'take a ten from the tens' }] };
+    const nt = await boot('netlify', body => ({ transcript: body.transcript, provider: 'phone', judge: nAnswer, model: 'gemini-3.5-flash-lite' }));
+    nt.E(`teachStart(teachUnitBuiltin('borrow'))`);
+    check('no voice server, no signal: no terms card, nothing sent, and the screen says Gemini checks it with a signal',
+      !nt.$('.teachterms') && /With a signal, Gemini checks it/.test(nt.screen()), nt.screen().slice(0, 300));
+    await tell(nt, 'take a ten from the tens');
+    check('…the phone\'s rubric judges it, and nothing leaves the phone', nt.sent.length === 0 && nt.$$('.teachchip.is-covered').length === 1, JSON.stringify(nt.sent));
+    nt.E(`S.online = true; teachStart(teachUnitBuiltin('borrow'))`);
+    check('with a signal: the grown-up\'s terms card shows on Teach Munni — words only, no recording, no name, Gemini, nothing kept, withdraw',
+      !!nt.$('.teachterms') && /FOR A GROWN-UP/.test(nt.screen()) && /no recording and no name/.test(nt.screen()) && /Google's Gemini/.test(nt.screen()) && /Nothing is kept/.test(nt.screen()) && /withdraw/i.test(nt.screen()), nt.screen().slice(0, 600));
+    await tell(nt, 'take a ten from the tens');
+    check('…before a grown-up agrees, typing still works and nothing is sent', nt.sent.length === 0 && nt.$$('.teachchip.is-covered').length === 1, JSON.stringify(nt.sent));
+    nt.E(`teachStart(teachUnitBuiltin('borrow'))`);
+    button(nt, /I'm the parent or guardian, and I agree/).click();
+    check('…agreeing keeps the terms for this child, with version and time, and the card goes', nt.E(`S.teachWords && S.teachWords.v === 1 && !!S.teachWords.at`) && !nt.$('.teachterms') && /Gemini checks which points you explained/.test(nt.screen()), nt.E(`JSON.stringify(S.teachWords)`));
+    await tell(nt, 'take a ten from the tens');
+    const ncall = nt.sent.find(x => x.url === '/api/teachback');
+    check('…then typed words go to /api/teachback with consent, the points still to teach and the band — no name, no id, no recording',
+      !!ncall && ncall.body.consent === true && ncall.body.transcript === 'take a ten from the tens' && ncall.body.ask === 'borrow.when' && Array.isArray(ncall.body.ages) && !ncall.body.audio
+        && !/Jai|c-[a-z0-9]{6,}/.test(JSON.stringify(ncall.body)), JSON.stringify(ncall && ncall.body).slice(0, 400));
+    check('…Gemini\'s verdict, its quote in the child\'s words, turns the chip — and the trace says Gemini judged it, quote checked',
+      nt.$$('.teachchip.is-covered').length === 1 && /judged by Gemini \(gemini-3\.5-flash-lite\), each credit checked/.test(nt.$('#trace') ? nt.$('#trace').textContent : nt.E(`document.body.textContent`)), nt.screen().slice(0, 200));
+    nAnswer = { aims: [{ id: 'borrow.ten', verdict: 'covered', quote: 'it becomes twelve ones' }] };
+    await tell(nt, 'it stays two I think');
+    check('…a credit whose quote is not in the child\'s words is not given (checked again on the phone)', nt.$$('.teachchip.is-covered').length === 1 && nt.E(`TEACH.s.items[1].hints`) === 1, nt.screen().slice(0, 200));
+    nt.sent.length = 0;
+    nt.E(`teachText('when the top is smaller you borrow', 'the phone')`);
+    for(let i = 0; i < 50 && !nt.sent.length; i++) await wait(10);
+    check('…words the phone\'s own recognizer wrote down go the same way', nt.sent.some(x => x.body.transcript === 'when the top is smaller you borrow'), JSON.stringify(nt.sent));
+    for(let i = 0; i < 50 && nt.E(`!!(TEACH && TEACH.busy)`); i++) await wait(20);
+    nt.E(`S.parentPin = null; go('parent')`);
+    check('the parent page: "Teach Munni: checked by Gemini", agreed on a date, and withdraw', /Teach Munni: checked by Gemini/.test(nt.screen()) && /Agreed on/.test(nt.screen()) && !!button(nt, /Withdraw consent/), '');
+    button(nt, /Withdraw consent/).click(); button(nt, /Yes, withdraw/).click();
+    nt.sent.length = 0;
+    nt.E(`teachStart(teachUnitBuiltin('borrow'))`);
+    nt.E(`TEACH.wordsLater = true; render()`);
+    await tell(nt, 'take a ten from the tens');
+    check('…withdrawn: nothing is sent, the phone judges', nt.E(`S.teachWords`) === null && nt.sent.length === 0, JSON.stringify(nt.sent));
+    nt.E(`TEACH.wordsLater = false; S.lang = 'hi'; render()`);
+    check('…the terms card in Hindi', /बड़ों के लिए · शर्तें/.test(nt.screen()) && /न रिकॉर्डिंग भेजती है, न नाम/.test(nt.screen()), nt.screen().slice(0, 300));
+    nt.E(`S.lang = 'en'`);
+    check('no uncaught script errors (the Netlify link)', nt.jsErrors.length === 0, nt.jsErrors.join(' | '));
   }catch(e){ check('the app run finished', false, e.stack); }
   appServer.close();
 

@@ -454,6 +454,7 @@ parent(){
 
     ${talkSetUp() ? talkParentHTML() : ''}
     ${cloudReadParentHTML()}
+    ${typeof teachWordsParentHTML === 'function' ? teachWordsParentHTML() : ''}
     ${typeof circleParentHTML === 'function' ? circleParentHTML() : ''}
     ${mindParentHTML()}
     ${typeof teachParentHTML === 'function' ? teachParentHTML() : ''}

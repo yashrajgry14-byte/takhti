@@ -12,6 +12,11 @@
      as backup), and Gemini says which points it covered, quoting the child
      (POST /teach/judge, api/teachback.mjs).
      Nothing is kept there. The quote is checked again here.
+   · A build with no voice server (the Netlify link): the words — typed,
+     or written down by the phone's own recognizer, never a recording — go
+     to the host's own judge (TEACH_URL → api/teachback.mjs, the same
+     judgeCore() and quote check), with a signal and under the words terms
+     a grown-up accepts here or on the parent page (TEACH_WORDS_TERMS).
    · Otherwise: the phone's own on-device recognizer, or typing, and the
      offline judge (teachRubric()). It never waits on the network: no
      answer in time → the honest message, and the child can type.
@@ -30,6 +35,63 @@ const TMR = o => o ? (S.lang === 'hi' ? o.hi : o.en) : '';
 const TMW = o => attr(TMR(o));
 
 function teachTermsOk(){ return !!(TALK_URL && S.voiceTerms && S.voiceTerms.v >= VOICE_TERMS_V); }   // v3: Gemini hears it (ui/cloud-read.js)
+
+/* No voice server: words only, to the host's judge, under their own terms.
+   Only the words go — no recording, no name — so these are separate from
+   the reading terms, and asked where they are needed: the first time a
+   child teaches Munni with a signal, or on the parent page. The wording is
+   for the lawyer, like the reading terms. */
+const TEACH_WORDS_V = 1;
+const TEACH_WORDS_TERMS = {
+  en: n => `When ${n} teaches Munni back what a lesson was about (Teach Munni) and this phone has a signal, the words ${n} types — or the words this phone's own speech recognition writes down — go over the internet to Takhti's server and to Google's Gemini, which checks which of the lesson's points ${n} explained. Gemini must quote ${n}'s own words for every point it counts, and Takhti checks that quote again on this phone. Only the words go: Takhti sends no recording and no name. We use Google's paid service, so Google does not train its models on them. Nothing is kept on our server — not the words, not the result. Which points ${n} explained stays on this phone (and with the class, if you switch on class sync). Without a signal, or without this, the phone checks it by itself. You can withdraw this any time on the parent page.`,
+  hi: n => `जब ${n} मुन्नी को किसी पाठ की बातें वापस सिखाते हैं (मुन्नी को सिखाओ) और फ़ोन में सिग्नल हो, तो ${n} जो शब्द लिखते हैं — या जो शब्द इस फ़ोन की अपनी बोली पहचान लिखती है — वे इंटरनेट से तख़्ती के सर्वर और Google के Gemini तक जाते हैं, जो जाँचता है कि ${n} ने पाठ की कौन-सी बातें समझाईं। हर गिनी गई बात के लिए Gemini को ${n} के अपने शब्द दिखाने होते हैं, और तख़्ती उन्हें इसी फ़ोन पर फिर जाँचती है। सिर्फ़ शब्द जाते हैं: तख़्ती न रिकॉर्डिंग भेजती है, न नाम। हम Google की पेड सेवा इस्तेमाल करते हैं, इसलिए Google इनसे अपने मॉडल नहीं सिखाता। हमारे सर्वर पर कुछ नहीं रखा जाता — न शब्द, न नतीजा। ${n} ने कौन-सी बातें समझाईं, वह इसी फ़ोन पर रहता है (और क्लास के साथ, अगर आप क्लास सिंक चालू करते हैं)। सिग्नल न हो, या इसके बिना, फ़ोन ख़ुद जाँचता है। माता-पिता वाले पेज पर इसे कभी भी वापस ले सकते हैं।`
+};
+function teachWordsOk(){ return !TALK_URL && !!(S.teachWords && S.teachWords.v >= TEACH_WORDS_V); }
+/* Where the words go to be judged right now, or '' for the phone's own rubric. */
+function teachJudgeUrl(){
+  if(!S.online) return '';
+  if(teachTermsOk()) return TALK_URL + '/teach/judge';
+  if(teachWordsOk()) return TEACH_URL;
+  return '';
+}
+function teachWordsAsk(){ return !TALK_URL && S.online && !teachWordsOk() && TEACH && !TEACH.wordsLater && !TEACH.sum; }
+function teachWordsAccept(where){
+  S.teachWords = { v: TEACH_WORDS_V, at: new Date().toISOString(), by: 'parent (' + (where || 'Teach Munni') + ')' };
+  log(null, `Teach Munni words terms (v${TEACH_WORDS_V}) accepted by a grown-up for ${S.name || 'this child'} — with a signal, the words go to Gemini to be judged; no recording, nothing kept`);
+  saveSoon(); render();
+}
+function teachWordsWithdraw(){
+  S.teachWords = null; S.ctx.wordsAsk = false;
+  log(null, 'Teach Munni words terms withdrawn by a parent — explanations are judged on this phone only');
+  saveSoon(); render();
+}
+function teachWordsCardHTML(){
+  const hi = S.lang === 'hi', n = attr(S.name || (hi ? 'आपका बच्चा' : 'your child'));
+  return `<div class="card circlecard teachterms" style="text-align:left;margin:10px 0">
+    <div class="kicker2">${hi ? 'बड़ों के लिए · शर्तें' : 'FOR A GROWN-UP · TERMS'}</div>
+    <b style="display:block;margin:4px 0">${hi ? `Gemini को ${n} का समझाना जाँचने दें?` : `Let Gemini check what ${n} explains?`}</b>
+    <div style="font-size:12.5px;line-height:1.5">${hi ? TEACH_WORDS_TERMS.hi(n) : TEACH_WORDS_TERMS.en(n)}</div>
+    <details style="font-size:12px;opacity:.75;margin-top:6px"><summary>${hi ? 'In English' : 'हिंदी में'}</summary>${hi ? TEACH_WORDS_TERMS.en(n) : TEACH_WORDS_TERMS.hi(n)}</details>
+    <button class="btn" style="margin-top:8px" onclick="teachWordsAccept()">${hi ? 'मैं माता-पिता/अभिभावक हूँ और सहमत हूँ' : "I'm the parent or guardian, and I agree"}</button>
+    <button class="btn ghost" style="margin-top:6px" onclick="TEACH.wordsLater=true;render()">${hi ? 'अभी नहीं — फ़ोन पर ही जाँचो' : 'Not now — check it on this phone'}</button>
+  </div>`;
+}
+/* The parent page, in a build with no voice server: what was agreed, and the right to withdraw it. */
+function teachWordsParentHTML(){
+  if(TALK_URL) return '';
+  const hi = S.lang === 'hi', n = attr(S.name || ''), t = S.teachWords;
+  return `<div class="metric" style="display:block">
+    <b>${hi ? 'मुन्नी को सिखाओ: Gemini की जाँच' : 'Teach Munni: checked by Gemini'}</b>
+    <div style="font-size:12.5px;opacity:.75;line-height:1.5;margin-top:4px">${hi ? TEACH_WORDS_TERMS.hi(n) : TEACH_WORDS_TERMS.en(n)}</div>
+    <div style="font-size:12.5px;margin-top:6px">${t
+      ? (hi ? `सहमति दी: ${String(t.at).slice(0, 10)} (शर्तें v${t.v})` : `Agreed on ${String(t.at).slice(0, 10)} (terms v${t.v})`)
+      : (hi ? 'अभी सहमति नहीं — समझाना इसी फ़ोन पर जाँचा जाता है।' : 'Not agreed — explanations are checked on this phone only.')}</div>
+    ${t ? (S.ctx.wordsAsk
+      ? `<div class="row" style="gap:8px;margin-top:6px"><button class="btn ghost" onclick="teachWordsWithdraw()">${hi ? 'हाँ, वापस लें' : 'Yes, withdraw'}</button><button class="btn" onclick="S.ctx.wordsAsk=false;render()">${hi ? 'रहने दें' : 'Keep it'}</button></div>`
+      : `<button class="btn ghost" style="margin-top:6px" onclick="S.ctx.wordsAsk=true;render()">${hi ? 'सहमति वापस लें' : 'Withdraw consent'}</button>`)
+      : `<button class="btn" style="margin-top:6px" onclick="teachWordsAccept('parent page')">${hi ? 'मैं माता-पिता/अभिभावक हूँ और सहमत हूँ' : "I'm the parent or guardian, and I agree"}</button>`}
+  </div>`;
+}
 function teachCloudReady(){
   return teachTermsOk() && S.online && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && typeof MediaRecorder !== 'undefined';
 }
@@ -122,12 +184,13 @@ async function teachType(){
 }
 async function teachText(text, how){
   if(!TEACH) return;
-  if(teachTermsOk() && S.online && text.trim()){
+  const url = text.trim() ? teachJudgeUrl() : '';
+  if(url){
     TEACH.busy = 'judge'; render();
     try{
       const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      const to = setTimeout(() => ctl && ctl.abort(), 9000);
-      const res = await fetch(TALK_URL + '/teach/judge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl ? ctl.signal : undefined,
+      const to = setTimeout(() => ctl && ctl.abort(), url === TEACH_URL ? 10000 : 9000);
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl ? ctl.signal : undefined,
         body: JSON.stringify({ consent: true, lang: S.lang, transcript: text, ...teachPayload() }) });
       clearTimeout(to);
       const d = await res.json().catch(() => ({}));
@@ -146,7 +209,7 @@ function teachJudged(d){
   const verdicts = d.judge ? teachApplyJudge(d.judge, text, s.items) : null;
   const how = verdicts ? `Gemini${d.model ? ' (' + d.model + ')' : ''}, each credit checked against the child's own words` : "Takhti's own rubric, on the phone";
   const out = teachHeard(s, text, verdicts, verdicts ? 'gemini' : 'rubric');
-  log(verdicts ? 2 : 0, `Teach Munni · "${it.aim.short.en}" · heard by ${d.provider || 'the phone'} · judged by ${how} → ${out}${d.judge ? '' : ''}`);
+  log(verdicts ? 2 : 0, `Teach Munni · "${it.aim.short.en}" · heard by ${d.provider || 'the phone'} · judged by ${how} → ${out}${!verdicts && !TALK_URL ? (!S.online ? ' (no signal: the phone judges; with a signal and the words terms, Gemini does)' : !teachWordsOk() ? ' (the words terms not agreed: the phone judges)' : ' (the judge did not answer in time)') : ''}`);
   if(out === 'unsure' && it.unsure >= 2) TEACH.typing = true;
   if(out === 'covered' && typeof sfxChime === 'function') sfxChime();
   teachAfter();
@@ -215,6 +278,7 @@ function teachHTML(){
   <div class="display" style="font-size:21px;margin:4px 0">🐘 ${hi ? 'मुन्नी को सिखाओ' : 'Teach Munni'}</div>
   <div class="muted">${TMW(s.unit.title)}</div>
   ${teachChipsHTML(s.items, it)}
+  ${teachWordsAsk() ? teachWordsCardHTML() : ''}
   <div class="teachstage">
     <div class="teachmunni${sum ? '' : ' is-puzzled'}">${munniSmall()}<span class="teachq">${sum ? '★' : '?'}</span></div>
     <div class="teachbubble">${TMW(s.line)}</div>
@@ -228,6 +292,8 @@ function teachHTML(){
       : judging ? (hi ? '🤔 सोच रही हूँ…' : '🤔 Thinking…')
       : (hi ? '🎤 छुओ और समझाओ' : '🎤 Tap and explain')}</button>
     ${TEACH.msg ? `<div class="retry" style="font-size:12.5px;margin-top:6px">${attr(TEACH.msg)}</div>` : ''}
+    ${!TALK_URL && !S.online ? `<div class="muted" style="font-size:12px;margin-top:6px">${hi ? 'सिग्नल नहीं: मुन्नी इसी फ़ोन पर जाँचती है। सिग्नल हो तो Gemini जाँचता है।' : 'No signal: Munni checks it on this phone. With a signal, Gemini checks it.'}</div>`
+      : teachWordsOk() && S.online ? `<div class="muted" style="font-size:12px;margin-top:6px">${hi ? 'Gemini जाँचता है कि कौन-सी बात समझाई — तुम्हारे अपने शब्दों से।' : 'Gemini checks which points you explained — from your own words.'}</div>` : ''}
     ${TEACH.typing ? `<div class="row" style="gap:6px;margin-top:8px">
       <input class="input" id="teachtxt" placeholder="${hi ? 'यहाँ लिखकर समझाओ' : 'Or type it here'}" autocomplete="off">
       <button class="btn ghost" style="width:auto;padding:8px 14px" onclick="teachType()">${hi ? 'बताओ' : 'Tell'}</button></div>`

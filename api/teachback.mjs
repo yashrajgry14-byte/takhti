@@ -33,6 +33,7 @@
    ================================================================== */
 import fs from 'node:fs';
 import vm from 'node:vm';
+import path from 'node:path';
 
 const ID = /^[a-z0-9.-]{1,32}$/;
 const VERDICTS = ['covered', 'partly', 'missing', 'unsure'];
@@ -54,7 +55,15 @@ let KNOWN;
 export function knownAims(){
   if(KNOWN !== undefined) return KNOWN;
   try{
-    const src = fs.readFileSync(new URL('../src/content/teach.js', import.meta.url), 'utf8');
+    // beside this file in the repo and on the voice server; on Netlify the
+    // file is shipped with the function (netlify.toml's included_files),
+    // under the function's root or the working folder — try each
+    const tries = [() => new URL('../src/content/teach.js', import.meta.url),
+      () => path.join(process.env.LAMBDA_TASK_ROOT || '', 'src/content/teach.js'),
+      () => path.join(process.cwd(), 'src/content/teach.js')];
+    let src = null;
+    for(const at of tries){ try{ src = fs.readFileSync(at(), 'utf8'); break; }catch(e){} }
+    if(src == null) throw new Error('teach.js not found');
     const ctx = {}; vm.createContext(ctx);
     vm.runInContext(src + ';this.OUT = JSON.stringify({ units: TEACH_UNITS, fix: TEACH_FIX_IDEAS });', ctx);
     const o = JSON.parse(ctx.OUT), aims = {};
@@ -125,11 +134,22 @@ export function withThinking(shapes, env){
   return [...shapes.map(think), ...shapes];
 }
 
+/* The models to ask, in turn. The judge must answer inside the phone's
+   9 s, and the live checks (14 Nov 2026) found the full Flash models busy
+   (503) or silent while flash-lite judged all four test explanations right
+   in under 2 s. So the first model gets a short turn (TAKHTI_TEACH_FIRST_MS,
+   3.5 s) and a busy/missing answer moves on at once to the next
+   (TAKHTI_TEACH_FALLBACK, default flash-lite; 'none' switches it off). */
+export function judgeModels(env){
+  env = env || {};
+  const first = env.TAKHTI_TEACH_MODEL || env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const fb = String(env.TAKHTI_TEACH_FALLBACK == null ? 'gemini-3.5-flash-lite' : env.TAKHTI_TEACH_FALLBACK);
+  const rest = fb.toLowerCase() === 'none' ? [] : fb.split(',').map(x => x.trim()).filter(Boolean);
+  return [first, ...rest].filter((m, i, a) => a.indexOf(m) === i).slice(0, 3);
+}
+
 async function callGemini(payload, ages, env, fetchImpl){
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
-  // its own model when set: the judge must answer in the phone's 9 s, drafting can wait
-  const model = env.TAKHTI_TEACH_MODEL || env.GEMINI_MODEL || 'gemini-3.8-flash';
-  const url = `${env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(model)}:generateContent`;
   const base = { systemInstruction: { parts: [{ text: instructions(ages) }] }, contents: [{ role: 'user', parts: [{ text: JSON.stringify(payload) }] }] };
   // the current structured-output field first, then the older one (as api/syllabus.mjs)
   // Thinking is asked for at a low level: the default on newer Flash models
@@ -139,21 +159,31 @@ async function callGemini(payload, ages, env, fetchImpl){
     { generationConfig: { temperature: 0, responseFormat: { text: { mimeType: 'APPLICATION_JSON', schema: SCHEMA } } } },
     { generationConfig: { temperature: 0, responseMimeType: 'application/json', responseJsonSchema: SCHEMA } }
   ], env);
-  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), Number(env.TAKHTI_TEACH_TIMEOUT_MS || 9000));
-  try{
-    let res, d;
-    for(const shape of shapes){
-      res = await fetchImpl(url, { method: 'POST', signal: ctl.signal,
-        headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify({ ...base, ...shape }) });
-      d = await res.json().catch(() => ({}));
-      if(res.status !== 400) break;
-    }
-    if(!res.ok) return { error: `Gemini said ${res.status}`, status: 502 };
-    const text = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('').replace(/```json|```/g, '').trim();
-    try{ return { out: JSON.parse(text), model }; }catch(e){ return { error: 'Gemini did not answer in the format', status: 502 }; }
-  }catch(e){
-    return { error: 'Gemini did not answer in time', status: 504 };
-  }finally{ clearTimeout(to); }
+  const models = judgeModels(env), total = Number(env.TAKHTI_TEACH_TIMEOUT_MS || 9000);
+  const firstMs = Number(env.TAKHTI_TEACH_FIRST_MS || 3500), start = Date.now();
+  let last = { error: 'Gemini did not answer in time', status: 504 };
+  for(let mi = 0; mi < models.length; mi++){
+    const model = models[mi], left = total - (Date.now() - start);
+    if(left < 600) break;
+    const budget = mi < models.length - 1 ? Math.min(firstMs, left) : left;
+    const url = `${env.GEMINI_API_BASE || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), budget);
+    try{
+      let res, d;
+      for(const shape of shapes){
+        res = await fetchImpl(url, { method: 'POST', signal: ctl.signal,
+          headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify({ ...base, ...shape }) });
+        d = await res.json().catch(() => ({}));
+        if(res.status !== 400) break;
+      }
+      if(!res.ok){ last = { error: `Gemini said ${res.status}`, status: 502 }; continue; }
+      const text = ((((d.candidates || [])[0] || {}).content || {}).parts || []).map(p => p.text || '').join('').replace(/```json|```/g, '').trim();
+      try{ return { out: JSON.parse(text), model }; }catch(e){ last = { error: 'Gemini did not answer in the format', status: 502 }; }
+    }catch(e){
+      last = { error: 'Gemini did not answer in time', status: 504 };
+    }finally{ clearTimeout(to); }
+  }
+  return last;
 }
 
 /* The whole request, independent of any host — exported for the tests

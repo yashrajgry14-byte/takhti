@@ -177,7 +177,7 @@ export async function run(opts, fetchImpl){
       if(dead >= DOWN){ rows.push({ case: c.id, ms: 0, verdicts: '', pass: false, why: 'skipped: no answer twice', error: 'skipped' }); continue; }
       t0 = Date.now();
       const r = await judgeCore({ consent: true, lang: c.lang, ages: [7, 8], ask: AIMS[0].id, aims: AIMS, transcript: c.said },
-        { ...env, TAKHTI_TEACH_MODEL: model }, 'live-check-' + (ip++), fetchImpl);
+        { ...env, TAKHTI_TEACH_MODEL: model, TAKHTI_TEACH_FALLBACK: 'none' }, 'live-check-' + (ip++), fetchImpl);
       const j = r.json || {};
       const v = judgeVerdict(c, j.judge);
       rows.push({ case: c.id, ms: ms(t0), verdicts: (j.judge && j.judge.aims || []).map(a => `${a.id}=${a.verdict}`).join(' '), ...v, error: j.error || null });
@@ -200,7 +200,7 @@ export async function run(opts, fetchImpl){
     const hear = (buf, mime, lang) => checkReading({ buf, mime }, null, lang, { env: { ...env, GEMINI_SPEECH_MODEL: hearModel }, fetch: fetchImpl, provider: 'gemini' });
     t0 = Date.now();
     const r = await judgeCore({ consent: true, lang: 'en', ages: [7, 8], ask: AIMS[0].id, aims: AIMS, audio: clips.explain.buf.toString('base64'), mime: clips.explain.mime },
-      { ...env, TAKHTI_TEACH_MODEL: judgeOk.model }, 'live-check-' + (ip++), fetchImpl, hear);
+      { ...env, TAKHTI_TEACH_MODEL: judgeOk.model, TAKHTI_TEACH_FALLBACK: 'none' }, 'live-check-' + (ip++), fetchImpl, hear);
     const j = r.json || {};
     out.judgeAudio = { hearModel, judgeModel: judgeOk.model, ms: ms(t0), heard: j.transcript || '', ...judgeVerdict(JUDGE_CASES[0], j.judge) };
     say(`   ${out.judgeAudio.pass ? '✓' : '✗'} ${out.judgeAudio.ms} ms  heard "${out.judgeAudio.heard}"${out.judgeAudio.pass ? '' : '  — ' + out.judgeAudio.why}`);

@@ -51,6 +51,7 @@ function newProfile(name){
     talkApplied: [],       // talk sessions already replayed into this record, so a talk never counts twice
     readAgain: [],         // lines the clearer reading check had to skip (no service answered): read again later — the line only, never a recording
     voiceTerms: null,      // {v, at, by}: a grown-up accepted the reading terms (reading checked online by Gemini, Sarvam as backup, nothing kept) — see ui/cloud-read.js
+    teachWords: null,      // {v, at, by}: with no voice server, a grown-up let Teach Munni's words (typed or the phone's recognizer — never a recording) go to Gemini to be judged — see ui/teach-munni.js
     // the learning circle — see ui/circle.js. Progress only; never a voice, a photo or a typed question.
     circleSync: false,     // a parent ticked "always keep in sync"
     circleSyncAt: null,    // when they did
