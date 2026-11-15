@@ -41,6 +41,13 @@ through their child's school.
 | Munni's voice | Gemini TTS, built ahead and shipped offline. |
 | Hearing a child read | Sarvam (verbatim). Our tests on deliberate misreadings (14 Nov) found Gemini writing the right word over a child's slip, so readings go to Sarvam and Gemini stays on what it judges well. |
 
+**Next to Google's Read Along:** Read Along helps a child read aloud and
+shows the teacher how accurately and fast they read. Takhti teaches the
+school's own NCERT lessons, maths included (sums, shapes, clocks), then has
+the child explain each lesson back to Munni, so the teacher sees, point by
+point, who can do it and who can explain it. The two fit together: Read
+Along for reading fluency, Takhti for understanding the week's lessons.
+
 > The network loads tomorrow. It never serves today. Everything a child does
 > in a lesson runs on the phone; the cloud prepares next week.
 
@@ -252,7 +259,9 @@ storage need a real origin).
 `api/ask.js` (answers to saved questions), `api/class-sync.mjs` (the hourly
 class sync, which needs Netlify Blobs) and `api/syllabus.mjs` (lessons from a
 chapter; set `GEMINI_API_KEY`, or run it on the voice server as
-`POST /syllabus`). Without them the app still
+`POST /syllabus`) and `api/teachback.mjs` (Teach Munni's Gemini judge, words
+only, the same `GEMINI_API_KEY`; the app uses it when there is no voice
+server, under the words terms a grown-up agrees to). Without them the app still
 runs on its on-device content, and classes use codes.
 
 ---
