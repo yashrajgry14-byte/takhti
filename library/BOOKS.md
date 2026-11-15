@@ -2,8 +2,9 @@
 
 The library is built ahead: every school on a book gets the same checked
 lessons, with no network in the week (`tools/build-library.mjs`, see
-CLAUDE.md → *The lesson library*). One book is built now — *Maths Mela*
-Class 3 (`library/ncert-maths-mela-3`). These are set up and waiting for
+CLAUDE.md → *The lesson library*). Built now: *Maths Mela* Class 3
+(`library/ncert-maths-mela-3`), and chapter 3 of the Class 5 EVS book
+*Our Wondrous World* (`library/ncert-our-wondrous-world-5`). These are set up and waiting for
 their PDFs:
 
 | class | subject | book | folder | NCERT code |
@@ -22,6 +23,7 @@ their PDFs:
 | Class 3 | hindi | Veena (वीणा) | `library/ncert-veena-3` | `chve1` (check) |
 | Class 4 | hindi | Veena (वीणा) | `library/ncert-veena-4` | `dhve1` (check) |
 | Class 5 | hindi | Veena (वीणा) | `library/ncert-veena-5` | `ehve1` |
+| Class 5 | evs | Our Wondrous World (हमारा अद्भुत संसार) | `library/ncert-our-wondrous-world-5` | `eeev1` — chapter 3 built (by Claude, not Gemini) |
 
 A book with nothing built isn't offered to a teacher (the bundle skips it).
 

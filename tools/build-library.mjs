@@ -138,13 +138,13 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
       if(meta.id !== opts.import.ch) continue;
       const r = readJSON(opts.import.file);
       if(r.cls && r.cls !== book.cls) throw new Error(`that run was for ${r.cls}, the book is ${book.cls}`);
-      const ch = saveChapter(dir, meta, recheck({ ...r, cls: book.cls, band: r.band }, { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book) }));
+      const ch = saveChapter(dir, meta, recheck({ ...r, cls: book.cls, band: r.band }, { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), subject: book.subject }));
       say(`${meta.id}: imported — ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
       out.push(ch); continue;
     }
     if(opts.recheck){
       if(!fs.existsSync(raw)){ say(`${meta.id}: not built yet — skipped`); continue; }
-      const ch = saveChapter(dir, meta, recheck(readJSON(raw), { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book) }));
+      const ch = saveChapter(dir, meta, recheck(readJSON(raw), { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), subject: book.subject }));
       say(`${meta.id}: checked again — ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
       out.push(ch); continue;
     }
@@ -159,7 +159,7 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
     // a file it can't read) is said and left for the next run, which picks
     // it up because it has no <ch>.json yet — the rest carry on
     try{
-      const r = await run({ file, cls: book.cls, count: meta.count || 4, note: meta.note || '', minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
+      const r = await run({ file, cls: book.cls, count: meta.count || 4, note: meta.note || '', minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), subject: book.subject, env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
       const ch = saveChapter(dir, meta, r, { guard: true, replace: opts.replace });
       say(`${meta.id}: ${keptSay(ch)}`);
       out.push(ch);
@@ -262,7 +262,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
   const model = env.GEMINI_BATCH_MODEL || env.GEMINI_MODEL || 'gemini-3.8-flash';
   const g = gemini(env, fetchImpl), pollMs = Number(opts.pollMs != null ? opts.pollMs : 30000);
   const until = Date.now() + Number(opts.waitMs != null ? opts.waitMs : 60 * 60000);
-  const ph = phoneChecker(), cls = ph.cls(book.cls), rules = ph.rules(cls.band), skills = ph.skills(cls.id);
+  const ph = phoneChecker(), cls = ph.cls(book.cls), rules = ph.rules(cls.band), skills = ph.skills(cls.id, book.subject);
   const statePath = path.join(dir, '.batch.json');
   let st = fs.existsSync(statePath) ? readJSON(statePath) : null;
   const save = () => writeJSON(statePath, st);

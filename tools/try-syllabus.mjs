@@ -63,7 +63,7 @@ export function phoneChecker(){
   return {
     cls: id => call(`sylClass(${JSON.stringify(id)})`),
     rules: band => call(`sylRules(${JSON.stringify(band)})`),
-    skills: id => call(`sylSkills(sylClass(${JSON.stringify(id)}))`),
+    skills: (id, subject) => call(`sylSkills(sylClass(${JSON.stringify(id)}), ${JSON.stringify(subject || '')})`),
     // min: the questions a picture lesson must ask (the library builder sets 2 — a coin toss isn't kept)
     // all: every lesson, not only a picture one (a reader's library — Santoor, Veena)
     clean: (raw, band, skills, mend, min, all) => call(`sylClean(${JSON.stringify(raw)}, { band: ${JSON.stringify(band)}, skills: ${JSON.stringify(skills)}, mendHints: ${!!mend}, minQuestions: ${Number(min) || 0}, minAll: ${!!all} })`)
@@ -86,7 +86,7 @@ export async function run(opts, fetchImpl){
   if(!chapter.file && !chapter.text) throw new Error('give the chapter: --file chapter.pdf (or a photo) or --text chapter.txt');
 
   const ph = phoneChecker();
-  const cls = ph.cls(opts.cls || 'c3'), rules = ph.rules(cls.band), skills = ph.skills(cls.id);
+  const cls = ph.cls(opts.cls || 'c3'), rules = ph.rules(cls.band), skills = ph.skills(cls.id, opts.subject);
   const { draftCore } = await import(pathToFileURL(path.join(root, 'api', 'syllabus.mjs')).href);
   const say = opts.say || (() => {});
   const t0 = Date.now();
@@ -129,7 +129,7 @@ export async function run(opts, fetchImpl){
    change to the checks, this says what the same drafts would get now. */
 export function recheck(r, opts){
   const min = (opts && opts.minQuestions) || 0, all = !!(opts && opts.minAll);
-  const ph = phoneChecker(), skills = ph.skills(r.cls);
+  const ph = phoneChecker(), skills = ph.skills(r.cls, (opts && opts.subject) || r.subject);
   const drafts = r.drafts.map(x => {
     const first = ph.clean(x.raw, r.band, skills, false, min, all), second = x.repairRaw ? ph.clean(x.repairRaw, r.band, skills, true, min, all) : null;
     return { ...x, first, second, verdict: first.ok ? 'passed' : second && second.ok ? 'repaired' : 'not used' };
@@ -169,7 +169,7 @@ export function report(r){
   const n = v => r.drafts.filter(x => x.verdict === v).length;
   const L = [
     `# Syllabus run — ${r.source}`, '',
-    `${r.at} · ${r.cls} (${r.band}, numbers to ${r.rules.maxNumber}) · Gemini model **${r.model}** · chapter "${r.chapter}"`, '',
+    `${r.at} · ${r.cls} (${r.band}, numbers to ${r.rules.maxNumber}) · ${/^gemini/i.test(r.model || "") ? "Gemini model" : "drafted by"} **${r.model}** · chapter "${r.chapter}"`, '',
     `**${n('passed')} passed first time · ${n('repaired')} fixed by the repair round · ${n('not used')} not used** (of ${r.drafts.length})  `,
     `Draft took ${(r.draftMs / 1000).toFixed(0)} s` + (r.repair ? ` · repair ${r.repair.status === 200 ? 'took ' + (r.repair.ms / 1000).toFixed(0) + ' s (' + r.repair.model + ')' : 'failed: ' + r.repair.error}` : ''), ''
   ];

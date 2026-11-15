@@ -246,9 +246,20 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     check('a book set up but not built yet (no chapters listed, or none built) is left out of the bundle, so a teacher is never offered an empty book',
       lb.books === 1 && /ready-book/.test(lsrc) && !/new-book|scanned-book/.test(lsrc), lsrc.slice(-200));
     const books = fs.readdirSync(path.join(root, 'library')).filter(d => fs.existsSync(path.join(root, 'library', d, 'book.json')));
-    const ok = books.every(d => { const b = JSON.parse(fs.readFileSync(path.join(root, 'library', d, 'book.json'), 'utf8')); return /^(maths|english|hindi)$/.test(b.subject) && b.title.hi && /^c[1-5]$/.test(b.cls); });
-    check('the NCERT books for Classes 1–5 are set up and waiting (maths, English and Hindi readers, each with its class and both titles), with library/BOOKS.md saying how to build one',
-      books.length >= 15 && ok && fs.existsSync(path.join(root, 'library/BOOKS.md')) && /--batch/.test(fs.readFileSync(path.join(root, 'library/BOOKS.md'), 'utf8')), books.join());
+    const ok = books.every(d => { const b = JSON.parse(fs.readFileSync(path.join(root, 'library', d, 'book.json'), 'utf8')); return /^(maths|english|hindi|evs)$/.test(b.subject) && b.title.hi && /^c[1-5]$/.test(b.cls); });
+    check('the NCERT books for Classes 1–5 are set up and waiting (maths, English and Hindi readers, EVS, each with its class and both titles), with library/BOOKS.md saying how to build one',
+      books.length >= 16 && ok && fs.existsSync(path.join(root, 'library/BOOKS.md')) && /--batch/.test(fs.readFileSync(path.join(root, 'library/BOOKS.md'), 'utf8')), books.join());
+    /* the first book beyond maths and language: Our Wondrous World (EVS, Class 5), chapter 3 —
+       every lesson a passage read for comprehension (its right answers are in the passage),
+       with at least two questions and the science in its Teach Munni aims; its drafts were
+       written by Claude, not Gemini, and the report says so */
+    const evs = JSON.parse(fs.readFileSync(path.join(root, 'library/ncert-our-wondrous-world-5/ch3.json'), 'utf8'));
+    const evsRaw = JSON.parse(fs.readFileSync(path.join(root, 'library/ncert-our-wondrous-world-5/ch3.raw.json'), 'utf8'));
+    const evsRep = fs.readFileSync(path.join(root, 'library/ncert-our-wondrous-world-5/ch3.report.md'), 'utf8');
+    check('EVS, Class 5 (Our Wondrous World, ch. 3 "The Mystery of Food"): 5 reading lessons, each ≥ 2 questions and ≥ 1 aim, counted as the EVS skill v5-health (health and hygiene), not as reading; drafted by Claude and the report says so, not "Gemini model"',
+      evs.lessons.length === 5 && !evs.notUsed.length && evs.lessons.every(l => l.subject === 'read' && l.skillId === 'v5-health' && l.aims.length >= 1 && l.beats.filter(x => x.t === 'ask').length >= 2 && l.beats.some(x => x.t === 'passage'))
+        && /claude/i.test(evsRaw.model) && /drafted by \*\*claude/.test(evsRep) && !/Gemini model \*\*claude/.test(evsRep),
+      JSON.stringify(evs.lessons.map(l => [l.title.en, l.subject, l.skillId, l.aims.length])));
     check('….batch.json is never committed (.gitignore)', /library\/\*\*\/\.batch\.json/.test(fs.readFileSync(path.join(root, '.gitignore'), 'utf8')), '');
     fs.rmSync(tmp, { recursive: true });
   }catch(e){ check('the batch builder ran', false, e.stack); }
@@ -282,6 +293,13 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     [...win.document.querySelectorAll('.ob-av')][0].click(); [...win.document.querySelectorAll('.ob-cakebtn')][5].click(); win.document.querySelector('.ob-go').click();
     E(`S.game = S.game || 'cricket'; S.name = 'Asha'; S.age = 8; S.classCode = 'CLS003'; setOnline(false); go('map')`);
     // the flow is tested on one chapter, whatever else the real library holds by now
+    /* an EVS book offers its EVS skills first (so its lessons count as EVS); every other
+       book leaves EVS out; and the shipped EVS chapter checks out again on a teacher's
+       phone, offline — all 5 lessons offered, none "changed after it was built" */
+    const evsSk = E(`JSON.stringify([sylSkills(sylClass('c5'), 'evs').slice(0, 3).map(s => s.id), sylSkills(sylClass('c5')).some(s => /^v\\d/.test(s.id))])`);
+    const evsOffer = E(`(() => { const b = LIBRARY.books.find(x => x.id === 'ncert-our-wondrous-world-5'); const d = libDrafts(b, b.chapters.find(c => c.id === 'ch3')).drafts; return JSON.stringify([d.length, d.filter(x => x.ok).length, d.every(x => x.lesson.skillId === 'v5-health')]); })()`);
+    check('an EVS book offers EVS skills first (v5-health among them) and a maths or language book none; the EVS chapter\'s 5 lessons are all offered to a Class 5 teacher, offline, each counting for v5-health',
+      JSON.parse(evsSk)[0].every(id => /^v\d/.test(id)) && JSON.parse(evsSk)[0].includes('v5-health') && JSON.parse(evsSk)[1] === false && evsOffer === '[5,5,true]', evsSk + ' ' + evsOffer);
     E(`LIBRARY.books[0].chapters = LIBRARY.books[0].chapters.filter(c => c.id === 'ch5')`);
     fetches = 0;
     E(`S.ctx.tcode = 'CLS003'; S.ctx.sylCls = 'c2'; go('teacher')`);

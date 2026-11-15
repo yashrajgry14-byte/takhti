@@ -75,7 +75,7 @@ function libNextWeek(code){
 /* A chapter's ready lessons as the teacher's draft card reads them, each
    checked again on this phone. */
 function libDrafts(book, ch){
-  const cls = sylClass(book.cls), skills = sylSkills(cls);
+  const cls = sylClass(book.cls), skills = sylSkills(cls, book.subject);
   const drafts = (ch.lessons || []).map(les => {
     const c = sylClean(les, { band: cls.band, skills });
     if(c.ok && c.lesson.id === les.id) return { raw: les, ...c };
