@@ -158,30 +158,56 @@ function practiseLine(){
 /* tap any word to hear it on its own — via data-say, so quotes and
    Devanagari can never break the handler */
 
-/* ---- writing pad ---- */
+/* ---- writing pad ----
+   Pointer events (mouse, finger and stylus alike), and the strokes kept in
+   S.ctx.strokes in CSS pixels: anything that re-renders the screen while a
+   child is drawing (narration ending, a sync, the trace panel) used to give
+   a fresh, empty canvas with no ink — now setupPad() draws the strokes back. */
 let drawing=false, hasInk=false;
 function setupPad(){
-  const g=$('guide'), c=$('ink'); if(!g) return;
-  const w=g.parentElement.clientWidth, h=g.parentElement.clientHeight;
-  [g,c].forEach(cv=>{ cv.width=w*2; cv.height=h*2; cv.getContext('2d').scale(2,2); });
+  const g=$('guide'), c=$('ink'); if(!g || !c) return;
+  const w=g.parentElement.clientWidth || 300, h=g.parentElement.clientHeight || 246;
+  [g,c].forEach(cv=>{ cv.width=w*2; cv.height=h*2; const x=cv.getContext('2d'); x.setTransform(2,0,0,2,0,0); });
   const gx=g.getContext('2d');
   gx.clearRect(0,0,w,h);
   gx.fillStyle='#EDE6D2'; gx.textAlign='center'; gx.textBaseline='middle';
   const size = S.ctx.glyph.length>2 ? h*0.45 : h*0.8;
-  gx.font=`700 ${size}px 'Baloo 2', sans-serif`;
+  gx.font=`700 ${size}px 'Baloo 2', 'Noto Sans Devanagari', sans-serif`;
   gx.fillText(S.ctx.glyph, w/2, h/2);
   const cx=c.getContext('2d');
-  cx.clearRect(0,0,w,h);
-  cx.lineWidth=14; cx.lineCap='round'; cx.lineJoin='round'; cx.strokeStyle='#F0A02A';
-  hasInk=false;
-  const pos=e=>{ const r=c.getBoundingClientRect(); const p=e.touches?e.touches[0]:e; return [p.clientX-r.left, p.clientY-r.top]; };
-  const start=e=>{ e.preventDefault(); drawing=true; hasInk=true; const [x,y]=pos(e); cx.beginPath(); cx.moveTo(x,y); };
-  const move=e=>{ if(!drawing) return; e.preventDefault(); const [x,y]=pos(e); cx.lineTo(x,y); cx.stroke(); if(typeof sfxChalk === 'function') sfxChalk(); };
-  const end=()=>{ drawing=false; };
-  c.onmousedown=start; c.onmousemove=move; window.onmouseup=end;
-  c.ontouchstart=start; c.ontouchmove=move; c.ontouchend=end;
+  const pen=()=>{ cx.lineWidth=14; cx.lineCap='round'; cx.lineJoin='round'; cx.strokeStyle='#F0A02A'; };
+  cx.clearRect(0,0,w,h); pen();
+  const strokes = S.ctx.strokes || (S.ctx.strokes = []);
+  for(const st of strokes){                     // ink drawn before a re-render comes back
+    if(!st.length) continue;
+    cx.beginPath(); cx.moveTo(st[0][0], st[0][1]);
+    if(st.length === 1) cx.lineTo(st[0][0]+0.1, st[0][1]+0.1);
+    for(let i=1;i<st.length;i++) cx.lineTo(st[i][0], st[i][1]);
+    cx.stroke();
+  }
+  hasInk = strokes.some(st => st.length);
+  drawing=false;
+  const pos=e=>{ const r=c.getBoundingClientRect(); const pt=e.touches?e.touches[0]:e;
+    return [(pt.clientX-r.left)*(w/(r.width||w)), (pt.clientY-r.top)*(h/(r.height||h))]; };
+  let cur=null;
+  const start=e=>{ if(e.button>0) return; e.preventDefault(); drawing=true; hasInk=true;
+    try{ if(e.pointerId!=null && c.setPointerCapture) c.setPointerCapture(e.pointerId); }catch(_){}
+    const [x,y]=pos(e); cur=[[x,y]]; strokes.push(cur);
+    pen(); cx.beginPath(); cx.moveTo(x,y); cx.lineTo(x+0.1,y+0.1); cx.stroke(); };
+  const move=e=>{ if(!drawing || !cur) return; e.preventDefault(); const [x,y]=pos(e);
+    const [px,py]=cur[cur.length-1]; cur.push([x,y]);
+    cx.beginPath(); cx.moveTo(px,py); cx.lineTo(x,y); cx.stroke();
+    if(typeof sfxChalk === 'function') sfxChalk(); };
+  const end=()=>{ drawing=false; cur=null; };
+  if(window.PointerEvent){
+    c.onpointerdown=start; c.onpointermove=move; c.onpointerup=end; c.onpointercancel=end; c.onpointerleave=end;
+    c.onmousedown=c.onmousemove=c.ontouchstart=c.ontouchmove=c.ontouchend=null;
+  }else{                                        // older browsers
+    c.onmousedown=start; c.onmousemove=move; window.onmouseup=end;
+    c.ontouchstart=start; c.ontouchmove=move; c.ontouchend=end;
+  }
 }
-function clearInk(){ S.ctx.score=null; S.ctx.msg=null; render(); }
+function clearInk(){ S.ctx.score=null; S.ctx.msg=null; S.ctx.strokes=[]; render(); }
 function nextGlyph(){ const pool=GLYPHS[S.lang][S.levels.write]; S.ctx={glyph:pool[Math.floor(Math.random()*pool.length)]}; render(); }
 function checkInk(){
   const g=$('guide'), c=$('ink');
@@ -316,113 +342,133 @@ function submitPaper(typed){
 
 /* ================= ARITHMETIC ANIMATION ================= */
 /* Three explainer modes, chosen by the problem — objects, number line, array. */
-function playMath(){
+/* "Show me": every step waits for Munni to finish saying it before the
+   next one starts. speak() cancels whatever is still playing, so steps on
+   fixed timers cut each other off and the child heard only the last line
+   (the answer). mathSay() resolves when the line has been said (or, muted,
+   after a short pause), so the explanation is heard in full, in order. */
+const mathWait = ms => new Promise(r => setTimeout(r, ms));
+function mathSay(text, minMs){
+  return Promise.all([
+    new Promise(r => { let done = false; const fin = () => { if(!done){ done = true; r(); } };
+      setTimeout(fin, 900 + String(text).split(/\s+/).length * 700 + 2500);   // a voice that never ends can't stall the scene
+      try{ speak(text, null, fin); }catch(e){ fin(); } }),
+    mathWait(minMs || 500)
+  ]);
+}
+async function playMath(){
   if(S._mathBusy) return;
   const p=S.ctx.p, g=gameById(S.game), st=$('mstage'); if(!st) return;
   const sk = skillOfProblem(p); if(sk && !S.ctx.helped) mindTaught(sk, 'show');   // watching it happen is a way of being taught
   S._mathBusy = true;
-  clearTimeout(S._mathBusyTimer);
-  S._mathBusyTimer = setTimeout(()=>{ S._mathBusy=false; }, 6000);
+  const run = S._mathRun = (S._mathRun || 0) + 1;
+  const live = () => S._mathRun === run && S.screen === 'math' && !!$('mstage');   // left the screen or started again: stop
+  const hi = S.lang === 'hi';
   const obj = g.proj || g.ic;
   const narr = m => { const n=$('mnarr'); if(n) n.textContent=m; };
   const big = Math.max(p.a,p.b) > 12 || (p.op!=='×' && p.a+p.b > 15);
-
-  if(p.op==='×'){                                  /* ---- array grid ---- */
-    log(0,`Explainer · array · ${p.b} rows of ${p.a}`);
-    st.innerHTML=`<div class="arrgrid" id="grid"></div><div class="tally" id="tal"></div><div class="narr" id="mnarr"></div>`;
-    const grid=$('grid');
-    narr(S.lang==='hi'?`${p.b} पंक्तियाँ, हर एक में ${p.a}`:`${p.b} rows of ${p.a}`);
-    speak(S.lang==='hi'?`${p.b} पंक्तियाँ, हर एक में ${p.a}`:`${p.b} rows of ${p.a}`);
-    let k=0;
-    for(let r=0;r<p.b;r++){
-      const row=document.createElement('div'); row.className='row';
-      for(let c=0;c<p.a;c++){
-        const s=document.createElement('span'); s.className='obj'; s.textContent=obj;
-        s.style.fontSize = p.a*p.b>28?'15px':'20px';
-        setTimeout(()=>s.classList.add('in'), k*55); k++;
-        row.appendChild(s);
+  try{
+    if(p.op==='×'){                                  /* ---- array grid ---- */
+      log(0,`Explainer · array · ${p.b} rows of ${p.a}`);
+      st.innerHTML=`<div class="arrgrid" id="grid"></div><div class="tally" id="tal"></div><div class="narr" id="mnarr"></div>`;
+      const grid=$('grid'), line = hi?`${p.b} पंक्तियाँ, हर एक में ${p.a}`:`${p.b} rows of ${p.a}`;
+      narr(line);
+      const spans=[];
+      for(let r=0;r<p.b;r++){
+        const row=document.createElement('div'); row.className='row';
+        for(let c=0;c<p.a;c++){
+          const s=document.createElement('span'); s.className='obj'; s.textContent=obj;
+          s.style.fontSize = p.a*p.b>28?'15px':'20px'; spans.push(s); row.appendChild(s);
+        }
+        grid.appendChild(row);
       }
-      grid.appendChild(row);
+      spans.forEach((s,k)=>setTimeout(()=>s.classList.add('in'), k*55));
+      await mathSay(line, spans.length*55+300); if(!live()) return;
+      // count the rows out loud: 4, 8, 12…
+      const rows=[...grid.querySelectorAll('.row')];
+      for(let r=0;r<rows.length;r++){
+        rows[r].querySelectorAll('.obj').forEach(o=>o.classList.add('tick'));
+        const tl=$('tal'); if(tl) tl.textContent=(r+1)*p.a;
+        await mathSay(String((r+1)*p.a), 450); if(!live()) return;
+        rows[r].querySelectorAll('.obj').forEach(o=>o.classList.remove('tick'));
+      }
+      narr(hi?`कुल ${p.ans}`:`That makes ${p.ans}`);
+      await mathSay(hi?`कुल ${p.ans}`:`That makes ${p.ans}`);
+      return;
     }
-    setTimeout(()=>countUp(p.ans, narr), k*55+250);
-    return;
-  }
 
-  if(big){                                          /* ---- number line ---- */
-    log(0,`Explainer · number line · start ${p.a}, ${p.op==='+'?'forward':'back'} ${p.b}`);
-    const lo=Math.max(0,Math.min(p.a,p.ans)-3), hi=Math.max(p.a,p.ans)+3, span=hi-lo;
-    const ticks=[...Array(span+1)].map((_,i)=>{
-      const x=20+(i*(320/span));
-      const label=(lo+i)%5===0 || lo+i===p.a || lo+i===p.ans;
-      return `<line x1="${x}" y1="26" x2="${x}" y2="${label?36:32}" stroke="#A9B8AF" stroke-width="1"/>
-              ${label?`<text x="${x}" y="50" fill="#A9B8AF" font-size="9" text-anchor="middle">${lo+i}</text>`:''}`;
-    }).join('');
-    st.innerHTML=`<svg class="nline" viewBox="0 0 360 62">
-        <line x1="20" y1="26" x2="340" y2="26" stroke="#A9B8AF" stroke-width="1.5"/>${ticks}
-        <g class="nmark" id="mk" transform="translate(${20+((p.a-lo)*(320/span))},0)">
-          <circle cx="0" cy="26" r="7" fill="#F0A02A"/><text x="0" y="15" fill="#F0A02A" font-size="11" text-anchor="middle" font-weight="700">${obj}</text>
-        </g></svg>
-      <div class="tally" id="tal">${p.a}</div><div class="narr" id="mnarr"></div>`;
-    narr(S.lang==='hi'?`${p.a} से शुरू, ${p.b} कदम ${p.op==='+'?'आगे':'पीछे'}`:`Start at ${p.a}, hop ${p.b} ${p.op==='+'?'forward':'back'}`);
-    speak(S.lang==='hi'?`${p.a} से शुरू करो`:`Start at ${p.a}`);
-    let cur=p.a;
-    for(let i=1;i<=p.b;i++) setTimeout(()=>{
-      cur += (p.op==='+'?1:-1);
-      const mk=$('mk'); if(mk) mk.setAttribute('transform',`translate(${20+((cur-lo)*(320/span))},0)`);
-      const tl=$('tal'); if(tl) tl.textContent=cur;
-    }, i*(p.b>12?150:300));
-    setTimeout(()=>{ narr(S.lang==='hi'?`जवाब ${p.ans}`:`We land on ${p.ans}`);
-      speak(S.lang==='hi'?`जवाब ${p.ans}`:`We land on ${p.ans}`); }, p.b*(p.b>12?150:300)+400);
-    return;
-  }
+    if(big){                                          /* ---- number line ---- */
+      log(0,`Explainer · number line · start ${p.a}, ${p.op==='+'?'forward':'back'} ${p.b}`);
+      const lo=Math.max(0,Math.min(p.a,p.ans)-3), hiN=Math.max(p.a,p.ans)+3, span=hiN-lo;
+      const ticks=[...Array(span+1)].map((_,i)=>{
+        const x=20+(i*(320/span));
+        const label=(lo+i)%5===0 || lo+i===p.a || lo+i===p.ans;
+        return `<line x1="${x}" y1="26" x2="${x}" y2="${label?36:32}" stroke="#A9B8AF" stroke-width="1"/>
+                ${label?`<text x="${x}" y="50" fill="#A9B8AF" font-size="9" text-anchor="middle">${lo+i}</text>`:''}`;
+      }).join('');
+      st.innerHTML=`<svg class="nline" viewBox="0 0 360 62">
+          <line x1="20" y1="26" x2="340" y2="26" stroke="#A9B8AF" stroke-width="1.5"/>${ticks}
+          <g class="nmark" id="mk" transform="translate(${20+((p.a-lo)*(320/span))},0)">
+            <circle cx="0" cy="26" r="7" fill="#F0A02A"/><text x="0" y="15" fill="#F0A02A" font-size="11" text-anchor="middle" font-weight="700">${obj}</text>
+          </g></svg>
+        <div class="tally" id="tal">${p.a}</div><div class="narr" id="mnarr"></div>`;
+      narr(hi?`${p.a} से शुरू, ${p.b} कदम ${p.op==='+'?'आगे':'पीछे'}`:`Start at ${p.a}, hop ${p.b} ${p.op==='+'?'forward':'back'}`);
+      await mathSay(hi?`${p.a} से शुरू करो, ${p.b} कदम ${p.op==='+'?'आगे':'पीछे'}`:`Start at ${p.a}. Hop ${p.b} ${p.op==='+'?'forward':'back'}`); if(!live()) return;
+      let cur=p.a;
+      for(let i=1;i<=p.b;i++){
+        cur += (p.op==='+'?1:-1);
+        const mk=$('mk'); if(mk) mk.setAttribute('transform',`translate(${20+((cur-lo)*(320/span))},0)`);
+        const tl=$('tal'); if(tl) tl.textContent=cur;
+        if(typeof sfxPop === 'function') try{ sfxPop(); }catch(e){}
+        await mathWait(p.b>12?220:380); if(!live()) return;
+      }
+      narr(hi?`जवाब ${p.ans}`:`We land on ${p.ans}`);
+      await mathSay(hi?`हम ${p.ans} पर पहुँचे`:`We land on ${p.ans}`);
+      return;
+    }
 
-  /* ---- object counting ---- */
-  log(0,`Explainer · counting ${obj} · ${p.a} ${p.op} ${p.b}`);
-  st.innerHTML=`<div class="plusrow">
-      <div class="grp" id="gA"></div><div class="opsign">${p.op}</div><div class="grp" id="gB"></div>
-    </div><div class="tally" id="tal"></div><div class="narr" id="mnarr"></div>`;
-  const mk=(host,n,cls,delay)=>{ for(let i=0;i<n;i++){
-      const s=document.createElement('span'); s.className='obj'; s.textContent=obj;
-      setTimeout(()=>s.classList.add(cls), delay+i*130); host.appendChild(s); } };
-  narr(S.lang==='hi'?`पहले ${p.a}`:`First, ${p.a}`);
-  speak(S.lang==='hi'?`पहले ${p.a}`:`First ${p.a}`);
-  mk($('gA'), p.a, 'in', 0);
-  const t1=p.a*130+350;
+    /* ---- object counting ---- */
+    log(0,`Explainer · counting ${obj} · ${p.a} ${p.op} ${p.b}`);
+    st.innerHTML=`<div class="plusrow">
+        <div class="grp" id="gA"></div><div class="opsign">${p.op}</div><div class="grp" id="gB"></div>
+      </div><div class="tally" id="tal"></div><div class="narr" id="mnarr"></div>`;
+    const mk=(host,n,cls)=>{ for(let i=0;i<n;i++){
+        const s=document.createElement('span'); s.className='obj'; s.textContent=obj;
+        setTimeout(()=>s.classList.add(cls), i*130); host.appendChild(s); } };
+    narr(hi?`पहले ${p.a}`:`First, ${p.a}`);
+    mk($('gA'), p.a, 'in');
+    await mathSay(hi?`पहले ${p.a}`:`First, ${p.a}`, p.a*130+300); if(!live()) return;
 
-  if(p.op==='+'){
-    setTimeout(()=>{ narr(S.lang==='hi'?`फिर ${p.b} और आए`:`Then ${p.b} more arrive`);
-      speak(S.lang==='hi'?`फिर ${p.b} और`:`Then ${p.b} more`); mk($('gB'), p.b, 'fly', 0); }, t1);
-    setTimeout(()=>{
-      const all=[...document.querySelectorAll('#gA .obj'),...document.querySelectorAll('#gB .obj')];
-      countObjects(all, narr);
-    }, t1 + p.b*130 + 500);
-  } else {
-    setTimeout(()=>{ narr(S.lang==='hi'?`${p.b} चले गए`:`${p.b} go away`);
-      speak(S.lang==='hi'?`${p.b} चले गए`:`Take away ${p.b}`);
-      [...document.querySelectorAll('#gA .obj')].slice(-p.b).forEach((el,i)=>
-        setTimeout(()=>el.classList.add('leave'), i*150));
-    }, t1);
-    setTimeout(()=>{
-      const left=[...document.querySelectorAll('#gA .obj')].slice(0, p.a-p.b);
-      countObjects(left, narr);
-    }, t1 + p.b*150 + 700);
+    let toCount;
+    if(p.op==='+'){
+      narr(hi?`फिर ${p.b} और आए`:`Then ${p.b} more arrive`);
+      mk($('gB'), p.b, 'fly');
+      await mathSay(hi?`फिर ${p.b} और आए`:`Then ${p.b} more arrive`, p.b*130+300); if(!live()) return;
+      toCount=[...document.querySelectorAll('#gA .obj'),...document.querySelectorAll('#gB .obj')];
+    } else {
+      narr(hi?`${p.b} चले गए`:`${p.b} go away`);
+      const gone=[...document.querySelectorAll('#gA .obj')].slice(-p.b);
+      gone.forEach((el,i)=>setTimeout(()=>el.classList.add('leave'), i*150));
+      await mathSay(hi?`${p.b} चले गए`:`Take away ${p.b}`, p.b*150+400); if(!live()) return;
+      toCount=[...document.querySelectorAll('#gA .obj')].slice(0, p.a-p.b);
+    }
+    await countObjects(toCount, narr, live);
+  } finally {
+    if(S._mathRun === run) S._mathBusy = false;
   }
 }
-function countObjects(els, narr){
-  narr(S.lang==='hi'?'अब गिनो…':'Now count…');
-  els.forEach((el,i)=>setTimeout(()=>{
-    el.classList.add('tick');
+async function countObjects(els, narr, live){
+  const hi = S.lang === 'hi';
+  narr(hi?'अब गिनो…':'Now count…');
+  await mathSay(hi?'अब गिनो':'Now count with me', 300); if(live && !live()) return;
+  for(let i=0;i<els.length;i++){
+    els[i].classList.add('tick');
     const tl=$('tal'); if(tl) tl.textContent=i+1;
-    speak(String(i+1));
-    setTimeout(()=>el.classList.remove('tick'), 420);
-  }, i*430));
-  setTimeout(()=>narr(S.lang==='hi'?`कुल ${els.length}`:`That makes ${els.length}`), els.length*430+200);
-}
-function countUp(n, narr){
-  narr(S.lang==='hi'?'अब गिनो…':'Now count…');
-  const tl=$('tal'); let i=0;
-  const iv=setInterval(()=>{ i++; if(tl) tl.textContent=i; if(i>=n){ clearInterval(iv);
-    narr(S.lang==='hi'?`कुल ${n}`:`That makes ${n}`); speak(String(n)); } }, Math.max(70, 600/n));
+    await mathSay(String(i+1), 380); if(live && !live()) return;
+    els[i].classList.remove('tick');
+  }
+  narr(hi?`कुल ${els.length}`:`That makes ${els.length}`);
+  await mathSay(hi?`कुल ${els.length}`:`That makes ${els.length}`);
 }
 function answerMath(o){
   if(S.ctx.picked!=null) return;

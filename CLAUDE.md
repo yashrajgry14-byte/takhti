@@ -89,7 +89,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v82` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v83` (recorded narration lives in a
 separate `takhti-audio-v2`, bumped only when a line is rendered again in a new
 voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
@@ -190,7 +190,12 @@ tools/compare-speech.mjs    day 1: a folder of children's recordings through bot
 ## Screens and navigation
 
 **Boot**: `app.js` → `arrival` (jungle scene, also the first user gesture audio
-needs). `arrFinish()`: no avatar/age → `onboard`; no game yet → `pick`;
+needs; a bouncing *Takhti* title while the herd passes, a cast of emoji animals
+and flowers, and in the talk Munni's bubble above her and the replies in one
+coloured row below her feet — nothing covers her). Onboarding asks the child's
+name first (`#obName`, typed by a grown-up, letters only, kept on the phone —
+no microphone for a name), then the animal friend (bright cartoon cards); with
+no name typed, the animal's name stands in, as before. `arrFinish()`: no avatar/age → `onboard`; no game yet → `pick`;
 otherwise `goHub()`.
 
 **`goHub()`** (`opening.js`): the first arrival of a calendar day plays `open`
@@ -873,6 +878,18 @@ teachable (`test/diagnose.test.js`); Nursery–Class 3 subject coverage 63/63;
 reading and writing ladders 6/6 each; 505 game-pool items (shape, clock and
 calendar questions stay out of the games — their answer is in a picture a game can't
 show; the 12 o'clock questions that were in the pool are out now).
+
+## Two fixes worth knowing (15 Nov)
+
+- **The writing pad** (`setupPad()`, `handlers.js`) uses pointer events
+  (mouse, finger, stylus) and keeps the strokes in `S.ctx.strokes`, so a
+  re-render while a child draws (narration ending, a sync) draws them back
+  instead of handing over an empty canvas; *Clear* empties them.
+- **"Show me"** (`playMath()`) waits for each spoken line (`mathSay()`, with a
+  timeout so a silent voice can't stall it) before the next step: `speak()`
+  cancels whatever is playing, so the old fixed timers cut every line off and
+  the child heard only the answer. Rows are counted out (4, 8, 12…) in the
+  array; leaving the screen or pressing again stops the old run.
 
 ## Spaced repetition
 

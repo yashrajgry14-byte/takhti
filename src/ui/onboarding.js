@@ -7,9 +7,9 @@
 
    So nobody types anything:
 
-     who are you   → tap an animal. It carries a name already, so a
-                     child who cannot spell still gets called something,
-                     and it is the same animal every day after.
+     who are you   → Munni asks the child's name (a grown-up types it); then tap an animal friend. With
+                     no name given, the animal's name stands in, so a
+                     child who cannot spell still gets called something.
      how old       → tap the cake with your number of candles. Counting
                      the candles is the first thing the app ever teaches.
      Munni dances  → and says the age back, so the child hears that they
@@ -32,29 +32,56 @@ const AVATARS = [
 ];
 const avatarById = id => AVATARS.find(a => a.id === id) || AVATARS[0];
 
-/* ---------------- step 1: who are you ---------------- */
+/* ---------------- step 1: your name, then your animal friend ----------------
+   Munni asks the child's own name, which a grown-up types (no microphone:
+   a name is personal, and the browser's recognizer would send the voice
+   off the phone). The name stays on this phone. A child who can't type yet, with no grown-up near,
+   just taps an animal: the animal's name stands in until a parent sets the
+   real one on the parent page. */
+const AV_BG = ['#FFB547','#5BC0EB','#B39DDB','#7ED957','#FF8FAB','#FFD166','#4DD0C4','#F4A261','#9AD0EC'];
 function obWhoHTML(){
   const hi = S.lang === 'hi';
+  const typed = (S.ob && S.ob.name) || '';
+  const greet = typed ? (hi ? `नमस्ते ${obEsc(typed)}! अब अपना जानवर दोस्त चुनो` : `Hi ${obEsc(typed)}! Now pick your animal friend`)
+                      : (hi ? 'नमस्ते! तुम्हारा नाम क्या है?' : 'Hello! What is your name?');
   return `
-  <div class="ob">
-    <div class="ob-munni">${typeof munniSmall === 'function' ? munniSmall() : '🐘'}</div>
-    <div class="ob-bubble">${hi ? 'तुम कौन हो? एक चुनो!' : 'Who are you? Pick one!'}</div>
+  <div class="ob ob-who">
+    <div class="ob-munni bob">${typeof munniSmall === 'function' ? munniSmall() : '🐘'}</div>
+    <div class="ob-bubble" id="obGreet">${greet}</div>
+    <div class="ob-namebox">
+      <input class="input ob-name" id="obName" maxlength="24" autocomplete="off" autocapitalize="words"
+             value="${obEsc(typed)}" placeholder="${hi ? 'अपना नाम लिखो' : 'Type your name'}"
+             oninput="obNameTyped(this.value)" onkeydown="if(event.key==='Enter'){this.blur()}">
+    </div>
+    <div class="ob-sub">${hi ? 'अपना जानवर दोस्त चुनो 👇' : 'Pick your animal friend 👇'}</div>
     <div class="ob-avatars">
       ${AVATARS.map((a,i)=>`
-        <button class="ob-av" style="animation-delay:${i*0.05}s" onclick="obPickAvatar('${a.id}')">
+        <button class="ob-av" style="animation-delay:${i*0.05}s;--avbg:${AV_BG[i % AV_BG.length]}" onclick="obPickAvatar('${a.id}')">
           <span class="ob-ic">${a.ic}</span>
           <span class="ob-nm">${hi ? a.hi : a.en}</span>
         </button>`).join('')}
     </div>
-    <div class="langpick" style="margin-top:6px">
-      <button class="${S.lang==='en'?'sel':''}" onclick="S.lang='en';render()">English</button>
-      <button class="${S.lang==='hi'?'sel':''}" onclick="S.lang='hi';render()">हिंदी</button>
+    <div class="langpick" style="margin-top:10px">
+      <button class="${S.lang==='en'?'sel':''}" onclick="obKeepName();S.lang='en';render()">English</button>
+      <button class="${S.lang==='hi'?'sel':''}" onclick="obKeepName();S.lang='hi';render()">हिंदी</button>
     </div>
   </div>`;
 }
+function obEsc(v){ return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+/* a name is letters (any script), spaces, dots and hyphens — nothing else is kept */
+function obCleanName(v){ return String(v || '').replace(/[^\p{L}\p{M}\s.'-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 24); }
+function obKeepName(){ const el = $('obName'); if(el){ S.ob = S.ob || { step:'who' }; S.ob.name = obCleanName(el.value); } }
+function obNameTyped(v){
+  S.ob = S.ob || { step:'who' }; S.ob.name = obCleanName(v);
+  const g = $('obGreet'), hi = S.lang === 'hi', n = S.ob.name;
+  if(g) g.textContent = n ? (hi ? `नमस्ते ${n}! अब अपना जानवर दोस्त चुनो` : `Hi ${n}! Now pick your animal friend`)
+                          : (hi ? 'नमस्ते! तुम्हारा नाम क्या है?' : 'Hello! What is your name?');
+}
 function obPickAvatar(id){
   const a = avatarById(id);
-  const name = S.lang === 'hi' ? a.hi : a.en;
+  obKeepName();
+  const own = S.ob && S.ob.name;
+  const name = own || (S.lang === 'hi' ? a.hi : a.en);
   // The avatar tap IS the profile creation moment for a brand-new device
   // — nothing upstream of this (arrival) ever calls createProfile(), so
   // if this were skipped, S.avatar/S.name would sit on the un-persisted
@@ -73,10 +100,12 @@ function obPickAvatar(id){
   S.avatar = id;
   if(typeof trumpet === 'function') trumpet(1);
   S.ob = { step:'age' };
-  log(null, 'Child chose an avatar · no name typed, nothing personal stored');
+  log(null, own ? 'Child gave a name and chose an avatar · the name stays on this phone'
+                : 'Child chose an avatar · no name given, the animal\'s name stands in');
   saveSoon();
   render();
-  speak(S.lang === 'hi' ? `${a.hi}! अच्छा चुना।` : `${a.en}! Good choice.`);
+  speak(S.lang === 'hi' ? (own ? `${own}, तुमने ${a.hi} चुना! बहुत अच्छा।` : `${a.hi}! अच्छा चुना।`)
+                        : (own ? `${own}, you picked the ${a.en}! Lovely.` : `${a.en}! Good choice.`));
 }
 
 /* ---------------- step 2: how old, in candles ---------------- */
