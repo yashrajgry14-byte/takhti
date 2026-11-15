@@ -154,6 +154,24 @@ function arrivalHTML(){
 
     <div class="ar-ground"></div>
 
+    <!-- the jungle's own cast: emoji are colour cartoons on every phone, cost nothing and work offline -->
+    <div class="ar-cast" aria-hidden="true">
+      <span class="ac ac-parrot">🦜</span>
+      <span class="ac ac-monkey">🐒</span>
+      <span class="ac ac-peacock">🦚</span>
+      <span class="ac ac-rabbit">🐇</span>
+      <span class="ac ac-fly f1">🦋</span><span class="ac ac-fly f2">🦋</span>
+      <span class="ac ac-flower fl1">🌼</span><span class="ac ac-flower fl2">🌸</span>
+      <span class="ac ac-flower fl3">🌺</span><span class="ac ac-flower fl4">🌻</span>
+      ${p === 'night' ? '<i class="ac-firefly ff1"></i><i class="ac-firefly ff2"></i><i class="ac-firefly ff3"></i>' : ''}
+    </div>
+
+    ${st.step > 0 ? '' : `<div class="ar-title">
+      <span class="ar-word">${(hi ? ['त','ख़्','ती'] : ['T','a','k','h','t','i']).map((ch,i)=>
+        `<b style="--i:${i}">${ch}</b>`).join('')}</span>
+      <span class="ar-tag">${hi ? 'मुन्नी आ रही है! 🐘' : 'Munni is on her way! 🐘'}</span>
+    </div>`}
+
     <div class="ar-munni ${st.step > 0 ? 'in' : ''}">
       ${typeof munniSmall === 'function' ? munniSmall() : ''}
     </div>
