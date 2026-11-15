@@ -635,6 +635,12 @@ function sylClean(raw, opts){
   // a reader's library lessons (opts.minAll — Santoor, Veena…) hold every lesson to it: a passage with one two-answer question is a coin toss too
   if(opts.minQuestions && asksN < opts.minQuestions && (opts.minAll || les.beats.some(b => picIs(b.t))))
     errs.push(`a lesson ${opts.minAll ? '' : 'with a picture '}asks at least ${opts.minQuestions} questions — this one asks ${asksN} (with two answers, one question is a coin toss): add a question about a new example`);
+  // …and in the library its questions don't all share one right answer (opts.mixRight, the builder
+  // sets it): every answer "Yes" is passed by a child who always says Yes — as weak as one question
+  // (Sarangi 1 ch7's first build). A teacher's own upload, and a lesson already on a phone, keep the warning.
+  const rightsN = les.beats.filter(b => b.t === 'ask' && Array.isArray(b.opts) && Number.isInteger(b.correct)).map(b => String(b.opts[b.correct]).trim().toLowerCase());
+  if(opts.mixRight && rightsN.length >= 2 && new Set(rightsN).size === 1)
+    errs.push(`every question's right answer is "${rightsN[0]}" — a child who always gives that answer passes them all: make at least one question's right answer different (a No / नहीं, or another word or number)`);
   if(les.beats.length && les.beats[les.beats.length - 1].t !== 'win')
     les.beats.push({ t:'win', say:{ en:'Well done. You learnt it today.', hi:'शाबाश! आज तुमने यह सीख लिया।' } });
   les.subject = les.beats.some(b => SYL_MATH.includes(b.t) || picIs(b.t)) ? 'math' : 'read';

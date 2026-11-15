@@ -89,7 +89,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v80` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v81` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -583,7 +583,11 @@ network and no waiting in the week.
 - **The rules a library lesson meets**: everything an upload meets, and two
   questions — every picture lesson in a maths book, and **every** lesson in
   a reader (`sylClean(…, { minAll })` for a book whose `subject` isn't
-  maths): a passage with one two-answer question is a coin toss too.
+  maths): a passage with one two-answer question is a coin toss too. And
+  its questions don't all share one right answer (`sylClean(…, { mixRight })`,
+  `LIB_MIX_ANSWERS`, every draft, repair and re-check): every answer "Yes" is
+  passed by a child who always says Yes. Both rules are the builder's only —
+  a teacher's own upload, and a lesson already on a phone, keep the warning.
 - **The books** (`library/BOOKS.md`): NCERT for Classes 1–5 are set up and
   waiting for their PDFs — *Joyful Mathematics* 1–2, *Maths Mela* 3–5,
   *Mridang* 1–2 and *Santoor* 3–5 (English), *Sarangi* 1–2 and *Veena* 3–5
@@ -635,6 +639,13 @@ network and no waiting in the week.
   draft)`, the report says "drafted by", and they went through
   `--import` and the same checker — a Gemini build (`--force --only ch3`
   with the PDF) can replace them.
+- **Hindi, Class 1** (15 Nov): NCERT *Sarangi* 1, chapter 7 "वाह, मेरे
+  घोड़े!" — 1 lesson, rhyming words (ताल / चाल: yes; ताल / घर: no). Its first
+  build kept two lessons whose every answer was "हाँ", which the
+  mixed-answers rule now rejects; two rebuilds kept one lesson each (the
+  other drafts read too hard for a Class 1 child — "decodes at fluent"), and
+  the rhyming one was taken with `--import` from its saved run: the other
+  ("first sounds") asked back the sound its teaching line had just said.
 
 ## This child's path — `core/planner.js`
 

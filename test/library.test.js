@@ -20,14 +20,19 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   // the seventh live run's own drafts (Maths Mela Class 3, shapes) — what a real Gemini sends
   const run7 = JSON.parse(fs.readFileSync(path.join(root, 'library/ncert-maths-mela-3/ch5.raw.json'), 'utf8'));
   // the library keeps a picture lesson only with two or more questions (14 Nov 2026) and those
-  // drafts ask one: the stand-in sends each with its question asked a second time, so every
-  // other decision below is the drafts' own (the one-question drafts themselves: section 1b)
+  // drafts ask one: the stand-in sends each with a second question of its own — a rectangle's
+  // perimeter, whose answer (18) none of them shares, since the library also won't keep a lesson
+  // whose questions all have one right answer — so every other decision below is the drafts'
+  // own (the one-question drafts themselves: section 1b)
+  const SECOND = [{ t:'figure', kind:'rectangle', w:7, h:2, ask:'perimeter' },
+    { t:'ask', q:{ en:'How far is it all the way round?', hi:'चारों ओर कुल कितनी दूरी है?' }, opts:['18','9'], hiOpts:['18','9'], correct:0,
+      why:{ en:'Children add only two sides.', hi:'बच्चे केवल दो भुजाएँ जोड़ते हैं।' } }];
   const twoQ = l => {
     if(!l || !Array.isArray(l.beats)) return l;
-    const b = l.beats, at = b.map(x => x && x.t).lastIndexOf('ask');
-    if(at < 1) return l;
+    const b = l.beats;
+    if(!b.some(x => x && x.t === 'ask')) return l;
     const win = b.findIndex(x => x && x.t === 'win'), out = b.slice();
-    out.splice(win >= 0 ? win : out.length, 0, JSON.parse(JSON.stringify(b[at - 1])), JSON.parse(JSON.stringify(b[at])));
+    out.splice(win >= 0 ? win : out.length, 0, ...JSON.parse(JSON.stringify(SECOND)));
     return { ...l, beats: out };
   };
   const firsts = run7.drafts.map(d => twoQ(d.raw)), fixes = run7.drafts.filter(d => !d.first.ok).map(d => twoQ(d.repairRaw));
@@ -235,6 +240,18 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     check('a reader\'s library (Santoor, Veena…) holds every lesson to two questions — a passage with one two-answer question is a coin toss too; in a maths book only picture lessons are held to it; two questions pass',
       asMaths.ok && !asReader.ok && asReader.errors.some(e => /^a lesson asks at least 2 questions/.test(e)) && ph.clean(READ2, cl.band, sk, false, 2, true).ok,
       JSON.stringify([asMaths.errors, asReader.errors, ph.clean(READ2, cl.band, sk, false, 2, true).errors]));
+    // the library's questions don't all share one right answer — always-Yes is as weak as one question
+    const YES = { ...JSON.parse(JSON.stringify(READ1)), beats:[READ1.beats[0],
+      { t:'ask', q:{ en:'Is the kite red?', hi:'क्या पतंग लाल है?' }, opts:['Yes','No'], hiOpts:['हाँ','नहीं'], correct:0 },
+      { t:'ask', q:{ en:'Is the wind strong today?', hi:'क्या आज हवा तेज़ है?' }, opts:['No','Yes'], hiOpts:['नहीं','हाँ'], correct:1 }, READ1.beats[2]] };
+    const MIXED = JSON.parse(JSON.stringify(YES)); MIXED.beats[2] = { t:'ask', q:{ en:'Is the kite blue?', hi:'क्या पतंग नीली है?' }, opts:['Yes','No'], hiOpts:['हाँ','नहीं'], correct:1 };
+    const yesLib = ph.clean(YES, cl.band, sk, false, 2, true, true), yesUp = ph.clean(YES, cl.band, sk, false, 0, false, false);
+    const libSrc = fs.readFileSync(path.join(root, 'tools/build-library.mjs'), 'utf8'), promptSrc = fs.readFileSync(path.join(root, 'api/syllabus.mjs'), 'utf8');
+    check('the library rejects a lesson whose every right answer is the same (always "Yes" passes them all), with why; mixed answers pass; a teacher\'s own upload keeps it, with the warning',
+      !yesLib.ok && yesLib.errors.some(e => /every question's right answer is "yes"/.test(e)) && ph.clean(MIXED, cl.band, sk, false, 2, true, true).ok && yesUp.ok, JSON.stringify([yesLib.errors, yesUp.errors]));
+    check('…the builder sets it on every draft, repair and re-check, live and batch; the prompt and the repair round say why',
+      /const LIB_MIX_ANSWERS = true/.test(libSrc) && (libSrc.match(/mixRight: LIB_MIX_ANSWERS/g) || []).length === 3 && (libSrc.match(/minAllOf\(book\), LIB_MIX_ANSWERS\)/g) || []).length === 2
+      && /MIX THE RIGHT ANSWERS/.test(promptSrc) && /every question's right answer is …/.test(promptSrc), '');
     // a book set up but not built isn't bundled
     const lt = path.join(tmp, 'lib');
     fs.mkdirSync(path.join(lt, 'ready-book'), { recursive: true }); fs.mkdirSync(path.join(lt, 'new-book')); fs.mkdirSync(path.join(lt, 'scanned-book'));

@@ -5,204 +5,61 @@
     "en": "Wah, My Horse!",
     "hi": "वाह, मेरे घोड़े!"
   },
-  "built": "2026-11-15T06:16:05.984Z",
+  "built": "2026-11-15T12:03:39.467Z",
   "model": "gemini-3.5-flash-lite",
+  "rechecked": "2026-11-15T12:03:39.467Z",
   "lessons": [
     {
       "band": "early",
       "school": true,
-      "ic": "👂",
+      "ic": "🐎",
       "title": {
-        "en": "First and last sound",
-        "hi": "पहली और अंतिम ध्वनि"
+        "en": "Rhyming words",
+        "hi": "एक जैसी आवाज़ वाले शब्द"
       },
       "sub": {
-        "en": "Hear the sounds",
-        "hi": "ध्वनियाँ पहचानो"
-      },
-      "skillId": "read1",
-      "source": "Page 45, Exercise 1",
-      "aims": [
-        {
-          "id": "s143etvo.0",
-          "kind": "explain",
-          "short": {
-            "en": "Last sound",
-            "hi": "अंतिम ध्वनि"
-          },
-          "point": {
-            "en": "The child can identify the last sound of a word.",
-            "hi": "बच्चा किसी शब्द की अंतिम ध्वनि पहचान सकता है।"
-          },
-          "forget": {
-            "en": "I forgot how to find the last sound!",
-            "hi": "मैं भूल गई कि अंतिम ध्वनि कैसे ढूँढूँ!"
-          },
-          "hints": [
-            {
-              "en": "Say the word slowly and hear the end.",
-              "hi": "शब्द को धीरे से बोलो और अंत सुनो।"
-            },
-            {
-              "en": "What comes out at the very finish?",
-              "hi": "सबसे अंत में मुँह से क्या निकलता है?"
-            }
-          ],
-          "ideas": [
-            {
-              "en": "say the word and listen to the final sound",
-              "hi": "शब्द बोलो और उसकी आखिरी आवाज़ सुनो",
-              "words": [
-                "end sound",
-                "आखिरी आवाज़",
-                "aakhri aawaz",
-                "antim"
-              ]
-            }
-          ]
-        }
-      ],
-      "beats": [
-        {
-          "t": "intro",
-          "say": {
-            "en": "Every word ends with a sound. Let us listen.",
-            "hi": "हर शब्द का अंत एक आवाज़ से होता है। आओ सुनें।"
-          }
-        },
-        {
-          "t": "word",
-          "say": {
-            "en": "In chaal, the last sound is l.",
-            "hi": "चाल में आखिरी आवाज़ ल है।"
-          },
-          "w": "चाल",
-          "art": "🚶"
-        },
-        {
-          "t": "word",
-          "say": {
-            "en": "Listen to kamal.",
-            "hi": "कमाल शब्द को सुनो।"
-          },
-          "w": "कमाल",
-          "art": "🌟"
-        },
-        {
-          "t": "ask",
-          "q": {
-            "en": "Does kamal end with l?",
-            "hi": "क्या कमाल का अंत ल पर होता है?"
-          },
-          "opts": [
-            "No",
-            "Yes"
-          ],
-          "hiOpts": [
-            "नहीं",
-            "हाँ"
-          ],
-          "correct": 1,
-          "why": {
-            "en": "Children often focus only on the starting sound.",
-            "hi": "बच्चे अक्सर केवल पहली आवाज़ पर ध्यान देते हैं।"
-          },
-          "aim": 1,
-          "derived": true
-        },
-        {
-          "t": "word",
-          "say": {
-            "en": "Listen to kaan.",
-            "hi": "कान शब्द को सुनो।"
-          },
-          "w": "कान",
-          "art": "👂"
-        },
-        {
-          "t": "ask",
-          "q": {
-            "en": "Does kaan end with n?",
-            "hi": "क्या कान का अंत न पर होता है?"
-          },
-          "opts": [
-            "No",
-            "Yes"
-          ],
-          "hiOpts": [
-            "नहीं",
-            "हाँ"
-          ],
-          "correct": 1,
-          "why": {
-            "en": "Children might look at the whole word and miss the back.",
-            "hi": "बच्चे पूरा शब्द देखते हैं और पीछे की आवाज़ छोड़ देते हैं।"
-          },
-          "aim": 1,
-          "derived": true
-        },
-        {
-          "t": "win",
-          "say": {
-            "en": "Listen carefully to hear the last sound.",
-            "hi": "अंतिम ध्वनि सुनने के लिए ध्यान से सुनो।"
-          }
-        }
-      ],
-      "subject": "read",
-      "id": "sch-143etvo"
-    },
-    {
-      "band": "early",
-      "school": true,
-      "ic": "🔤",
-      "title": {
-        "en": "Letters त and घ",
-        "hi": "अक्षर त और घ"
-      },
-      "sub": {
-        "en": "Recognising new letters",
-        "hi": "नए अक्षर पहचानना"
+        "en": "Words ending the same way",
+        "hi": "एक जैसी अंतिम आवाज़"
       },
       "skillId": "h1-read",
-      "source": "Page 45, Exercise 2",
+      "source": "Page 45",
       "aims": [
         {
-          "id": "sj9ks3p.0",
+          "id": "s9r9m9t.0",
           "kind": "explain",
           "short": {
-            "en": "Find letter त",
-            "hi": "त अक्षर ढूँढो"
+            "en": "Find rhyming",
+            "hi": "मिलते-जुल्ते शब्द"
           },
           "point": {
-            "en": "The child can recognise the letter त in words.",
-            "hi": "बच्चा शब्दों में 'त' अक्षर पहचान सकता है।"
+            "en": "The child can pick out words that end with the same sound.",
+            "hi": "बच्चा एक जैसी अंतिम आवाज़ वाले शब्दों को पहचान सकता है।"
           },
           "forget": {
-            "en": "I forgot how to find the letter त!",
-            "hi": "मैं भूल गई कि 'त' अक्षर कैसे ढूँढूँ!"
+            "en": "I forgot! How do I know if two words match?",
+            "hi": "मैं भूल गई! मुझे कैसे पता चलेगा कि दो शब्द मिलते हैं?"
           },
           "hints": [
             {
-              "en": "Look closely at the letters in the word.",
-              "hi": "शब्द में दिए गए अक्षरों को ध्यान से देखो।"
+              "en": "Say both words out loud. Listen to the back.",
+              "hi": "दोनों शब्दों को बोलकर देखो। पीछे का हिस्सा सुनो।"
             },
             {
-              "en": "Check where the sound ta appears.",
-              "hi": "देखो कि 'त' की आवाज़ कहाँ आती है।"
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
             }
           ],
           "ideas": [
             {
-              "en": "look for letter ta in the word",
-              "hi": "शब्द में 'त' अक्षर को ढूँढो",
+              "en": "listen to the ending sound of both words",
+              "hi": "दोनों शब्दों की ध्वनि को सुनो",
               "words": [
-                "letter ta",
-                "taal",
-                "अक्षर त",
-                "पहचान",
-                "akshar ta",
-                "pehchan"
+                "ending",
+                "sound",
+                "antim",
+                "dhwani",
+                "आवाज़",
+                "ध्वनि"
               ]
             }
           ]
@@ -212,77 +69,58 @@
         {
           "t": "intro",
           "say": {
-            "en": "Let us learn the letter त.",
-            "hi": "आओ 'त' अक्षर सीखें।"
+            "en": "Some words end with the very same sound.",
+            "hi": "कुछ शब्दों के आख़िरी हिस्से की आवाज़ एक जैसी होती है।"
           }
         },
         {
-          "t": "word",
-          "say": {
-            "en": "Taala starts with त.",
-            "hi": "ताला की शुरुआत 'त' से होती है।"
+          "t": "passage",
+          "p": {
+            "en": "ताल, चाल, दाल, कमाल",
+            "hi": "ताल, चाल, दाल, कमाल"
           },
-          "w": "ताला",
-          "art": "🔒"
-        },
-        {
-          "t": "word",
-          "say": {
-            "en": "Look at tota.",
-            "hi": "तोता शब्द को देखो।"
-          },
-          "w": "तोता",
-          "art": "🦜"
+          "art": "🐴"
         },
         {
           "t": "ask",
           "q": {
-            "en": "Does tota have the letter त?",
-            "hi": "क्या तोता में 'त' अक्षर है?"
+            "en": "Do taal and chaal match?",
+            "hi": "क्या ताल और चाल मिलते हैं?"
           },
           "opts": [
-            "No",
-            "Yes"
+            "Yes",
+            "No"
           ],
           "hiOpts": [
-            "नहीं",
-            "हाँ"
+            "हाँ",
+            "नहीं"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
-            "en": "Children might confuse similar looking letter shapes.",
-            "hi": "बच्चे मिलते-जुलते अक्षरों में भ्रमित हो सकते हैं।"
+            "en": "Children confuse rhyming words with words that start the same way.",
+            "hi": "बच्चे एक जैसी आवाज़ वाले शब्दों को शुरुआती आवाज़ से मिला देते हैं।"
           },
           "aim": 1,
           "derived": true
         },
         {
-          "t": "word",
-          "say": {
-            "en": "Look at tan.",
-            "hi": "तन शब्द को देखो।"
-          },
-          "w": "तन",
-          "art": "👦"
-        },
-        {
           "t": "ask",
           "q": {
-            "en": "Does tan have the letter त?",
-            "hi": "क्या तन में 'त' अक्षर है?"
+            "en": "Does taal rhyme with ghar?",
+            "hi": "क्या ताल की आवाज़ घर से मिलती है?"
           },
           "opts": [
-            "No",
-            "Yes"
+            "Yes",
+            "No"
           ],
           "hiOpts": [
-            "नहीं",
-            "हाँ"
+            "हाँ",
+            "नहीं"
           ],
           "correct": 1,
           "why": {
-            "en": "Children might miss letters hiding in short words.",
-            "hi": "बच्चे छोटे शब्दों में अक्षर पहचान नहीं पाते।"
+            "en": "Children pick any two words thinking they all rhyme.",
+            "hi": "बच्चे कोई भी दो शब्द चुन लेते हैं यह सोचकर कि सबकी आवाज़ मिलती है।"
           },
           "aim": 1,
           "derived": true
@@ -290,23 +128,35 @@
         {
           "t": "win",
           "say": {
-            "en": "Spot the letter त easily.",
-            "hi": "शब्दों में 'त' अक्षर पहचानना सीखो।"
+            "en": "Words that end the same way sound like magic!",
+            "hi": "जिन शब्दों का अंत एक जैसा हो, उनकी आवाज़ मज़ेदार लगती है!"
           }
         }
       ],
       "subject": "read",
-      "id": "sch-j9ks3p"
+      "id": "sch-9r9m9t"
     }
   ],
   "notUsed": [
     {
       "title": {
-        "en": "Rhyming words",
-        "hi": "तुकांत शब्द"
+        "en": "First and last sound",
+        "hi": "पहली और आख़िरी आवाज़"
       },
       "errors": [
-        "beat 5: question decodes at \"fluent\", far above \"early\""
+        "beat 2: question decodes at \"fluent\", far above \"early\"",
+        "beat 4: question decodes at \"fluent\", far above \"early\""
+      ]
+    },
+    {
+      "title": {
+        "en": "Letters त, घ and ड़",
+        "hi": "वर्ण त, घ और ड़"
+      },
+      "errors": [
+        "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (hi) already gives the explanation (it says \"शुरुआत\"))",
+        "beat 2: question decodes at \"fluent\", far above \"early\"",
+        "beat 4: question decodes at \"fluent\", far above \"early\""
       ]
     }
   ]
