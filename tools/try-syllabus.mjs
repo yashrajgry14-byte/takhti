@@ -169,7 +169,7 @@ export function report(r){
   const n = v => r.drafts.filter(x => x.verdict === v).length;
   const L = [
     `# Syllabus run — ${r.source}`, '',
-    `${r.at} · ${r.cls} (${r.band}, numbers to ${r.rules.maxNumber}) · Gemini model **${r.model}** · chapter "${r.chapter}"`, '',
+    `${r.at} · ${r.cls} (${r.band}, numbers to ${r.rules.maxNumber}) · ${/^gemini/i.test(r.model || "") ? "Gemini model" : "drafted by"} **${r.model}** · chapter "${r.chapter}"`, '',
     `**${n('passed')} passed first time · ${n('repaired')} fixed by the repair round · ${n('not used')} not used** (of ${r.drafts.length})  `,
     `Draft took ${(r.draftMs / 1000).toFixed(0)} s` + (r.repair ? ` · repair ${r.repair.status === 200 ? 'took ' + (r.repair.ms / 1000).toFixed(0) + ' s (' + r.repair.model + ')' : 'failed: ' + r.repair.error}` : ''), ''
   ];

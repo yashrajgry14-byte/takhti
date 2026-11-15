@@ -88,7 +88,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v78` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v79` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -615,6 +615,19 @@ network and no waiting in the week.
   those topics yet, and the teacher is warned on the nine with a maths skill
   (`sylLessonWarnings()`) — the three tagged with a reading skill get no
   warning.
+- **EVS, the first subject beyond maths and language** (15 Nov): NCERT *Our
+  Wondrous World* Class 5 (`library/ncert-our-wondrous-world-5`, subject
+  `evs`), chapter 3 "The Mystery of Food" — 5 lessons (why food spoils,
+  what microbes need, drying / oil / cold, helpful microbes, chewing and
+  teeth). Each is a passage with two questions whose right answers are in
+  the passage, so they count as reading comprehension (`e5-compre`; the
+  `v5-…` EVS skills have no concepts and the drafting prompt still leaves
+  them out), and the science is in the Teach Munni aims ("explain why oil
+  keeps a pickle from spoiling"). **Drafted by Claude in a chat session,
+  not Gemini** (no key there): `ch3.raw.json` says `model: claude (hand-written
+  draft)`, the report says "drafted by", and they went through
+  `--import` and the same checker — a Gemini build (`--force --only ch3`
+  with the PDF) can replace them.
 
 ## This child's path — `core/planner.js`
 
@@ -1882,7 +1895,10 @@ Honest edges of what's built:
    the faster models are busy) — the half-price Batch API isn't used yet.
    The term is a list of chapters, one a week; a chapter taking two weeks
    or a school's own week dates aren't modelled. The book choice and term
-   live on the teacher's phone only (no transfer to another phone). Every
+   live on the teacher's phone only (no transfer to another phone). The EVS
+   book (*Our Wondrous World* Class 5) has one chapter, written by Claude
+   rather than Gemini; EVS answers count as reading comprehension, not as
+   EVS skills, so the diagnostic and the twin don't track EVS topics yet. Every
    lesson is the same for every school on the book; a teacher who wants
    something different still drafts from a chapter. The publisher's
    permission for lessons built from its book is a question for the lawyer

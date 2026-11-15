@@ -246,9 +246,20 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     check('a book set up but not built yet (no chapters listed, or none built) is left out of the bundle, so a teacher is never offered an empty book',
       lb.books === 1 && /ready-book/.test(lsrc) && !/new-book|scanned-book/.test(lsrc), lsrc.slice(-200));
     const books = fs.readdirSync(path.join(root, 'library')).filter(d => fs.existsSync(path.join(root, 'library', d, 'book.json')));
-    const ok = books.every(d => { const b = JSON.parse(fs.readFileSync(path.join(root, 'library', d, 'book.json'), 'utf8')); return /^(maths|english|hindi)$/.test(b.subject) && b.title.hi && /^c[1-5]$/.test(b.cls); });
-    check('the NCERT books for Classes 1–5 are set up and waiting (maths, English and Hindi readers, each with its class and both titles), with library/BOOKS.md saying how to build one',
-      books.length >= 15 && ok && fs.existsSync(path.join(root, 'library/BOOKS.md')) && /--batch/.test(fs.readFileSync(path.join(root, 'library/BOOKS.md'), 'utf8')), books.join());
+    const ok = books.every(d => { const b = JSON.parse(fs.readFileSync(path.join(root, 'library', d, 'book.json'), 'utf8')); return /^(maths|english|hindi|evs)$/.test(b.subject) && b.title.hi && /^c[1-5]$/.test(b.cls); });
+    check('the NCERT books for Classes 1–5 are set up and waiting (maths, English and Hindi readers, EVS, each with its class and both titles), with library/BOOKS.md saying how to build one',
+      books.length >= 16 && ok && fs.existsSync(path.join(root, 'library/BOOKS.md')) && /--batch/.test(fs.readFileSync(path.join(root, 'library/BOOKS.md'), 'utf8')), books.join());
+    /* the first book beyond maths and language: Our Wondrous World (EVS, Class 5), chapter 3 —
+       every lesson a passage read for comprehension (its right answers are in the passage),
+       with at least two questions and the science in its Teach Munni aims; its drafts were
+       written by Claude, not Gemini, and the report says so */
+    const evs = JSON.parse(fs.readFileSync(path.join(root, 'library/ncert-our-wondrous-world-5/ch3.json'), 'utf8'));
+    const evsRaw = JSON.parse(fs.readFileSync(path.join(root, 'library/ncert-our-wondrous-world-5/ch3.raw.json'), 'utf8'));
+    const evsRep = fs.readFileSync(path.join(root, 'library/ncert-our-wondrous-world-5/ch3.report.md'), 'utf8');
+    check('EVS, Class 5 (Our Wondrous World, ch. 3 "The Mystery of Food"): 5 reading lessons, each ≥ 2 questions and ≥ 1 aim, counted as e5-compre; drafted by Claude and the report says so, not "Gemini model"',
+      evs.lessons.length === 5 && !evs.notUsed.length && evs.lessons.every(l => l.subject === 'read' && l.skillId === 'e5-compre' && l.aims.length >= 1 && l.beats.filter(x => x.t === 'ask').length >= 2 && l.beats.some(x => x.t === 'passage'))
+        && /claude/i.test(evsRaw.model) && /drafted by \*\*claude/.test(evsRep) && !/Gemini model \*\*claude/.test(evsRep),
+      JSON.stringify(evs.lessons.map(l => [l.title.en, l.subject, l.skillId, l.aims.length])));
     check('….batch.json is never committed (.gitignore)', /library\/\*\*\/\.batch\.json/.test(fs.readFileSync(path.join(root, '.gitignore'), 'utf8')), '');
     fs.rmSync(tmp, { recursive: true });
   }catch(e){ check('the batch builder ran', false, e.stack); }
