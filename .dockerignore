@@ -1,0 +1,13 @@
+# what `gcloud run deploy --source .` uploads: only what the Dockerfile copies
+.git
+.gitignore
+node_modules/
+test/
+tools/
+voice/
+library/
+syllabus-run/
+live-check/
+*.md
+.env
+.env.*

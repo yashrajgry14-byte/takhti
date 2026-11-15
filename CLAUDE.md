@@ -50,7 +50,8 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # serves on http://localhost:5173
-npm test           # all 46 test suites (see Testing)
+npm test           # all 47 test suites (see Testing)
+npm run cloud      # the Cloud Run server locally (cloud/server.mjs), on :8080
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
 
@@ -1369,6 +1370,24 @@ this same call, about one question), so:
   `record()` / `noteSkillAttempt()` / `noteSkillFromConcept()` — once per talk
   (`S.talkApplied`) and only into the child who talked (`talkApply()`).
 
+## Google Cloud — `cloud/`, `Dockerfile`
+
+One Cloud Run service, `cloud/server.mjs` (no dependencies), serves the app
+and the Tier 2 endpoints it already calls on its own origin: `/api/syllabus`
+(`draftCore()`), `/api/teachback` (`judgeCore()`, words only), `/api/ask`, and
+`/api/class-sync` (`syncCore()` over a private Cloud Storage bucket,
+`TAKHTI_SYNC_BUCKET`, reached with Cloud Run's own service-account token from
+the metadata server — no key file). It serves only a whitelist (`index.html`,
+`sw.js`, the manifest, `src/`, `icons/`, `audio/`). `GEMINI_API_KEY` comes from
+Secret Manager. Cloud Run has no serverless cap, so it sets
+`TAKHTI_SYLLABUS_MAX_MB` 12 and `TAKHTI_SYLLABUS_TIMEOUT_MS` 180000 unless the
+deploy does. `cloud/deploy.sh`, run in Cloud Shell, enables the APIs, stores
+the key, makes the bucket, grants the service account just those, and runs
+`gcloud run deploy --source .` to `asia-south1`; `cloud/README.md` is the
+walk-through. The voice server is not part of it (it keeps state in files).
+Not yet deployed from this repo's workspace — Google Cloud's APIs are blocked
+there; the deploy runs from Cloud Shell.
+
 ## Munni on the phone — `voice/`
 
 A **second channel, not part of the app**: a small dependency-free Node
@@ -1590,7 +1609,7 @@ app is a client of it, and only when a parent says so.
 
 ## Testing
 
-`npm test` runs 46 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 47 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -1639,6 +1658,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `library` | Node + jsdom | the Batch API builder against a stand-in Files API and Batch API (the PDF uploaded once by resumable upload, the key in a header, one draft job to the full Flash model with no PDF inline, each request exactly `buildRequest()`'s; a job not done by `--wait` kept in `.batch.json` and collected by the next run with no second upload or job; one repair job; the report saying batch and its tokens; the upload deleted, the key in no file; a weaker rebuild saved as a candidate, `--replace` taking it; a refused request shape sent again with the older names; `GEMINI_BATCH_MODEL`); a reader holding every lesson to two questions; a book not built yet left out of the bundle; the fourteen NCERT books set up; the builder against a stand-in Gemini with the seventh live run's own drafts (each question asked a second time — the drafts as they are ask one, and none is kept: a picture lesson with one question isn't, with why): only passing lessons kept, the failure named with why, the title from the chapter, a missing PDF skipped and said, raw and report written, the key in no file, a built chapter skipped (no call), `--force --only`, `--recheck` and `--import` with no call; `--scan` (a whole book's PDFs in natural order, front matter and answers left out, a listed chapter's title kept, a built chapter now on another file warned about); a chapter Gemini can't do doesn't stop the book, and `summary.md` says so; a bad book.json refused with each fault; the bundle (every chapter in order, one not built yet with no lessons, no raw drafts); the shipped `src/content/library.js` exactly what `library/` builds; PDFs ignored; in the app, offline: no book for Class 2 said, Maths Mela offered for Class 3, the term laid out with this week's chapter, the plan kept on the phone, this week's lessons in the approval card (every one checked again, no network), approved into the class, the child's "From your school" with their path; a chapter added later at the end, ↑ ↓, a not-built week said, next week; a lesson edited after it was built not offered; Hindi; no fetch at all |
 | `demo` | jsdom | the demo card says what it is; two labelled demo children join the class with sync off; their records come from the mind's own rounds and a real twin habit for Kabir (none for Asha); the library's chapter approved → two different paths for the same lesson; the teacher's path card names both; switching to each goes to the map and shows their own Story Fire; removal deletes exactly them (phone and mirror) and restores the real child; no room → said, none added; Hindi |
 | `live-check` | Node | `tools/live-check.mjs` against a stand-in Gemini with a good, a slip-tidying and a down model: slips kept or "wrote the line", every case failing with its reason when down, the judge's four cases (a credit-anything judge fails, an echo of Munni's question downgraded by the quote check), judging from a recording, the advice naming the settings, the key in no output, no key → nobody called; the judge's own model setting (`TAKHTI_TEACH_MODEL`, else `GEMINI_MODEL`), each model measured alone (`TAKHTI_TEACH_FALLBACK: 'none'`) |
+| `cloud` | HTTP | `cloud/server.mjs`, the Cloud Run service: the app's files from a whitelist only (never `voice/`, `api/`, a `.env`, the notes, a path that climbs out), honest 503s without a key or bucket, a non-JSON body a 400, a chapter reaching a stand-in Gemini with the key in a header, 12 MB and 180 s, class sync round-tripping through a stand-in Cloud Storage with the metadata server's token (fetched once), storage down → 503 |
 | `hygiene` | static | **no unreachable code**, `sw.js` matches `index.html`, no orphan files |
 
 **Helpers** (`test/_helpers/`): `load-order.js` — suites that quote numbers

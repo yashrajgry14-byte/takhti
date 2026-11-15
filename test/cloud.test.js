@@ -1,0 +1,116 @@
+/* cloud/server.mjs — Takhti on Google Cloud Run.
+   The real server over HTTP: it serves the app's files from a whitelist and
+   nothing else (never voice/, api/, a .env or the notes), the Tier 2 endpoints
+   answer honestly without a key, drafting reaches Gemini with the key in a
+   header (a stand-in Gemini), and class sync round-trips through a stand-in
+   Cloud Storage with the service account's token from a stand-in metadata
+   server — no key file anywhere. */
+const http = require('http');
+const path = require('path');
+const { pathToFileURL } = require('url');
+
+const checks = [];
+const check = (name, pass, detail) => checks.push({ name, pass: !!pass, detail });
+
+function listen(handler){ return new Promise(r => { const s = http.createServer(handler); s.listen(0, '127.0.0.1', () => r(s)); }); }
+function req(port, method, p, body){
+  return new Promise((resolve, reject) => {
+    const data = body == null ? null : Buffer.from(typeof body === 'string' ? body : JSON.stringify(body));
+    const r = http.request({ host: '127.0.0.1', port, method, path: p, headers: data ? { 'content-type': 'application/json', 'content-length': data.length } : {} }, res => {
+      const chunks = []; res.on('data', c => chunks.push(c)); res.on('end', () => {
+        const text = Buffer.concat(chunks).toString('utf8'); let json = null; try{ json = JSON.parse(text); }catch(e){}
+        resolve({ status: res.statusCode, type: res.headers['content-type'] || '', cache: res.headers['cache-control'] || '', text, json });
+      });
+    });
+    r.on('error', reject); if(data) r.write(data); r.end();
+  });
+}
+
+(async () => {
+  // a stand-in Gemini that records what reached it
+  const seen = [];
+  const gem = await listen((q, s) => { let b = ''; q.on('data', c => b += c); q.on('end', () => {
+    seen.push({ url: q.url, key: q.headers['x-goog-api-key'], body: b });
+    s.writeHead(200, { 'content-type': 'application/json' });
+    s.end(JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify({ lessons: [] }) }] } }] }));
+  }); });
+
+  for(const k of ['GEMINI_API_KEY', 'TAKHTI_SYNC_BUCKET', 'ANTHROPIC_API_KEY']) delete process.env[k];
+  const mod = await import(pathToFileURL(path.join(__dirname, '..', 'cloud', 'server.mjs')).href);
+  const srv = await listen(mod.handle);
+  const port = srv.address().port;
+
+  // ---- the app's files, and only those ----
+  const page = await req(port, 'GET', '/');
+  check('the app\'s page is served at / (HTML, never cached, so a new build shows at once)', page.status === 200 && /text\/html/.test(page.type) && /no-cache/.test(page.cache) && /<script src="src\/app.js/.test(page.text), page.status + ' ' + page.type);
+  const sw = await req(port, 'GET', '/sw.js'), js = await req(port, 'GET', '/src/app.js'), man = await req(port, 'GET', '/manifest.webmanifest'), aud = await req(port, 'GET', '/audio/manifest-hi.json');
+  check('…the service worker (never cached), the scripts, the manifest and the narration as their own types',
+    sw.status === 200 && /no-cache/.test(sw.cache) && js.status === 200 && /javascript/.test(js.type) && man.status === 200 && /manifest/.test(man.type) && aud.status === 200 && /json/.test(aud.type),
+    [sw.status, js.status, js.type, man.status, man.type, aud.status].join(' '));
+  const never = ['/voice/server.js', '/voice/.env', '/api/syllabus.mjs', '/cloud/server.mjs', '/package.json', '/CLAUDE.md', '/tools/try-syllabus.mjs', '/library/BOOKS.md', '/test/cloud.test.js',
+    '/src/../voice/.env', '/src/%2e%2e/package.json', '/src/..%2fpackage.json', '/icons/../CLAUDE.md', '/.git/config', '/src/'];
+  const leaked = [];
+  for(const p of never){ const r = await new Promise((res, rej) => { const q = http.request({ host: '127.0.0.1', port, path: p }, x => { x.resume(); x.on('end', () => res(x.statusCode)); }); q.on('error', rej); q.end(); }); if(r === 200) leaked.push(p); }
+  check('nothing outside the whitelist is served — the voice server, its .env, the API code, the notes, a path that climbs out', leaked.length === 0, leaked.join(', '));
+
+  // ---- no key: honest answers, and the app falls back to the phone ----
+  const h0 = (await req(port, 'GET', '/healthz')).json;
+  const syl0 = await req(port, 'POST', '/api/syllabus', { chapter: { text: 'Shapes' }, band: 'developing', n: 2 });
+  const sync0 = await req(port, 'POST', '/api/class-sync', {});
+  const ask0 = await req(port, 'POST', '/api/ask', { messages: [] });
+  const get0 = await req(port, 'GET', '/api/syllabus');
+  check('without a key or a bucket every endpoint says so (the app then works on the phone), and a GET to the API is refused',
+    h0 && h0.gemini === false && h0.sync === false && syl0.status === 503 && sync0.status === 503 && /not configured/.test(sync0.json.error) && ask0.status === 503 && get0.status === 405,
+    JSON.stringify([h0, syl0.status, sync0.status, ask0.status, get0.status]));
+  const bad = await req(port, 'POST', '/api/teachback', '{not json');
+  check('…a body that isn\'t JSON is a 400, not a crash', bad.status === 400, bad.status + ' ' + bad.text);
+
+  // ---- with the key: drafting reaches Gemini, the key only in a header ----
+  process.env.GEMINI_API_KEY = 'test-key-not-real';
+  process.env.GEMINI_API_BASE = 'http://127.0.0.1:' + gem.address().port;
+  process.env.GEMINI_FALLBACK_MODEL = 'none';
+  const syl = await req(port, 'POST', '/api/syllabus', { chapter: { text: 'Chapter 5: Shapes. A square has four equal sides.' }, band: 'developing', grade: 3, n: 2 });
+  check('with the key from Secret Manager, a chapter goes to Gemini — the key in a header, never in the URL — and the drafts come back',
+    syl.status === 200 && Array.isArray(syl.json.lessons) && seen.length === 1 && seen[0].key === 'test-key-not-real' && !seen[0].url.includes('test-key') && /Square has four|square has four/i.test(seen[0].body),
+    JSON.stringify([syl.status, seen.map(s => s.url)]));
+  check('…Cloud Run takes a whole chapter (12 MB) and the full model chain (180 s), unlike a serverless host', process.env.TAKHTI_SYLLABUS_MAX_MB === '12' && process.env.TAKHTI_SYLLABUS_TIMEOUT_MS === '180000', process.env.TAKHTI_SYLLABUS_MAX_MB + ' ' + process.env.TAKHTI_SYLLABUS_TIMEOUT_MS);
+
+  // ---- class sync through Cloud Storage, the token from the metadata server ----
+  const objects = new Map(), calls = [];
+  const realFetch = global.fetch;
+  global.fetch = async (url, opts = {}) => {
+    const u = String(url), auth = (opts.headers || {}).Authorization;
+    if(u.startsWith('http://metadata.google.internal/')){ calls.push('token'); return new Response(JSON.stringify({ access_token: 'sa-token', expires_in: 3600 }), { status: (opts.headers || {})['Metadata-Flavor'] === 'Google' ? 200 : 403 }); }
+    if(u.startsWith('https://storage.googleapis.com/')){
+      calls.push((opts.method || 'GET') + ' ' + (auth === 'Bearer sa-token' ? 'auth' : 'NOAUTH'));
+      const m = u.match(/\/o\/([^?]+)\?alt=media/), up = u.match(/[?&]name=([^&]+)/);
+      if(m){ const k = decodeURIComponent(m[1]); return objects.has(k) ? new Response(objects.get(k), { status: 200 }) : new Response('', { status: 404 }); }
+      if(up){ objects.set(decodeURIComponent(up[1]), opts.body); return new Response('{}', { status: 200 }); }
+    }
+    return realFetch(url, opts);
+  };
+  process.env.TAKHTI_SYNC_BUCKET = 'takhti-classes-test';
+  const child = { code: 'CLS042', children: { c1: { childName: 'Riya', skillHistory: { add2: { right: 3, tries: 4 } }, at: Date.now() } } };
+  const up = await req(port, 'POST', '/api/class-sync', child);
+  const keys = [...objects.keys()];
+  const stored = keys.length ? JSON.parse(objects.get(keys[0])) : null;
+  const back = await req(port, 'POST', '/api/class-sync', { code: 'CLS042', children: { c2: { childName: 'Kabir', skillHistory: {}, at: Date.now() + 5 } } });
+  const both = keys.length ? Object.keys(JSON.parse(objects.get(keys[0])).children || {}).sort().join(',') : '';
+  check('class sync is stored in the Cloud Storage bucket, one object per class, with the service account\'s own token (no key file)',
+    up.status === 200 && keys.length === 1 && /^classes\/[A-Za-z0-9_-]+\.json$/.test(keys[0]) && calls.includes('token') && calls.filter(c => /NOAUTH/.test(c)).length === 0
+      && stored && stored.children && stored.children.c1 && /Riya/.test(JSON.stringify(stored.children.c1)) && back.status === 200 && both === 'c1,c2',
+    JSON.stringify([up.status, up.json, keys, calls, back.status, both]));
+  check('…the token is fetched once and reused', calls.filter(c => c === 'token').length === 1, JSON.stringify(calls));
+  global.fetch = async (url, opts) => String(url).startsWith('https://storage.googleapis.com/') ? new Response('', { status: 500 }) : (String(url).startsWith('http://metadata') ? new Response(JSON.stringify({ access_token: 't', expires_in: 3600 }), { status: 200 }) : realFetch(url, opts));
+  const down = await req(port, 'POST', '/api/class-sync', child);
+  check('…storage failing is a 503 the app already handles, never a crash', down.status === 503 && /unavailable/.test(down.json.error), down.status + ' ' + down.text);
+  global.fetch = realFetch;
+
+  srv.close(); gem.close();
+  console.log('\n' + '-'.repeat(70));
+  checks.forEach(c => console.log(`  ${c.pass ? 'PASS' : 'FAIL'}  ${c.name}${c.pass ? '' : '  → ' + c.detail}`));
+  console.log('-'.repeat(70));
+  const failures = checks.filter(c => !c.pass).length;
+  console.log(`${checks.length - failures}/${checks.length} checks passed`);
+  process.exitCode = failures ? 1 : 0;
+})().catch(e => { console.error(e); process.exitCode = 1; });
