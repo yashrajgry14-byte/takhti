@@ -88,11 +88,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-<<<<<<< HEAD
-`sw.js` caches the app shell as `takhti-v76` (recorded narration lives in a
-=======
-`sw.js` caches the app shell as `takhti-v75` (recorded narration lives in a
->>>>>>> Ask Munni: no answer for times 1, a real reveal on the call; fonts-offline tests pass
+`sw.js` caches the app shell as `takhti-v77` (recorded narration lives in a
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
