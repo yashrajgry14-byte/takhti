@@ -53,7 +53,8 @@ server.listen(0, '127.0.0.1', () => {
   const port = server.address().port;
   const virtualConsole = new VirtualConsole();
   const jsErrors = [];
-  virtualConsole.on('jsdomError', e => jsErrors.push(e.message));
+  // Google Fonts can't load without open internet (a sandbox); that is the network, not the app — any other link still fails
+  virtualConsole.on('jsdomError', e => { if(!/^Could not load link: "https:\/\/fonts\.googleapis\.com\//.test(e.message)) jsErrors.push(e.message); });
   virtualConsole.forwardTo(console);
 
   const dom = new JSDOM(html, {

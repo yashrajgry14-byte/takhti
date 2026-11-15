@@ -81,8 +81,9 @@ function itemsFor(S, T, help, lang) {
     for (const st of x.steps) {
       const told = say(st.tell, st.vals);
       if (st.ask && st.ans != null) {
+        // the reveal explains (a step told as its question keeps its statement in `why`)
         items.push({ kind: 'helpstep', expect: 'number', answer: st.ans, distractor: near(st.ans),
-                     prompt: S.joinSay(carry, say(st.ask, Object.assign({}, st.vals))), why: told });
+                     prompt: S.joinSay(carry, say(st.ask, Object.assign({}, st.vals))), why: say(st.why || st.tell, st.vals) });
         carry = '';
       } else carry = S.joinSay(carry, told);
     }

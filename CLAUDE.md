@@ -88,7 +88,11 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
+<<<<<<< HEAD
 `sw.js` caches the app shell as `takhti-v76` (recorded narration lives in a
+=======
+`sw.js` caches the app shell as `takhti-v75` (recorded narration lives in a
+>>>>>>> Ask Munni: no answer for times 1, a real reveal on the call; fonts-offline tests pass
 separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
@@ -1159,7 +1163,10 @@ only knows this one question.
   **She never says the final answer**: the last line asks it, and the
   child answers on screen; a step that lands on the answer by itself
   (65 − 25: the tens leave 40) is asked, not told, and "put them
-  together" then names no numbers. No network, so it works offline.
+  together" then names no numbers; a sum times 1 is "just one group",
+  never "one group of 7". On the call, that step is asked too, and its
+  reveal after two tries still explains it ("60 take away 20 leaves 40").
+  No network, so it works offline.
 - **Still stuck? Munni calls.** With the parent's Talking Munni switch on
   and a signal, *Still stuck? Talk to Munni* opens the same live web call
   as Talking Munni (`talkHelp()`), about this one question. The server
@@ -1672,9 +1679,9 @@ Honest edges of what's built:
    lessons, just no story.
 7. **Browser APIs are stubbed in the tests** (speech, the on-device model,
    audio). Check on a real handset before a demo — especially the microphone
-   and offline reading. The jsdom suites also fail their "no uncaught errors"
-   check on a machine that can't reach Google Fonts (a sandbox with no open
-   internet), which is the network, not the app.
+   and offline reading. The jsdom suites' "no uncaught errors" checks ignore
+   only Google Fonts failing to load (a sandbox with no open internet) — any
+   other link that fails still fails them.
 8. **The phone channel has had its first live call, nothing more.** On 26
    Oct 2026 `build-agent.js`'s output was created in a real Bolna account
    (through Bolna's API) and called a real phone: the greeting, Sarvam

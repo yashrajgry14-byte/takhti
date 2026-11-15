@@ -112,6 +112,8 @@ server.listen(0, '127.0.0.1', () => {
   // a bug to fail the suite on. Anything else still fails it.
   virtualConsole.on('jsdomError', e => {
     if(/Not implemented: HTMLMediaElement/.test(e.message)) return;
+    // Google Fonts can't load without open internet (a sandbox): the network, not the app
+    if(/^Could not load link: "https:\/\/fonts\.googleapis\.com\//.test(e.message)) return;
     jsErrors.push(e.message);
   });
   virtualConsole.forwardTo(console);

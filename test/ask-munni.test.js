@@ -83,6 +83,13 @@ const fakeBolna = http.createServer((req, res) => {
   }
   check('…and a step that lands on the answer itself (65 − 25, 30 × 4) never says it — it is asked, or put together without numbers', landed.length === 0
     && !X.explainLines(X.explainMath({ a: 65, b: 25, op: '−' }), 'en').some(l => /\b40\b/.test(l)) && !X.explainLines(X.explainMath({ a: 30, b: 4, op: '×' }), 'hi').some(l => /\b120\b/.test(l)), landed.slice(0, 3).join('\n'));
+  // times 1: "7 times 1 is just one group of 7" said the answer before the question
+  const once = [];
+  for(let n = 2; n <= 99; n++) for(const p of [{ a: n, b: 1 }, { a: 1, b: n }]){
+    const y = X.explainMath({ a: p.a, b: p.b, op: '×' });
+    for(const lang of ['en', 'hi']) if(y && X.explainLines(y, lang).slice(0, -1).some(l => new RegExp(`(^|[^0-9])${y.ans}([^0-9]|$)`).test(l))) once.push(`${y.text} (${lang})`);
+  }
+  check('…nor for a sum times 1 (only the last line, the question itself, names the number)', once.length === 0, once.slice(0, 3).join(', '));
   check('…every small question it asks has a real whole-number answer', wrongAsks.length === 0, wrongAsks.slice(0, 3).join(', '));
   const x = X.explainMath({ a: 38, b: 24, op: '+' });
   check('38 + 24 is tens, then ones, then the carried ten, then the child\'s own answer',
@@ -111,6 +118,13 @@ const brain = createBrain({ dataDir: fs.mkdtempSync(path.join(os.tmpdir(), 'takh
   check('…and ends asking the child to answer on the screen too', /स्क्रीन पर/.test(says[says.length - 1]), says[says.length - 1]);
   const after = JSON.stringify(brain.getChild(kid.id).profile.skillHistory || {}) + JSON.stringify(brain.getChild(kid.id).profile.attempts);
   check('help steps are never recorded as the child\'s evidence', before === after, before + ' → ' + after);
+  // 65 − 25: the tens step lands on the answer, so it is asked; missed twice, the reveal still
+  // explains it in a statement — not "The answer is forty. First the tens: sixty take away twenty?"
+  const enKid = brain.registerChild({ name: 'Tara', age: 8, lang: 'en', parent_phone: '+919500000078', consent: true }).child;
+  const ls = brain.createSession(enKid.id, { channel: 'app', kind: 'help', help: { kind: 'math', a: 65, b: 25, op: '−' } }).session;
+  const l0 = brain.toolNext(ls.id).say; brain.toolAnswer(ls.id, '70'); const rev = brain.toolAnswer(ls.id, '70').say;
+  check('a step that lands on the answer: the call asks it, and its reveal explains it, never as a question',
+    /take away (20|twenty)\?/.test(l0) && !/leaves (40|forty)/.test(l0) && /leaves (40|forty)\. Good try/.test(rev) && !/(20|twenty)\? Good try/.test(rev), l0 + '\n' + rev);
   const line = brain.core.T.SENTENCES.hi[2][1];
   const rs = brain.createSession(kid.id, { channel: 'app', kind: 'help', help: { kind: 'read', line } }).session;
   const r0 = brain.toolNext(rs.id).say;

@@ -38,7 +38,8 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
 const virtualConsole = new VirtualConsole();
 const jsErrors = [];
-virtualConsole.on('jsdomError', e => jsErrors.push(e.message));
+// Google Fonts can't load without open internet (a sandbox); that is the network, not the app — any other link still fails
+virtualConsole.on('jsdomError', e => { if(!/^Could not load link: "https:\/\/fonts\.googleapis\.com\//.test(e.message)) jsErrors.push(e.message); });
 virtualConsole.forwardTo(console);
 
 const dom = new JSDOM(html, {

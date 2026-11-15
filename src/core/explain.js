@@ -52,7 +52,7 @@ const XL = {
   // multiplication and division
   groups:     { en: '{a} times {b} means {b} groups of {a}. Count in {a}s: {list}…', hi: '{a} गुणा {b} मतलब {a} के {b} समूह। {a}-{a} करके गिनो: {list}…' },
   oneMoreQ:   { en: 'What is {last} and {a} more?', hi: '{last} में {a} और जोड़ो तो कितने?' },
-  oneGroup:   { en: '{a} times 1 is just one group of {a}.', hi: '{a} गुणा 1 मतलब {a} का बस एक समूह।' },
+  oneGroup:   { en: 'Times 1 means just one group. Nothing more is added.', hi: '1 से गुणा मतलब बस एक समूह। और कुछ नहीं जुड़ता।' },
   splitMul:   { en: '{a} is {at} and {ao}. Multiply each one by {b}.', hi: '{a} मतलब {at} और {ao}। दोनों को {b} से गुणा करो।' },
   mulPartQ:   { en: 'What is {x} times {b}?', hi: '{x} गुणा {b} कितने?' },
   mulPart:    { en: '{x} times {b} is {p}.', hi: '{x} गुणा {b} बराबर {p}।' },
@@ -153,7 +153,9 @@ function explainMath(pIn){
     final = { tpl: XL.finalMinus, vals: { a, b } };
   } else if(op === '×'){
     ans = a * b;
-    if(a >= 10 && b < 10){                               // 23 × 4: split the bigger number
+    if(b === 1 || a === 1){                              // 23 × 1: one group (before splitting, whose "23 is 20 and 3" restates it)
+      steps.push(xstep(XL.oneGroup, {}));
+    } else if(a >= 10 && b < 10){                        // 23 × 4: split the bigger number
       const at = tensOf(a), ao = a % 10;
       steps.push(xstep(XL.splitMul, { a, at, ao, b }));
       steps.push(xstep(XL.mulPart, { x: at, b, p: at * b }, XL.mulPartQ, at * b));
@@ -165,8 +167,6 @@ function explainMath(pIn){
       steps.push(xstep(XL.mulPart, { x: bt, b: a, p: bt * a }, XL.mulPartQ, bt * a));
       steps.push(xstep(XL.mulPart, { x: bo, b: a, p: bo * a }, XL.mulPartQ, bo * a));
       steps.push(xstep(XL.addParts, { p: bt * a, q: bo * a }));
-    } else if(b === 1 || a === 1){
-      steps.push(xstep(XL.oneGroup, { a: Math.max(a, b) }));
     } else if(a === 0 || b === 0){
       return null;
     } else {                                             // count in groups, ask the last one
@@ -190,11 +190,12 @@ function explainMath(pIn){
 
   // A step can land on the final answer by itself (65 − 25: the tens leave 40, the ones 0;
   // 30 × 4: the ones part is 0). Munni never says it: such a step is told as its question,
-  // and a "put them together" line with a zero part names no numbers.
+  // and a "put them together" line with a zero part names no numbers. The call's reveal (after
+  // two tries, voice/help.js) still explains it, so the full line is kept as `why`.
   for(const st of steps){
     const said = Object.keys(st.vals).filter(k => (st.tell.en || '').includes('{' + k + '}'));
     if(!said.some(k => st.vals[k] === ans)) continue;
-    if(st.ask) st.tell = st.ask;
+    if(st.ask){ st.why = st.tell; st.tell = st.ask; }
     else if(st.tell === XL.joinUp) st.tell = XL.joinPlain;
     else if(st.tell === XL.addParts) st.tell = XL.addPlain;
   }
