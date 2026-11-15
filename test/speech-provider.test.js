@@ -235,10 +235,23 @@ const stand = http.createServer((req, res) => {
   b = await run(path.join(root, 'tools/build-audio.mjs'), ['--lang', 'hi', '--limit', '6', '--out', out1], { ...GEM, SARVAM_API_KEY: '', ELEVEN_API_KEY: '', SPEECH_PROVIDER: '', TAKHTI_BATCH_POLL_MS: '20', TAKHTI_NO_FFMPEG: '1' });
   const sentAgain = (G.batch ? G.batch.batch.input_config.requests.requests : []).map(x => x.metadata.key);
   check('…a second run carries on: it sends only lines not yet rendered, and counts what is done', b.code === 0 && /already done : 6\b/.test(b.out) && sentAgain.length === 6 && sentAgain.every(k => !keys.includes(k)), b.out + JSON.stringify(sentAgain));
+  // two lines from an older pack (no `v`): --force renders exactly those again, not Gemini's own
+  const manPath1 = path.join(out1, 'manifest-hi.json');
+  man = JSON.parse(fs.readFileSync(manPath1, 'utf8'));
+  const geminiKeys = Object.keys(man), older = keys.slice(0, 2);
+  for(const k of older) delete man[k].v;
+  fs.writeFileSync(manPath1, JSON.stringify(man));
+  reset();
+  b = await run(path.join(root, 'tools/build-audio.mjs'), ['--lang', 'hi', '--limit', '4', '--force', '--out', out1], { ...GEM, SARVAM_API_KEY: '', ELEVEN_API_KEY: '', SPEECH_PROVIDER: '', TAKHTI_BATCH_POLL_MS: '20', TAKHTI_NO_FFMPEG: '1' });
+  const forced = (G.batch ? G.batch.batch.input_config.requests.requests : []).map(x => x.metadata.key);
+  man = JSON.parse(fs.readFileSync(manPath1, 'utf8'));
+  check('…--force renders again the lines another provider made (no v), never the ones Gemini already made, and marks them gemini',
+    b.code === 0 && older.every(k => forced.includes(k) && man[k].v === 'gemini') && !forced.some(k => geminiKeys.includes(k) && !older.includes(k)) && forced.length === 4,
+    b.out + JSON.stringify(forced));
   let hasFfmpeg = true; try{ require('child_process').execFileSync('ffmpeg', ['-version'], { stdio: 'ignore' }); }catch(e){ hasFfmpeg = false; }
   if(hasFfmpeg){
     const out2 = fs.mkdtempSync(path.join(os.tmpdir(), 'takhti-pack-'));
-    b = await run(path.join(root, 'tools/build-audio.mjs'), ['--lang', 'en', '--limit', '3', '--out', out2], { ...GEM, TAKHTI_BATCH_POLL_MS: '20' });
+    b = await run(path.join(root, 'tools/build-audio.mjs'), ['--lang', 'en', '--limit', '3', '--out', out2], { ...GEM, SARVAM_API_KEY: '', ELEVEN_API_KEY: '', SPEECH_PROVIDER: '', TAKHTI_BATCH_POLL_MS: '20' });
     man = JSON.parse(fs.readFileSync(path.join(out2, 'manifest-en.json'), 'utf8'));
     check('…with ffmpeg, small mp3s (no x in the manifest)', Object.keys(man).length === 3 && Object.keys(man).every(k => !man[k].x && fs.existsSync(path.join(out2, 'en', k + '.mp3'))), b.out + b.err);
   }

@@ -89,8 +89,9 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v81` (recorded narration lives in a
-separate, never-bumped `takhti-audio-v1`). **Bump `CACHE` whenever you ship
+`sw.js` caches the app shell as `takhti-v82` (recorded narration lives in a
+separate `takhti-audio-v2`, bumped only when a line is rendered again in a new
+voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
 scripts in the same order — `test/hygiene.test.js` fails otherwise, so a new
 file can't silently miss the offline cache.
@@ -1793,16 +1794,15 @@ Honest edges of what's built:
    Gemini (paid tier) and Sarvam each need a data-processing agreement.
    Children's speech through either is untested on real children. Builds without a voice server keep
    the old path (the browser's own recognizer online). The recorded
-   narration: Hindi is complete — 1,315 lines made with Gemini TTS (15 Nov
-   2026; mp3, 21 MB in `audio/hi/`); English has only 439 of the 1,332
-   lines `build-audio.mjs --lang en --dry-run` asks for, from the 1 Sep
-   build that predates Gemini (a different voice, no `v` in the manifest),
-   and the other 893 play in the phone's own voice until
-   `tools/build-audio.mjs --lang en` is run. Neither pack downloads at
-   install: `sw.js` keeps each clip in `takhti-audio-v1` the first time it
-   plays, so a line never heard online plays in the phone's own voice
-   offline. Sarvam (or ElevenLabs) can still build either pack with
-   `--provider sarvam`.
+   narration is complete in both languages and in one voice (Gemini TTS,
+   Kore, 15 Nov 2026): Hindi 1,315 lines (mp3, 21 MB in `audio/hi/`),
+   English 1,332 (mp3, 18 MB in `audio/en/`) — the 439 English lines from
+   the 1 Sep build in an older voice were rendered again with
+   `build-audio.mjs --force`, and `AUDIO_CACHE` went to v2 so phones drop
+   the old clips. Neither pack downloads at install: `sw.js` keeps each clip
+   in `takhti-audio-v2` the first time it plays, so a line never heard
+   online plays in the phone's own voice offline. Sarvam (or ElevenLabs)
+   can still build either pack with `--provider sarvam`.
 
 13. **Lessons from the syllabus are new.** Gemini drafting is tested
    against a stand-in, not yet against real chapters in an account: the

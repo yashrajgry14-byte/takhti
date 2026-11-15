@@ -38,7 +38,13 @@
      node tools/build-audio.mjs --lang en --dry-run        # count, send nothing
 
    Re-running skips anything already rendered, so a content change costs
-   only the lines that changed.
+   only the lines that changed. --force also renders again every line a
+   different provider made (the manifest's `v`; a line with no `v` predates
+   it), so the whole pack is one voice:
+     node tools/build-audio.mjs --lang en --provider gemini --force
+   A clip's filename is a hash of its text, so a line rendered again keeps
+   its name: bump AUDIO_CACHE in sw.js when shipping it, or phones that
+   already played the old clip keep it.
    ================================================================== */
 
 import fs from 'node:fs';
@@ -55,6 +61,10 @@ const OUT  = argv('--out') ? path.resolve(argv('--out')) : path.join(ROOT, 'audi
 const LIMIT = Number(argv('--limit')) || Infinity;
 const LANG = (process.argv.includes('--lang') ? process.argv[process.argv.indexOf('--lang')+1] : 'hi');
 const DRY  = process.argv.includes('--dry-run');
+// --force: render again every line this provider didn't make (the manifest's
+// `v`), so a pack built in two voices becomes one. Keyed on `v`, not "all",
+// so a run cut short carries on where it stopped like a normal one.
+const FORCE = process.argv.includes('--force');
 
 /* Voices: pick warm, unhurried, mid-range. A children's narrator, not a
    newsreader. Override with ELEVEN_VOICE_HI / ELEVEN_VOICE_EN. */
@@ -200,7 +210,8 @@ async function renderGemini(todo, manifest, save){
   const manifest = fs.existsSync(manifestPath)
     ? JSON.parse(fs.readFileSync(manifestPath,'utf8')) : {};
 
-  const pending = [...lines].filter(([k]) => !manifest[k] || !fs.existsSync(fileOf(k, manifest[k].x)));
+  const pending = [...lines].filter(([k]) => !manifest[k] || !fs.existsSync(fileOf(k, manifest[k].x))
+    || (FORCE && manifest[k].v !== PROVIDER));
   const todo = pending.slice(0, LIMIT);
 
   console.log(`bank         : ${bank.length} lessons`);
@@ -222,7 +233,7 @@ async function renderGemini(todo, manifest, save){
     const file = fileOf(k, 'mp3');
     try{
       await render(text, file);
-      manifest[k] = { t:text, b:fs.statSync(file).size };
+      manifest[k] = { t:text, b:fs.statSync(file).size, v:PROVIDER };
       if(++done % 25 === 0){
         fs.writeFileSync(manifestPath, JSON.stringify(manifest));
         console.log(`  ${done}/${todo.length}`);

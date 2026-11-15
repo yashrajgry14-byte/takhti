@@ -9,12 +9,15 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v81';
-// Recorded audio clips are content-hashed (see core/voice.js) — a given
-// filename can never change, so they live in a cache of their own that
-// the version cleanup below never touches. Bumping CACHE on a normal
-// deploy must not re-download tens of MB of narration.
-const AUDIO_CACHE = 'takhti-audio-v1';
+const CACHE = 'takhti-v82';
+// Recorded audio clips are named by a hash of their text (see core/voice.js),
+// so they live in a cache of their own that the version cleanup below never
+// touches: bumping CACHE on a normal deploy must not re-download tens of MB
+// of narration. The one time a filename's sound changes is a line rendered
+// again in a new voice (build-audio --force) — then, and only then, bump
+// AUDIO_CACHE too. v2 (15 Nov 2026): English re-rendered in Gemini's voice,
+// so phones drop the old-voice clips and fetch each again when it next plays.
+const AUDIO_CACHE = 'takhti-audio-v2';
 
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
