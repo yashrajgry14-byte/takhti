@@ -1713,9 +1713,17 @@ Honest edges of what's built:
    and the DPDP Rules' verifiable parental consent (same caveat as 8);
    Gemini (paid tier) and Sarvam each need a data-processing agreement.
    Children's speech through either is untested on real children. Builds without a voice server keep
-   the old path (the browser's own recognizer online). The narration isn't
-   rendered for Hindi yet (English has 439 lines of the old set): run
-   `tools/build-audio.mjs --lang hi --provider sarvam`.
+   the old path (the browser's own recognizer online). The recorded
+   narration: Hindi is complete — 1,315 lines made with Gemini TTS (15 Nov
+   2026; mp3, 21 MB in `audio/hi/`); English has only 439 of the 1,332
+   lines `build-audio.mjs --lang en --dry-run` asks for, from the 1 Sep
+   build that predates Gemini (a different voice, no `v` in the manifest),
+   and the other 893 play in the phone's own voice until
+   `tools/build-audio.mjs --lang en` is run. Neither pack downloads at
+   install: `sw.js` keeps each clip in `takhti-audio-v1` the first time it
+   plays, so a line never heard online plays in the phone's own voice
+   offline. Sarvam (or ElevenLabs) can still build either pack with
+   `--provider sarvam`.
 
 13. **Lessons from the syllabus are new.** Gemini drafting is tested
    against a stand-in, not yet against real chapters in an account: the
