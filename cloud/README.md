@@ -9,7 +9,7 @@ and the Gemini endpoints the app already calls on its own origin:
 | `POST /api/syllabus` | a chapter → Gemini drafts the week's lessons; the phone checks them | Gemini API, key in Secret Manager |
 | `POST /api/teachback` | Teach Munni's judge, on words only | Gemini API |
 | `POST /api/class-sync` | the class between phones | a private Cloud Storage bucket, reached with Cloud Run's own identity (no key file) |
-| `GET /healthz` | `{ gemini, sync }` — is each set up? | |
+| `GET /health` | `{ gemini, sync }` (Cloud Run reserves `/healthz` for itself) — is each set up? | |
 
 Only a whitelist is ever served (`index.html`, `sw.js`, the manifest,
 `src/`, `icons/`, `audio/`) — never `voice/`, `api/`, the notes or a `.env`.
@@ -43,7 +43,7 @@ You need a Google Cloud project with **billing on**, and your Gemini API key.
    Cloud Run's identity access to just the key and the bucket, builds the
    container and deploys to Mumbai (`asia-south1`). At the end it prints the
    link.
-4. Open `LINK/healthz` — it should say `"gemini":true,"sync":true` — then the
+4. Open `LINK/health` — it should say `"gemini":true,"sync":true` — then the
    link itself on a phone.
 
 To ship a new version: `git pull && bash cloud/deploy.sh`.
@@ -59,7 +59,7 @@ To ship a new version: `git pull && bash cloud/deploy.sh`.
   script again (new roles take a minute to apply). If it still fails, in the
   Console open Cloud Build → Settings and turn on the Cloud Run Admin and
   Service Account User roles.
-- **`/healthz` says `gemini:false`**: the secret didn't attach; run the script
+- **`/health` says `gemini:false`**: the secret didn't attach; run the script
   again.
 
 ## Cost

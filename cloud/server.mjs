@@ -121,7 +121,7 @@ export async function handle(req, res){
   const url = new URL(req.url, 'http://x');
   const p = url.pathname;
   try{
-    if(p === '/healthz') return json(res, 200, { ok: true, gemini: !!process.env.GEMINI_API_KEY, sync: !!process.env.TAKHTI_SYNC_BUCKET });
+    if(p === '/health' || p === '/healthz') return json(res, 200, { ok: true, gemini: !!process.env.GEMINI_API_KEY, sync: !!process.env.TAKHTI_SYNC_BUCKET });
     if(p.startsWith('/api/')){
       if(req.method !== 'POST') return json(res, 405, { error: 'POST only' });
       const body = await readJSON(req);

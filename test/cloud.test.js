@@ -54,7 +54,7 @@ function req(port, method, p, body){
   check('nothing outside the whitelist is served — the voice server, its .env, the API code, the notes, a path that climbs out', leaked.length === 0, leaked.join(', '));
 
   // ---- no key: honest answers, and the app falls back to the phone ----
-  const h0 = (await req(port, 'GET', '/healthz')).json;
+  const h0 = (await req(port, 'GET', '/health')).json;
   const syl0 = await req(port, 'POST', '/api/syllabus', { chapter: { text: 'Shapes' }, band: 'developing', n: 2 });
   const sync0 = await req(port, 'POST', '/api/class-sync', {});
   const ask0 = await req(port, 'POST', '/api/ask', { messages: [] });

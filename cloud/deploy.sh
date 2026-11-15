@@ -57,4 +57,4 @@ gcloud run deploy "$SERVICE" --source . --project "$PROJECT" --region "$REGION" 
 URL="$(gcloud run services describe "$SERVICE" --project "$PROJECT" --region "$REGION" --format='value(status.url)')"
 echo
 echo "Takhti is live: $URL"
-echo "Check:          $URL/healthz   (should say gemini: true, sync: true)"
+echo "Check:          $URL/health    (should say gemini: true, sync: true)"
