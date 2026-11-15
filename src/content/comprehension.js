@@ -95,8 +95,11 @@ const GRAMMAR = {
    ui/cards.js and is not loaded when this file is tested or built, so we
    carry our own — and it falls back to the other language rather than
    returning empty, because a passage that renders blank is worse than a
-   passage in the wrong language. */
-const CL = o => (o && (o[S.lang] || o.en || o.hi)) || '';
+   passage in the wrong language.
+   A lesson in a language of its own (a school lesson from an English book,
+   `lang` — core/syllabus.js) shows its passage in that language whatever the
+   app's: an English lesson read in Hindi would teach nothing. */
+const CL = o => { const l = (S.lesson && S.lesson.data && S.lesson.data.lang) || S.lang; return (o && (o[l] || o.en || o.hi)) || ''; };
 
 /* ---------------- renderers for the three new beats ---------------- */
 function compArt(b){

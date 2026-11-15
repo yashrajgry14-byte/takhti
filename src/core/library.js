@@ -74,10 +74,15 @@ function libNextWeek(code){
 
 /* A chapter's ready lessons as the teacher's draft card reads them, each
    checked again on this phone. */
+/* An English book's lessons are English lessons, read in English whatever the
+   app's language: built with lang 'en' (tools/build-library.mjs, inside the
+   id), and checked again with it here — a lesson built without it (or with
+   it taken off on the way) gets a different id and is not offered. */
+const libLangOf = book => (book && book.subject === 'english' ? 'en' : undefined);
 function libDrafts(book, ch){
   const cls = sylClass(book.cls), skills = sylSkills(cls, book.subject);
   const drafts = (ch.lessons || []).map(les => {
-    const c = sylClean(les, { band: cls.band, skills });
+    const c = sylClean(les, { band: cls.band, skills, lang: libLangOf(book) });
     if(c.ok && c.lesson.id === les.id) return { raw: les, ...c };
     return { raw: les, ...c, lesson: c.lesson || les, ok: false,
       errors: c.ok ? ['this lesson changed after it was built, so it is not offered'] : c.errors };

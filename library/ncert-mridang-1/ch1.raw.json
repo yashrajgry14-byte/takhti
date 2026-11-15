@@ -1,0 +1,2687 @@
+{
+  "at": "2026-11-15T12:09:24.729Z",
+  "cls": "c1",
+  "band": "early",
+  "rules": {
+    "band": "early",
+    "ages": [
+      5,
+      6
+    ],
+    "maxNumber": 20,
+    "sayWords": 14,
+    "read": "early"
+  },
+  "note": "Parts of the body and what each does; the sight words one and to; the first sound of a word (a to e). Keep the English words the child reads in English in the Hindi lines too.",
+  "lang": "en",
+  "source": "aemr101.pdf",
+  "model": "gemini-3.8-flash",
+  "chapter": "Two Little Hands",
+  "draftMs": 0,
+  "batch": {
+    "drafts": "batches/97s1nyv1lyw6invtmfiko671sdn5eyux2doa",
+    "repairs": "batches/ge16ru8oksf9mtvt3wxuvjnzhixw69mmzpi5"
+  },
+  "tried": [
+    {
+      "model": "gemini-3.8-flash",
+      "outcome": "batch",
+      "ms": 0,
+      "tokens": {
+        "in": 14872,
+        "out": 14988,
+        "total": 29860
+      }
+    }
+  ],
+  "repair": {
+    "status": 200,
+    "model": "gemini-3.8-flash",
+    "error": "",
+    "ms": 0,
+    "tried": [
+      {
+        "model": "gemini-3.8-flash",
+        "outcome": "batch",
+        "ms": 0,
+        "tokens": {
+          "in": 10827,
+          "out": 18743,
+          "total": 29570
+        }
+      }
+    ]
+  },
+  "drafts": [
+    {
+      "raw": {
+        "title": {
+          "en": "Nose and ears",
+          "hi": "नाक और कान"
+        },
+        "sub": {
+          "en": "What they do",
+          "hi": "वे क्या करते हैं"
+        },
+        "ic": "👃",
+        "skill": "e1-read",
+        "source": "Page 2, 7",
+        "aims": [
+          {
+            "short": {
+              "en": "Nose to smell",
+              "hi": "नाक से सूँघना"
+            },
+            "point": {
+              "en": "The child can tell that we smell with our nose.",
+              "hi": "बच्चा बता सकता है कि हम नाक से सूँघते हैं।"
+            },
+            "forget": {
+              "en": "I forgot! What do we do with our nose?",
+              "hi": "मैं भूल गई! हम अपनी नाक से क्या करते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Sniff a sweet flower. Which body part helps you?",
+                "hi": "एक महकते फूल को सूँघो। शरीर का कौन सा अंग मदद करता है?"
+              },
+              {
+                "en": "What happens when you hold your nostrils closed?",
+                "hi": "जब तुम नाक बंद करते हो, तब क्या होता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "we smell flowers and food with our nose",
+                "hi": "हम अपनी नाक से खुशबू और खाना सूँघते हैं",
+                "words": [
+                  "smell",
+                  "nose",
+                  "sniff",
+                  "flower",
+                  "food",
+                  "सूँघ",
+                  "सूँघते",
+                  "सूँघना",
+                  "नाक",
+                  "naak",
+                  "soonghna"
+                ]
+              }
+            ]
+          },
+          {
+            "short": {
+              "en": "Ears to hear",
+              "hi": "कानों से सुनना"
+            },
+            "point": {
+              "en": "The child can tell that we hear with our ears.",
+              "hi": "बच्चा बता सकता है कि हम कानों से सुनते हैं।"
+            },
+            "forget": {
+              "en": "I forgot! What do we do with our ears?",
+              "hi": "मैं भूल गई! हम अपने कानों से क्या करते हैं?"
+            },
+            "hints": [
+              {
+                "en": "When a bell rings, which body part helps you?",
+                "hi": "जब घंटी बजती है, तो शरीर का कौन सा अंग मदद करता है?"
+              },
+              {
+                "en": "Cover both sides of your head. Can you still hear well?",
+                "hi": "सिर के दोनों तरफ़ हाथ रखो। क्या अब भी अच्छे से सुनाई देता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "we hear sounds with our ears",
+                "hi": "हम अपने कानों से आवाज़ें सुनते हैं",
+                "words": [
+                  "hear",
+                  "ears",
+                  "sound",
+                  "listen",
+                  "सुन",
+                  "सुनते",
+                  "कान",
+                  "आवाज़",
+                  "sunte",
+                  "kaan"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Our body has many parts. Let us read.",
+              "hi": "हमारे शरीर के कई अंग हैं। आओ पढ़ें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Ravi has a nose. Ravi can smell a rose. Ravi has two ears. Ravi can hear a bell.",
+              "hi": "रवि के पास एक nose है। रवि rose को smell कर सकता है। रवि के दो ears हैं। रवि bell को hear कर सकता है।"
+            },
+            "art": "🌹"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What does Ravi do with his nose?",
+              "hi": "रवि nose से क्या करता है?"
+            },
+            "opts": [
+              "smell",
+              "hear"
+            ],
+            "hiOpts": [
+              "smell",
+              "hear"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children mix up smelling with hearing from the same story.",
+              "hi": "बच्चे उसी कहानी में आए सुनने के काम से उलझ जाते हैं।"
+            },
+            "aim": 1
+          },
+          {
+            "t": "readline",
+            "text": "I hear with my ears.",
+            "say": {
+              "en": "Read this line out loud.",
+              "hi": "इस पंक्ति को ज़ोर से पढ़ो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What do we do with our ears?",
+              "hi": "हम ears से क्या करते हैं?"
+            },
+            "opts": [
+              "hear",
+              "smell"
+            ],
+            "hiOpts": [
+              "hear",
+              "smell"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the job of ears with the job of the nose.",
+              "hi": "बच्चे कानों के काम को नाक के काम के साथ मिला देते हैं।"
+            },
+            "aim": 2
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "We smell with the nose and hear with ears.",
+              "hi": "हम नाक से सूँघते हैं और कानों से सुनते हैं।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "early",
+          "school": true,
+          "ic": "👃",
+          "title": {
+            "en": "Nose and ears",
+            "hi": "नाक और कान"
+          },
+          "sub": {
+            "en": "What they do",
+            "hi": "वे क्या करते हैं"
+          },
+          "skillId": "e1-read",
+          "source": "Page 2, 7",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Our body has many parts. Let us read.",
+                "hi": "हमारे शरीर के कई अंग हैं। आओ पढ़ें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Ravi has a nose. Ravi can smell a rose. Ravi has two ears. Ravi can hear a bell.",
+                "hi": "रवि के पास एक nose है। रवि rose को smell कर सकता है। रवि के दो ears हैं। रवि bell को hear कर सकता है।"
+              },
+              "art": "🌹"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What does Ravi do with his nose?",
+                "hi": "रवि nose से क्या करता है?"
+              },
+              "opts": [
+                "hear",
+                "smell"
+              ],
+              "hiOpts": [
+                "hear",
+                "smell"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children mix up smelling with hearing from the same story.",
+                "hi": "बच्चे उसी कहानी में आए सुनने के काम से उलझ जाते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "readline",
+              "say": {
+                "en": "Read this line out loud.",
+                "hi": "इस पंक्ति को ज़ोर से पढ़ो।"
+              },
+              "text": "I hear with my ears."
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What do we do with our ears?",
+                "hi": "हम ears से क्या करते हैं?"
+              },
+              "opts": [
+                "smell",
+                "hear"
+              ],
+              "hiOpts": [
+                "smell",
+                "hear"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse the job of ears with the job of the nose.",
+                "hi": "बच्चे कानों के काम को नाक के काम के साथ मिला देते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "We smell with the nose and hear with ears.",
+                "hi": "हम नाक से सूँघते हैं और कानों से सुनते हैं।"
+              }
+            }
+          ],
+          "lang": "en",
+          "subject": "read",
+          "id": "sch-wmfpw2"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says \"sniff\"))",
+          "copies the textbook word for word (\"i hear with my ears\") — write the idea in your own words and sentences"
+        ],
+        "checks": [
+          "text",
+          "text"
+        ],
+        "aimErrors": [
+          "aim 1: hint 1 (en) already gives the explanation (it says \"sniff\")",
+          "aim 2: hint 2 (en) already gives the explanation (it says \"hear\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Nose and ears",
+          "hi": "नाक और कान"
+        },
+        "sub": {
+          "en": "What they do",
+          "hi": "वे क्या करते हैं"
+        },
+        "ic": "👃",
+        "skill": "e1-read",
+        "source": "Page 2, 7",
+        "aims": [
+          {
+            "short": {
+              "en": "Nose to smell",
+              "hi": "नाक से सूँघना"
+            },
+            "point": {
+              "en": "The child can tell that we smell with our nose.",
+              "hi": "बच्चा बता सकता है कि हम नाक से सूँघते हैं।"
+            },
+            "forget": {
+              "en": "I forgot! What do we do with our nose?",
+              "hi": "मैं भूल गई! हम अपनी नाक से क्या करते हैं?"
+            },
+            "hints": [
+              {
+                "en": "Hold a sweet rose to your face. Which body part helps you?",
+                "hi": "एक गुलाब चेहरे के पास लाओ। शरीर का कौन सा अंग मदद करता है?"
+              },
+              {
+                "en": "What happens when you hold your nostrils closed?",
+                "hi": "जब तुम नथुने बंद करते हो, तब क्या होता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "we smell flowers and food with our nose",
+                "hi": "हम अपनी नाक से खुशबू और खाना सूँघते हैं",
+                "words": [
+                  "smell",
+                  "nose",
+                  "sniff",
+                  "flower",
+                  "food",
+                  "सूँघ",
+                  "सूँघते",
+                  "सूँघना",
+                  "नाक",
+                  "naak",
+                  "soonghna"
+                ]
+              }
+            ]
+          },
+          {
+            "short": {
+              "en": "Ears to hear",
+              "hi": "कानों से सुनना"
+            },
+            "point": {
+              "en": "The child can tell that we hear with our ears.",
+              "hi": "बच्चा बता सकता है कि हम कानों से सुनते हैं।"
+            },
+            "forget": {
+              "en": "I forgot! What do we do with our ears?",
+              "hi": "मैं भूल गई! हम अपने कानों से क्या करते हैं?"
+            },
+            "hints": [
+              {
+                "en": "When a bell rings, which body part helps you?",
+                "hi": "जब घंटी बजती है, तो शरीर का कौन सा अंग मदद करता है?"
+              },
+              {
+                "en": "Cover both sides of your head. Can you still tell what was said?",
+                "hi": "सिर के दोनों तरफ़ हाथ रखो। क्या अब भी सब साफ़ समझ आता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "we hear sounds with our ears",
+                "hi": "हम अपने कानों से आवाज़ें सुनते हैं",
+                "words": [
+                  "hear",
+                  "ears",
+                  "sound",
+                  "listen",
+                  "सुन",
+                  "सुनते",
+                  "कान",
+                  "आवाज़",
+                  "sunte",
+                  "kaan"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Our body has many parts. Let us read.",
+              "hi": "हमारे शरीर के कई अंग हैं। आओ पढ़ें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Ravi has a nose. Ravi can smell a rose. Ravi has two ears. Ravi can hear a bell.",
+              "hi": "रवि के पास एक nose है। रवि rose को smell कर सकता है। रवि के दो ears हैं। रवि bell को hear कर सकता है।"
+            },
+            "art": "🌹"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What does Ravi do with his nose?",
+              "hi": "रवि nose से क्या करता है?"
+            },
+            "opts": [
+              "smell",
+              "hear"
+            ],
+            "hiOpts": [
+              "smell",
+              "hear"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children mix up smelling with hearing from the same story.",
+              "hi": "बच्चे उसी कहानी में आए सुनने के काम से उलझ जाते हैं।"
+            },
+            "aim": 1
+          },
+          {
+            "t": "readline",
+            "text": "Two ears hear the bell ring.",
+            "say": {
+              "en": "Read this line out loud.",
+              "hi": "इस पंक्ति को ज़ोर से पढ़ो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What do we do with our ears?",
+              "hi": "हम ears से क्या करते हैं?"
+            },
+            "opts": [
+              "hear",
+              "smell"
+            ],
+            "hiOpts": [
+              "hear",
+              "smell"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the job of ears with the job of the nose.",
+              "hi": "बच्चे कानों के काम को नाक के काम के साथ मिला देते हैं।"
+            },
+            "aim": 2
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "We smell with the nose and hear with ears.",
+              "hi": "हम नाक से सूँघते हैं और कानों से सुनते हैं।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "early",
+          "school": true,
+          "ic": "👃",
+          "title": {
+            "en": "Nose and ears",
+            "hi": "नाक और कान"
+          },
+          "sub": {
+            "en": "What they do",
+            "hi": "वे क्या करते हैं"
+          },
+          "skillId": "e1-read",
+          "source": "Page 2, 7",
+          "aims": [
+            {
+              "id": "sx61wjc.0",
+              "kind": "explain",
+              "short": {
+                "en": "Nose to smell",
+                "hi": "नाक से सूँघना"
+              },
+              "point": {
+                "en": "The child can tell that we smell with our nose.",
+                "hi": "बच्चा बता सकता है कि हम नाक से सूँघते हैं।"
+              },
+              "forget": {
+                "en": "I forgot! What do we do with our nose?",
+                "hi": "मैं भूल गई! हम अपनी नाक से क्या करते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "Hold a sweet rose to your face. Which body part helps you?",
+                  "hi": "एक गुलाब चेहरे के पास लाओ। शरीर का कौन सा अंग मदद करता है?"
+                },
+                {
+                  "en": "What happens when you hold your nostrils closed?",
+                  "hi": "जब तुम नथुने बंद करते हो, तब क्या होता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "we smell flowers and food with our nose",
+                  "hi": "हम अपनी नाक से खुशबू और खाना सूँघते हैं",
+                  "words": [
+                    "smell",
+                    "sniff",
+                    "flower",
+                    "food",
+                    "सूँघ",
+                    "सूँघते",
+                    "सूँघना",
+                    "naak",
+                    "soonghna"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "sx61wjc.1",
+              "kind": "explain",
+              "short": {
+                "en": "Ears to hear",
+                "hi": "कानों से सुनना"
+              },
+              "point": {
+                "en": "The child can tell that we hear with our ears.",
+                "hi": "बच्चा बता सकता है कि हम कानों से सुनते हैं।"
+              },
+              "forget": {
+                "en": "I forgot! What do we do with our ears?",
+                "hi": "मैं भूल गई! हम अपने कानों से क्या करते हैं?"
+              },
+              "hints": [
+                {
+                  "en": "When a bell rings, which body part helps you?",
+                  "hi": "जब घंटी बजती है, तो शरीर का कौन सा अंग मदद करता है?"
+                },
+                {
+                  "en": "Cover both sides of your head. Can you still tell what was said?",
+                  "hi": "सिर के दोनों तरफ़ हाथ रखो। क्या अब भी सब साफ़ समझ आता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "we hear sounds with our ears",
+                  "hi": "हम अपने कानों से आवाज़ें सुनते हैं",
+                  "words": [
+                    "hear",
+                    "sound",
+                    "listen",
+                    "सुन",
+                    "सुनते",
+                    "आवाज़",
+                    "sunte",
+                    "kaan"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Our body has many parts. Let us read.",
+                "hi": "हमारे शरीर के कई अंग हैं। आओ पढ़ें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Ravi has a nose. Ravi can smell a rose. Ravi has two ears. Ravi can hear a bell.",
+                "hi": "रवि के पास एक nose है। रवि rose को smell कर सकता है। रवि के दो ears हैं। रवि bell को hear कर सकता है।"
+              },
+              "art": "🌹"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What does Ravi do with his nose?",
+                "hi": "रवि nose से क्या करता है?"
+              },
+              "opts": [
+                "hear",
+                "smell"
+              ],
+              "hiOpts": [
+                "hear",
+                "smell"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children mix up smelling with hearing from the same story.",
+                "hi": "बच्चे उसी कहानी में आए सुनने के काम से उलझ जाते हैं।"
+              },
+              "aim": 1,
+              "derived": true
+            },
+            {
+              "t": "readline",
+              "say": {
+                "en": "Read this line out loud.",
+                "hi": "इस पंक्ति को ज़ोर से पढ़ो।"
+              },
+              "text": "Two ears hear the bell ring."
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What do we do with our ears?",
+                "hi": "हम ears से क्या करते हैं?"
+              },
+              "opts": [
+                "smell",
+                "hear"
+              ],
+              "hiOpts": [
+                "smell",
+                "hear"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse the job of ears with the job of the nose.",
+                "hi": "बच्चे कानों के काम को नाक के काम के साथ मिला देते हैं।"
+              },
+              "aim": 2,
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "We smell with the nose and hear with ears.",
+                "hi": "हम नाक से सूँघते हैं और कानों से सुनते हैं।"
+              }
+            }
+          ],
+          "lang": "en",
+          "subject": "read",
+          "id": "sch-x61wjc"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "text",
+          "text"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "One and to",
+          "hi": "one और to"
+        },
+        "sub": {
+          "en": "Two sight words",
+          "hi": "दो sight words"
+        },
+        "ic": "📖",
+        "skill": "u-sight",
+        "source": "Page 2",
+        "aims": [
+          {
+            "short": {
+              "en": "Sight word one",
+              "hi": "Sight word one"
+            },
+            "point": {
+              "en": "The child can read the sight word one.",
+              "hi": "बच्चा sight word one पढ़ सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I read the word o-n-e?",
+              "hi": "मैं भूल गई! o-n-e शब्द को कैसे पढ़ूँ?"
+            },
+            "hints": [
+              {
+                "en": "How many heads do you have on your body?",
+                "hi": "तुम्हारे शरीर पर कितने सिर हैं?"
+              },
+              {
+                "en": "What number comes just before two?",
+                "hi": "दो से ठीक पहले कौन सी संख्या आती है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word o-n-e is read as one",
+                "hi": "o-n-e शब्द को one पढ़ा जाता है",
+                "words": [
+                  "one",
+                  "a single",
+                  "only one",
+                  "एक",
+                  "वन",
+                  "ek",
+                  "one number"
+                ]
+              }
+            ]
+          },
+          {
+            "short": {
+              "en": "Sight word to",
+              "hi": "Sight word to"
+            },
+            "point": {
+              "en": "The child can read the sight word to.",
+              "hi": "बच्चा sight word to पढ़ सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I read the word t-o?",
+              "hi": "मैं भूल गई! t-o शब्द को कैसे पढ़ूँ?"
+            },
+            "hints": [
+              {
+                "en": "It starts with the sound of t. Can you say it?",
+                "hi": "यह t की आवाज़ से शुरू होता है। क्या तुम बोल सकते हो?"
+              },
+              {
+                "en": "Think of the small word before walk in legs to walk.",
+                "hi": "legs to walk में walk से पहले आने वाले शब्द को सोचो।"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word t-o is read as to",
+                "hi": "t-o शब्द को to पढ़ा जाता है",
+                "words": [
+                  "to",
+                  "too",
+                  "टू",
+                  "to walk",
+                  "to see",
+                  "to run"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us read words for our body.",
+              "hi": "आओ अपने शरीर के लिए शब्द पढ़ें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "I have one head. I have one mouth. I have two legs to walk.",
+              "hi": "मेरे पास one head है। मेरे पास one mouth है। मेरे पास चलने के लिए two legs to walk हैं।"
+            },
+            "art": "🧒"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many heads do I have?",
+              "hi": "मेरे पास कितने head हैं?"
+            },
+            "opts": [
+              "one",
+              "two"
+            ],
+            "hiOpts": [
+              "one",
+              "two"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse one with two because legs come as two.",
+              "hi": "बच्चे two legs की वजह से one को two समझ लेते हैं।"
+            },
+            "aim": 1
+          },
+          {
+            "t": "readline",
+            "text": "Two legs to walk.",
+            "say": {
+              "en": "Read this line out loud.",
+              "hi": "इस पंक्ति को ज़ोर से पढ़ो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Which word comes before walk?",
+              "hi": "walk से पहले कौन सा शब्द आया?"
+            },
+            "opts": [
+              "to",
+              "two"
+            ],
+            "hiOpts": [
+              "to",
+              "two"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the sight word to with the number word two.",
+              "hi": "बच्चे sight word to को संख्या शब्द two के साथ मिला देते हैं।"
+            },
+            "aim": 2
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "One head and two legs to walk.",
+              "hi": "एक सिर और चलने के लिए दो पैर।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "early",
+          "school": true,
+          "ic": "📖",
+          "title": {
+            "en": "One and to",
+            "hi": "one और to"
+          },
+          "sub": {
+            "en": "Two sight words",
+            "hi": "दो sight words"
+          },
+          "skillId": "u-sight",
+          "source": "Page 2",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us read words for our body.",
+                "hi": "आओ अपने शरीर के लिए शब्द पढ़ें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "I have one head. I have one mouth. I have two legs to walk.",
+                "hi": "मेरे पास one head है। मेरे पास one mouth है। मेरे पास चलने के लिए two legs to walk हैं।"
+              },
+              "art": "🧒"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many heads do I have?",
+                "hi": "मेरे पास कितने head हैं?"
+              },
+              "opts": [
+                "one",
+                "two"
+              ],
+              "hiOpts": [
+                "one",
+                "two"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children confuse one with two because legs come as two.",
+                "hi": "बच्चे two legs की वजह से one को two समझ लेते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "readline",
+              "say": {
+                "en": "Read this line out loud.",
+                "hi": "इस पंक्ति को ज़ोर से पढ़ो।"
+              },
+              "text": "Two legs to walk."
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Which word comes before walk?",
+                "hi": "walk से पहले कौन सा शब्द आया?"
+              },
+              "opts": [
+                "to",
+                "two"
+              ],
+              "hiOpts": [
+                "to",
+                "two"
+              ],
+              "correct": 0,
+              "why": {
+                "en": "Children confuse the sight word to with the number word two.",
+                "hi": "बच्चे sight word to को संख्या शब्द two के साथ मिला देते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "One head and two legs to walk.",
+                "hi": "एक सिर और चलने के लिए दो पैर।"
+              }
+            }
+          ],
+          "lang": "en",
+          "subject": "read",
+          "id": "sch-1ds8z1u"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: the short name needs English and Hindi, at most 32 letters)",
+          "beat 4: the right answer \"to\" isn't in the passage"
+        ],
+        "checks": [
+          "text",
+          "teacher"
+        ],
+        "aimErrors": [
+          "aim 1: the short name needs English and Hindi, at most 32 letters",
+          "aim 2: the short name needs English and Hindi, at most 32 letters"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "One and to",
+          "hi": "one और to"
+        },
+        "sub": {
+          "en": "Two sight words",
+          "hi": "दो sight words"
+        },
+        "ic": "📖",
+        "skill": "u-sight",
+        "source": "Page 2",
+        "aims": [
+          {
+            "short": {
+              "en": "Word one",
+              "hi": "शब्द one"
+            },
+            "point": {
+              "en": "The child can read the sight word one.",
+              "hi": "बच्चा sight word one पढ़ सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I read the word o-n-e?",
+              "hi": "मैं भूल गई! o-n-e शब्द को कैसे पढ़ूँ?"
+            },
+            "hints": [
+              {
+                "en": "How many heads do you have on your body?",
+                "hi": "तुम्हारे शरीर पर कितने सिर हैं?"
+              },
+              {
+                "en": "What number comes just before two?",
+                "hi": "दो से ठीक पहले कौन सी संख्या आती है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word o-n-e is read as one",
+                "hi": "o-n-e शब्द को one पढ़ा जाता है",
+                "words": [
+                  "one",
+                  "a single",
+                  "only one",
+                  "एक",
+                  "वन",
+                  "ek",
+                  "one number"
+                ]
+              }
+            ]
+          },
+          {
+            "short": {
+              "en": "Word to",
+              "hi": "शब्द to"
+            },
+            "point": {
+              "en": "The child can read the sight word to.",
+              "hi": "बच्चा sight word to पढ़ सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I read the word t-o?",
+              "hi": "मैं भूल गई! t-o शब्द को कैसे पढ़ूँ?"
+            },
+            "hints": [
+              {
+                "en": "It starts with the sound of t. Can you say it?",
+                "hi": "यह t की आवाज़ से शुरू होता है। क्या तुम बोल सकते हो?"
+              },
+              {
+                "en": "It rhymes with do. Can you say it?",
+                "hi": "यह do से मिलता-जुलता है। क्या तुम बोल सकते हो?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word t-o is read as to",
+                "hi": "t-o शब्द को to पढ़ा जाता है",
+                "words": [
+                  "to",
+                  "too",
+                  "टू",
+                  "to walk",
+                  "to see",
+                  "to run"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us read words for our body.",
+              "hi": "आओ अपने शरीर के लिए शब्द पढ़ें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Ravi has one head. Ravi has one nose. Ravi has two eyes.",
+              "hi": "रवि के पास one head है। रवि के पास one nose है। रवि के पास two eyes हैं।"
+            },
+            "art": "🧒"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "How many heads does Ravi have?",
+              "hi": "रवि के पास कितने head हैं?"
+            },
+            "opts": [
+              "one",
+              "two"
+            ],
+            "hiOpts": [
+              "one",
+              "two"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse one with two because eyes come as two.",
+              "hi": "बच्चे two eyes की वजह से one को two समझ लेते हैं।"
+            },
+            "aim": 1
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "Ravi has two legs to walk. Ravi runs to school.",
+              "hi": "रवि के पास walk करने के लिए two legs हैं। रवि school तक run करता है।"
+            },
+            "art": "🚶"
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "Which word comes before walk?",
+              "hi": "walk से पहले कौन सा शब्द आया?"
+            },
+            "opts": [
+              "to",
+              "two"
+            ],
+            "hiOpts": [
+              "to",
+              "two"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the sight word to with the number word two.",
+              "hi": "बच्चे sight word to को संख्या शब्द two के साथ मिला देते हैं।"
+            },
+            "aim": 2
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "One head and two legs to walk.",
+              "hi": "एक सिर और चलने के लिए दो पैर।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "early",
+          "school": true,
+          "ic": "📖",
+          "title": {
+            "en": "One and to",
+            "hi": "one और to"
+          },
+          "sub": {
+            "en": "Two sight words",
+            "hi": "दो sight words"
+          },
+          "skillId": "u-sight",
+          "source": "Page 2",
+          "aims": [
+            {
+              "id": "s13m9ezb.0",
+              "kind": "explain",
+              "short": {
+                "en": "Word one",
+                "hi": "शब्द one"
+              },
+              "point": {
+                "en": "The child can read the sight word one.",
+                "hi": "बच्चा sight word one पढ़ सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I read the word o-n-e?",
+                "hi": "मैं भूल गई! o-n-e शब्द को कैसे पढ़ूँ?"
+              },
+              "hints": [
+                {
+                  "en": "How many heads do you have on your body?",
+                  "hi": "तुम्हारे शरीर पर कितने सिर हैं?"
+                },
+                {
+                  "en": "What number comes just before two?",
+                  "hi": "दो से ठीक पहले कौन सी संख्या आती है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the word o-n-e is read as one",
+                  "hi": "o-n-e शब्द को one पढ़ा जाता है",
+                  "words": [
+                    "one",
+                    "a single",
+                    "only one",
+                    "एक",
+                    "वन",
+                    "ek",
+                    "one number"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "s13m9ezb.1",
+              "kind": "explain",
+              "short": {
+                "en": "Word to",
+                "hi": "शब्द to"
+              },
+              "point": {
+                "en": "The child can read the sight word to.",
+                "hi": "बच्चा sight word to पढ़ सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I read the word t-o?",
+                "hi": "मैं भूल गई! t-o शब्द को कैसे पढ़ूँ?"
+              },
+              "hints": [
+                {
+                  "en": "It starts with the sound of t. Can you say it?",
+                  "hi": "यह t की आवाज़ से शुरू होता है। क्या तुम बोल सकते हो?"
+                },
+                {
+                  "en": "It rhymes with do. Can you say it?",
+                  "hi": "यह do से मिलता-जुलता है। क्या तुम बोल सकते हो?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the word t-o is read as to",
+                  "hi": "t-o शब्द को to पढ़ा जाता है",
+                  "words": [
+                    "to",
+                    "too",
+                    "टू",
+                    "to walk",
+                    "to see",
+                    "to run"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us read words for our body.",
+                "hi": "आओ अपने शरीर के लिए शब्द पढ़ें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Ravi has one head. Ravi has one nose. Ravi has two eyes.",
+                "hi": "रवि के पास one head है। रवि के पास one nose है। रवि के पास two eyes हैं।"
+              },
+              "art": "🧒"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "How many heads does Ravi have?",
+                "hi": "रवि के पास कितने head हैं?"
+              },
+              "opts": [
+                "two",
+                "one"
+              ],
+              "hiOpts": [
+                "two",
+                "one"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse one with two because eyes come as two.",
+                "hi": "बच्चे two eyes की वजह से one को two समझ लेते हैं।"
+              },
+              "aim": 1,
+              "derived": true
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "Ravi has two legs to walk. Ravi runs to school.",
+                "hi": "रवि के पास walk करने के लिए two legs हैं। रवि school तक run करता है।"
+              },
+              "art": "🚶"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "Which word comes before walk?",
+                "hi": "walk से पहले कौन सा शब्द आया?"
+              },
+              "opts": [
+                "two",
+                "to"
+              ],
+              "hiOpts": [
+                "two",
+                "to"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse the sight word to with the number word two.",
+                "hi": "बच्चे sight word to को संख्या शब्द two के साथ मिला देते हैं।"
+              },
+              "aim": 2,
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "One head and two legs to walk.",
+                "hi": "एक सिर और चलने के लिए दो पैर।"
+              }
+            }
+          ],
+          "lang": "en",
+          "subject": "read",
+          "id": "sch-13m9ezb"
+        },
+        "ok": false,
+        "errors": [
+          "beat 4: the right answer \"to\" isn't in the passage"
+        ],
+        "checks": [
+          "text",
+          "teacher"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "not used"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Sounds of a and b",
+          "hi": "a और b की आवाज़ें"
+        },
+        "sub": {
+          "en": "First sound in a word",
+          "hi": "शब्द की पहली आवाज़"
+        },
+        "ic": "🅰️",
+        "skill": "e1-decode",
+        "source": "Page 11, 13",
+        "aims": [
+          {
+            "short": {
+              "en": "First sound a",
+              "hi": "पहली आवाज़ a"
+            },
+            "point": {
+              "en": "The child can identify the first sound of a word starting with a.",
+              "hi": "बच्चा a से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I find the first sound of ant?",
+              "hi": "मैं भूल गई! ant की पहली आवाज़ कैसे ढूँढूँ?"
+            },
+            "hints": [
+              {
+                "en": "Say ant slowly. What sound comes out first?",
+                "hi": "ant धीरे से बोलो। सबसे पहले क्या आवाज़ निकलती है?"
+              },
+              {
+                "en": "Does it start like axe and apple?",
+                "hi": "क्या यह axe और apple की तरह शुरू होता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word ant starts with the letter sound a",
+                "hi": "ant शब्द a की आवाज़ से शुरू होता है",
+                "words": [
+                  "a",
+                  "letter a",
+                  "ant",
+                  "starts with a",
+                  "a sound",
+                  "ए",
+                  "shuru"
+                ]
+              }
+            ]
+          },
+          {
+            "short": {
+              "en": "First sound b",
+              "hi": "पहली आवाज़ b"
+            },
+            "point": {
+              "en": "The child can identify the first sound of a word starting with b.",
+              "hi": "बच्चा b से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I find the first sound of bag?",
+              "hi": "मैं भूल गई! bag की पहली आवाज़ कैसे ढूँढूँ?"
+            },
+            "hints": [
+              {
+                "en": "Say bag slowly. What sound do your lips make first?",
+                "hi": "bag धीरे से बोलो। तुम्हारे होंठ पहले कैसी आवाज़ निकालते हैं?"
+              },
+              {
+                "en": "Does it start like boy and bee?",
+                "hi": "क्या यह boy और bee की तरह शुरू होता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word bag starts with the letter sound b",
+                "hi": "bag शब्द b की आवाज़ से शुरू होता है",
+                "words": [
+                  "b",
+                  "letter b",
+                  "bag",
+                  "starts with b",
+                  "b sound",
+                  "बी",
+                  "shuru"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us listen to the first sounds.",
+              "hi": "आओ पहली आवाज़ों को ध्यान से सुनें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "An ant is on a leaf. A boy has a bag. The bag is big.",
+              "hi": "एक ant पत्ती पर है। एक boy के पास bag है। bag बड़ा है।"
+            },
+            "art": "🐜"
+          },
+          {
+            "t": "word",
+            "word": "ant",
+            "art": "🐜",
+            "say": {
+              "en": "Look at this word. Read it.",
+              "hi": "इस शब्द को देखो और पढ़ो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is the first sound of ant?",
+              "hi": "ant की पहली आवाज़ क्या है?"
+            },
+            "opts": [
+              "a",
+              "e"
+            ],
+            "hiOpts": [
+              "a",
+              "e"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the short vowel sounds of a and e.",
+              "hi": "बच्चे a और e की छोटी स्वर ध्वनियों में उलझ जाते हैं।"
+            },
+            "aim": 1
+          },
+          {
+            "t": "word",
+            "word": "bag",
+            "art": "🎒",
+            "say": {
+              "en": "Look at this word. Read it.",
+              "hi": "इस शब्द को देखो और पढ़ो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is the first sound of bag?",
+              "hi": "bag की पहली आवाज़ क्या है?"
+            },
+            "opts": [
+              "b",
+              "d"
+            ],
+            "hiOpts": [
+              "b",
+              "d"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children mix up b and d, which look and sound similar.",
+              "hi": "बच्चे b और d में उलझते हैं, जो देखने और सुनने में मिलते-जुलते हैं।"
+            },
+            "aim": 2
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Ant starts with a, bag starts with b.",
+              "hi": "Ant a से शुरू होता है, bag b से।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "early",
+          "school": true,
+          "ic": "🅰️",
+          "title": {
+            "en": "Sounds of a and b",
+            "hi": "a और b की आवाज़ें"
+          },
+          "sub": {
+            "en": "First sound in a word",
+            "hi": "शब्द की पहली आवाज़"
+          },
+          "skillId": "e1-decode",
+          "source": "Page 11, 13",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us listen to the first sounds.",
+                "hi": "आओ पहली आवाज़ों को ध्यान से सुनें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "An ant is on a leaf. A boy has a bag. The bag is big.",
+                "hi": "एक ant पत्ती पर है। एक boy के पास bag है। bag बड़ा है।"
+              },
+              "art": "🐜"
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Look at this word. Read it.",
+                "hi": "इस शब्द को देखो और पढ़ो।"
+              },
+              "w": "ant",
+              "art": "🐜"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is the first sound of ant?",
+                "hi": "ant की पहली आवाज़ क्या है?"
+              },
+              "opts": [
+                "e",
+                "a"
+              ],
+              "hiOpts": [
+                "e",
+                "a"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse the short vowel sounds of a and e.",
+                "hi": "बच्चे a और e की छोटी स्वर ध्वनियों में उलझ जाते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Look at this word. Read it.",
+                "hi": "इस शब्द को देखो और पढ़ो।"
+              },
+              "w": "bag",
+              "art": "🎒"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is the first sound of bag?",
+                "hi": "bag की पहली आवाज़ क्या है?"
+              },
+              "opts": [
+                "d",
+                "b"
+              ],
+              "hiOpts": [
+                "d",
+                "b"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children mix up b and d, which look and sound similar.",
+                "hi": "बच्चे b और d में उलझते हैं, जो देखने और सुनने में मिलते-जुलते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Ant starts with a, bag starts with b.",
+                "hi": "Ant a से शुरू होता है, bag b से।"
+              }
+            }
+          ],
+          "lang": "en",
+          "subject": "read",
+          "id": "sch-1qhqfkv"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"ant\"))"
+        ],
+        "checks": [
+          "text",
+          "text"
+        ],
+        "aimErrors": [
+          "aim 1: Munni's question (en) already gives the explanation (it says \"ant\")",
+          "aim 2: Munni's question (en) already gives the explanation (it says \"bag\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Sounds of a and b",
+          "hi": "a और b की आवाज़ें"
+        },
+        "sub": {
+          "en": "First sound in a word",
+          "hi": "शब्द की पहली आवाज़"
+        },
+        "ic": "🅰️",
+        "skill": "e1-decode",
+        "source": "Page 11, 13",
+        "aims": [
+          {
+            "short": {
+              "en": "First sound a",
+              "hi": "पहली आवाज़ a"
+            },
+            "point": {
+              "en": "The child can identify the first sound of a word starting with a.",
+              "hi": "बच्चा a से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I find the first sound of this word?",
+              "hi": "मैं भूल गई! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
+            },
+            "hints": [
+              {
+                "en": "Say this word slowly. What sound comes out first?",
+                "hi": "यह शब्द धीरे से बोलो। सबसे पहले क्या आवाज़ निकलती है?"
+              },
+              {
+                "en": "Does it start like axe and apple?",
+                "hi": "क्या यह axe और apple की तरह शुरू होता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word ant starts with the letter sound a",
+                "hi": "ant शब्द a की आवाज़ से शुरू होता है",
+                "words": [
+                  "a",
+                  "letter a",
+                  "ant",
+                  "starts with a",
+                  "a sound",
+                  "ए",
+                  "shuru"
+                ]
+              }
+            ]
+          },
+          {
+            "short": {
+              "en": "First sound b",
+              "hi": "पहली आवाज़ b"
+            },
+            "point": {
+              "en": "The child can identify the first sound of a word starting with b.",
+              "hi": "बच्चा b से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I know the first sound here?",
+              "hi": "मैं भूल गई! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
+            },
+            "hints": [
+              {
+                "en": "Say this word slowly. What sound do your lips make first?",
+                "hi": "यह शब्द धीरे से बोलो। तुम्हारे होंठ पहले कैसी आवाज़ निकालते हैं?"
+              },
+              {
+                "en": "Does it start like boy and bee?",
+                "hi": "क्या यह boy और bee की तरह शुरू होता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word bag starts with the letter sound b",
+                "hi": "bag शब्द b की आवाज़ से शुरू होता है",
+                "words": [
+                  "b",
+                  "letter b",
+                  "bag",
+                  "starts with b",
+                  "b sound",
+                  "बी",
+                  "shuru"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us listen to the first sounds.",
+              "hi": "आओ पहली आवाज़ों को ध्यान से सुनें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "An ant is on a leaf. A boy has a bag. The bag is big.",
+              "hi": "एक ant पत्ती पर है। एक boy के पास bag है। bag बड़ा है।"
+            },
+            "art": "🐜"
+          },
+          {
+            "t": "word",
+            "word": "ant",
+            "art": "🐜",
+            "say": {
+              "en": "Look at this word. Read it.",
+              "hi": "इस शब्द को देखो और पढ़ो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is the first sound of ant?",
+              "hi": "ant की पहली आवाज़ क्या है?"
+            },
+            "opts": [
+              "a",
+              "e"
+            ],
+            "hiOpts": [
+              "a",
+              "e"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the short vowel sounds of a and e.",
+              "hi": "बच्चे a और e की छोटी स्वर ध्वनियों में उलझ जाते हैं।"
+            },
+            "aim": 1
+          },
+          {
+            "t": "word",
+            "word": "bag",
+            "art": "🎒",
+            "say": {
+              "en": "Look at this word. Read it.",
+              "hi": "इस शब्द को देखो और पढ़ो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is the first sound of bag?",
+              "hi": "bag की पहली आवाज़ क्या है?"
+            },
+            "opts": [
+              "b",
+              "d"
+            ],
+            "hiOpts": [
+              "b",
+              "d"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children mix up b and d, which look and sound similar.",
+              "hi": "बच्चे b और d में उलझते हैं, जो देखने और सुनने में मिलते-जुलते हैं।"
+            },
+            "aim": 2
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Ant starts with a, bag starts with b.",
+              "hi": "Ant a से शुरू होता है, bag b से।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "early",
+          "school": true,
+          "ic": "🅰️",
+          "title": {
+            "en": "Sounds of a and b",
+            "hi": "a और b की आवाज़ें"
+          },
+          "sub": {
+            "en": "First sound in a word",
+            "hi": "शब्द की पहली आवाज़"
+          },
+          "skillId": "e1-decode",
+          "source": "Page 11, 13",
+          "aims": [
+            {
+              "id": "sh11tzv.0",
+              "kind": "explain",
+              "short": {
+                "en": "First sound a",
+                "hi": "पहली आवाज़ a"
+              },
+              "point": {
+                "en": "The child can identify the first sound of a word starting with a.",
+                "hi": "बच्चा a से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I find the first sound of this word?",
+                "hi": "मैं भूल गई! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
+              },
+              "hints": [
+                {
+                  "en": "Say this word slowly. What sound comes out first?",
+                  "hi": "यह शब्द धीरे से बोलो। सबसे पहले क्या आवाज़ निकलती है?"
+                },
+                {
+                  "en": "Does it start like axe and apple?",
+                  "hi": "क्या यह axe और apple की तरह शुरू होता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the word ant starts with the letter sound a",
+                  "hi": "ant शब्द a की आवाज़ से शुरू होता है",
+                  "words": [
+                    "a",
+                    "letter a",
+                    "ant",
+                    "starts with a",
+                    "a sound",
+                    "ए",
+                    "shuru"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "sh11tzv.1",
+              "kind": "explain",
+              "short": {
+                "en": "First sound b",
+                "hi": "पहली आवाज़ b"
+              },
+              "point": {
+                "en": "The child can identify the first sound of a word starting with b.",
+                "hi": "बच्चा b से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I know the first sound here?",
+                "hi": "मैं भूल गई! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
+              },
+              "hints": [
+                {
+                  "en": "Say this word slowly. What sound do your lips make first?",
+                  "hi": "यह शब्द धीरे से बोलो। तुम्हारे होंठ पहले कैसी आवाज़ निकालते हैं?"
+                },
+                {
+                  "en": "Does it start like boy and bee?",
+                  "hi": "क्या यह boy और bee की तरह शुरू होता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the word bag starts with the letter sound b",
+                  "hi": "bag शब्द b की आवाज़ से शुरू होता है",
+                  "words": [
+                    "b",
+                    "letter b",
+                    "bag",
+                    "starts with b",
+                    "b sound",
+                    "बी",
+                    "shuru"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us listen to the first sounds.",
+                "hi": "आओ पहली आवाज़ों को ध्यान से सुनें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "An ant is on a leaf. A boy has a bag. The bag is big.",
+                "hi": "एक ant पत्ती पर है। एक boy के पास bag है। bag बड़ा है।"
+              },
+              "art": "🐜"
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Look at this word. Read it.",
+                "hi": "इस शब्द को देखो और पढ़ो।"
+              },
+              "w": "ant",
+              "art": "🐜"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is the first sound of ant?",
+                "hi": "ant की पहली आवाज़ क्या है?"
+              },
+              "opts": [
+                "e",
+                "a"
+              ],
+              "hiOpts": [
+                "e",
+                "a"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse the short vowel sounds of a and e.",
+                "hi": "बच्चे a और e की छोटी स्वर ध्वनियों में उलझ जाते हैं।"
+              },
+              "aim": 1,
+              "derived": true
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Look at this word. Read it.",
+                "hi": "इस शब्द को देखो और पढ़ो।"
+              },
+              "w": "bag",
+              "art": "🎒"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is the first sound of bag?",
+                "hi": "bag की पहली आवाज़ क्या है?"
+              },
+              "opts": [
+                "d",
+                "b"
+              ],
+              "hiOpts": [
+                "d",
+                "b"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children mix up b and d, which look and sound similar.",
+                "hi": "बच्चे b और d में उलझते हैं, जो देखने और सुनने में मिलते-जुलते हैं।"
+              },
+              "aim": 2,
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Ant starts with a, bag starts with b.",
+                "hi": "Ant a से शुरू होता है, bag b से।"
+              }
+            }
+          ],
+          "lang": "en",
+          "subject": "read",
+          "id": "sch-h11tzv"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "text",
+          "text"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    },
+    {
+      "raw": {
+        "title": {
+          "en": "Sounds of d and e",
+          "hi": "d और e की आवाज़ें"
+        },
+        "sub": {
+          "en": "Dog and egg",
+          "hi": "dog और egg"
+        },
+        "ic": "🐶",
+        "skill": "e1-decode",
+        "source": "Page 11, 13",
+        "aims": [
+          {
+            "short": {
+              "en": "First sound d",
+              "hi": "पहली आवाज़ d"
+            },
+            "point": {
+              "en": "The child can identify the first sound of a word starting with d.",
+              "hi": "बच्चा d से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I find the first sound of dog?",
+              "hi": "मैं भूल गई! dog की पहली आवाज़ कैसे ढूँढूँ?"
+            },
+            "hints": [
+              {
+                "en": "Say dog slowly to yourself. What sound comes first?",
+                "hi": "dog मन में धीरे से बोलो। पहले कौन सी आवाज़ आती है?"
+              },
+              {
+                "en": "Does it start like den and door?",
+                "hi": "क्या यह den और door की तरह शुरू होता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word dog starts with the letter sound d",
+                "hi": "dog शब्द d की आवाज़ से शुरू होता है",
+                "words": [
+                  "d",
+                  "letter d",
+                  "dog",
+                  "starts with d",
+                  "d sound",
+                  "डी",
+                  "shuru"
+                ]
+              }
+            ]
+          },
+          {
+            "short": {
+              "en": "First sound e",
+              "hi": "पहली आवाज़ e"
+            },
+            "point": {
+              "en": "The child can identify the first sound of a word starting with e.",
+              "hi": "बच्चा e से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I find the first sound of egg?",
+              "hi": "मैं भूल गई! egg की पहली आवाज़ कैसे ढूँढूँ?"
+            },
+            "hints": [
+              {
+                "en": "Say egg slowly. What sound do you hear at the start?",
+                "hi": "egg धीरे से बोलो। शुरुआत में कौन सी आवाज़ सुनते हो?"
+              },
+              {
+                "en": "Does it start like elephant and ear?",
+                "hi": "क्या यह elephant और ear की तरह शुरू होता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word egg starts with the letter sound e",
+                "hi": "egg शब्द e की आवाज़ से शुरू होता है",
+                "words": [
+                  "e",
+                  "letter e",
+                  "egg",
+                  "starts with e",
+                  "e sound",
+                  "ई",
+                  "shuru"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us find more first sounds.",
+              "hi": "आओ और भी पहली आवाज़ें ढूँढें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "A dog runs to a den. The dog sees an egg.",
+              "hi": "एक dog den की ओर दौड़ता है। dog एक egg देखता है।"
+            },
+            "art": "🐶"
+          },
+          {
+            "t": "word",
+            "word": "dog",
+            "art": "🐶",
+            "say": {
+              "en": "Look at this word. Read it.",
+              "hi": "इस शब्द को देखो और पढ़ो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is the first sound of dog?",
+              "hi": "dog की पहली आवाज़ क्या है?"
+            },
+            "opts": [
+              "d",
+              "b"
+            ],
+            "hiOpts": [
+              "d",
+              "b"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the mirror letters and sounds of d and b.",
+              "hi": "बच्चे d और b की उलटी आकृतियों और ध्वनियों में उलझ जाते हैं।"
+            },
+            "aim": 1
+          },
+          {
+            "t": "word",
+            "word": "egg",
+            "art": "🥚",
+            "say": {
+              "en": "Look at this word. Read it.",
+              "hi": "इस शब्द को देखो और पढ़ो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is the first sound of egg?",
+              "hi": "egg की पहली आवाज़ क्या है?"
+            },
+            "opts": [
+              "e",
+              "a"
+            ],
+            "hiOpts": [
+              "e",
+              "a"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the short vowel sounds of e and a.",
+              "hi": "बच्चे e और a के स्वरों में भ्रमित हो जाते हैं।"
+            },
+            "aim": 2
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Dog starts with d, egg starts with e.",
+              "hi": "Dog d से शुरू होता है, egg e से।"
+            }
+          }
+        ]
+      },
+      "first": {
+        "lesson": {
+          "band": "early",
+          "school": true,
+          "ic": "🐶",
+          "title": {
+            "en": "Sounds of d and e",
+            "hi": "d और e की आवाज़ें"
+          },
+          "sub": {
+            "en": "Dog and egg",
+            "hi": "dog और egg"
+          },
+          "skillId": "e1-decode",
+          "source": "Page 11, 13",
+          "aims": [],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us find more first sounds.",
+                "hi": "आओ और भी पहली आवाज़ें ढूँढें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "A dog runs to a den. The dog sees an egg.",
+                "hi": "एक dog den की ओर दौड़ता है। dog एक egg देखता है।"
+              },
+              "art": "🐶"
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Look at this word. Read it.",
+                "hi": "इस शब्द को देखो और पढ़ो।"
+              },
+              "w": "dog",
+              "art": "🐶"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is the first sound of dog?",
+                "hi": "dog की पहली आवाज़ क्या है?"
+              },
+              "opts": [
+                "b",
+                "d"
+              ],
+              "hiOpts": [
+                "b",
+                "d"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse the mirror letters and sounds of d and b.",
+                "hi": "बच्चे d और b की उलटी आकृतियों और ध्वनियों में उलझ जाते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Look at this word. Read it.",
+                "hi": "इस शब्द को देखो और पढ़ो।"
+              },
+              "w": "egg",
+              "art": "🥚"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is the first sound of egg?",
+                "hi": "egg की पहली आवाज़ क्या है?"
+              },
+              "opts": [
+                "a",
+                "e"
+              ],
+              "hiOpts": [
+                "a",
+                "e"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse the short vowel sounds of e and a.",
+                "hi": "बच्चे e और a के स्वरों में भ्रमित हो जाते हैं।"
+              },
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Dog starts with d, egg starts with e.",
+                "hi": "Dog d से शुरू होता है, egg e से।"
+              }
+            }
+          ],
+          "lang": "en",
+          "subject": "read",
+          "id": "sch-f43spd"
+        },
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"dog\"))"
+        ],
+        "checks": [
+          "text",
+          "text"
+        ],
+        "aimErrors": [
+          "aim 1: Munni's question (en) already gives the explanation (it says \"dog\")",
+          "aim 2: Munni's question (en) already gives the explanation (it says \"egg\")"
+        ],
+        "aimFixes": []
+      },
+      "repairRaw": {
+        "title": {
+          "en": "Sounds of d and e",
+          "hi": "d और e की आवाज़ें"
+        },
+        "sub": {
+          "en": "Dog and egg",
+          "hi": "dog और egg"
+        },
+        "ic": "🐶",
+        "skill": "e1-decode",
+        "source": "Page 11, 13",
+        "aims": [
+          {
+            "short": {
+              "en": "First sound d",
+              "hi": "पहली आवाज़ d"
+            },
+            "point": {
+              "en": "The child can identify the first sound of a word starting with d.",
+              "hi": "बच्चा d से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I find the first sound of this word?",
+              "hi": "मैं भूल गई! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
+            },
+            "hints": [
+              {
+                "en": "Say this word slowly to yourself. What sound comes first?",
+                "hi": "इस शब्द को मन में धीरे से बोलो। पहले कौन सी आवाज़ आती है?"
+              },
+              {
+                "en": "Does it start like den and door?",
+                "hi": "क्या यह den और door की तरह शुरू होता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word dog starts with the letter sound d",
+                "hi": "dog शब्द d की आवाज़ से शुरू होता है",
+                "words": [
+                  "d",
+                  "letter d",
+                  "dog",
+                  "starts with d",
+                  "d sound",
+                  "डी",
+                  "shuru"
+                ]
+              }
+            ]
+          },
+          {
+            "short": {
+              "en": "First sound e",
+              "hi": "पहली आवाज़ e"
+            },
+            "point": {
+              "en": "The child can identify the first sound of a word starting with e.",
+              "hi": "बच्चा e से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+            },
+            "forget": {
+              "en": "I forgot! How do I know the first sound here?",
+              "hi": "मैं भूल गई! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
+            },
+            "hints": [
+              {
+                "en": "Say this word slowly. What sound do you hear at the start?",
+                "hi": "यह शब्द धीरे से बोलो। शुरुआत में कौन सी आवाज़ सुनते हो?"
+              },
+              {
+                "en": "Does it start like elephant and ear?",
+                "hi": "क्या यह elephant और ear की तरह शुरू होता है?"
+              }
+            ],
+            "ideas": [
+              {
+                "en": "the word egg starts with the letter sound e",
+                "hi": "egg शब्द e की आवाज़ से शुरू होता है",
+                "words": [
+                  "e",
+                  "letter e",
+                  "egg",
+                  "starts with e",
+                  "e sound",
+                  "ई",
+                  "shuru"
+                ]
+              }
+            ]
+          }
+        ],
+        "beats": [
+          {
+            "t": "intro",
+            "say": {
+              "en": "Let us find more first sounds.",
+              "hi": "आओ और भी पहली आवाज़ें ढूँढें।"
+            }
+          },
+          {
+            "t": "passage",
+            "p": {
+              "en": "A dog runs to a den. The dog sees an egg.",
+              "hi": "एक dog den की ओर दौड़ता है। dog एक egg देखता है।"
+            },
+            "art": "🐶"
+          },
+          {
+            "t": "word",
+            "word": "dog",
+            "art": "🐶",
+            "say": {
+              "en": "Look at this word. Read it.",
+              "hi": "इस शब्द को देखो और पढ़ो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is the first sound of dog?",
+              "hi": "dog की पहली आवाज़ क्या है?"
+            },
+            "opts": [
+              "d",
+              "b"
+            ],
+            "hiOpts": [
+              "d",
+              "b"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the mirror letters and sounds of d and b.",
+              "hi": "बच्चे d और b की उलटी आकृतियों और ध्वनियों में उलझ जाते हैं।"
+            },
+            "aim": 1
+          },
+          {
+            "t": "word",
+            "word": "egg",
+            "art": "🥚",
+            "say": {
+              "en": "Look at this word. Read it.",
+              "hi": "इस शब्द को देखो और पढ़ो।"
+            }
+          },
+          {
+            "t": "ask",
+            "q": {
+              "en": "What is the first sound of egg?",
+              "hi": "egg की पहली आवाज़ क्या है?"
+            },
+            "opts": [
+              "e",
+              "a"
+            ],
+            "hiOpts": [
+              "e",
+              "a"
+            ],
+            "correct": 0,
+            "why": {
+              "en": "Children confuse the short vowel sounds of e and a.",
+              "hi": "बच्चे e और a के स्वरों में भ्रमित हो जाते हैं।"
+            },
+            "aim": 2
+          },
+          {
+            "t": "win",
+            "say": {
+              "en": "Dog starts with d, egg starts with e.",
+              "hi": "Dog d से शुरू होता है, egg e से।"
+            }
+          }
+        ]
+      },
+      "second": {
+        "lesson": {
+          "band": "early",
+          "school": true,
+          "ic": "🐶",
+          "title": {
+            "en": "Sounds of d and e",
+            "hi": "d और e की आवाज़ें"
+          },
+          "sub": {
+            "en": "Dog and egg",
+            "hi": "dog और egg"
+          },
+          "skillId": "e1-decode",
+          "source": "Page 11, 13",
+          "aims": [
+            {
+              "id": "snn6rv.0",
+              "kind": "explain",
+              "short": {
+                "en": "First sound d",
+                "hi": "पहली आवाज़ d"
+              },
+              "point": {
+                "en": "The child can identify the first sound of a word starting with d.",
+                "hi": "बच्चा d से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I find the first sound of this word?",
+                "hi": "मैं भूल गई! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
+              },
+              "hints": [
+                {
+                  "en": "Say this word slowly to yourself. What sound comes first?",
+                  "hi": "इस शब्द को मन में धीरे से बोलो। पहले कौन सी आवाज़ आती है?"
+                },
+                {
+                  "en": "Does it start like den and door?",
+                  "hi": "क्या यह den और door की तरह शुरू होता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the word dog starts with the letter sound d",
+                  "hi": "dog शब्द d की आवाज़ से शुरू होता है",
+                  "words": [
+                    "d",
+                    "letter d",
+                    "dog",
+                    "starts with d",
+                    "d sound",
+                    "डी",
+                    "shuru"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "snn6rv.1",
+              "kind": "explain",
+              "short": {
+                "en": "First sound e",
+                "hi": "पहली आवाज़ e"
+              },
+              "point": {
+                "en": "The child can identify the first sound of a word starting with e.",
+                "hi": "बच्चा e से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I know the first sound here?",
+                "hi": "मैं भूल गई! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
+              },
+              "hints": [
+                {
+                  "en": "Say this word slowly. What sound do you hear at the start?",
+                  "hi": "यह शब्द धीरे से बोलो। शुरुआत में कौन सी आवाज़ सुनते हो?"
+                },
+                {
+                  "en": "Does it start like elephant and ear?",
+                  "hi": "क्या यह elephant और ear की तरह शुरू होता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the word egg starts with the letter sound e",
+                  "hi": "egg शब्द e की आवाज़ से शुरू होता है",
+                  "words": [
+                    "e",
+                    "letter e",
+                    "egg",
+                    "starts with e",
+                    "e sound",
+                    "ई",
+                    "shuru"
+                  ]
+                }
+              ]
+            }
+          ],
+          "beats": [
+            {
+              "t": "intro",
+              "say": {
+                "en": "Let us find more first sounds.",
+                "hi": "आओ और भी पहली आवाज़ें ढूँढें।"
+              }
+            },
+            {
+              "t": "passage",
+              "p": {
+                "en": "A dog runs to a den. The dog sees an egg.",
+                "hi": "एक dog den की ओर दौड़ता है। dog एक egg देखता है।"
+              },
+              "art": "🐶"
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Look at this word. Read it.",
+                "hi": "इस शब्द को देखो और पढ़ो।"
+              },
+              "w": "dog",
+              "art": "🐶"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is the first sound of dog?",
+                "hi": "dog की पहली आवाज़ क्या है?"
+              },
+              "opts": [
+                "b",
+                "d"
+              ],
+              "hiOpts": [
+                "b",
+                "d"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse the mirror letters and sounds of d and b.",
+                "hi": "बच्चे d और b की उलटी आकृतियों और ध्वनियों में उलझ जाते हैं।"
+              },
+              "aim": 1,
+              "derived": true
+            },
+            {
+              "t": "word",
+              "say": {
+                "en": "Look at this word. Read it.",
+                "hi": "इस शब्द को देखो और पढ़ो।"
+              },
+              "w": "egg",
+              "art": "🥚"
+            },
+            {
+              "t": "ask",
+              "q": {
+                "en": "What is the first sound of egg?",
+                "hi": "egg की पहली आवाज़ क्या है?"
+              },
+              "opts": [
+                "a",
+                "e"
+              ],
+              "hiOpts": [
+                "a",
+                "e"
+              ],
+              "correct": 1,
+              "why": {
+                "en": "Children confuse the short vowel sounds of e and a.",
+                "hi": "बच्चे e और a के स्वरों में भ्रमित हो जाते हैं।"
+              },
+              "aim": 2,
+              "derived": true
+            },
+            {
+              "t": "win",
+              "say": {
+                "en": "Dog starts with d, egg starts with e.",
+                "hi": "Dog d से शुरू होता है, egg e से।"
+              }
+            }
+          ],
+          "lang": "en",
+          "subject": "read",
+          "id": "sch-nn6rv"
+        },
+        "ok": true,
+        "errors": [],
+        "checks": [
+          "text",
+          "text"
+        ],
+        "aimErrors": [],
+        "aimFixes": []
+      },
+      "verdict": "repaired"
+    }
+  ]
+}

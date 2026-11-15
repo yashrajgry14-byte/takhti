@@ -67,8 +67,17 @@ export function phoneChecker(){
     // min: the questions a picture lesson must ask (the library builder sets 2 — a coin toss isn't kept)
     // all: every lesson, not only a picture one (a reader's library — Santoor, Veena)
     // mix: the questions mustn't all share one right answer (the library builder — always-"Yes" isn't kept)
-    clean: (raw, band, skills, mend, min, all, mix) => call(`sylClean(${JSON.stringify(raw)}, { band: ${JSON.stringify(band)}, skills: ${JSON.stringify(skills)}, mendHints: ${!!mend}, minQuestions: ${Number(min) || 0}, minAll: ${!!all}, mixRight: ${!!mix} })`)
+    // lang: an English book's lesson ('en') — read in English whatever the app's language
+    clean: (raw, band, skills, mend, min, all, mix, lang) => call(`sylClean(${JSON.stringify(raw)}, { band: ${JSON.stringify(band)}, skills: ${JSON.stringify(skills)}, mendHints: ${!!mend}, minQuestions: ${Number(min) || 0}, minAll: ${!!all}, mixRight: ${!!mix}, lang: ${JSON.stringify(lang === 'en' ? 'en' : null)} })`)
   };
+}
+
+/* A check only the builder can make (the library's: does a lesson copy its
+   textbook? tools/book-words.mjs): vet(lesson) → a reason, or null. A lesson
+   it stops is not kept, and the repair round is told why, like any other. */
+export function vetted(res, vet){
+  const why = vet && res && res.lesson ? vet(res.lesson) : null;
+  return why ? { ...res, ok: false, errors: res.errors.concat([why]) } : res;
 }
 
 const MIMES = { '.pdf':'application/pdf', '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg', '.webp':'image/webp' };
@@ -86,6 +95,7 @@ export async function run(opts, fetchImpl){
   if(opts.text) chapter.text = fs.readFileSync(opts.text, 'utf8');
   if(!chapter.file && !chapter.text) throw new Error('give the chapter: --file chapter.pdf (or a photo) or --text chapter.txt');
 
+  const lang = opts.lang === 'en' ? 'en' : undefined;     // an English book's lesson (api/syllabus.mjs englishText)
   const ph = phoneChecker();
   const cls = ph.cls(opts.cls || 'c3'), rules = ph.rules(cls.band), skills = ph.skills(cls.id, opts.subject);
   const { draftCore } = await import(pathToFileURL(path.join(root, 'api', 'syllabus.mjs')).href);
@@ -94,31 +104,31 @@ export async function run(opts, fetchImpl){
   say(`Asking ${env.GEMINI_MODEL || 'gemini-3.8-flash'} for ${opts.count || 4} lesson(s) for ${cls.en}…`);
   // Google's busy spells come and go (the first live run hit one): a busy or
   // timed-out draft is tried once more after a pause, as a person would
-  let d = await draftCore({ mode:'draft', chapter, rules, count: opts.count || 4, skills, note: opts.note || '' }, env, 'try-syllabus', fetchImpl);
+  let d = await draftCore({ mode:'draft', chapter, rules, count: opts.count || 4, skills, note: opts.note || '', lang }, env, 'try-syllabus', fetchImpl);
   if(d.status === 502 && /busy/.test(d.json.error || '') || d.status === 504){
     const pause = Number(opts.retryMs != null ? opts.retryMs : 60000);
     say(`${d.json.error} — trying once more in ${Math.round(pause / 1000)} s…`);
     await new Promise(r => setTimeout(r, pause));
-    d = await draftCore({ mode:'draft', chapter, rules, count: opts.count || 4, skills, note: opts.note || '' }, env, 'try-syllabus', fetchImpl);
+    d = await draftCore({ mode:'draft', chapter, rules, count: opts.count || 4, skills, note: opts.note || '', lang }, env, 'try-syllabus', fetchImpl);
   }
   const draftMs = Date.now() - t0;
   if(d.status !== 200) throw new Error(`Gemini's draft failed (${d.status}): ${d.json.error}`);
   const raws = d.json.lessons || [];
   const min = opts.minQuestions || 0, all = !!opts.minAll, mix = !!opts.mixRight;
-  const drafts = raws.map(raw => ({ raw, first: ph.clean(raw, cls.band, skills, false, min, all, mix) }));
+  const drafts = raws.map(raw => ({ raw, first: vetted(ph.clean(raw, cls.band, skills, false, min, all, mix, lang), opts.vet) }));
   say(`Drafted ${raws.length} in ${(draftMs / 1000).toFixed(0)} s (${d.json.model}) · ${drafts.filter(x => x.first.ok).length} passed the checker first time`);
 
   const failed = drafts.filter(x => !x.first.ok);
   let repair = null;
   if(failed.length){
     const t1 = Date.now();
-    const r = await draftCore({ mode:'repair', repair: failed.map(x => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })), rules }, env, 'try-syllabus', fetchImpl);
+    const r = await draftCore({ mode:'repair', repair: failed.map(x => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })), rules, lang }, env, 'try-syllabus', fetchImpl);
     repair = { status: r.status, model: r.json.model || '', error: r.json.error || '', ms: Date.now() - t1, tried: r.json.tried || [] };
-    if(r.status === 200) (r.json.lessons || []).forEach((raw, k) => { if(failed[k]){ failed[k].repairRaw = raw; failed[k].second = ph.clean(raw, cls.band, skills, true, min, all, mix); } });
+    if(r.status === 200) (r.json.lessons || []).forEach((raw, k) => { if(failed[k]){ failed[k].repairRaw = raw; failed[k].second = vetted(ph.clean(raw, cls.band, skills, true, min, all, mix, lang), opts.vet); } });
     say(`Sent ${failed.length} back with the checker's reasons · ${failed.filter(x => x.second && x.second.ok).length} fixed`);
   }
   const result = {
-    at: new Date().toISOString(), cls: cls.id, band: cls.band, rules, note: opts.note || '',
+    at: new Date().toISOString(), cls: cls.id, band: cls.band, rules, note: opts.note || '', ...(lang ? { lang } : {}),
     source: opts.file ? path.basename(opts.file) : path.basename(opts.text), model: d.json.model, chapter: d.json.chapter, draftMs, tried: d.json.tried || [], repair,
     drafts: drafts.map(x => ({ raw: x.raw, first: x.first, repairRaw: x.repairRaw || null, second: x.second || null,
       verdict: x.first.ok ? 'passed' : x.second && x.second.ok ? 'repaired' : 'not used' }))
@@ -130,12 +140,14 @@ export async function run(opts, fetchImpl){
    change to the checks, this says what the same drafts would get now. */
 export function recheck(r, opts){
   const min = (opts && opts.minQuestions) || 0, all = !!(opts && opts.minAll), mix = !!(opts && opts.mixRight);
+  const lang = (opts && opts.lang) || r.lang || undefined;     // a run keeps its lang; a library recheck says it again
   const ph = phoneChecker(), skills = ph.skills(r.cls, (opts && opts.subject) || r.subject);
   const drafts = r.drafts.map(x => {
-    const first = ph.clean(x.raw, r.band, skills, false, min, all, mix), second = x.repairRaw ? ph.clean(x.repairRaw, r.band, skills, true, min, all, mix) : null;
+    const vet = opts && opts.vet;
+    const first = vetted(ph.clean(x.raw, r.band, skills, false, min, all, mix, lang), vet), second = x.repairRaw ? vetted(ph.clean(x.repairRaw, r.band, skills, true, min, all, mix, lang), vet) : null;
     return { ...x, first, second, verdict: first.ok ? 'passed' : second && second.ok ? 'repaired' : 'not used' };
   });
-  return { ...r, rechecked: new Date().toISOString(), drafts };
+  return { ...r, ...(lang ? { lang } : {}), rechecked: new Date().toISOString(), drafts };
 }
 
 /* ---------- the report a person reads ---------- */

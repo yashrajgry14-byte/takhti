@@ -235,6 +235,38 @@ An example of one good lesson (the shape of it, not its content):
    "why":{"en":"Children who just saw the square expect every shape to have 4 sides.","hi":"वर्ग देखने के बाद बच्चे हर आकृति की 4 भुजाएँ मान लेते हैं।"}},
   {"t":"win","say":{"en":"Go round once and count each side.","hi":"एक बार पूरा घूमो और हर भुजा गिनो।"}}]}`;
 }
+/* An English book's lesson (the library builder sends lang:'en' for a book
+   whose subject is english — NCERT Mridang, Santoor): the child reads English
+   whatever the app's language (src/ui/lesson-player.js), so what the child
+   reads is English a Class 1 child can read, hiOpts are those same English
+   words, and Munni never reads out the word she then asks about. The first
+   live Mridang run (15 Nov 2026) wrote Hindi-script answers for "to" and "a",
+   word cards whose narration said the word, and "Which word is this?" after
+   the card had gone — 0 of 4 kept. The test runs the example through the
+   checker. */
+export const ENGLISH_EXAMPLE = `{"title":{"en":"What Meena hears","hi":"मीना क्या सुनती है"},"sub":{"en":"Read and find out","hi":"पढ़ो और पता करो"},"ic":"👂","skill":"e1-read","source":"Page 7",
+ "aims":[{"short":{"en":"Ears hear","hi":"कान सुनते हैं"},"point":{"en":"The child can tell what we do with our ears.","hi":"बच्चा बता सकता है कि हम कानों से क्या करते हैं।"},"forget":{"en":"I forgot! What are my big ears for?","hi":"मैं भूल गई! मेरे बड़े कान किस काम के हैं?"},"hints":[{"en":"What do you do when a bird sings?","hi":"जब चिड़िया गाती है, तब तुम क्या करते हो?"},{"en":"Shut your eyes. Can you still tell the bird is there?","hi":"आँखें बंद करो। क्या फिर भी पता चलता है कि चिड़िया है?"}],"ideas":[{"en":"we hear sounds with our ears","hi":"हम कानों से आवाज़ सुनते हैं","words":["hear","listen","sound","sounds","सुन","सुनते","आवाज़","sunte","sunna","awaaz"]}]},
+  {"short":{"en":"First sound","hi":"पहली आवाज़"},"point":{"en":"The child can say the first sound of a word.","hi":"बच्चा किसी शब्द की पहली आवाज़ बता सकता है।"},"forget":{"en":"I forgot! How do I find the first sound of a word?","hi":"मैं भूल गई! किसी शब्द की पहली आवाज़ कैसे पता करूँ?"},"hints":[{"en":"Say nose to yourself. Which sound comes out of your mouth before the others?","hi":"nose मन में बोलो। मुँह से बाकी आवाज़ों से आगे कौन सी आवाज़ निकलती है?"},{"en":"Is it the same sound you hear in nest?","hi":"क्या यह वही आवाज़ है जो nest में सुनते हो?"}],"ideas":[{"en":"say the word slowly and listen to how it starts","hi":"शब्द धीरे-धीरे बोलो और सुनो कि वह कैसे शुरू होता है","words":["slowly","start","starts","beginning","begin","धीरे","शुरू","शुरुआत","dheere","shuru"]}]}],
+ "beats":[{"t":"intro","say":{"en":"Let us read about Meena.","hi":"आओ मीना के बारे में पढ़ें।"}},
+  {"t":"passage","p":{"en":"Meena sits in the park. A bird sings. Meena hears the bird. The sun is up. Meena sees the sun.","hi":"मीना पार्क में बैठी है। एक चिड़िया गाती है। मीना चिड़िया को सुनती है। सूरज निकला है। मीना सूरज को देखती है।"},"art":"🐦"},
+  {"t":"ask","q":{"en":"What does Meena hear?","hi":"मीना क्या सुनती है?"},"opts":["the bird","the sun"],"hiOpts":["the bird","the sun"],"correct":0,"aim":1,
+   "why":{"en":"Children pick the sun because Meena sees it, not hears it.","hi":"बच्चे सूरज चुन लेते हैं क्योंकि मीना उसे देखती है, सुनती नहीं।"}},
+  {"t":"word","word":"nose","art":"👃","say":{"en":"Look at this word. Read it.","hi":"इस शब्द को देखो और पढ़ो।"}},
+  {"t":"ask","q":{"en":"What is the first sound of nose?","hi":"nose की पहली आवाज़ क्या है?"},"opts":["n","m"],"hiOpts":["n","m"],"correct":0,"aim":2,
+   "why":{"en":"Children mix up n and m, which sound alike.","hi":"बच्चे n और m में उलझते हैं, दोनों की आवाज़ मिलती-जुलती है।"}},
+  {"t":"win","say":{"en":"We hear with our ears. Every word has a first sound.","hi":"हम कानों से सुनते हैं। हर शब्द की एक पहली आवाज़ होती है।"}}]}`;
+function englishText(rules){
+  return `THIS IS AN ENGLISH LESSON, from the school's English textbook: the child is learning to read English.
+E1. What the child reads is English a child of ${rules.ages.join('–')} can read: the passage, word and readline text, each question's "en" and opts. Short everyday words, sentences of 3 to 6 words, one idea each.
+E2. The child sees the English passage, question and answers even when the app is in Hindi. hiOpts are the SAME English words as opts — copy them (["n","m"], ["the bird","the sun"]); this replaces rule 10 for hiOpts. The Hindi of p and q is for the teacher: natural Hindi, keeping the English word being learnt in English ("nose की पहली आवाज़").
+E3. Munni's say lines may explain, but never read out a word a question then asks for. A word beat SHOWS one word: its say is "Look at this word. Read it." — never the word itself, never "this word starts with b".
+E4. A question asks only about what the child has just read: the words its answer needs are in the passage or word beats right before it. Never "Which word is this?" — the word card has gone by then; ask about the word's sound or meaning, or put the words in a passage.
+E5. First sounds: ask "What is the first sound of <word>?", with two single letters as answers ("n" and "m") — the right one is the word's first letter, the other a sound children mix up with it. Use a word whose first letter is its first sound (not "eyes", "knee", "one").
+E6. Write your own words and sentences. NEVER copy the textbook's poem, song, rhyme or sentences, not even one line: take the chapter's topic and its word list only.
+An example of one good English lesson:
+${ENGLISH_EXAMPLE}`;
+}
+
 function rulesText(rules){
   return `Hard rules — Takhti's checker rejects any lesson that breaks one:
 1. 4 to 8 beats; start with intro, passage or a teaching picture; end with win; at least one ask.
@@ -256,7 +288,7 @@ function rulesText(rules){
 12. Plain text only: no markup, no brackets of code, no links. ic and art are a single emoji.`;
 }
 
-function instructions(rules, count, skills, note){
+function instructions(rules, count, skills, note, lang){
   return `You write short practice lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (age band "${rules.band}").
 A teacher has given you a chapter from their own school's syllabus. Write ${count} lesson(s) that practise what THIS chapter teaches — nothing from outside it.
 
@@ -272,23 +304,25 @@ How to keep the explanation out of Munni's mouth: her question names the TOPIC (
 ${beatsText()}
 
 ${rulesText(rules)}
-13. skill: the id from this list that the lesson practises, or "" if none fits: ${skills.length ? skills.map(s => `${s.id} (${s.en})`).join('; ') : '(none given)'}.
+${lang === 'en' ? englishText(rules) + '\n' : ''}13. skill: the id from this list that the lesson practises, or "" if none fits: ${skills.length ? skills.map(s => `${s.id} (${s.en})`).join('; ') : '(none given)'}.
 14. source: where in the chapter it comes from.
 ${note ? `The teacher's note: "${note}"` : ''}
 Answer with JSON only, in the given schema.`;
 }
 
-function repairInstructions(rules){
+function repairInstructions(rules, lang){
   return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Return each lesson fixed — same topic, same format, same aims, every reason addressed — and change nothing else.
 How to read the reasons: "must say what is asked (ask)" → set the figure's ask to what the next question asks (sides, corners, name…); "a rectangle needs w and h" → give both; "say the answer … (in the intro)" or "(in beat N's words)" → rewrite THAT line so it no longer says the answer (an intro may say what we will do — "let us fold a paper circle" — not what we will find), or ask about a new example whose answer is different (teach a square's 4 sides, ask a triangle's); "the teaching picture again" → change the question picture to another shape whose answer is different; "say the answer" also counts number words (three, तीन) — teach the idea without the number; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi; "a question needs exactly 2 answers" → give opts, hiOpts and correct; "needs a circle with 2 or more folds" / "doesn't show the folds" → set folds to 2 or more (a number, not text); "a row needs its find" → set find to the one shape the question looks for; "exactly one picture may have a square corner" → change the row so only one item has one; a teaching picture's say may tell what to look at, never the number or name asked for; "the clock … must say what is asked" → give the clock ask:"time" (or two clocks ask:"minutes"/"hours"); "a clock is read to" → change m to a time this age reads; "isn't what the clock shows" → mark the time the hands really show; "a whole number of hours" → ask minutes instead; "the question must say how much later" → put k in the question in both languages ("3 months later", "3 महीने बाद"); "isn't what the calendar shows" → mark the month or day the picture really gives; "every question's right answer is …" → change one question so its right answer is different (a No / नहीं, or another word or number), keeping it true to the picture or passage; "asks at least 2 questions" → add a second question: a NEW picture (another shape, time, month or date, with its ask) and its ask beat, before the win; "already gives the explanation (it says …)" → rewrite that question or hint so it no longer uses those words (a hint asks, it doesn't tell), keeping the aim's words as they are.
 
 ${beatsText()}
 
 ${rulesText(rules)}
-Answer with JSON only, in the given schema.`;
+${lang === 'en' ? `${englishText(rules)}
+For an English lesson: "an English lesson's Hindi answers are the same English words" → copy opts into hiOpts; "starts with" / "both answers are the first sound" → make the right answer the word's own first letter and the other a different letter; "isn't in the passage" → put the word the answer needs in a word or passage beat just before the question; "asks which word was on the card" → ask the word's first sound, or what it means, or which word fits a short sentence; "copies the textbook word for word" → write that line again with your own words (another child, another thing, another sentence), not the book's.
+` : ''}Answer with JSON only, in the given schema.`;
 }
 
-const wait = ms => new Promise(r => setTimeout(r, ms));
+const wait =ms => new Promise(r => setTimeout(r, ms));
 /* A generateContent answer's JSON, or null — the live call's and a batch
    response's alike. */
 export function answerJSON(d){
@@ -424,12 +458,13 @@ export function buildRequest(body, opts = {}){
   body = body || {};
   const env = opts.env || {};
   const rules = cleanRules(body.rules);
+  const lang = body.lang === 'en' ? 'en' : '';          // an English book's lesson (englishText)
   if(body.mode === 'repair'){
     const items = (Array.isArray(body.repair) ? body.repair : []).slice(0, 5)
       .filter(x => x && typeof x.lesson === 'object' && JSON.stringify(x.lesson).length < 12000)
       .map(x => ({ lesson: x.lesson, errors: (Array.isArray(x.errors) ? x.errors : []).slice(0, 10).map(e => plain(e, 240)) }));
     if(!items.length) return { status:400, error:'nothing to repair' };
-    return { mode:'repair', count: items.length, system: repairInstructions(rules), parts:[{ text: JSON.stringify({ lessons: items }) }] };
+    return { mode:'repair', count: items.length, system: repairInstructions(rules, lang), parts:[{ text: JSON.stringify({ lessons: items }) }] };
   }
   const ch = body.chapter || {};
   const parts = [];
@@ -455,7 +490,7 @@ export function buildRequest(body, opts = {}){
     .map(s => ({ id: s.id, en: plain(s.en, 60) }));
   const note = plain(body.note, 200).trim();
   parts.push({ text: `Write ${count} lesson(s) from this chapter.` });
-  return { mode:'draft', count, system: instructions(rules, count, skills, note), parts };
+  return { mode:'draft', count, system: instructions(rules, count, skills, note, lang), parts };
 }
 
 /* What Gemini sent, as the endpoint answers it: lessons only, at most as

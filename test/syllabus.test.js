@@ -304,6 +304,34 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     const exSrc = fs.readFileSync(path.join(root, 'api/syllabus.mjs'), 'utf8').replace(/\r\n/g, '\n').match(/An example of one good lesson[^\n]*\n([\s\S]*?)`;\n}/)[1];
     const ex = JSON.parse(E(`JSON.stringify(sylClean(${exSrc}, { band:'early', skills: sylSkills(sylClass('c1')) }))`));
     check("the example lesson in Gemini's prompt passes Takhti's own checker (so the example and the rules can't drift apart)", ex.ok && ex.checks.length >= 1 && ex.checks.every(c => c === 'shape'), JSON.stringify(ex.errors));
+    // an English book's lesson (NCERT Mridang): read in English whatever the app's language
+    const enSrc = fs.readFileSync(path.join(root, 'api/syllabus.mjs'), 'utf8').replace(/\r\n/g, '\n').match(/ENGLISH_EXAMPLE = `([\s\S]*?)`;/)[1];
+    const EN = JSON.parse(enSrc);
+    const enClean = (x, lang) => JSON.parse(E(`JSON.stringify(sylClean(${JSON.stringify(x)}, { band:'early', skills: sylSkills(sylClass('c1')), minQuestions: 2, minAll: true, lang: ${JSON.stringify(lang || null)} }))`));
+    const enEx = enClean(EN, 'en');
+    check("the English example in Gemini's prompt passes as an English lesson: lang 'en' kept, both questions read off the text (the first sound off the word itself)",
+      enEx.ok && enEx.lesson.lang === 'en' && enEx.checks.every(c => c === 'text'), JSON.stringify(enEx.errors));
+    check("…the same lesson NOT marked English fails: Hindi answers in English letters are only an English lesson's own words",
+      !enClean(EN).ok && enClean(EN).errors.some(e => /must be in Devanagari/.test(e)), JSON.stringify(enClean(EN).errors));
+    const readEn = clean({ ...clone(READ) }), readEnL = JSON.parse(E(`JSON.stringify(sylClean(${JSON.stringify(READ)}, { band:'developing', skills: sylSkills(sylClass('c2')), lang:'en' }))`));
+    check("lang is inside the id when set — and a lesson without one keeps the id it always had (no lang key in it)",
+      readEn.ok && readEnL.ok && readEnL.lesson.id !== readEn.lesson.id && !('lang' in readEn.lesson) && readEnL.lesson.lang === 'en'
+      && JSON.parse(E(`JSON.stringify(sylClean(${JSON.stringify(readEnL.lesson)}, { band:'developing' }).lesson.id)`)) === readEnL.lesson.id, readEnL.lesson.id + ' ' + readEn.lesson.id);
+    const enMod = f => { const x = clone(EN); f(x.beats); return x; };
+    const enErr = (name, x, re) => { const c = enClean(x, 'en'); check(name, !c.ok && c.errors.some(e => re.test(e)), JSON.stringify(c.errors)); };
+    enErr("an English lesson's Hindi answer in English letters must be that very English word", enMod(b => { b[2].hiOpts = ['bird', 'the sun']; }), /same English words/);
+    enErr('a first sound marked wrong is caught by the word itself ("nose" starts with "n", not "m")', enMod(b => { b[4].correct = 1; }), /"nose" starts with "n"/);
+    enErr('…and two answers that are both its first sound', enMod(b => { b[4].opts = ['n', 'N']; b[4].hiOpts = ['n', 'N']; }), /both answers are the first sound/);
+    enErr('a word card whose narration says the letter ("This word begins with an n sound.") gives the first sound away', enMod(b => { b[3].say = { en: 'This word begins with an n sound.', hi: 'यह शब्द n आवाज़ से शुरू होता है।' }; }), /say the answer "n"/);
+    const article = enClean(enMod(b => { b[0].say = { en: 'Every word starts with a sound.', hi: 'हर शब्द एक आवाज़ से शुरू होता है।' }; b[3].w = undefined; b[3].word = 'ant'; b[4].q = { en: 'What is the first sound of ant?', hi: 'ant की पहली आवाज़ क्या है?' }; b[4].opts = ['a', 'e']; b[4].hiOpts = ['a', 'e']; }), 'en');
+    check('…but "starts with a sound" is the article, not the letter a', article.ok, JSON.stringify(article.errors));
+    const twoCards = q => enMod(b => { b.splice(3, 2, { t: 'word', word: 'eyes', art: '👀', say: { en: 'Look at this word.', hi: 'इस शब्द को देखो।' } }, { t: 'word', word: 'ears', art: '👂', say: { en: 'And this one.', hi: 'और इसे भी।' } },
+      { t: 'ask', q, opts: ['eyes', 'ears'], hiOpts: ['eyes', 'ears'], correct: 0, aim: 1, why: { en: 'Children mix up eyes and ears.', hi: 'बच्चे आँख और कान में उलझते हैं।' } }); });
+    const cards = enClean(twoCards({ en: 'What do we see with?', hi: 'हम किससे देखते हैं?' }), 'en');
+    check('two word cards in a row are both read: a question about the first card is in what the child read', cards.ok, JSON.stringify(cards.errors));
+    enErr('…but "Which little word did you read first?" only asks for the card the child just saw — nothing to work out', twoCards({ en: 'Which little word did you read first?', hi: 'तुमने पहले कौन सा छोटा शब्द पढ़ा?' }), /asks which word was on the card/);
+    enErr('…and a word card that says the two-letter word ("This word is to.") gives it away', enMod(b => { b.splice(3, 2, { t: 'word', word: 'to', art: '➡️', say: { en: 'This word is to.', hi: 'यह शब्द to है।' } },
+      { t: 'ask', q: { en: 'Which little word did you read?', hi: 'तुमने कौन सा छोटा शब्द पढ़ा?' }, opts: ['to', 'go'], hiOpts: ['to', 'go'], correct: 0, aim: 2, why: { en: 'Children mix up short words.', hi: 'बच्चे छोटे शब्दों में उलझते हैं।' } }); }), /say the answer "to"/);
     // from the second live run: the question's picture was the teaching picture again, and the intro said the answer
     const circ = (beats) => ({ ...clone(READ), title:{ en:'The centre', hi:'केंद्र' }, skill:'shapes2d', beats:[...beats,
       { t:'ask', q:{ en:'Where do the fold lines meet?', hi:'तह की रेखाएँ कहाँ मिलती हैं?' }, opts:['Centre','Edge'], hiOpts:['केंद्र','किनारा'], correct:0 },

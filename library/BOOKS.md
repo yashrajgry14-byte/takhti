@@ -3,8 +3,10 @@
 The library is built ahead: every school on a book gets the same checked
 lessons, with no network in the week (`tools/build-library.mjs`, see
 CLAUDE.md → *The lesson library*). Built now: *Maths Mela* Class 3
-(`library/ncert-maths-mela-3`), and chapter 3 of the Class 5 EVS book
-*Our Wondrous World* (`library/ncert-our-wondrous-world-5`). These are set up and waiting for
+(`library/ncert-maths-mela-3`, every chapter), *Mridang* Class 1
+(`library/ncert-mridang-1`, chapter 1 — the first English chapter), and
+chapter 3 of the Class 5 EVS book *Our Wondrous World*
+(`library/ncert-our-wondrous-world-5`). These are set up and waiting for
 their PDFs:
 
 | class | subject | book | folder | NCERT code |
@@ -13,7 +15,7 @@ their PDFs:
 | Class 2 | maths | Joyful Mathematics (आनंदमय गणित) | `library/ncert-joyful-maths-2` | `bejm1` (check) |
 | Class 4 | maths | Maths Mela (गणित मेला) | `library/ncert-maths-mela-4` | `demm1` (check) |
 | Class 5 | maths | Maths Mela (गणित मेला) | `library/ncert-maths-mela-5` | `eemm1` |
-| Class 1 | english | Mridang (मृदंग) | `library/ncert-mridang-1` | `aemr1` (chapter 1 is `aemr101.pdf`, listed) |
+| Class 1 | english | Mridang (मृदंग) | `library/ncert-mridang-1` | `aemr1` (chapter 1, `aemr101.pdf`, built) |
 | Class 2 | english | Mridang (मृदंग) | `library/ncert-mridang-2` | `bemr1` (check) |
 | Class 3 | english | Santoor (संतूर) | `library/ncert-santoor-3` | `cesa1` (check) |
 | Class 4 | english | Santoor (संतूर) | `library/ncert-santoor-4` | `desa1` (check) |
@@ -52,7 +54,9 @@ A book with nothing built isn't offered to a teacher (the bundle skips it).
    up from `.batch.json`.
 5. **Read** `summary.md` and each chapter's `<ch>.report.md`; then bump
    `CACHE` in `sw.js`, run `npm test`, commit `library/<book>/*.json`,
-   `*.report.md`, `summary.md` and `src/content/library.js`.
+   `*.report.md`, `summary.md` and `src/content/library.js` (a reader's
+   `<ch>.book.json` is one of the `*.json`: hashes of the book's own words,
+   never its text).
 
 ## Rebuilding a book that is already built
 
@@ -69,3 +73,17 @@ Everything a teacher's own upload meets (CLAUDE.md → *The school's own
 syllabus*), and two questions: every picture lesson in a maths book, and
 every lesson in a reader (Mridang, Sarangi, Santoor, Veena) — with two
 answers, one question is a coin toss.
+
+A reader's lesson also never copies its book: each chapter's printed lines
+are copied out once by Gemini and kept only as hashes of every five-word
+run (`<ch>.book.json`), and a lesson with five or more of the book's words
+in a row is sent back to be written again in its own words
+(`tools/book-words.mjs`). Nothing shorter counts: a single word or a short
+common phrase is the language every lesson shares.
+
+An English book's lessons (Mridang, Santoor — `"subject": "english"`) are
+English lessons: drafted as English for the class's age, and read in
+English — the passage, the questions, the answers — even by a child using
+the app in Hindi. Munni's own lines stay in the child's language. Only
+English books: a Hindi reader, an EVS book and a maths book keep the
+child's language.

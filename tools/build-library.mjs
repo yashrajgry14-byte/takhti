@@ -52,7 +52,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { run, recheck, report } from './try-syllabus.mjs';
+import { run, recheck, report, vetted, readEnv } from './try-syllabus.mjs';
+import { ensureIndex, readIndex, copied, copyError } from './book-words.mjs';
 /* A library lesson with a picture asks at least two questions — with two
    answers, one question is a coin toss; such a lesson is not kept (a
    teacher's own upload still gets the warning instead). */
@@ -66,6 +67,18 @@ const minAllOf = book => !!book.subject && book.subject !== 'maths';
    such lessons). Builder-only, like the two above: a teacher's own upload, and
    a lesson already on a phone, keep the warning instead. */
 const LIB_MIX_ANSWERS = true;
+/* an English book's lessons are English lessons: drafted as English (the
+   prompt's englishText), checked with lang 'en' (inside the id), read in
+   English whatever the app's language (ui/lesson-player.js) */
+const langOf = book => (book.subject === 'english' ? 'en' : undefined);
+/* a reader's lesson never copies its textbook (tools/book-words.mjs): the
+   chapter's index of the book's own words, made once from its PDF, hashes only */
+const vetOf = idx => idx ? (les => { const r = copied(les, idx); return r ? copyError(r) : null; }) : undefined;
+async function bookWordsFor(dir, book, meta, file, env, fetchImpl, say){
+  if(!minAllOf(book)) return null;
+  try{ return await ensureIndex(dir, meta, file, { ...readEnv(path.join(root, 'voice', '.env'), process.env), ...(env || {}) }, fetchImpl); }
+  catch(e){ say(`  ${meta.id}: the book's own words were not checked — ${e.message}`); return null; }
+}
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const LIB = path.join(root, 'library');
@@ -143,13 +156,13 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
       if(meta.id !== opts.import.ch) continue;
       const r = readJSON(opts.import.file);
       if(r.cls && r.cls !== book.cls) throw new Error(`that run was for ${r.cls}, the book is ${book.cls}`);
-      const ch = saveChapter(dir, meta, recheck({ ...r, cls: book.cls, band: r.band }, { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, subject: book.subject }));
+      const ch = saveChapter(dir, meta, recheck({ ...r, cls: book.cls, band: r.band }, { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, subject: book.subject, lang: langOf(book), vet: vetOf(readIndex(dir, meta.id)) }));
       say(`${meta.id}: imported — ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
       out.push(ch); continue;
     }
     if(opts.recheck){
       if(!fs.existsSync(raw)){ say(`${meta.id}: not built yet — skipped`); continue; }
-      const ch = saveChapter(dir, meta, recheck(readJSON(raw), { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, subject: book.subject }));
+      const ch = saveChapter(dir, meta, recheck(readJSON(raw), { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, subject: book.subject, lang: langOf(book), vet: vetOf(readIndex(dir, meta.id)) }));
       say(`${meta.id}: checked again — ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
       out.push(ch); continue;
     }
@@ -164,7 +177,8 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
     // a file it can't read) is said and left for the next run, which picks
     // it up because it has no <ch>.json yet — the rest carry on
     try{
-      const r = await run({ file, cls: book.cls, count: meta.count || 4, note: meta.note || '', minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, subject: book.subject, env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
+      const idx = await bookWordsFor(dir, book, meta, file, opts.env, fetchImpl, say);
+      const r = await run({ vet: vetOf(idx), file, cls: book.cls, count: meta.count || 4, note: meta.note || '', minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, subject: book.subject, lang: langOf(book), env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
       const ch = saveChapter(dir, meta, r, { guard: true, replace: opts.replace });
       say(`${meta.id}: ${keptSay(ch)}`);
       out.push(ch);
@@ -301,7 +315,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
   }
 
   const metaOf = id => book.chapters.find(c => c.id === id) || { id };
-  const draftReq = c => { const meta = metaOf(c.id); return buildRequest({ mode: 'draft', rules, count: meta.count || 4, skills, note: meta.note || '' }, { fileUri: c.uri, mime: c.mime }); };
+  const draftReq = c => { const meta = metaOf(c.id); return buildRequest({ mode: 'draft', rules, count: meta.count || 4, skills, note: meta.note || '', lang: langOf(book) }, { fileUri: c.uri, mime: c.mime }); };
   const asRequest = (q, shape) => ({ systemInstruction: { parts: [{ text: q.system }] }, contents: [{ role: 'user', parts: q.parts }], ...GEN_SHAPES[shape] });
   // every request erred as a bad request (the field names) → the next request shape, once each
   const allBad = list => list.length && list.every(x => x.error && (x.error.code === 400 || /INVALID_ARGUMENT/.test(x.error.status || '')));
@@ -327,6 +341,8 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
     }
   }
 
+  const idxs = {};
+  for(const c of st.chapters) idxs[c.id] = await bookWordsFor(dir, book, metaOf(c.id), path.resolve(opts.pdfs || dir, c.file), opts.env, fetchImpl, say);
   // 1. the drafts
   const drafts = await job('drafts', () => st.chapters.map(c => [c.id, draftReq(c)]).filter(([, q]) => !q.error));
   if(drafts === null){ say(`The drafts are still running on Google's side (${st.drafts.job}). Run the same command again later — it picks the job up.`); return out; }
@@ -337,7 +353,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
       if(!o){ st.checked[c.id] = { error: (x && x.error && x.error.message) || 'no answer in the lesson format' }; continue; }
       const q = draftReq(c), got = lessonsFrom(o, q, { model: st.model });
       st.checked[c.id] = { chapter: got.chapter, tokens: tokensOf(d),
-        drafts: got.lessons.map(raw => ({ raw, first: ph.clean(raw, cls.band, skills, false, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS) })) };
+        drafts: got.lessons.map(raw => ({ raw, first: vetted(ph.clean(raw, cls.band, skills, false, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS, langOf(book)), vetOf(idxs[c.id])) })) };
     }
     save();
     const n = Object.values(st.checked).reduce((a, c) => a + (c.drafts ? c.drafts.length : 0), 0), ok = Object.values(st.checked).reduce((a, c) => a + (c.drafts ? c.drafts.filter(x => x.first.ok).length : 0), 0);
@@ -346,7 +362,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
 
   // 2. one repair round, every chapter's failures in the same batch
   const toFix = id => (st.checked[id].drafts || []).map((x, i) => ({ x, i })).filter(({ x }) => !x.first.ok);
-  const repairReq = id => buildRequest({ mode: 'repair', rules, repair: toFix(id).map(({ x }) => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })) });
+  const repairReq = id => buildRequest({ mode: 'repair', rules, lang: langOf(book), repair: toFix(id).map(({ x }) => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })) });
   const repairs = await job('repairs', () => st.chapters.filter(c => st.checked[c.id].drafts && toFix(c.id).length).map(c => [c.id, repairReq(c.id)]).filter(([, q]) => !q.error));
   if(repairs === null){ say(`The repairs are still running on Google's side (${st.repairs.job}). Run the same command again later — it picks the job up.`); return out; }
 
@@ -356,9 +372,9 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
     if(k.error){ say(`${c.id}: not built — ${k.error}`); failed.push({ id: c.id, why: k.error }); continue; }
     const rx = repairs[c.id], rd = rx && rx.response, ro = rd && answerJSON(rd);
     const fixes = toFix(c.id);
-    if(ro){ const got = lessonsFrom(ro, { mode: 'repair', count: fixes.length }); got.lessons.forEach((raw, j) => { const f = fixes[j]; if(f){ f.x.repairRaw = raw; f.x.second = ph.clean(raw, cls.band, skills, true, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS); } }); }
+    if(ro){ const got = lessonsFrom(ro, { mode: 'repair', count: fixes.length }); got.lessons.forEach((raw, j) => { const f = fixes[j]; if(f){ f.x.repairRaw = raw; f.x.second = vetted(ph.clean(raw, cls.band, skills, true, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS, langOf(book)), vetOf(idxs[c.id])); } }); }
     const r = {
-      at: new Date().toISOString(), cls: cls.id, band: cls.band, rules, note: meta.note || '', source: c.file, model: st.model, chapter: k.chapter,
+      at: new Date().toISOString(), cls: cls.id, band: cls.band, rules, note: meta.note || '', ...(langOf(book) ? { lang: langOf(book) } : {}), source: c.file, model: st.model, chapter: k.chapter,
       draftMs: 0, batch: { drafts: st.drafts && st.drafts.job, repairs: st.repairs && st.repairs.job || null },
       tried: [{ model: st.model, outcome: 'batch', ms: 0, ...(k.tokens ? { tokens: k.tokens } : {}) }],
       repair: fixes.length ? { status: ro ? 200 : 502, model: st.model, error: ro ? '' : ((rx && rx.error && rx.error.message) || 'no answer'), ms: 0,

@@ -49,9 +49,16 @@ const LES_READ_SAY = {
   chunks: { en: 'Here are the hard words in pieces. Say them, then read it all.', hi: 'ये रहे कठिन शब्द टुकड़ों में। इन्हें बोलो, फिर पूरा पढ़ो।' },
   solo:   { en: 'You read it first. Then I will ask you about it.', hi: 'पहले तुम पढ़ो। फिर मैं पूछूँगी।' }
 };
+/* What the child READS — the passage, the questions, the answers — is in the
+   lesson's own language when it has one (a school lesson from an English
+   book: core/syllabus.js's lang), whatever the app's: an English lesson shown
+   in Hindi would teach nothing. Munni's own lines (the intro, her help, "well
+   done") stay in the child's language. */
+function lesLang(){ return (S.lesson && S.lesson.data && S.lesson.data.lang) || S.lang; }
+function lesText(o){ return (o && (o[lesLang()] || o.en)) || ''; }
 function lesSay(b){
   const rw = b.t === 'passage' && S.lesson && S.lesson.readWay;
-  if(rw && LES_READ_SAY[rw]) return (LES_READ_SAY[rw][S.lang] || LES_READ_SAY[rw].en) + (rw === 'model' ? L(b.p) : '');
+  if(rw && LES_READ_SAY[rw]) return (LES_READ_SAY[rw][S.lang] || LES_READ_SAY[rw].en) + (rw === 'model' ? lesText(b.p) : '');
   if(typeof litSay === 'function'){ const s = litSay(b); if(s != null) return s; }
   if(typeof compSay === 'function'){ const s = compSay(b); if(s != null) return s; }
   if(typeof picSay === 'function'){ const s = picSay(b); if(s != null) return s; }   // a picture (a shape, a clock…): Munni's own words, never a question picture's answer
@@ -255,12 +262,20 @@ function lesBeat(){
 function lesNarrate(){
   const b = lesBeat();
   if(!b) return;
-  const line = b.t === 'ask' ? L(b.q) : lesSay(b);
-  if(!line) return;
-  speak(line, null, () => {
+  const after = () => {
     if(!S.lesson || b.t === 'ask') return;
     setTimeout(() => { if(S.lesson && lesBeat() === b) lesNext(); }, 900);
-  });
+  };
+  // the question is read in the lesson's own voice (English for an English lesson)
+  if(b.t === 'ask'){ const q = lesText(b.q); if(q) speak(q, lesLang(), after); return; }
+  // Munni reads the passage first: her line in the child's language, the passage in its own
+  if(b.t === 'passage' && S.lesson.readWay === 'model' && lesLang() !== S.lang){
+    speak(LES_READ_SAY.model[S.lang] || LES_READ_SAY.model.en, null, () => { if(S.lesson && lesBeat() === b) speak(lesText(b.p), lesLang(), after); });
+    return;
+  }
+  const line = lesSay(b);
+  if(!line) return;
+  speak(line, null, after);
 }
 /* A collectible card, kept in the child's own profile (S.cards — persisted,
    shown on the parent dashboard). Stable ids, so earning the same card
@@ -322,8 +337,9 @@ function lesAnswer(k){
   if(!helped && les.skillId) noteSkillAttempt(les.skillId, ok);
   else if(!helped && les.concept) noteSkillFromConcept(les.concept, ok);
   render();
+  const shown = lesLang() === 'hi' ? (b.hiOpts || b.opts) : b.opts;     // the answer as it is on the button
   speak(ok ? (S.lang==='hi'?'बिलकुल सही!':'Exactly right!')
-           : (S.lang==='hi'?`देखो — जवाब है ${b.opts[b.correct]}`:`Look — the answer is ${b.opts[b.correct]}`),
+           : (S.lang==='hi'?`देखो — जवाब है ${shown[b.correct]}`:`Look — the answer is ${shown[b.correct]}`),
         null, () => setTimeout(() => { if(S.lesson) lesNext(); }, 700));
 }
 
@@ -356,7 +372,7 @@ function lessonHTML(){
   const asking = b.t === 'ask';
   // a question about a picture (a shape, a clock…) keeps it on screen — the answer is in the picture
   const pic = asking && typeof picFor === 'function' ? picFor(les, S.lesson.i) : null;
-  const opts = asking ? (S.lang==='hi' ? (b.hiOpts || b.opts) : b.opts) : [];
+  const opts = asking ? (lesLang()==='hi' ? (b.hiOpts || b.opts) : b.opts) : [];
   if(asking && S.lesson.picked == null && S.lesson.helpedAt !== S.lesson.i && typeof twinExpectLesson === 'function') twinExpectLesson(les, S.lesson.i);
 
   // one shared match: the friend sets it up, the child answers, both win
@@ -386,7 +402,7 @@ function lessonHTML(){
 
   <div class="lesstage">
     ${b.svg ? b.svg : ''}
-    <div class="lesart">${asking ? `${pic ? picArt(pic) : ''}<div class="lesq">${L(b.q)}</div>` : lesArt(b, obj)}${!asking ? lesChunksHTML(b) : ''}</div>
+    <div class="lesart">${asking ? `${pic ? picArt(pic) : ''}<div class="lesq">${lesText(b.q)}</div>` : lesArt(b, obj)}${!asking ? lesChunksHTML(b) : ''}</div>
     ${!asking ? `<div class="lescap">${lesSay(b)}</div>` : ''}
     ${cardRewardHtml}
   </div>
@@ -494,7 +510,7 @@ function schoolLessonsHTML(){
 /* A passage's two longest words, in pieces — the "hard words in pieces" way. */
 function lesChunksHTML(b){
   if(b.t !== 'passage' || !S.lesson || S.lesson.readWay !== 'chunks' || typeof wordChunks !== 'function') return '';
-  const text = L(b.p), lang = /[ऀ-ॿ]/.test(text) ? 'hi' : 'en';
+  const text = lesText(b.p), lang = /[ऀ-ॿ]/.test(text) ? 'hi' : 'en';
   const len = w => typeof graphemes === 'function' ? graphemes(w).length : w.length;
   const words = text.replace(/[.,!?।"“”]/g, ' ').trim().split(/\s+/).filter((w, i, a) => len(w) >= 3 && a.indexOf(w) === i)
     .sort((x, y) => len(y) - len(x)).slice(0, 2);

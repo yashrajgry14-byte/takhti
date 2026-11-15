@@ -250,8 +250,51 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     check('the library rejects a lesson whose every right answer is the same (always "Yes" passes them all), with why; mixed answers pass; a teacher\'s own upload keeps it, with the warning',
       !yesLib.ok && yesLib.errors.some(e => /every question's right answer is "yes"/.test(e)) && ph.clean(MIXED, cl.band, sk, false, 2, true, true).ok && yesUp.ok, JSON.stringify([yesLib.errors, yesUp.errors]));
     check('…the builder sets it on every draft, repair and re-check, live and batch; the prompt and the repair round say why',
-      /const LIB_MIX_ANSWERS = true/.test(libSrc) && (libSrc.match(/mixRight: LIB_MIX_ANSWERS/g) || []).length === 3 && (libSrc.match(/minAllOf\(book\), LIB_MIX_ANSWERS\)/g) || []).length === 2
+      /const LIB_MIX_ANSWERS = true/.test(libSrc) && (libSrc.match(/mixRight: LIB_MIX_ANSWERS/g) || []).length === 3 && (libSrc.match(/minAllOf\(book\), LIB_MIX_ANSWERS[,)]/g) || []).length === 2
       && /MIX THE RIGHT ANSWERS/.test(promptSrc) && /every question's right answer is …/.test(promptSrc), '');
+    // a reader's lesson never copies its textbook (tools/book-words.mjs): the first live Mridang
+    // build kept two lessons whose passages were page 7's own sentences, word for word
+    const bw = await import(pathToFileURL(path.join(root, 'tools/book-words.mjs')).href);
+    const POEM = 'Two little hands\ngo clap, clap, clap.\nI see with my eyes.\nThese are my legs.';
+    const bidx = bw.bookIndex(POEM, { file: 'p.pdf' });
+    const Lp = p => ({ beats: [{ t: 'passage', p: { en: p, hi: 'कुछ' } }] });
+    check("the book's own words are kept as hashes only — not one of its words is in the index",
+      bidx.runs.length > 0 && !/little|clap|eyes|legs/i.test(JSON.stringify(bidx)), JSON.stringify(bidx).slice(0, 200));
+    check('a lesson that copies five words in a row is caught — across a poem\'s lines too; its own sentences pass',
+      bw.copied(Lp('Look! I see with my eyes.'), bidx) === 'i see with my eyes' && bw.copied(Lp('Two little hands go clap.'), bidx) === 'two little hands go clap'
+        && bw.copied(Lp('Ravi sees a dog with his eyes. My legs can run.'), bidx) === null,
+      JSON.stringify([bw.copied(Lp('Look! I see with my eyes.'), bidx), bw.copied(Lp('Two little hands go clap.'), bidx)]));
+    const short = ['These are my legs.', 'Eyes.', 'Look with my eyes.', 'I see.', 'Two little hands.', 'Clap, clap, clap!', 'Ravi says: see with my eyes, little one.'];
+    check('…but nothing shorter than five words in a row: not a single word, not a short common phrase — not even a whole four-word sentence of the book\'s ("These are my legs.")',
+      short.every(p => bw.copied(Lp(p), bidx) === null), JSON.stringify(short.map(p => [p, bw.copied(Lp(p), bidx)])));
+    {
+      const { ENGLISH_EXAMPLE } = await import(pathToFileURL(path.join(root, 'api/syllabus.mjs')).href);
+      const own = JSON.parse(ENGLISH_EXAMPLE), copy = JSON.parse(ENGLISH_EXAMPLE);
+      copy.beats[1].p.en = 'Meena sits in the park. A bird sings. Meena hears the bird. The sun is up. Meena sees the sun and smiles.';
+      const ed = path.join(tmp, 'en-book'); fs.mkdirSync(ed);
+      fs.writeFileSync(path.join(ed, 'book.json'), JSON.stringify({ id:'en-book', title:{ en:'Mridang', hi:'मृदंग' }, cls:'c1', subject:'english', chapters:[{ id:'ch1', n:1, file:'c1.pdf', count:1 }] }));
+      fs.writeFileSync(path.join(ed, 'c1.pdf'), Buffer.from('%PDF-1.4 ' + 'x'.repeat(400)));
+      const asked = [];
+      const standEn = async (url, o) => {
+        const body = JSON.parse(o.body), sys = ((body.systemInstruction || {}).parts || [{}])[0].text || '', text = body.contents[0].parts.map(p => p.text || '').join(' ');
+        const kind = /^Copy out/.test(sys) ? 'book' : /"lessons"\s*:/.test(text) && /errors/.test(text) ? 'repair' : 'draft';
+        asked.push({ kind, english: /THIS IS AN ENGLISH LESSON/.test(sys) });
+        const out = kind === 'book' ? 'Look up! Meena sees the sun and smiles. She has two little hands and two little eyes. ' + 'The chapter goes on with more lines. '.repeat(3)
+          : JSON.stringify(kind === 'repair' ? { lessons: [own] } : { chapter: 'Two Little Hands', lessons: [copy] });
+        return { ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: out }] } }] }) };
+      };
+      await lib.buildBook(ed, { env, say: () => {} }, standEn);
+      const ech = JSON.parse(fs.readFileSync(path.join(ed, 'ch1.json'), 'utf8')), erep = fs.readFileSync(path.join(ed, 'ch1.report.md'), 'utf8');
+      const ebook = fs.readFileSync(path.join(ed, 'ch1.book.json'), 'utf8');
+      check("an English book's chapter: the chapter's text is copied out once and kept as hashes (no words of it), the draft and the repair are both asked as ENGLISH lessons",
+        asked[0].kind === 'book' && asked.filter(a => a.kind !== 'book').every(a => a.english) && asked.some(a => a.kind === 'repair') && !/meena|little|smiles/i.test(ebook), JSON.stringify(asked) + ebook.slice(0, 120));
+      check("…the draft that copied the book (\"Meena sees the sun and smiles\") is sent back with the words it copied, and the lesson kept is its own — an English lesson, lang 'en' inside its id",
+        /copies the textbook word for word \("meena sees the sun and"\)/.test(erep) && ech.lessons.length === 1 && ech.lessons[0].lang === 'en' && !/sees the sun and smiles/.test(JSON.stringify(ech.lessons)),
+        erep.slice(0, 600));
+      const n0 = asked.length;
+      await lib.buildBook(ed, { recheck: true });
+      check('…and --recheck reads the kept index again with no call at all', asked.length === n0 && JSON.parse(fs.readFileSync(path.join(ed, 'ch1.json'), 'utf8')).lessons.length === 1, asked.length - n0);
+    }
     // a book set up but not built isn't bundled
     const lt = path.join(tmp, 'lib');
     fs.mkdirSync(path.join(lt, 'ready-book'), { recursive: true }); fs.mkdirSync(path.join(lt, 'new-book')); fs.mkdirSync(path.join(lt, 'scanned-book'));
@@ -292,7 +335,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const vc = new VirtualConsole(), jsErrors = [];
   vc.on('jsdomError', e => { if(!/Not implemented|Could not load link/.test(e.message)) jsErrors.push(e.message); });
-  let fetches = 0;
+  let fetches = 0; const fetchUrls = [];
   const dom = new JSDOM(html, { virtualConsole: vc, url: `http://127.0.0.1:${appServer.address().port}/index.html`, runScripts:'dangerously', resources:'usable', pretendToBeVisual: true,
     beforeParse(win){
       win.SpeechSynthesisUtterance = function(t){ this.text = t; };
@@ -300,7 +343,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
       win.navigator.vibrate = () => {};
       win.HTMLMediaElement.prototype.play = function(){ setTimeout(() => this.onended && this.onended(), 0); return Promise.resolve(); };
       win.HTMLMediaElement.prototype.pause = function(){};
-      win.fetch = () => { fetches++; return Promise.reject(new Error('offline')); };
+      win.fetch = (u) => { fetches++; fetchUrls.push(String(u && u.url || u)); return Promise.reject(new Error('offline')); };
     } });
   const win = dom.window, E = c => win.eval(c), screen = () => win.document.querySelector('#screen').textContent;
   const btn = re => [...win.document.querySelectorAll('button')].find(b => re.test(b.textContent));
@@ -363,7 +406,82 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
       E(`S.ctx.sylRes.drafts.filter(d => !d.ok).length`) === 1 && /changed after it was built/.test(screen()), E(`JSON.stringify(S.ctx.sylRes.drafts.map(d => [d.ok, (d.errors || [])[0]]))`));
     E(`S.lang = 'hi'; render()`);
     check('…all of it in Hindi too', /लाइब्रेरी से/.test(screen()) && /सत्र का क्रम/.test(screen()) && /आकृतियों के साथ मज़ा/.test(screen()), screen().slice(0, 400));
-    check('no network was used for any of it', fetches === 0, fetches);
+    // an English book (NCERT Mridang): its lessons stay English for a child using the app in Hindi
+    E(`S.lang = 'en'; S.classCode = 'CLS001'; go('teacher')`);
+    await wait(10);
+    E(`S.ctx.tcode = 'CLS001'; S.ctx.sylCls = 'c1'; S.ctx.sylRes = null; render()`);
+    await wait(10);
+    const selEn = [...win.document.querySelectorAll('select')].find(s => [...s.options].some(o => o.value === 'ncert-mridang-1'));
+    check('for Class 1 the library offers Mridang (English, NCERT)', !!selEn && /Mridang · NCERT/.test(selEn.textContent), screen().slice(0, 400));
+    if(selEn){ selEn.value = 'ncert-mridang-1'; selEn.dispatchEvent(new win.Event('change')); }
+    await wait(10);
+    if(btn(/Open this week's lessons/)) btn(/Open this week's lessons/).click();
+    await wait(10);
+    const enN = E(`S.ctx.sylRes ? S.ctx.sylRes.drafts.filter(d => d.ok).length : 0`);
+    check("Mridang's chapter 1 opens with every lesson passing this phone's check, each an English lesson (lang 'en', inside its id)",
+      enN >= 1 && E(`S.ctx.sylRes.drafts.every(d => d.ok && d.lesson.lang === 'en')`), E(`JSON.stringify(S.ctx.sylRes && S.ctx.sylRes.drafts.map(d => [d.ok, d.lesson.lang, (d.errors || [])[0]]))`));
+    // each lesson's own "Approve these aims" (one lesson has no "approve all")
+    for(let k = 0; k < 6 && btn(/^Approve these aims$/); k++){ btn(/^Approve these aims$/).click(); await wait(10); }
+    // (muted: Munni's narration would load the app's own voice pack, which this offline check counts as a fetch)
+    E(`S.muted = true; S.classCode = 'CLS001'; S.age = 5; S.lang = 'hi'; go('lessons')`);
+    await wait(20);
+    const enLes = E(`JSON.stringify(schoolLessons().find(l => l.lang === 'en' && l.beats.some(b => b.t === 'ask' && (b.hiOpts || []).join() !== b.opts.join())) || schoolLessons().find(l => l.lang === 'en'))`);
+    const L1 = JSON.parse(enLes || 'null');
+    check('a 5-year-old using the app in Hindi sees the Mridang lessons at the Story Fire', !!L1 && /तुम्हारे स्कूल से — इस हफ़्ते/.test(screen()), screen().slice(0, 300));
+    if(L1){
+      E(`startLesson(${JSON.stringify(L1.id)})`);
+      await wait(20);
+      const seen = [];
+      for(let k = 0; k < L1.beats.length; k++){
+        const b = L1.beats[k];
+        if(b.t !== 'ask' && b.t !== 'passage' && b.t !== 'intro') continue;
+        E(`S.lesson.i = ${k}; S.lesson.picked = null; render()`);
+        const d = win.document;
+        if(b.t === 'passage') seen.push(['passage', (d.querySelector('.cmp-passage p') || {}).textContent === b.p.en, b.p.en]);
+        if(b.t === 'ask') seen.push(['ask', (d.querySelector('.lesq') || {}).textContent === b.q.en
+          && [...d.querySelectorAll('.opts .opt')].map(o => o.textContent).join('|') === b.opts.join('|'), b.q.en + ' ' + b.opts.join('/')]);
+        if(b.t === 'intro' && b.say) seen.push(['intro', /[ऀ-ॿ]/.test((d.querySelector('.lescap') || {}).textContent || ''), 'intro in Hindi']);
+      }
+      check('…and opens one: the passage, the question and the answer buttons are in English — Munni\'s intro stays in the child\'s Hindi',
+        seen.some(s => s[0] === 'ask') && seen.every(s => s[1]), JSON.stringify(seen));
+      const ask = L1.beats.findIndex(b => b.t === 'ask');
+      E(`S.lesson.i = ${ask}; S.lesson.picked = null; render()`);
+      const optTexts = [...win.document.querySelectorAll('.opts .opt')].map(o => o.textContent);
+      check('…the answer buttons are the English answers, never the Hindi translation', optTexts.join('|') === L1.beats[ask].opts.join('|') && !optTexts.some(t => /[ऀ-ॿ]/.test(t)), optTexts.join('|'));
+      E(`endLesson(); S.lang = 'en'`);
+    }
+    // only an ENGLISH book's lessons are locked to English: a Hindi reader (Sarangi), an EVS book
+    // (Our Wondrous World) and a maths book (Maths Mela) keep the child's language, both ways
+    const others = [['ncert-sarangi-1', 'Hindi book (Sarangi)'], ['ncert-our-wondrous-world-5', 'EVS book (Our Wondrous World)'], ['ncert-maths-mela-3', 'maths book (Maths Mela)']];
+    for(const [bookId, label] of others){
+      const got = JSON.parse(E(`(() => {
+        const book = libBook(${JSON.stringify(bookId)}); if(!book) return 'null';
+        S.ctx.tcode = 'CLS001';
+        for(const ch of book.chapters){
+          S.ctx.sylRes = libDrafts(book, ch);
+          const i = S.ctx.sylRes.drafts.findIndex(d => d.ok && d.lesson.beats.some(b => b.t === 'ask' && b.q && b.q.hi !== b.q.en));
+          if(i >= 0){ sylApprove(i); return JSON.stringify(S.ctx.sylRes.drafts[i].lesson); }
+        }
+        return 'null';
+      })()`));
+      if(!got){ check(`${label}: a lesson to play`, false, 'none in the bundle'); continue; }
+      const ask = got.beats.findIndex(b => b.t === 'ask' && b.q.hi !== b.q.en);
+      const seen = {};
+      for(const lang of ['hi', 'en']){
+        E(`S.classCode = 'CLS001'; S.lang = '${lang}'; S.lesson = null; render()`);
+        E(`startLesson(${JSON.stringify(got.id)})`);
+        await wait(20);
+        E(`S.lesson.i = ${ask}; S.lesson.picked = null; render()`);
+        const b = got.beats[ask], d = win.document;
+        seen[lang] = { q: (d.querySelector('.lesq') || {}).textContent, opts: [...d.querySelectorAll('.opts .opt')].map(o => o.textContent).join('|'),
+          ok: (d.querySelector('.lesq') || {}).textContent === b.q[lang] && [...d.querySelectorAll('.opts .opt')].map(o => o.textContent).join('|') === (lang === 'hi' ? (b.hiOpts || b.opts) : b.opts).join('|') };
+        E(`endLesson()`);
+      }
+      check(`a ${label} lesson has no lang and keeps the child's language: Hindi for a child using the app in Hindi, English in English`,
+        !('lang' in got) && seen.hi.ok && seen.en.ok, JSON.stringify(seen));
+    }
+    E(`S.lang = 'en'; S.muted = false`);
+    check('no network was used for any of it', fetches === 0, fetches + ' ' + fetchUrls.join(' '));
     check('no uncaught script errors', jsErrors.length === 0, jsErrors.join(' | '));
   }catch(e){ check('the app run finished', false, e.stack); }
   appServer.close();

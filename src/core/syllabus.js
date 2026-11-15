@@ -439,6 +439,20 @@ const SYL_NUM_EN = ['zero','one','two','three','four','five','six','seven','eigh
 const SYL_NUM_HI = ['शून्य','एक','दो','तीन','चार','पाँच','छह','सात','आठ','नौ','दस','ग्यारह','बारह','तेरह','चौदह','पंद्रह','सोलह','सत्रह','अठारह','उन्नीस','बीस'];
 /* Does a line of narration already say this answer? A number as a whole
    number (a digit or a word); words when every content word of the answer is there. */
+/* An English lesson's first-sound question names its word: "What is the first
+   sound of ant?", "Does bag start with…?" → "ant", "bag" (null for "this word",
+   which a picture would have to show). */
+function sylFirstSound(q){
+  const m = /\bfirst (?:sound|letter)\b[^?]*?\b(?:of|in)\s+(?:the\s+word\s+)?["'“‘]?([A-Za-z]{2,15})\b/i.exec(q || '')
+    || /\b(?:does|do)\s+(?:the\s+word\s+)?["'“‘]?([A-Za-z]{2,15})["'”’]?\s+(?:start|begin)\s+with\b/i.exec(q || '');
+  const w = m && m[1].toLowerCase();
+  return w && !['this', 'that', 'the', 'word', 'each', 'these'].includes(w) ? w : null;
+}
+/* An answer that is one letter ("a", "B", "the b sound", "letter m") → "a", "b", "m" */
+function sylLetterOf(o){
+  const s = String(o == null ? '' : o).trim().toLowerCase().replace(/["'“”‘’]/g, '').replace(/^(?:the\s+)?(?:letter\s+|sound\s+)?/, '').replace(/\s+(?:sound|letter)$/, '');
+  return /^[a-z]$/.test(s) ? s : null;
+}
 function sylSaysIt(text, answer){
   if(!text || answer == null) return false;
   const a = String(answer).trim();
@@ -449,7 +463,17 @@ function sylSaysIt(text, answer){
     if(n === 1) return false;                             // "one" and "एक" are mostly "a"
     return n <= 20 && (words.includes(SYL_NUM_EN[n]) || words.includes(SYL_NUM_HI[n]) || (n === 6 && words.includes('छः')) || (n === 5 && words.includes('पांच')));
   }
-  const stop = /^(the|and|for|with|its|that|this|are|was|का|की|के|है|हैं|में|पर|से|को|और|एक)$/i;
+  // a letter (an English lesson's first sound): "an a sound", "starts with b",
+  // "b की आवाज़" — and any lone b, m, s…, which only ever names the letter
+  // ("a" and "I" are words too, so those need the sound or letter beside them)
+  const ch = sylLetterOf(a);
+  // ("starts with a sound" is an article: "a" counts only as "an a sound", "the a sound", "a आवाज़" or quoted)
+  if(ch && /^[ai]$/.test(ch)) return new RegExp(`\\b(?:an|the)\\s+["'“‘]?${ch}["'”’]?\\s+(?:sound|letter)|(^|[^A-Za-z])${ch}\\s*(?:आवाज़|आवाज|अक्षर|से शुरू)|["“‘']${ch}["”’']`, 'i').test(text);
+  if(ch) return new RegExp(`(^|[^A-Za-z])${ch}(?=\\s*(?:sound|letter|आवाज़|आवाज|अक्षर|से शुरू))|(?:starts?|begins?|sound of|letter)\\s+(?:with\\s+)?(?:an?\\s+|the\\s+)?["'“‘]?${ch}(?![A-Za-z])`, 'i').test(text)
+    || (!/^[ai]$/.test(ch) && new RegExp(`(^|[^A-Za-z'’])${ch}(?![A-Za-z'’])`, 'i').test(text));
+  // a two-letter word ("to"): too common to look for anywhere, so only where it is named as the word
+  if(/^[A-Za-z]{2}$/.test(a)) return new RegExp(`(?:word|शब्द)\\s+(?:is\\s+)?["'“‘]?${a}(?![A-Za-z])|["“‘']${a}["”’']`, 'i').test(text);
+  const stop =/^(the|and|for|with|its|that|this|are|was|का|की|के|है|हैं|में|पर|से|को|और|एक)$/i;
   const uk = w => w.replace(/tre$/, 'ter').replace(/tres$/, 'ters');          // centre / center
   const want = sylWords(a).filter(w => !stop.test(w)).map(uk), have = sylWords(text).map(uk);
   return want.length > 0 && want.every(w => have.some(h => h === w || (w.length >= 4 && h.length >= 4 && h.slice(0, 4) === w.slice(0, 4))));
@@ -482,6 +506,12 @@ function sylClean(raw, opts){
     aims: [],
     beats: []
   };
+  // the language the child reads it in, whatever the app's: a lesson from an
+  // English book (core/library.js, tools/build-library.mjs) is an English
+  // lesson, so its passage, questions and answers stay English for a child
+  // using the app in Hindi (ui/lesson-player.js). Inside the id when set.
+  const lang = ['en', 'hi'].includes(opts.lang) ? opts.lang : ['en', 'hi'].includes(raw.lang) ? raw.lang : undefined;
+  if(lang) les.lang = lang;
   // an aim that fails its check is dropped and named (aimErrors); a lesson with none fails
   // mendHints: the repaired draft's last chance — a hint that still gives it away becomes a general nudge (teachCleanAims)
   const ta = typeof teachCleanAims === 'function' ? teachCleanAims(raw.aims, 'sch-tmp', { mendHints: !!(opts && opts.mendHints) }) : { aims: [], errors: ['the aim checker is not loaded'], fixes: [] };
@@ -490,6 +520,7 @@ function sylClean(raw, opts){
   const beats = sylTidy(Array.isArray(raw.beats) ? raw.beats.slice(0, 12) : []);
   if(beats.length > 10) errs.push('more than 10 beats — keep a lesson short');
   let lastShown = null, shown = null, readText = '', lead = [], taught = false, asked = false;   // lead: what Munni said since the last question
+  let readWords = [], readFresh = true;          // the word cards read since the last question
   const checks = [];
 
   beats.forEach((x, i) => {
@@ -573,8 +604,14 @@ function sylClean(raw, opts){
     if(t === 'ask'){
       const opts = out.opts || [], hiOpts = out.hiOpts || [];
       if(opts.length !== 2) errs.push(`beat ${i}: a question needs exactly 2 answers`);
-      // (a number, or a time written in digits — "3:30" — is the same in Hindi)
-      if(hiOpts.some(o => !/^\d+$/.test(o) && !/^\d{1,2}:\d{2}$/.test(o) && !/[ऀ-ॿ]/.test(o))) errs.push(`beat ${i}: the Hindi answers must be in Devanagari (Yes/No → हाँ/नहीं)`);
+      // (a number, or a time written in digits — "3:30" — is the same in Hindi;
+      // so, in an English lesson, is the English word the child reads: "ears",
+      // "to", "a" — but only that very word, as opts has it)
+      const enSame = (o, k) => les.lang === 'en' && typeof opts[k] === 'string' && o.toLowerCase() === opts[k].toLowerCase();
+      if(hiOpts.some((o, k) => !/^\d+$/.test(o) && !/^\d{1,2}:\d{2}$/.test(o) && !/[ऀ-ॿ]/.test(o) && !enSame(o, k)))
+        errs.push(les.lang === 'en'
+          ? `beat ${i}: an English lesson's Hindi answers are the same English words as opts (or Hindi in Devanagari)`
+          : `beat ${i}: the Hindi answers must be in Devanagari (Yes/No → हाँ/नहीं)`);
       if(!asked && !taught) errs.push(`beat ${i}: teach before you ask — put a teaching picture, a worked example or a passage before the first question`);
       asked = true;
       const right = opts[out.correct];
@@ -598,7 +635,20 @@ function sylClean(raw, opts){
         // (Maths Mela's first chapter counts the letters in names)
         const lw = /how many letters\b.*\b(?:word|name)\s+["'“‘]?([A-Za-z]{2,15})\b/i.exec((out.q && out.q.en) || '');
         const counted = lw && /^\d+$/.test(String(right)) && Number(right) === lw[1].length;
-        const grounded = right != null && (counted || sylGrounded(right, readText) || sylGrounded(hiOpts[out.correct], readText));
+        // "What is the first sound of ant?" is checked by the word itself: the
+        // right answer is its first letter, and the other answer isn't
+        const sound0 = sylFirstSound(out.q && out.q.en);
+        const fsRight = sound0 && sylLetterOf(right) === sound0[0];
+        if(sound0 && !fsRight) errs.push(`beat ${i}: marked "${right}" right, but "${sound0}" starts with "${sound0[0]}"`);
+        if(sound0 && opts.some((o, k) => k !== out.correct && sylLetterOf(o) === sound0[0])) errs.push(`beat ${i}: both answers are the first sound of "${sound0}"`);
+        // a word card shown since the last question was read, however short ("to", "a")
+        const shownWord = readWords.some(w => typeof right === 'string' && w.toLowerCase() === right.trim().toLowerCase());
+        // "Which word is shown here?" right after the card: the answer is the card the child just
+        // saw (gone from the screen by now), so there is nothing to read or work out — the second
+        // live Mridang build kept two of these, the first draft having been told not to (15 Nov 2026)
+        if(shownWord && /\b(?:which|what)\s+(?:\w+\s+)?word\b|कौन\s*सा\s+(?:\S+\s+)?शब्द/i.test(`${out.q && out.q.en} ${out.q && out.q.hi}`) && !sound0)
+          errs.push(`beat ${i}: asks which word was on the card the child just saw — nothing to work out: ask its first sound or what it means, or which word fits a sentence`);
+        const grounded = right != null && (counted || fsRight || shownWord || sylGrounded(right, readText) || sylGrounded(hiOpts[out.correct], readText));
         const yesNo = opts.every(o => /^(yes|no)$/i.test(o));
         if(!grounded && !yesNo) errs.push(`beat ${i}: the right answer "${right}" isn't in the passage`);
         checks.push(grounded ? 'text' : 'teacher');
@@ -619,9 +669,16 @@ function sylClean(raw, opts){
         && said.find(s => sylSaysIt(s.en, right) || sylSaysIt(s.hi, hiOpts[out.correct]) || (geoQ && (picSaid(s.en, shown) || picSaid(s.hi, shown))));
       if(gave) errs.push(`beat ${i}: the lines just before this question say the answer "${right}" (${gave.at === 'intro' ? 'in the intro' : `in beat ${gave.at}'s words`}) — let the child work it out`);
       lead = [];
+      readFresh = true;
     } else if(t !== 'intro' && t !== 'win'){
       lastShown = t; shown = out;
-      if(SYL_READ.includes(t)) readText = [out.p && out.p.en, out.p && out.p.hi, out.w, out.text].filter(Boolean).join(' ');
+      // what the child read since the last question: two word cards in a row are both read
+      if(SYL_READ.includes(t)){
+        const now = [out.p && out.p.en, out.p && out.p.hi, out.w, out.text].filter(Boolean).join(' ');
+        readText = readFresh ? now : readText + ' ' + now;
+        readWords = (readFresh ? [] : readWords).concat(t === 'word' && out.w ? [out.w] : []);
+        readFresh = false;
+      }
     }
     if(t !== 'ask' && out.say) lead.push({ ...out.say, at: t === 'intro' ? 'intro' : i });
     if(t !== 'ask' && t !== 'intro' && t !== 'win') taught = true;          // a worked example or a passage
@@ -647,7 +704,9 @@ function sylClean(raw, opts){
   // the right answer isn't always first: a stable shuffle, by the lesson's own content
   // (the aims are inside the id, without their ids: an aim edited on the way changes it)
   const id = 'sch-' + sylHash({ t: les.title, s: les.sub, k: les.skillId, a: les.aims.map(a => ({ ...a, id: undefined })), b: les.beats.map(b => ({ ...b, correct: undefined, hiOpts: undefined,
-    opts: b.opts && b.opts.slice().sort(), right: b.opts ? b.opts[b.correct] : undefined, hiRight: b.hiOpts ? b.hiOpts[b.correct] : undefined })) });
+    opts: b.opts && b.opts.slice().sort(), right: b.opts ? b.opts[b.correct] : undefined, hiRight: b.hiOpts ? b.hiOpts[b.correct] : undefined })),
+    // only when set, so a lesson without one (every maths lesson) keeps the id it always had
+    ...(les.lang ? { l: les.lang } : {}) });
   les.aims.forEach((a, k) => { a.id = ('s' + id.replace(/^sch-/, '') + '.' + k).slice(0, 32); });
   les.beats.forEach((b, i) => {
     if(b.t === 'ask' && b.opts && b.hiOpts && b.opts.length === 2 && b.hiOpts.length === 2 && Number.isInteger(b.correct) && b.correct < 2 && (seedOf(id + i) & 1) !== b.correct){
