@@ -13,9 +13,10 @@ async function speak(text, lang, onDone){
   const l = lang || S.lang;
   stopOnlineSpeech();
   const requestId = SPEECH_REQUEST;
+  SPEAK_LIVE = requestId;
   const pace = (typeof band === 'function' ? band().speechRate : 0.95);
   let completed = false;
-  const finish = () => { if(completed || requestId !== SPEECH_REQUEST) return; completed = true; if(onDone) onDone(); };
+  const finish = () => { if(completed || requestId !== SPEECH_REQUEST) return; completed = true; if(SPEAK_LIVE === requestId) SPEAK_LIVE = -1; if(onDone) onDone(); };
   const recorded = async () => {
     if(requestId !== SPEECH_REQUEST || completed) return;
     let ok = false;
@@ -35,6 +36,12 @@ async function speak(text, lang, onDone){
   if(requestId !== SPEECH_REQUEST || completed) return;
   if(!google) await backup();
 }
+/* Is Munni in the middle of a line? The line speak() started last, still
+   playing (a line cut off by a newer one, or by leaving the screen, is
+   not). ui/voice-first.js waits on this so it never talks over a screen's
+   own narration. */
+let SPEAK_LIVE = -1;
+function speechBusy(){ return SPEAK_LIVE !== -1 && SPEAK_LIVE === SPEECH_REQUEST; }
 /* Never invoke browser-installed voices. For legacy callers, route through
    the same online voice pipeline rather than using device speech. */
 function speakDevice(text,lang,onDone){return speak(text,lang,onDone);}

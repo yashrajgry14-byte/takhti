@@ -90,7 +90,14 @@ function loadBank(){
                   'src/core/daily-engine.js','src/content/lessons.js','src/core/lesson-gen.js','src/core/explain.js'])
     vm.runInContext(fs.readFileSync(path.join(ROOT,f),'utf8'), ctx);
   vm.runInContext('globalThis.__bank = LESSONS.concat(generateLessons()); globalThis.__lines = SENTENCES; globalThis.__glyphs = GLYPHS; globalThis.__chunks = wordChunks;', ctx);
-  return { bank: ctx.__bank, sentences: ctx.__lines, glyphs: ctx.__glyphs, chunks: ctx.__chunks };
+  // Munni's videos (their animated form is narrated line by line) and the
+  // read-aloud intros for Nursery–Class 2 (ui/voice-first.js; its page hooks
+  // find no page here and stay idle)
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'src/content/videos.js'), 'utf8') + ';globalThis.__videos = VIDEOS;', ctx);
+  const vf = { console, document: { readyState: 'complete', getElementById: () => null } };
+  vm.createContext(vf);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'src/ui/voice-first.js'), 'utf8') + ';globalThis.__intros = VF_INTROS;', vf);
+  return { bank: ctx.__bank, sentences: ctx.__lines, glyphs: ctx.__glyphs, chunks: ctx.__chunks, videos: ctx.__videos, intros: vf.__intros };
 }
 
 /* Same hash the runtime uses to find a file — keep these in step. */
@@ -105,7 +112,7 @@ const SAY_LINES = {
 };
 const SAY_INTRO = { en: w => `Let's say ${w} together.`, hi: w => `चलो, ${w} साथ में बोलें।` };
 
-function collect({ bank, sentences, glyphs, chunks }, lang){
+function collect({ bank, sentences, glyphs, chunks, videos, intros }, lang){
   const lines = new Map();          // key -> text
   const add = t => { if(t && String(t).trim()) lines.set(lineKey(String(t), lang), String(t).trim()); };
   for(const l of bank){
@@ -125,6 +132,16 @@ function collect({ bank, sentences, glyphs, chunks }, lang){
     }
   }
   for(const l of SAY_LINES[lang] || []) add(l);
+  // Munni's videos: every scene line, every pause's question, answers, praise and help
+  for(const v of videos || []){
+    add(v.title && v.title[lang]);
+    for(const sc of v.scenes){
+      add(sc.say[lang]);
+      if(sc.pause){ add(sc.pause.q[lang]); add(sc.pause.praise[lang]); add(sc.pause.show[lang]);
+        sc.pause.opts.forEach((o, i) => { add(o[lang]); if(i === sc.pause.opts.length - 1) add(`${lang === 'hi' ? 'या' : 'or'} ${o[lang]}?`); }); }
+    }
+  }
+  for(const k of Object.keys(intros || {})) add(intros[k][lang]);
   // every letter heard on its own: the Sand Patch, and "hear them side by side"
   for(const lv of Object.values((glyphs || {})[lang] || {})) for(const g of lv) add(g);
   return lines;

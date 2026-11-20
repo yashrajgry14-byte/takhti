@@ -24,6 +24,7 @@
    ================================================================== */
 const fs = require('fs'), path = require('path'), http = require('http');
 const { JSDOM, VirtualConsole } = require('jsdom');
+const { installVoice } = require('./_helpers/voice-stub');
 
 let failures = 0;
 const checks = [];
@@ -52,8 +53,7 @@ server.listen(0, '127.0.0.1', () => {
     url: `http://127.0.0.1:${server.address().port}/index.html`,
     runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true,
     beforeParse(w){
-      w.speechSynthesis = { getVoices: () => [], speak: u => spoken.push(u && u.text), cancel: () => {}, addEventListener: () => {} };
-      w.SpeechSynthesisUtterance = function(t){ this.text = t; };
+      installVoice(w, spoken);   // Google speech stood in: test/_helpers/voice-stub.js
       w.navigator.vibrate = () => {};
       // jsdom draws nothing: a canvas context that accepts every call, so the trace pad can render
       const ctx2d = new Proxy({}, { get: (t, k) => k in t ? t[k] : (k === 'measureText' ? () => ({ width: 10 }) : k === 'getImageData' ? () => ({ data: new Uint8ClampedArray(4) }) : () => {}), set: (t, k, v) => (t[k] = v, true) });

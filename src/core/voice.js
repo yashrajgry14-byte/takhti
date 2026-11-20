@@ -150,4 +150,3 @@ async function playBackup(text,lang,onDone,pace,requestId,onPlaybackFailure){
   if(!(typeof TALK_URL!=='undefined' && TALK_URL) || !text || String(text).length>160) return false;
   return playOnlineSource(TALK_URL+'/reading/tts',String(text),lang,onDone,pace,requestId,onPlaybackFailure);
 }
-function voicePackLoaded(lang){return !!(VOICE_MANIFEST[lang] && Object.keys(VOICE_MANIFEST[lang]).length);}
