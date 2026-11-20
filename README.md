@@ -87,7 +87,7 @@ yet. The Android app ports the same logic to Kotlin (`ANDROID.md`).
 
 | Google component | What it does in Takhti | Where |
 |---|---|---|
-| **Gemini API — structured output** (`gemini-3.8-flash`, falling back to `gemini-3.7-flash` and `gemini-3.5-flash-lite`) | Turns a textbook chapter (PDF, photo or text) into lessons in Takhti's own format, one JSON schema per lesson-step type, each with its teacher-approved aims; a failed lesson goes back once with the checker's reasons | `api/syllabus.mjs`, `tools/try-syllabus.mjs`, `tools/build-library.mjs` |
+| **Gemini API — structured output** (`gemini-4-hydrogen`, falling back to `gemini-3.8-flash` and `gemini-3.5-flash-lite`) | Turns a textbook chapter (PDF, photo or text) into lessons in Takhti's own format, one JSON schema per lesson-step type, each with its teacher-approved aims; a failed lesson goes back once with the checker's reasons | `api/syllabus.mjs`, `tools/try-syllabus.mjs`, `tools/build-library.mjs` |
 | **Gemini — audio understanding** | Writes down what a child *said* when reading aloud (बाई stays बाई, not भाई) and when explaining to Munni; the phone grades it | `voice/speech.js` |
 | **Gemini — the judge** | Decides which aims a child's explanation covered, quoting the child for every credit; an unquoted credit is downgraded on the server and again on the phone | `api/teachback.mjs` |
 | **Gemini TTS + Batch API** | Munni's voice, built ahead at half price and shipped offline, so a lesson never waits for the network | `tools/build-audio.mjs` |

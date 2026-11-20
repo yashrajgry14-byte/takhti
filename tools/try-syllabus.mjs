@@ -101,7 +101,7 @@ export async function run(opts, fetchImpl){
   const { draftCore } = await import(pathToFileURL(path.join(root, 'api', 'syllabus.mjs')).href);
   const say = opts.say || (() => {});
   const t0 = Date.now();
-  say(`Asking ${env.GEMINI_MODEL || 'gemini-3.8-flash'} for ${opts.count || 4} lesson(s) for ${cls.en}…`);
+  say(`Asking ${env.GEMINI_MODEL || 'gemini-4-hydrogen'} for ${opts.count || 4} lesson(s) for ${cls.en}…`);
   // Google's busy spells come and go (the first live run hit one): a busy or
   // timed-out draft is tried once more after a pause, as a person would
   let d = await draftCore({ mode:'draft', chapter, rules, count: opts.count || 4, skills, note: opts.note || '', lang }, env, 'try-syllabus', fetchImpl);

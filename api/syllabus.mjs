@@ -26,8 +26,8 @@
    → { lessons:[…raw drafts…], chapter, model }
 
    Keys stay here: GEMINI_API_KEY (or GOOGLE_API_KEY), GEMINI_MODEL
-   (default gemini-3.8-flash; GEMINI_FALLBACK_MODEL, a comma list tried in
-   turn when that one is busy, default gemini-3.7-flash,gemini-3.5-flash-lite;
+   (default gemini-4-hydrogen — Gemini 4's fast model, 12 Nov 2026; GEMINI_FALLBACK_MODEL, a comma list tried in
+   turn when that one is busy, default gemini-3.8-flash,gemini-3.5-flash-lite;
    a model that hung or was busy rests a few minutes). TAKHTI_SYLLABUS_KEY, if set, is a school
    password the teacher view must send. Works as a Netlify function
    (Request → Response), with the Vercel-style (req, res) signature
@@ -339,11 +339,11 @@ async function callGemini(parts, system, env, fetchImpl){
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
   // the chosen model, then a lighter one when Google says it's busy (503/429)
   // or doesn't know the model (404) — GEMINI_FALLBACK_MODEL, 'none' to switch off
-  const primary = env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const primary = env.GEMINI_MODEL || 'gemini-4-hydrogen';
   // the fallbacks, in order — a full Flash model before the lite one (the
   // third live run: flash-lite left out whole questions); a comma list
   const fallbacks = env.GEMINI_FALLBACK_MODEL === 'none' ? []
-    : String(env.GEMINI_FALLBACK_MODEL || 'gemini-3.7-flash,gemini-3.5-flash-lite').split(',').map(x => x.trim()).filter(Boolean);
+    : String(env.GEMINI_FALLBACK_MODEL || 'gemini-3.8-flash,gemini-3.5-flash-lite').split(',').map(x => x.trim()).filter(Boolean);
   const all = [primary].concat(fallbacks.filter((m, i) => m !== primary && fallbacks.indexOf(m) === i));
   const now = Date.now(), awake = all.filter(m => !(RESTING.get(m) > now));
   const models = awake.length ? awake : all.slice(-1);               // all resting: the last one still tries

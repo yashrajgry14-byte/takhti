@@ -278,7 +278,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
   const { buildRequest, lessonsFrom, answerJSON, GEN_SHAPES } = await import(pathToFileURL(path.join(root, 'api', 'syllabus.mjs')).href);
   const env = { ...readEnv(path.join(root, 'voice', '.env'), process.env), ...(opts.env || {}) };
   if(!(env.GEMINI_API_KEY || env.GOOGLE_API_KEY)) throw new Error('no Gemini key: put GEMINI_API_KEY=… in voice/.env (see voice/.env.example)');
-  const model = env.GEMINI_BATCH_MODEL || env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const model = env.GEMINI_BATCH_MODEL || env.GEMINI_MODEL || 'gemini-4-hydrogen';
   const g = gemini(env, fetchImpl), pollMs = Number(opts.pollMs != null ? opts.pollMs : 30000);
   const until = Date.now() + Number(opts.waitMs != null ? opts.waitMs : 60 * 60000);
   const ph = phoneChecker(), cls = ph.cls(book.cls), rules = ph.rules(cls.band), skills = ph.skills(cls.id, book.subject);

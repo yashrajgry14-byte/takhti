@@ -181,9 +181,9 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     const sa = batchStand({ firsts, repairs: fixes, pendingPolls: 1 });
     const first = await lib.batchBook(dir, { env, pollMs: 0, waitMs: 0, say: s => said.push(s) }, sa.fetch);
     const state = fs.existsSync(path.join(dir, '.batch.json')) ? JSON.parse(fs.readFileSync(path.join(dir, '.batch.json'), 'utf8')) : null;
-    check('--batch: the chapter PDF goes up once through the Files API (resumable upload, the key in a header) and the drafts go as one batch job to the full Flash model — never the PDF inline',
+    check('--batch: the chapter PDF goes up once through the Files API (resumable upload, the key in a header) and the drafts go as one batch job to Gemini 4 Hydrogen — never the PDF inline',
       sa.log.uploads === 1 && sa.log.start['X-Goog-Upload-Protocol'] === 'resumable' && sa.log.start['x-goog-api-key'] === 'gk-batch-secret'
-        && sa.log.submits.length === 1 && /models\/gemini-3\.8-flash:batchGenerateContent$/.test(sa.log.submits[0].url)
+        && sa.log.submits.length === 1 && /models\/gemini-4-hydrogen:batchGenerateContent$/.test(sa.log.submits[0].url)
         && JSON.stringify(sa.log.submits[0].body).includes('"file_uri":"https://gen.example/files/f1"') && !JSON.stringify(sa.log.submits[0].body).includes('inline_data'),
       JSON.stringify({ up: sa.log.uploads, subs: sa.log.submits.map(x => x.url) }));
     const { buildRequest } = await import(pathToFileURL(path.join(root, 'api/syllabus.mjs')).href);
@@ -201,7 +201,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
       got.length === 1 && sa.log.uploads === 1 && sa.log.submits.length === 2 && /errors/.test(JSON.stringify(sa.log.submits[1].body)) && ch5.lessons.length === 4 && ch5.notUsed.length === 0,
       JSON.stringify({ subs: sa.log.submits.length, kept: ch5.lessons.length }));
     check('…the chapter\'s report says it came by batch and what it used, the upload is deleted afterwards, .batch.json is gone, and the key is in no file',
-      raw.batch && /^batches\//.test(raw.batch.drafts) && raw.tried[0].outcome === 'batch' && raw.tried[0].tokens.in === 1000 && /gemini-3\.8-flash batch/.test(fs.readFileSync(path.join(dir, 'ch5.report.md'), 'utf8'))
+      raw.batch && /^batches\//.test(raw.batch.drafts) && raw.tried[0].outcome === 'batch' && raw.tried[0].tokens.in === 1000 && /gemini-4-hydrogen batch/.test(fs.readFileSync(path.join(dir, 'ch5.report.md'), 'utf8'))
         && sa.log.deletes.length === 1 && !fs.existsSync(path.join(dir, '.batch.json')) && fs.readdirSync(dir).every(f => !fs.readFileSync(path.join(dir, f)).toString().includes('gk-batch-secret')),
       JSON.stringify({ batch: raw.batch, tried: raw.tried, del: sa.log.deletes, files: fs.readdirSync(dir) }));
     // a rebuild that comes back weaker never replaces the chapter

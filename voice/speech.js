@@ -11,7 +11,7 @@
    as it is switched on.
 
    checkReading — a child's voice → exactly what they said
-   · gemini: GEMINI_SPEECH_MODEL (default gemini-3.8-flash), audio in
+   · gemini: GEMINI_SPEECH_MODEL (default gemini-4-hydrogen), audio in
      (inline_data — webm, ogg, wav… are all listed by the API), structured
      output { said, words:[{word, said}] }. With the passage it also says,
      per word of the line, what the child said for it. It is told to write
@@ -115,7 +115,7 @@ function thinkLow(bodies, env){
   return [...bodies.map(b => ({ ...b, generationConfig: { ...b.generationConfig, thinkingConfig: { thinkingLevel: lv } } })), ...bodies];
 }
 async function geminiHear(clip, passage, lang, env, fetchImpl, ms){
-  const model = env.GEMINI_SPEECH_MODEL || 'gemini-3.8-flash';
+  const model = env.GEMINI_SPEECH_MODEL || 'gemini-4-hydrogen';
   // GEMINI_HEAR_LINE=0: heard without the line, for the day a live check shows
   // the line pulling Gemini into writing it instead of what the child said
   if(env.GEMINI_HEAR_LINE === '0') passage = null;

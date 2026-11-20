@@ -91,14 +91,14 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     ? { ok:false, status:503, json: async () => ({ error:{ message:'The model is overloaded' } }) }
     : { ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[MATH] }) }] } }] }) }; };
   const rb = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.8', busyThen);
-  check('Google says the model is busy (503): one more try, then the next model in the chain (a full Flash before the lite one) answers', rb.status === 200 && rb.json.model === 'gemini-3.7-flash'
-    && calls.filter(c => /gemini-test:/.test(c.url)).length === 2 && /3\.7-flash:/.test(calls[calls.length - 1].url), JSON.stringify(calls.map(c => c.url.split('/').pop())));
+  check('Google says the model is busy (503): one more try, then the next model in the chain (a full Flash before the lite one) answers', rb.status === 200 && rb.json.model === 'gemini-3.8-flash'
+    && calls.filter(c => /gemini-test:/.test(c.url)).length === 2 && /3\.8-flash:/.test(calls[calls.length - 1].url), JSON.stringify(calls.map(c => c.url.split('/').pop())));
   calls.length = 0;
   const hangs = (url, o) => { calls.push({ url }); return /gemini-test:/.test(url)
     ? new Promise((_, no) => o.signal.addEventListener('abort', () => no(new Error('aborted'))))
     : Promise.resolve({ ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[READ] }) }] } }] }) }); };
   // the eighth live run: both full Flash models hung, used 151 of 180 s, and flash-lite never had a fair turn
-  const twoHang = (url, o) => { calls.push({ url }); return /gemini-test:|3\.7-flash:/.test(url)
+  const twoHang = (url, o) => { calls.push({ url }); return /gemini-test:|3\.8-flash:/.test(url)
     ? new Promise((_, no) => o.signal.addEventListener('abort', () => no(new Error('aborted'))))
     : new Promise(ok => setTimeout(() => ok({ ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[READ] }) }] } }] }) }), 1200)); };
   const r2h = await draftCore({ chapter:{ text:'Chapter 6. Kites. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_TIMEOUT_MS: 6000, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.1.6', twoHang);
@@ -130,9 +130,9 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   const firstCalls = calls.length; calls.length = 0;
   const again = await draftCore({ mode:'repair', repair:[{ lesson: WRONG_SUM, errors:['x'] }], rules }, restEnv, '1.1.3.2', restFake);
   check('a model that just said "busy" rests: the next request (the repair round) goes straight to the fallback, no waiting',
-    firstCalls === 3 && calls.length === 1 && /3\.7-flash:/.test(calls[0].url) && again.json.model === 'gemini-3.7-flash', `${firstCalls} then ${JSON.stringify(calls.map(c => c.url.split('/').pop()))}`);
+    firstCalls === 3 && calls.length === 1 && /3\.8-flash:/.test(calls[0].url) && again.json.model === 'gemini-3.8-flash', `${firstCalls} then ${JSON.stringify(calls.map(c => c.url.split('/').pop()))}`);
   calls.length = 0;
-  const twoBusy = async (url) => { calls.push({ url }); return /gemini-test:|3\.7-flash:/.test(url)
+  const twoBusy = async (url) => { calls.push({ url }); return /gemini-test:|3\.8-flash:/.test(url)
     ? { ok:false, status:503, json: async () => ({}) }
     : { ok:true, status:200, json: async () => ({ candidates:[{ content:{ parts:[{ text: JSON.stringify({ lessons:[MATH] }) }] } }] }) }; };
   const r3m = await draftCore({ chapter:{ text:'Chapter 4. Subtraction. '.repeat(5) }, rules }, { ...env, TAKHTI_SYLLABUS_RETRY_MS: 1, TAKHTI_GEMINI_REST_MS: 0 }, '1.1.3.3', twoBusy);

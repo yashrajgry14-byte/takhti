@@ -81,7 +81,7 @@ export function readIndex(dir, id){
 export async function transcribe(file, env, fetchImpl = fetch){
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
   if(!key) throw new Error('no Gemini key');
-  const models = String(env.TAKHTI_BOOKWORDS_MODEL || 'gemini-3.5-flash-lite,gemini-3.8-flash').split(',').map(x => x.trim()).filter(Boolean);
+  const models = String(env.TAKHTI_BOOKWORDS_MODEL || 'gemini-3.5-flash-lite,gemini-4-hydrogen').split(',').map(x => x.trim()).filter(Boolean);
   const data = fs.readFileSync(file).toString('base64');
   const body = {
     systemInstruction: { parts: [{ text: 'Copy out, exactly as printed, every line of text in this textbook chapter: poems and songs line by line, sentences, word lists, dialogues, exercises and instructions. One line of the page per line. Leave out page numbers, running headers and copyright marks. Plain text only — no commentary.' }] },

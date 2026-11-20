@@ -350,7 +350,7 @@ child sees.
   rules (number ceiling, word limit — sent by the phone from `ages.js`),
   the beat types the player can draw and their limits, the arithmetic rule,
   both languages, the class's skill ids, the note — and asks Gemini
-  (`GEMINI_API_KEY`, `GEMINI_MODEL`, default `gemini-3.8-flash`) for JSON in
+  (`GEMINI_API_KEY`, `GEMINI_MODEL`, default `gemini-4-hydrogen`, Gemini 4's fast model since 20 Nov 2026) for JSON in
   Takhti's lesson schema (structured output, **one beat schema per beat
   type, each with its own required fields** — a question can't arrive
   without its two answers and the right one, a rectangle without `w` and
@@ -362,7 +362,7 @@ child sees.
   silent one gets Munni's own words, below). Google saying the model is
   busy (503) gets one more try a moment later; a 429 (the key's quota)
   none — then each `GEMINI_FALLBACK_MODEL` in turn (a comma list, default
-  `gemini-3.7-flash,gemini-3.5-flash-lite`; `none` switches them off),
+  `gemini-3.8-flash,gemini-3.5-flash-lite`; `none` switches them off),
   which a 404 also moves to; all busy → "Gemini is busy right now" (a 429
   is said as the key's own limit, not as busy). Every model's outcome and
   time (`ok`, `hung`, 503, 429…) — and, for an answer, the tokens Gemini
@@ -576,8 +576,8 @@ network and no waiting in the week.
   `answerJSON()`, `lessonsFrom()`; `draftCore()` is a thin wrapper), and a
   batch whose every request is refused as a bad request is sent again with
   the older field names. The model is `GEMINI_BATCH_MODEL` (default
-  `gemini-3.8-flash`: a batch waits for capacity, so the full Flash model
-  that is too busy live can draft the library). The job runs on Google's
+  `gemini-4-hydrogen`; `gemini-4-argon`, Gemini 4's frontier model, is one
+  setting away for the library's best drafts — a batch waits for capacity). The job runs on Google's
   side: its name is kept in `<book>/.batch.json` (never committed), so a
   run that stops waiting (`--wait` minutes, default 60) picks it up again;
   the uploads are deleted when it is done.
@@ -1173,7 +1173,7 @@ lang)` and `narrate(text, lang)`. `SPEECH_PROVIDER=gemini|sarvam` in
 `voice/.env` picks the provider, **default gemini** (the Google buildathon);
 Sarvam stays as the backup — its code is `voice/asr.js`, unchanged, and is
 the whole reading check again the moment the setting says `sarvam`.
-- **Gemini hears** (`GEMINI_SPEECH_MODEL`, default `gemini-3.8-flash`): the
+- **Gemini hears** (`GEMINI_SPEECH_MODEL`, default `gemini-4-hydrogen`): the
   clip as inline audio, structured output `{ said, words:[{word, said}] }`,
   told to write what it HEARS ("बाई" for "भाई" stays "बाई"). Asked to think
   little (`thinkingConfig.thinkingLevel`, `TAKHTI_THINKING`, default `low`; a model
@@ -1347,7 +1347,7 @@ protégé effect, and the one place a child gets to *say* what they learnt.
   down by the speech adapter (`voice/speech.js`: Gemini, Sarvam as backup), then judged
   by Gemini (`api/teachback.mjs`, `judgeCore()`). **Its models**
   (`judgeModels()`): `TAKHTI_TEACH_MODEL`, else `GEMINI_MODEL`, else
-  `gemini-3.8-flash`, which gets a short turn (`TAKHTI_TEACH_FIRST_MS`,
+  `gemini-4-hydrogen`, which gets a short turn (`TAKHTI_TEACH_FIRST_MS`,
   3.5 s; a 503/429/404 moves on at once), then `TAKHTI_TEACH_FALLBACK`
   (default `gemini-3.5-flash-lite`; `none` switches it off) for the rest of
   the 9 s — the live checks found the full Flash models busy or silent while
@@ -2021,6 +2021,13 @@ Honest edges of what's built:
    something different still drafts from a chapter. The publisher's
    permission for lessons built from its book is a question for the lawyer
    (the lessons don't copy the book's text or figures).
+18. **Gemini 4 Hydrogen is the default since 20 Nov 2026** (the Buildathon
+   finals, Jaipur): released 12 Nov as the fast model of the Gemini 4 family
+   and the successor of 3.8 Flash, it drafts lessons, hears and judges by
+   default; 3.8 Flash and 3.5 Flash-Lite stay as the fallbacks. The tests
+   run against a stand-in; `tools/live-check.mjs` and
+   `tools/try-syllabus.mjs` with the team's key are what show its real speed
+   and quality — run them before the demo.
 15. **Gemini as the speech provider is new (12 Nov 2026).** It is tested
    against a stand-in only. The real risk is that a model given the line
    "hears" the line — tidying a child's misreading the way the phone's

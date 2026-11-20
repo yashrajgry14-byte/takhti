@@ -142,7 +142,7 @@ export function withThinking(shapes, env){
    (TAKHTI_TEACH_FALLBACK, default flash-lite; 'none' switches it off). */
 export function judgeModels(env){
   env = env || {};
-  const first = env.TAKHTI_TEACH_MODEL || env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const first = env.TAKHTI_TEACH_MODEL || env.GEMINI_MODEL || 'gemini-4-hydrogen';
   const fb = String(env.TAKHTI_TEACH_FALLBACK == null ? 'gemini-3.5-flash-lite' : env.TAKHTI_TEACH_FALLBACK);
   const rest = fb.toLowerCase() === 'none' ? [] : fb.split(',').map(x => x.trim()).filter(Boolean);
   return [first, ...rest].filter((m, i, a) => a.indexOf(m) === i).slice(0, 3);
