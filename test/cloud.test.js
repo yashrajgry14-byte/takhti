@@ -53,6 +53,21 @@ function req(port, method, p, body){
   for(const p of never){ const r = await new Promise((res, rej) => { const q = http.request({ host: '127.0.0.1', port, path: p }, x => { x.resume(); x.on('end', () => res(x.statusCode)); }); q.on('error', rej); q.end(); }); if(r === 200) leaked.push(p); }
   check('nothing outside the whitelist is served — the voice server, its .env, the API code, the notes, a path that climbs out', leaked.length === 0, leaked.join(', '));
 
+  // ---- a new build reaches phones whole (20 Nov: an hour-cached script beside a new index.html) ----
+  const etagOf = p => new Promise((res, rej) => { const q = http.request({ host: '127.0.0.1', port, path: p }, x => { x.resume(); x.on('end', () => res({ status: x.statusCode, etag: x.headers.etag, cache: x.headers['cache-control'] || '' })); }); q.on('error', rej); q.end(); });
+  const a1 = await etagOf('/src/ui/arrival.js');
+  const a2 = await new Promise((res, rej) => { const q = http.request({ host: '127.0.0.1', port, path: '/src/ui/arrival.js', headers: { 'if-none-match': a1.etag } }, x => { let n = 0; x.on('data', c => n += c.length); x.on('end', () => res({ status: x.statusCode, bytes: n })); }); q.on('error', rej); q.end(); });
+  const fs = require('fs');
+  const clipName = (() => { for(const l of ['hi', 'en']){ try{ const f = fs.readdirSync(path.join(__dirname, '..', 'audio', l)).find(n => /\.(mp3|wav)$/.test(n)); if(f) return `/audio/${l}/${f}`; }catch(e){} } return null; })();
+  const clip = clipName ? await etagOf(clipName) : null;
+  check('a script is checked with the server every time (no-cache, an ETag, a 304 with no body when unchanged); a recorded clip, named by its hash, is kept',
+    a1.status === 200 && a1.cache === 'no-cache' && !!a1.etag && a2.status === 304 && a2.bytes === 0 && (!clip || (clip.status === 200 && /immutable/.test(clip.cache))),
+    JSON.stringify([a1, a2, clip]));
+  const swSrc = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8'), ix = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  check('…the service worker fills a new cache past the browser\'s HTTP cache, and the page opens a new build when its worker takes over (only on the first screen or the map)',
+    /new Request\(u, \{ cache: 'reload' \}\)/.test(swSrc) && /updateViaCache: 'none'/.test(ix) && /controllerchange/.test(ix) && /scr === 'arrival' \|\| scr === 'map'/.test(ix),
+    'sw.js / index.html');
+
   // ---- no key: honest answers, and the app falls back to the phone ----
   const h0 = (await req(port, 'GET', '/health')).json;
   const syl0 = await req(port, 'POST', '/api/syllabus', { chapter: { text: 'Shapes' }, band: 'developing', n: 2 });

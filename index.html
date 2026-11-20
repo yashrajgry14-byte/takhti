@@ -158,8 +158,21 @@ window.TAKHTI_VOICE = window.TAKHTI_VOICE || '';</script>
 <!-- Cache the shell so the demo runs with the phone in airplane mode. -->
 <script>
 if('serviceWorker' in navigator){
+  // A page opened from the cache is the old build. When a new build's worker
+  // takes over, open the new one — but only on the first screen or the map,
+  // never in the middle of a lesson or a game (it waits until the child is back).
+  let hadWorker = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    if(!hadWorker){ hadWorker = true; return; }   // a first install: this page is already the newest
+    const fresh = ()=>{
+      const scr = window.S && S.screen;
+      if(!scr || scr === 'arrival' || scr === 'map') location.reload();
+      else setTimeout(fresh, 2000);
+    };
+    fresh();
+  });
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('[sw] registration failed', err));
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(err=>console.warn('[sw] registration failed', err));
   });
 }
 </script>

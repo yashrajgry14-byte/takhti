@@ -89,7 +89,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v84` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v85` (recorded narration lives in a
 separate `takhti-audio-v2`, bumped only when a line is rendered again in a new
 voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
@@ -938,6 +938,20 @@ show; the 12 o'clock questions that were in the pool are out now).
   cancels whatever is playing, so the old fixed timers cut every line off and
   the child heard only the answer. Rows are counted out (4, 8, 12…) in the
   array; leaving the screen or pressing again stops the old run.
+
+## How a new build reaches a phone (20 Nov)
+
+The live link's first screen stayed old after a redeploy, and the Story Fire
+and Picture Hut broke: the service worker filled its new cache through the
+browser's HTTP cache, and the server let scripts be kept for an hour, so a
+phone that had just visited stored the new `index.html` beside the old
+scripts — two builds at once, served cache-first until the next bump. Now
+`sw.js` caches the shell with `cache: 'reload'`; `cloud/server.mjs` sends
+every file `no-cache` with an ETag (a 304 when unchanged; only a hash-named
+audio clip is kept); and `index.html` registers the worker with
+`updateViaCache: 'none'` and reloads into a new build when its worker takes
+over — only on the first screen or the map, never in a lesson or a game.
+`test/cloud.test.js` checks all three.
 
 ## Spaced repetition
 

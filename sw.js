@@ -9,7 +9,7 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v84';
+const CACHE = 'takhti-v85';
 // Recorded audio clips are named by a hash of their text (see core/voice.js),
 // so they live in a cache of their own that the version cleanup below never
 // touches: bumping CACHE on a normal deploy must not re-download tens of MB
@@ -50,8 +50,13 @@ self.addEventListener('install', e => {
   // report what is missing instead.
   e.waitUntil((async () => {
     const cache = await caches.open(CACHE);
+    // cache: 'reload' goes past the browser's HTTP cache. Without it a phone
+    // that loaded the app within the server's max-age filled the NEW cache
+    // with the OLD scripts beside the new index.html — a mix of two builds,
+    // served cache-first until the next bump (20 Nov: the live link's new
+    // first screen never showed, and the Story Fire and Picture Hut broke).
     await Promise.all(SHELL.map(u =>
-      cache.add(u).catch(err => console.warn('[sw] could not cache', u, err))
+      cache.add(new Request(u, { cache: 'reload' })).catch(err => console.warn('[sw] could not cache', u, err))
     ));
     self.skipWaiting();
   })());

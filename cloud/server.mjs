@@ -47,7 +47,7 @@ const TYPES = {
   '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ogg': 'audio/ogg', '.woff2': 'font/woff2'
 };
 
-async function serveFile(res, urlPath){
+async function serveFile(req, res, urlPath){
   let p;
   try{ p = decodeURIComponent(urlPath); }catch(e){ return false; }
   if(p === '/') p = '/index.html';
@@ -58,15 +58,21 @@ async function serveFile(res, urlPath){
   try{
     const st = await stat(file);
     if(!st.isFile()) return false;
-    const body = await readFile(file);
-    res.writeHead(200, {
+    // Every file is checked with the server on each load (a 304 when it is the
+    // same): a script kept for an hour beside a new index.html was two builds
+    // at once (20 Nov). Only a recorded clip, named by a hash of its text,
+    // never changes and is kept.
+    const clip = p.startsWith('/audio/') && !p.endsWith('.json');
+    const etag = `"${st.size.toString(36)}-${Math.floor(st.mtimeMs).toString(36)}"`;
+    const head = {
       'Content-Type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream',
-      // the service worker and the page must update the moment a new build ships;
-      // the rest is versioned by the service worker's own cache name
-      'Cache-Control': p === '/sw.js' || p === '/index.html' ? 'no-cache' : 'public, max-age=3600',
-      'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer'
-    });
-    res.end(body);
+      'Cache-Control': clip ? 'public, max-age=31536000, immutable' : 'no-cache',
+      'ETag': etag, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer'
+    };
+    if(req.headers['if-none-match'] === etag){ res.writeHead(304, head); res.end(); return true; }
+    const body = await readFile(file);
+    res.writeHead(200, head);
+    res.end(req.method === 'HEAD' ? undefined : body);
     return true;
   }catch(e){ return false; }
 }
@@ -141,7 +147,7 @@ export async function handle(req, res){
       }
       return json(res, 404, { error: 'not found' });
     }
-    if((req.method === 'GET' || req.method === 'HEAD') && await serveFile(res, p)) return;
+    if((req.method === 'GET' || req.method === 'HEAD') && await serveFile(req, res, p)) return;
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Not found');
   }catch(e){
