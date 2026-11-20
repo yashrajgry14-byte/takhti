@@ -130,10 +130,10 @@ function obAgeHTML(){
             <span class="ob-num">${n}</span>
           </button>`).join('')}
       </div>
-      <div class="ob-older">
+      ${AGE_SHOWN_MAX > 10 ? `<div class="ob-older">
         <span class="ob-sub" style="margin:0">${hi ? 'और बड़े?' : 'Older?'}</span>
-        ${[11,12,13,14,15,16].map(n => `<button class="ob-agechip" onclick="obPickAge(${n})">${n}</button>`).join('')}
-      </div>`}
+        ${[11,12,13,14,15,16].filter(n => n <= AGE_SHOWN_MAX).map(n => `<button class="ob-agechip" onclick="obPickAge(${n})">${n}</button>`).join('')}
+      </div>` : ''}`}
   </div>`;
 }
 /* A cake with n lit candles. The child counts them — which is genuinely
@@ -175,7 +175,7 @@ function obClassHTML(){
     <div class="ob-munni bob">${typeof munniSmall === 'function' ? munniSmall() : '🐘'}</div>
     <div class="ob-bubble">${hi ? `तुम किस कक्षा में हो? <b>${k.hi}</b>?` : `Which class are you in? <b>${k.en}</b>?`}</div>
     <div class="ob-classes">
-      ${CLASSES.map((c,i) => `
+      ${classesShown().map((c,i) => `
         <button class="ob-clsbtn ${c.id === sel ? 'sel' : ''}" style="animation-delay:${i*0.04}s" onclick="obPickClass('${c.id}')">${hi ? c.hi : c.en}</button>`).join('')}
     </div>
     <div class="ob-sub">${hi ? 'पक्का न हो तो किसी बड़े से पूछो' : 'Not sure? Ask a grown-up'}</div>
