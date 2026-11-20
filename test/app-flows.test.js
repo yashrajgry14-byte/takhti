@@ -115,6 +115,12 @@ server.listen(0, '127.0.0.1', () => {
       check("switching it on shows 'Sync now' and an honest status (no sync server in this test)", E('S.syncOn') === true && !!byText('.btn', 'Sync now') && /sync/i.test($('#screen').textContent), $('#screen').textContent.slice(0, 200));
       tap(byText('.btn', 'For teachers'));
       check('"For teachers" opens the teacher view', E('S.screen') === 'teacher', E('S.screen'));
+      check('the teacher screen denies access until a verified school teacher logs in',
+        /Teacher account required/.test($('#screen').textContent) && !$('.covtable'), 'unguarded class view');
+      // Simulate the successful server-verified role response to exercise
+      // the teacher's local UI, without weakening production authorization.
+      E(`CLASS_AUTH.token='test-approved-session'; CLASS_AUTH.expires=Date.now()+60000;
+        CLASS_AUTH.role='teacher'; CLASS_AUTH.classes=['ABC123']; render();`);
       check('the teacher view shows what Takhti covers, from the live skill graph', !!$('.covtable') && $('#screen').textContent.includes('can be taught today'), 'no coverage');
       $('#tcode').value = 'ABC123'; tap(byText('.btn', 'Open class'));
       check('opening the class lists the linked child', $('#screen').textContent.includes('1 linked: Tiger'), $('#screen').textContent.slice(0, 400));
