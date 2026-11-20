@@ -81,7 +81,8 @@ export async function syncCore(store, body, identity){
   if(identity.role === 'guardian' && (body.teacherKey || body.homework || body.lessons || body.roster)) return {status:403,json:{error:'teacher actions forbidden'}};
   const code = String(body && body.code || '').toUpperCase();
   if(!CODE.test(code)) return { status:400, json:{ error:'bad class code' } };
-  const key = 'class-' + code;
+  if(!/^[A-Za-z0-9_-]{6,64}$/.test(identity.schoolId||'')) return {status:403,json:{error:'school identity required'}};
+  const key = 'class-' + identity.schoolId + '-' + code;
   const cur = (await store.get(key, { type:'json' })) || { children:{}, homework:null };
 
   let teacher = identity.role === 'teacher';
