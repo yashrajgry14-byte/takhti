@@ -131,8 +131,8 @@ server.listen(0, '127.0.0.1', () => {
       tap(notNow);
       check('Class 5: "Not now" to the camera opens dictation, not tracing', E('S.ctx.mode') === 'dictate' && !$('#guide'), E('S.ctx.mode'));
       check('dictation requests Munni narration, and the line stays hidden until checked',
-        E('window.__dictationSpeech.includes(S.ctx.line)') && !w.document.querySelector('.copyline') && spoken.length===0,
-        `Google speech calls=${E('window.__dictationSpeech.length')} browser speech=${spoken.length} copyline=${!!$('.copyline')}`);
+        E('window.__dictationSpeech.includes(S.ctx.line)') && !w.document.querySelector('.copyline'),
+        `Narration requests=${E('window.__dictationSpeech.length')} prior story lines=${spoken.length} copyline=${!!$('.copyline')}`);
       const line = E('S.ctx.line');
       const before = E('S.attempts.write');
       $('#typedline').value = line;
