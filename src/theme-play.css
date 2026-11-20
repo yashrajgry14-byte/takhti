@@ -1,0 +1,246 @@
+/* ==================================================================
+   PLAYTIME THEME (20 Nov)
+   Loaded LAST, after styles.css and theme-light.css: a pure override
+   layer, like theme-light. Delete this one <link> (and its line in
+   sw.js) and the app is back exactly as it was.
+
+   The 15 Nov pass made the arrival and the animal friends bright and
+   chunky. Everything after them still looked like a form — white boxes,
+   thin borders, grey text. This carries the same language through the
+   whole child side:
+     · one palette (the avatar colours), cycled so neighbours differ
+     · chunky "press-able" buttons: a darker bottom edge that squashes
+     · cream speech bubbles with a sunny border, everywhere Munni or Appu talks
+     · the jungle map as a real sunny jungle, not a white card
+     · the phone stays one size; long screens scroll inside it
+   The grown-up pages (.paper) keep their calm look; only their inputs
+   are fixed so they no longer look switched off.
+   ================================================================== */
+
+:root{
+  --p-orange:#FF8C42; --p-blue:#3FB4E6; --p-green:#7CC242; --p-yellow:#FFC93C;
+  --p-pink:#FF7FA3;   --p-purple:#A88BEB; --p-teal:#2EC4B6; --p-red:#F2545B;
+  --p-ink:#2A2118;    --p-ink-2:#6E6355; --p-cream:#FFFDF6; --p-sun:#FFD166;
+  --p-edge:rgba(0,0,0,.16);
+}
+
+/* ---------------- the phone: one size, scrolls inside ---------------- */
+@media(min-width:901px){
+  .device{padding:12px;border-radius:44px;background:linear-gradient(160deg,#F4EBD8,#E2D3B4);
+    border:1px solid rgba(42,33,24,.12);
+    box-shadow:0 2px 0 rgba(255,255,255,.7) inset,0 30px 60px rgba(60,45,25,.28),0 0 0 6px rgba(255,255,255,.35)}
+  .screen{height:min(800px, calc(100vh - 110px));min-height:640px;display:flex;flex-direction:column;
+    padding:14px 0 0;border-radius:34px}
+  .statusrow{margin:0 18px 10px;flex:0 0 auto}
+  #screen{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 16px 22px;
+    scrollbar-width:none;overscroll-behavior:contain}
+  #screen::-webkit-scrollbar{display:none}
+  /* the arrival scene fills the phone instead of leaving a beige strip under it */
+  .arrival{margin:-2px -16px -22px;height:calc(100% + 24px);min-height:600px;border-radius:0 0 34px 34px}
+}
+
+/* ---------------- type and small chrome ---------------- */
+.screen .display{font-weight:800;color:var(--p-ink);letter-spacing:0}
+.screen .muted{color:var(--p-ink-2)}
+.back{display:inline-flex;align-items:center;gap:4px;background:#fff;color:var(--p-ink);
+  font-weight:700;font-size:14px;padding:6px 14px 5px;border-radius:999px;margin-bottom:10px;
+  border:2px solid rgba(42,33,24,.08);box-shadow:0 3px 0 rgba(42,33,24,.08)}
+.back:active{transform:translateY(2px);box-shadow:none}
+.statusrow .pill{font-weight:600}
+
+/* ---------------- buttons you want to press ---------------- */
+.btn{border-radius:18px;font-weight:700;font-size:17px;color:#fff;background:var(--p-orange);
+  border-bottom:5px solid rgba(0,0,0,.18);text-shadow:0 1px 1px rgba(0,0,0,.18);
+  box-shadow:0 6px 14px rgba(255,140,66,.28);transition:transform .1s, box-shadow .1s, filter .15s}
+.btn:hover{filter:brightness(1.04)}
+.btn:active{transform:translateY(3px);border-bottom-width:2px;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.btn.leaf{background:#2DB36F;color:#fff;box-shadow:0 6px 14px rgba(45,179,111,.28)}
+.btn.indigo{background:#4F7BEA;color:#fff;box-shadow:0 6px 14px rgba(79,123,234,.28)}
+.btn.ghost{background:#fff;color:var(--p-ink);text-shadow:none;border:2px solid rgba(42,33,24,.08);
+  border-bottom:5px solid rgba(42,33,24,.14);box-shadow:0 4px 10px rgba(60,45,25,.08)}
+.btn.ghost:active{border-bottom-width:2px}
+.btn:disabled{transform:none}
+
+/* ---------------- speech bubbles: one look for Munni and Appu ---------------- */
+.ob-bubble,.ob-who .ob-bubble,.teachbubble,.elephbubble{background:var(--p-cream);color:var(--p-ink);
+  border:3px solid var(--p-sun);font-weight:600;box-shadow:0 8px 20px rgba(60,45,25,.12)}
+
+/* ---------------- onboarding: the cakes ---------------- */
+.ob-cakebtn{border:none;border-radius:20px;padding:12px 4px 8px;background:#FFF4D6;
+  border-bottom:5px solid rgba(0,0,0,.1);box-shadow:0 5px 12px rgba(60,45,25,.1)}
+.ob-cakebtn:nth-child(4n+2){background:#E3F4FD}
+.ob-cakebtn:nth-child(4n+3){background:#FFE6EE}
+.ob-cakebtn:nth-child(4n){background:#E9F7DD}
+.ob-num{font-weight:800;font-size:22px;color:var(--p-ink)}
+.cake .candles i{background:#FF7FA3}
+.cake .cake-top{background:#FFF0F5}
+.cake .cake-body{background:linear-gradient(180deg,#FF9EBB 0 40%,#E8749A 40%)}
+
+/* ---------------- pick your game: bright tiles like the animal friends ---------------- */
+.gamegrid{gap:10px;max-height:none;overflow:visible;padding:2px 2px 6px}
+.gcard{--c:var(--p-orange);border:none;border-radius:22px;padding:12px 4px 10px;color:#fff;
+  font-weight:800;font-size:13px;text-shadow:0 1px 2px rgba(0,0,0,.3);
+  background:radial-gradient(circle at 50% 34%,#fff 0 22px,var(--c) 23px);
+  border-bottom:5px solid rgba(0,0,0,.16);box-shadow:0 6px 12px rgba(60,45,25,.14)}
+.gcard span{display:block;height:44px;line-height:44px;font-size:28px;margin-bottom:4px;text-shadow:none}
+.gcard:hover{background:radial-gradient(circle at 50% 34%,#fff 0 22px,var(--c) 23px);filter:brightness(1.05)}
+.gcard:active{transform:translateY(3px) scale(.97)}
+.gcard.sel{background:radial-gradient(circle at 50% 34%,#fff 0 22px,var(--c) 23px);
+  outline:4px solid var(--p-ink);outline-offset:2px;color:#fff}
+.gcard:nth-child(8n+2){--c:var(--p-blue)} .gcard:nth-child(8n+3){--c:var(--p-purple)}
+.gcard:nth-child(8n+4){--c:var(--p-green)} .gcard:nth-child(8n+5){--c:var(--p-pink)}
+.gcard:nth-child(8n+6){--c:#F5B700}        .gcard:nth-child(8n+7){--c:var(--p-teal)}
+.gcard:nth-child(8n){--c:#F4A261}
+
+/* ---------------- top bar + siblings on the map ---------------- */
+.top-gamify-bar{background:#fff;border:2px solid rgba(42,33,24,.06);border-radius:20px;
+  box-shadow:0 4px 0 rgba(42,33,24,.06),0 8px 18px rgba(60,45,25,.08)}
+.star-badge{background:#FFF4D6;border:2px solid var(--p-sun);font-weight:800}
+.profilechip{border-radius:16px}
+.profilechip.sel{background:#FFF0E3;border-color:var(--p-orange);color:var(--p-ink)}
+.profilechip.sel .pic{background:var(--p-orange)}
+
+/* ---------------- the jungle map: a sunny jungle ---------------- */
+.jmap.glass-card,.jmap{backdrop-filter:none;border:none;height:630px;border-radius:28px;
+  box-shadow:0 10px 26px rgba(30,80,40,.22),0 0 0 4px #fff inset;
+  background:
+    radial-gradient(50px 28px at 18% 9%,rgba(255,255,255,.95) 60%,transparent 62%),
+    radial-gradient(36px 20px at 26% 7%,rgba(255,255,255,.95) 60%,transparent 62%),
+    radial-gradient(44px 24px at 80% 5%,rgba(255,255,255,.9) 60%,transparent 62%),
+    radial-gradient(70px 70px at 88% 4%,#FFE27A 0 40%,rgba(255,226,122,.35) 41% 60%,transparent 62%),
+    radial-gradient(140% 40% at 20% 30%,#9EDB6E 0 45%,transparent 46%),
+    radial-gradient(140% 40% at 85% 26%,#8BD25F 0 45%,transparent 46%),
+    linear-gradient(180deg,#BDE7FA 0 15%,#A8DC7C 15.2%,#7CC75A 55%,#5FB24A 100%)}
+.jm-path{stroke:#FFF1CC;stroke-width:16;stroke-dasharray:none;opacity:.95;
+  filter:drop-shadow(0 2px 0 rgba(120,80,20,.18))}
+.jm-path.lit{stroke:var(--p-orange);stroke-width:6;opacity:1;filter:none}
+.jm-deco{opacity:1;font-size:34px;filter:drop-shadow(0 3px 2px rgba(0,0,0,.18))}
+.jm-deco.sm{opacity:1;font-size:22px}
+.jm-bird{color:rgba(42,33,24,.45);font-size:15px}
+
+.jm-place{color:var(--p-ink)}
+.jm-ic{--c:var(--p-orange);width:66px;height:66px;font-size:33px;background:#fff;backdrop-filter:none;
+  border:4px solid var(--c);box-shadow:0 5px 0 var(--c),0 10px 16px rgba(20,60,20,.25)}
+.jm-place:nth-of-type(2) .jm-ic{--c:#E0A000}
+.jm-place:nth-of-type(3) .jm-ic{--c:#8D8D8D}
+.jm-place:nth-of-type(4) .jm-ic{--c:var(--p-red)}
+.jm-place:nth-of-type(5) .jm-ic{--c:var(--p-purple)}
+.jm-place:nth-of-type(6) .jm-ic{--c:var(--p-blue)}
+.jm-place:nth-of-type(7) .jm-ic{--c:var(--p-teal)}
+.jm-place:nth-of-type(8) .jm-ic{--c:var(--p-pink)}
+.jm-place:active .jm-ic{transform:translateY(4px);box-shadow:0 1px 0 var(--c),0 4px 8px rgba(20,60,20,.2)}
+.jm-label{margin-top:8px;max-width:112px;background:rgba(255,255,255,.94);border-radius:12px;
+  padding:3px 8px 4px;box-shadow:0 3px 8px rgba(20,60,20,.18)}
+.jm-label b{font-size:13px;font-weight:800;color:var(--p-ink);text-shadow:none}
+.jm-label small,.jm-label small{font-size:10.5px;color:var(--p-ink-2);text-shadow:none;line-height:1.2}
+.jm-place.here .jm-ic{background:#FFF4D6;border-color:var(--p-orange);
+  box-shadow:0 5px 0 var(--p-orange),0 10px 16px rgba(20,60,20,.25)}
+@keyframes jmPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.jm-place.full .jm-ic{border-color:#2DB36F;box-shadow:0 5px 0 #2DB36F,0 10px 16px rgba(20,60,20,.25)}
+.jm-tick{background:#2DB36F;color:#fff;border:2px solid #fff}
+.jm-munni{width:104px;filter:drop-shadow(0 6px 6px rgba(20,60,20,.25))}
+.jm-say{background:var(--p-cream);color:var(--p-ink);border:3px solid var(--p-sun);font-size:13px;
+  font-weight:700;padding:6px 11px;border-radius:14px;box-shadow:0 6px 14px rgba(20,60,20,.25)}
+
+/* ---------------- story list and lesson cards ---------------- */
+.lescard{--c:var(--p-orange);background:#fff;border:2px solid rgba(42,33,24,.06);border-radius:20px;
+  border-bottom:5px solid rgba(42,33,24,.1);box-shadow:0 5px 12px rgba(60,45,25,.07);padding:11px 12px}
+.lescard:hover{background:#FFFBF2}
+.lescard .lesic{display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;border-radius:15px;
+  background:color-mix(in srgb,var(--c) 22%,#fff);font-size:24px}
+.lescard .lesgo{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border-radius:50%;
+  background:var(--c);color:#fff;font-size:13px;box-shadow:0 3px 0 rgba(0,0,0,.15)}
+.lescard b{font-weight:800}
+.leslist .lescard:nth-child(6n+2){--c:var(--p-blue)} .leslist .lescard:nth-child(6n+3){--c:var(--p-purple)}
+.leslist .lescard:nth-child(6n+4){--c:var(--p-green)} .leslist .lescard:nth-child(6n+5){--c:var(--p-pink)}
+.leslist .lescard:nth-child(6n){--c:var(--p-teal)}
+
+.lesstage{background:#fff;border:3px solid #FFE3A3;border-radius:24px;box-shadow:0 8px 20px rgba(60,45,25,.08)}
+.lescap{font-weight:600;color:var(--p-ink)}
+
+/* ---------------- the six games ---------------- */
+.shelfcard{--c:var(--p-orange);background:#fff;border:2px solid rgba(42,33,24,.06);border-radius:22px;
+  border-bottom:5px solid var(--c);box-shadow:0 6px 14px rgba(60,45,25,.08);overflow:hidden;position:relative}
+.shelfcard::before{content:'';position:absolute;left:0;right:0;top:0;height:54px;
+  background:color-mix(in srgb,var(--c) 20%,#fff)}
+.shelfcard>*{position:relative}
+.shelfcard .sc-ic{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:#fff;
+  font-size:28px;box-shadow:0 4px 0 color-mix(in srgb,var(--c) 45%,#fff);margin-bottom:6px}
+.shelfcard .sc-name{font-weight:800}
+.shelfcard:nth-child(6n+2){--c:var(--p-blue)} .shelfcard:nth-child(6n+3){--c:var(--p-red)}
+.shelfcard:nth-child(6n+4){--c:var(--p-purple)} .shelfcard:nth-child(6n+5){--c:var(--p-green)}
+.shelfcard:nth-child(6n){--c:var(--p-teal)}
+
+/* ---------------- counting: the sum on a real takhti (slate) ---------------- */
+.problem{display:block;margin:6px 4px 12px;padding:18px 10px 16px;text-align:center;border-radius:20px;
+  background:radial-gradient(120% 140% at 30% 20%,#2F5446 0%,#1F3B31 70%);color:#FFFDF2;font-weight:800;
+  border:8px solid #C98B4E;box-shadow:0 4px 0 #9C6534,0 10px 22px rgba(60,45,25,.25),inset 0 0 0 2px rgba(255,255,255,.06);
+  text-shadow:0 0 1px rgba(255,255,255,.4);letter-spacing:4px}
+.mathstage{background:#fff;border:3px dashed #BFE3F5;border-radius:22px}
+.opts{gap:12px}
+.opt{--c:var(--p-blue);font-weight:800;border:none;border-radius:20px;color:var(--p-ink);
+  background:color-mix(in srgb,var(--c) 18%,#fff);border-bottom:6px solid color-mix(in srgb,var(--c) 70%,#fff);
+  box-shadow:0 5px 12px rgba(60,45,25,.08);transition:transform .1s}
+.opt:active{transform:translateY(3px)}
+.opts .opt:nth-child(4n+2){--c:var(--p-orange)} .opts .opt:nth-child(4n+3){--c:var(--p-purple)}
+.opts .opt:nth-child(4n){--c:var(--p-pink)}
+.opt.right,.opts .opt.right{background:#2DB36F;color:#fff;border-bottom-color:#1E8A52;
+  animation:pRight .5s cubic-bezier(.3,1.6,.5,1)}
+.opt.wrong,.opts .opt.wrong{background:var(--p-red);color:#fff;border-bottom-color:#B8323A;animation:pWrong .4s}
+@keyframes pRight{0%{transform:scale(.9)}100%{transform:scale(1)}}
+@keyframes pWrong{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ---------------- reading and writing ---------------- */
+.sentence{background:#fff;border:3px solid #FFE3A3;border-radius:22px;padding:12px 14px;
+  box-shadow:0 6px 16px rgba(60,45,25,.07);font-weight:700}
+.padwrap{background:#fff;border:3px solid #CDEBD6;border-radius:24px}
+.tabs button,.langpick button{border-radius:14px;font-weight:700}
+.tabs button.sel,.langpick button.sel{background:var(--p-orange);color:#fff;border-color:transparent;
+  box-shadow:0 4px 0 rgba(0,0,0,.14)}
+
+/* ---------------- Munni's Pond: Munni looks like Munni ---------------- */
+.eleph .el-fill{fill:#A692B8}
+.eleph .el-fill2{fill:#B9A7C9}
+.eleph .el-line,.eleph .el-tusk,.eleph .el-trunkline{stroke:#8C78A0}
+.eleph .el-tusk{stroke:#FFFDF6}
+.chit{border-radius:18px}
+
+/* ---------------- Teach Appu ---------------- */
+.teachstage{background:linear-gradient(180deg,#E6F5FD,#FFF8E6);border-radius:24px;padding:10px;
+  border:3px solid #fff;box-shadow:0 8px 20px rgba(60,45,25,.08)}
+.teachchip{border-radius:999px;font-weight:700;border-width:2px;background:#fff}
+.teachchip.is-partly,.teachchip.is-gap{background:#FFF4D6;border-color:var(--p-sun)}
+.teachmic{background:var(--p-pink);font-size:19px;padding:16px;box-shadow:0 6px 16px rgba(255,127,163,.35)}
+.teachmic.live{background:var(--p-red)}
+.teachslate{background:#1F3B31;color:#FFFDF2;border:6px solid #C98B4E;border-radius:14px}
+
+/* ---------------- Picture Hut ---------------- */
+.hero-video-card.glass-card{background:linear-gradient(135deg,#FFF1C7,#FFD9E4);border:3px solid #fff;border-radius:24px}
+.series-card.glass-card,.video-card.glass-card{border-radius:22px;border:2px solid rgba(42,33,24,.06);
+  border-bottom:5px solid rgba(42,33,24,.1);background:#fff}
+.video-grid .video-card:nth-child(4n+1) .vc-thumb{background:#FFE9D6}
+.video-grid .video-card:nth-child(4n+2) .vc-thumb{background:#E3F4FD}
+.video-grid .video-card:nth-child(4n+3) .vc-thumb{background:#EFE7FF}
+.video-grid .video-card:nth-child(4n)   .vc-thumb{background:#E9F7DD}
+.vc-thumb{border-radius:16px}
+.theme-pill{border-radius:999px;font-weight:700}
+
+/* ---------------- the grown-up pages: inputs that look usable ---------------- */
+.paper .input,.paper input:not([type=checkbox]):not([type=range]),.paper textarea,.paper select{
+  background:rgba(255,255,255,.96);color:#2A2118;border:2px solid rgba(255,255,255,.25)}
+.paper .input::placeholder,.paper textarea::placeholder{color:#8A7E6D}
+.paper .btn.ghost{background:rgba(255,255,255,.12);color:#F3EEE0;border-color:rgba(255,255,255,.18);
+  border-bottom-color:rgba(0,0,0,.25)}
+
+@media(prefers-reduced-motion:reduce){ .opt.right,.opt.wrong{animation:none} }
+
+/* map labels: one short line each; the "what you do here" line only under
+   the place Munni is suggesting, so the jungle doesn't read like a menu */
+.jm-label{max-width:92px;margin-left:auto;margin-right:auto;padding:2px 8px 3px;line-height:1.1}
+.jm-label b{font-size:12px;line-height:1.12}
+.jm-label small{display:none}
+.jm-place.here .jm-label small{display:block}
+.series-ep.btn{font-size:13.5px;padding:8px 10px;border-radius:14px;border-bottom-width:3px;text-align:left}
+/* Munni stands a little higher so her bubble sits above the place, not on it */
+.jm-munni{transform:translate(-50%,-142%)}
+@keyframes jmBob{0%,100%{transform:translate(-50%,-142%)}50%{transform:translate(-50%,-148%)}}

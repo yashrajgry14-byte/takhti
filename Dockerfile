@@ -10,6 +10,7 @@ RUN npm ci --omit=dev --no-audit --no-fund
 COPY index.html sw.js manifest.webmanifest ./
 COPY src ./src
 COPY icons ./icons
+COPY fonts ./fonts
 COPY audio ./audio
 COPY api ./api
 COPY cloud ./cloud

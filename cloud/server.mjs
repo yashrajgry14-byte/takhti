@@ -39,7 +39,7 @@ const { askCore } = await import('../api/ask.js');
 
 /* ---------- the app's files: a whitelist, never the whole repo ---------- */
 const FILES = new Set(['/index.html', '/sw.js', '/manifest.webmanifest']);
-const DIRS = ['/src/', '/icons/', '/audio/'];
+const DIRS = ['/src/', '/icons/', '/fonts/', '/audio/'];
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml',
