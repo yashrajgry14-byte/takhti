@@ -121,7 +121,8 @@ server.listen(0, '127.0.0.1', () => {
       tap($$('.toggle').find(t => t.getAttribute('aria-label') === 'sync'));
       await tick();
       check("'Keep this class synced' makes this phone the class's teacher (a private key, never shown)", E("S.syncClasses.includes('ABC123') && S.syncKeys.ABC123.length === 48") && !$('#screen').textContent.includes(E('S.syncKeys.ABC123')), 'no key');
-      const sel = $('#screen select'); sel.value = 'tables'; sel.dispatchEvent(new w.Event('change'));
+      // the skill picker, not the class roster's "This class is…" (which now comes first)
+      const sel = $$('#screen select').find(s => /tskill/.test(s.getAttribute('onchange') || '')); sel.value = 'tables'; sel.dispatchEvent(new w.Event('change'));
       check('picking the skill the class got wrong runs the real diagnosis per child', $$('#screen .metric').some(m => m.textContent.includes('Tiger')), 'no per-child result');
       $('#tnote').value = 'Practise your tables'; tap(byText('.btn', 'This skill'));
       check('assigning homework stores it for the class', E(`(readClassShared('ABC123')._homework||{}).skills+''`) === 'tables', E(`JSON.stringify(readClassShared('ABC123')._homework)`));

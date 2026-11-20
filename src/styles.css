@@ -1330,3 +1330,75 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 .lesart.tmini{min-height:0;zoom:.6;margin:2px 0;pointer-events:none;align-items:flex-start}
 .lesart.tmini .obj{animation:none!important;opacity:1!important}
 .lesart.tmini svg{max-width:220px;height:auto}
+
+/* ================= STORY TIME (ui/story-time.js) =================
+   For Nursery–UKG: big pictures, nothing to read, one thing at a time. */
+.st-home{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.st-munni{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;color:inherit;text-align:left;cursor:pointer}
+.st-munni .hm-munni{width:86px;height:64px;flex:none}
+.st-bubble{background:var(--paper);color:var(--paper-ink);border-radius:16px;padding:10px 13px;font-size:16px;line-height:1.35;position:relative;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.st-bubble:before{content:'';position:absolute;left:-8px;top:50%;margin-top:-8px;border:8px solid transparent;border-right-color:var(--paper);border-left:0}
+.st-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.st-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:118px;padding:12px 8px;border-radius:22px;
+  border:2px solid rgba(237,230,210,.16);background:linear-gradient(160deg,#2F5D55,#1E403A);color:var(--chalk);cursor:pointer;
+  font:inherit;box-shadow:0 6px 18px rgba(0,0,0,.22);transition:transform .15s}
+.st-card:active{transform:scale(.96)}
+.st-card-ic{font-size:52px;line-height:1}
+.st-card-t{font-size:15px;font-weight:700;text-align:center;line-height:1.2;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.st-card,.st-card:hover{color:#fff}
+.st-card.hero{min-height:200px;background:linear-gradient(160deg,#F0A02A,#C5603A);border-color:rgba(255,255,255,.35)}
+.st-card.hero .st-card-ic{font-size:96px;animation:stBob 2.4s ease-in-out infinite}
+.st-card.hero .st-card-t{font-size:21px;padding:0 54px}
+.st-play{position:absolute;right:14px;bottom:12px;width:46px;height:46px;border-radius:50%;background:#fff;color:#C5603A;font-size:22px;display:grid;place-items:center;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.st-done{position:absolute;top:8px;right:10px;font-size:18px}
+.st-card.place{background:linear-gradient(160deg,#3B5FA8,#27406F)}
+.st-card.place.mine{background:linear-gradient(160deg,#E8447C,#A92D5A);border-color:rgba(255,255,255,.35)}
+.st-pick{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:11.5px;background:rgba(255,255,255,.92);color:#A92D5A;border-radius:99px;padding:1px 9px;white-space:nowrap;font-weight:700}
+.st-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.st-ibtn{width:52px;height:52px;border-radius:50%;border:0;background:rgba(237,230,210,.14);font-size:26px;cursor:pointer}
+.st-dots{display:flex;gap:6px}
+.st-dots i{width:10px;height:10px;border-radius:50%;background:rgba(237,230,210,.22)}
+.st-dots i.on{background:var(--leaf)} .st-dots i.now{background:var(--marigold);transform:scale(1.3)}
+.st-stage{position:relative;width:100%;aspect-ratio:16/12;border-radius:24px;overflow:hidden;box-shadow:inset 0 0 0 3px rgba(255,255,255,.18),0 8px 22px rgba(0,0,0,.25);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.st-stage.tappable{cursor:pointer}
+.st-stage.bg-plain{background:radial-gradient(circle at 50% 40%,#FFF6DD,#F3E3B8)}
+.st-stage.bg-sky{background:linear-gradient(180deg,#9FD8FF 0%,#D9F1FF 70%,#BFE7A8 70%,#9ED184 100%)}
+.st-stage.bg-pond{background:linear-gradient(180deg,#BDE7FF 0%,#E6F7FF 55%,#7FC98A 55%,#6AB8D8 78%,#4D9CC4 100%)}
+.st-stage.bg-room{background:linear-gradient(180deg,#FCE9D2 0%,#FCE9D2 68%,#D9A877 68%,#C99363 100%)}
+.st-stage.bg-tree{background:
+  radial-gradient(ellipse 34% 24% at 50% 26%,#4FAF5B 0 98%,transparent 100%),
+  linear-gradient(90deg,transparent 46%,#8B5A2B 46% 54%,transparent 54%) 0 38%/100% 52% no-repeat,
+  linear-gradient(180deg,#BFE6FF 0%,#E3F5FF 74%,#9ED184 74%,#86C06C 100%)}
+.st-it{position:absolute;transform:translate(-50%,-50%);line-height:1;text-align:center;transition:left .7s cubic-bezier(.5,0,.5,1.4),top .7s cubic-bezier(.5,0,.5,1.4);filter:drop-shadow(0 3px 3px rgba(0,0,0,.18))}
+.st-it svg{display:block}
+.st-lbl{display:block;font-size:15px;font-weight:700;color:#2A2118;margin-top:4px;font-family:'Mukta',system-ui,sans-serif}
+.st-num{position:absolute;right:-10px;top:-12px;font-size:14px;background:#E8447C;color:#fff;border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-family:'Mukta',system-ui,sans-serif}
+.st-big{position:absolute;left:30%;top:50%;transform:translate(-50%,-50%);font-size:min(30vw,150px);line-height:1;color:#C5603A;font-family:'Mukta',system-ui,sans-serif;text-shadow:0 4px 0 rgba(0,0,0,.12);animation:stPop .5s both}
+.st-munni-sm{position:absolute;right:2%;bottom:2%;width:74px;opacity:.95;pointer-events:none}
+.st-munni-sm .hm-munni{width:74px;height:56px}
+.st-hint{position:absolute;left:50%;top:5%;transform:translateX(-50%);background:rgba(255,255,255,.92);color:#2A2118;border-radius:99px;padding:5px 16px;font-size:20px;font-weight:700;animation:stPulse 1.2s ease-in-out infinite}
+.st-turn{position:absolute;left:50%;top:10%;transform:translateX(-50%);background:#E8447C;color:#fff;border-radius:99px;padding:8px 20px;font-size:24px;font-weight:700;animation:stPulse 1s ease-in-out infinite}
+.st-opts{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;gap:4%;padding:6%}
+.st-opt{display:flex;flex-direction:column;align-items:center;justify-content:center;border:4px solid rgba(255,255,255,.9);border-radius:22px;background:rgba(255,255,255,.78);cursor:pointer;padding:6px;transition:transform .15s,opacity .3s;animation:stIn .4s both}
+.st-opt:active{transform:scale(.95)}
+.st-opt.st-right{border-color:#3FBB78;box-shadow:0 0 0 6px rgba(63,187,120,.45);animation:stBob 1s ease-in-out 2}
+.st-opt.st-dim{opacity:.35}
+.st-group{display:grid;gap:4px;font-size:34px;line-height:1}
+.st-group i{font-style:normal}
+.st-cap{margin-top:10px;font-size:15px;line-height:1.45;opacity:.85;min-height:2.9em}
+.st-grown{margin-top:12px;background:rgba(237,230,210,.08);border:1px dashed rgba(237,230,210,.25);border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.45}
+.st-grown.small{font-size:12.5px;opacity:.75;margin-top:8px}
+.st-endcard{text-align:center;display:flex;flex-direction:column;gap:12px}
+.st-end-ic{font-size:84px;line-height:1;animation:stBob 2s ease-in-out infinite}
+.st-end-t{font-size:28px;font-weight:700}
+.st-endcard .st-grown{text-align:left}
+.a-pop{animation:stPop .5s both} .a-grow{animation:stGrow .9s both} .a-bob{animation:stPop .5s both,stBob 2.6s ease-in-out .5s infinite}
+.a-sway{animation:stPop .5s both,stSway 3s ease-in-out .5s infinite} .a-float{animation:stPop .5s both,stFloat 3s ease-in-out .5s infinite}
+.st-fell{animation:none!important}
+@keyframes stPop{from{transform:translate(-50%,-50%) scale(0)}70%{transform:translate(-50%,-50%) scale(1.15)}to{transform:translate(-50%,-50%) scale(1)}}
+@keyframes stGrow{from{transform:translate(-50%,-50%) scale(.2)}to{transform:translate(-50%,-50%) scale(1)}}
+@keyframes stBob{0%,100%{translate:0 0}50%{translate:0 -6px}}
+@keyframes stSway{0%,100%{rotate:-6deg}50%{rotate:6deg}}
+@keyframes stFloat{0%,100%{translate:0 0}50%{translate:0 -12px}}
+@keyframes stIn{from{scale:0}70%{scale:1.08}to{scale:1}}
+@keyframes stPulse{0%,100%{scale:1}50%{scale:1.08}}

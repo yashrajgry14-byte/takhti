@@ -144,7 +144,8 @@ server.listen(0, '127.0.0.1', () => {
       check('Class 1: "Not now" to the camera goes back to tracing', E('S.ctx.mode') === 'trace', E('S.ctx.mode'));
 
       /* ---- the map says what the class does ---- */
-      const sub = cls => { E(`setChildClass('${cls}'); go('map');`); const p = $$('.jm-place').find(b => b.getAttribute('onclick').includes("'write'")); return p ? p.textContent : ''; };
+      // a Nursery child's home is Story Time now (ui/story-time.js): open the map the way a parent's "map" choice does
+      const sub = cls => { E(`setChildClass('${cls}'); S.home = 'map'; go('map'); S.home = null;`); const p = $$('.jm-place').find(b => b.getAttribute('onclick').includes("'write'")); return p ? p.textContent : ''; };
       check('map: the Sand Patch says "Trace letters" in Nursery', /Trace letters/.test(sub('nur')), sub('nur'));
       check('map: the Sand Patch says "Write in your notebook" in Class 5, nothing about tracing', /Write in your notebook/.test(sub('c5')) && !/Trace/i.test(sub('c5')), sub('c5'));
 

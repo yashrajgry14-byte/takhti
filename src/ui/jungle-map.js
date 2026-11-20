@@ -139,6 +139,7 @@ function jungleMapHTML(){
 
   return `
   ${topGamifyBar()}
+  ${typeof simpleHomeOn === 'function' && simpleHomeOn() ? `<button class="btn ghost" style="width:100%;margin:0 0 8px" onclick="storyHome()">🏠 ${hi ? 'मुन्नी के घर वापस' : "Back to Munni's home"}</button>` : ''}
   ${profileSwitcher()}
   ${typeof circleMapHTML === 'function' ? circleMapHTML() : ''}
   ${mindMapHTML()}

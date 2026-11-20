@@ -9,7 +9,7 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v92';
+const CACHE = 'takhti-v93';
 // Recorded audio clips are named by a hash of their text (see core/voice.js),
 // so they live in a cache of their own that the version cleanup below never
 // touches: bumping CACHE on a normal deploy must not re-download tens of MB
@@ -40,7 +40,7 @@ const SHELL = [
   './src/ui/jungle-map.js', './src/ui/video-player.js', './src/ui/teacher.js',
   './src/games/runner.js', './src/games/pop.js', './src/games/tower.js',
   './src/games/match.js', './src/games/sort.js', './src/games/archer.js',
-  './src/ui/self-listen.js', './src/ui/talk-munni.js', './src/ui/cloud-read.js', './src/ui/say-it.js', './src/ui/circle.js', './src/ui/ask-munni.js', './src/ui/mind-ui.js', './src/ui/teach-munni.js', './src/ui/handlers.js', './src/app.js',
+  './src/ui/self-listen.js', './src/ui/talk-munni.js', './src/ui/cloud-read.js', './src/ui/say-it.js', './src/ui/circle.js', './src/ui/ask-munni.js', './src/ui/mind-ui.js', './src/ui/teach-munni.js', './src/content/stories.js', './src/ui/story-time.js', './src/ui/handlers.js', './src/app.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png'
 ];
 

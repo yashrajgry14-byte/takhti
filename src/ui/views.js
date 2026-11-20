@@ -26,6 +26,8 @@ function go(s){
   askFollow(s);    // Ask Munni's help belongs to the screen it was asked on
   talkFollow(s);   // a Talking Munni call lives at the Pond and in the games, nowhere else
   if(typeof teachFollow === 'function') teachFollow(s);   // what the child taught Appu counts even if they leave half way
+  // the youngest children's home is Story Time, not the map (ui/story-time.js) — every "back to the map" lands there
+  if(s === 'map' && typeof simpleHomeOn === 'function' && simpleHomeOn() && !S._fullMap) s = 'stories';
   S.screen=s; S.ctx={}; render(); talkChip();
 }
 
@@ -486,6 +488,7 @@ parent(){
       ? 'कक्षा तय करती है कि क्या सिखाया जाए; उम्र बस यह कि मुन्नी कैसे बोले। तख़्ती उसी कक्षा के भीतर बच्चे के हिसाब से ढल जाती है।'
       : 'Class decides what is taught; age only how Munni speaks. Takhti adapts to your child within their class.'}${S.clsBy === 'school'
       ? (S.lang==='hi' ? ' कक्षा बदलनी हो तो शिक्षक से कहें।' : ' To change the class, ask the teacher.') : ''}</div>
+    ${typeof simpleHomeParentHTML === 'function' ? simpleHomeParentHTML() : ''}
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'आवाज़':'SOUND'}</div>
     <div class="metric">
