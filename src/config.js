@@ -18,7 +18,7 @@ const API_URL = (typeof window !== 'undefined' && window.TAKHTI_API) || '/api/as
    on — the child's voice leaves the phone while they talk. */
 const TALK_URL = ((typeof window !== 'undefined' && window.TAKHTI_VOICE) || '').replace(/\/$/, '');
 
-/* Teach Munni's judge when this build has no voice server: the host's own
+/* Teach Appu's judge when this build has no voice server: the host's own
    function (api/teachback.mjs on Netlify, served at /api/teachback). It
    takes words only — typed, or written down by the phone's own recognizer —
    never a recording, and only under the words terms a parent accepts

@@ -3,8 +3,8 @@
 
 [functions]
   directory = "api"
-  # Teach Munni's judge reads its own copy of the built-in points (a phone
-  # can't put words in the prompt); without this file a Munni's-sum point
+  # Teach Appu's judge reads its own copy of the built-in points (a phone
+  # can't put words in the prompt); without this file an Appu's-sum point
   # can't be judged on Netlify
   included_files = ["src/content/teach.js"]
 

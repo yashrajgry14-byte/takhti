@@ -108,7 +108,7 @@ function classMirrorKey(code){ return 'takhti-class-' + code; }
    debounce below so a test (or a caller that already knows it is the last
    write for a while, e.g. right before the app backgrounds) can force it
    immediately instead of waiting out the debounce window. */
-/* Teach Munni's points (core/teachback.js) travel with the counts: which
+/* Teach Appu's points (core/teachback.js) travel with the counts: which
    lesson points this child explained — ids and c/p/g only, nothing said —
    and each point's loop (teachLoopNext(): first try, taught again, now). */
 function teachExplainedOf(c){

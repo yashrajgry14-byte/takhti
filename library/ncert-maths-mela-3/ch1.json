@@ -25,7 +25,7 @@
       "source": "Page 1",
       "aims": [
         {
-          "id": "s1puidqx.0",
+          "id": "s1gubxcy.0",
           "kind": "explain",
           "short": {
             "en": "Make tally marks",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! How do we keep track of cows using marks on the wall?",
-            "hi": "मैं भूल गई! दीवार पर निशान लगाकर हम गायों का हिसाब कैसे रखते हैं?"
+            "hi": "मैं भूल गया! दीवार पर निशान लगाकर हम गायों का हिसाब कैसे रखते हैं?"
           },
           "hints": [
             {
@@ -88,14 +88,14 @@
             "hi": "पाँच गायों के लिए कितने निशान बनाए जाते हैं?"
           },
           "opts": [
-            "5",
-            "10"
+            "10",
+            "5"
           ],
           "hiOpts": [
-            "5",
-            "10"
+            "10",
+            "5"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Children may confuse the total count with double the number.",
             "hi": "बच्चे कुल गिनती को दोगुनी संख्या से भ्रमित हो सकते हैं।"
@@ -110,7 +110,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-1puidqx"
+      "id": "sch-1gubxcy"
     },
     {
       "band": "developing",
@@ -128,7 +128,7 @@
       "source": "Page 3",
       "aims": [
         {
-          "id": "s1024bkz.0",
+          "id": "spyf4rw.0",
           "kind": "explain",
           "short": {
             "en": "Count letters",
@@ -140,7 +140,7 @@
           },
           "forget": {
             "en": "I forgot! How do we find the letter count among animals?",
-            "hi": "मैं भूल गई! जानवरों के नाम में अक्षर कैसे ढूंढते हैं?"
+            "hi": "मैं भूल गया! जानवरों के नाम में अक्षर कैसे ढूंढते हैं?"
           },
           "hints": [
             {
@@ -213,7 +213,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-1024bkz"
+      "id": "sch-pyf4rw"
     },
     {
       "band": "developing",
@@ -231,7 +231,7 @@
       "source": "Page 7",
       "aims": [
         {
-          "id": "s1gpkcba.0",
+          "id": "s1bv0q5l.0",
           "kind": "explain",
           "short": {
             "en": "Group by use",
@@ -243,7 +243,7 @@
           },
           "forget": {
             "en": "I forgot! How do we sort household objects into groups?",
-            "hi": "मैं भूल गई! घरेलू वस्तुओं को समूहों में कैसे छाँटते हैं?"
+            "hi": "मैं भूल गया! घरेलू वस्तुओं को समूहों में कैसे छाँटते हैं?"
           },
           "hints": [
             {
@@ -314,7 +314,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-1gpkcba"
+      "id": "sch-1bv0q5l"
     }
   ],
   "notUsed": [

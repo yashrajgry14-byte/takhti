@@ -24,7 +24,7 @@ skill: shapes2d · source: Page 51
 
 **Aims kept (what the teacher approves):**
 - The child can count the sides of a rectangle.  ·  बच्चा किसी आयत की भुजाएँ गिन सकता है।  
-  Munni forgets: "I forgot! How many sides does a rectangle have?  ·  मैं भूल गई! आयत की कितनी भुजाएँ होती हैं?"
+  Munni forgets: "I forgot! How many sides does a rectangle have?  ·  मैं भूल गया! आयत की कितनी भुजाएँ होती हैं?"
 
 **The lesson:**
 1. intro — "Let us look at a rectangle and count its sides.  ·  आओ एक आयत देखें और उसकी भुजाएँ गिनें।"
@@ -42,7 +42,7 @@ skill: shapes2d · source: Page 55
 
 **Aims kept (what the teacher approves):**
 - The child can identify a square corner.  ·  बच्चा चौकोर कोने को पहचान सकता है।  
-  Munni forgets: "I forgot! What do we call this corner that stands straight like a square?  ·  मैं भूल गई! जो कोना वर्ग की तरह सीधा होता है, उसे क्या कहते हैं?"
+  Munni forgets: "I forgot! What do we call this corner that stands straight like a square?  ·  मैं भूल गया! जो कोना वर्ग की तरह सीधा होता है, उसे क्या कहते हैं?"
 
 **The lesson:**
 1. intro — "Let us learn about square corners.  ·  आओ चौकोर कोनों के बारे में जानें।"
@@ -82,7 +82,7 @@ skill: shapes2d · source: Page 57
 
 **Aims kept (what the teacher approves):**
 - The child can count the sides of a shape.  ·  बच्चा किसी आकृति की भुजाएँ गिन सकता है।  
-  Munni forgets: "I forgot! How many sides does a shape have?  ·  मैं भूल गई! किसी आकृति की कितनी भुजाएँ होती हैं?"
+  Munni forgets: "I forgot! How many sides does a shape have?  ·  मैं भूल गया! किसी आकृति की कितनी भुजाएँ होती हैं?"
 
 **The lesson:**
 1. intro — "Let us count the sides of shapes.  ·  आओ आकृतियों की भुजाएँ गिनें।"
@@ -118,7 +118,7 @@ skill: shapes2d · source: Page 59
 
 **Aims kept (what the teacher approves):**
 - The child can find where the fold lines meet in a circle.  ·  बच्चा बता सकता है कि वृत्त में तह की रेखाएँ कहाँ मिलती हैं।  
-  Munni forgets: "I forgot! What is the meeting point of the folds in a circle called?  ·  मैं भूल गई! वृत्त में तह मिलने वाले बिंदु को क्या कहते हैं?"
+  Munni forgets: "I forgot! What is the meeting point of the folds in a circle called?  ·  मैं भूल गया! वृत्त में तह मिलने वाले बिंदु को क्या कहते हैं?"
 
 **The lesson:**
 1. intro — "Let us fold paper circles and look at the creases.  ·  आओ कागज़ के गोलों को मोड़ें और तहों को देखें।"

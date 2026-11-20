@@ -39,7 +39,7 @@ skill: add2 · source: Page 30
 
 **Aims kept (what the teacher approves):**
 - The child can find the total by adding two groups.  ·  बच्चा दो समूहों को जोड़कर कुल संख्या बता सकता है।  
-  Munni forgets: "I forgot! How do I find how many sweets are there in total?  ·  मैं भूल गई! कुल कितनी मिठाइयाँ हैं, यह कैसे पता करूँ?"
+  Munni forgets: "I forgot! How do I find how many sweets are there in total?  ·  मैं भूल गया! कुल कितनी मिठाइयाँ हैं, यह कैसे पता करूँ?"
 
 **The lesson:**
 1. intro — "Let us add sweets to find the total.  ·  कुल संख्या जानने के लिए मिठाइयाँ जोड़ें।"
@@ -110,7 +110,7 @@ skill: skip · source: Page 32
 
 **Aims kept (what the teacher approves):**
 - The child can add numbers by jumping forward on a line.  ·  बच्चा रेखा पर आगे कूदकर संख्याएँ जोड़ सकता है।  
-  Munni forgets: "I forgot! How do I add using jumps on the bead string?  ·  मैं भूल गई! मनकों की माला पर छलांग लगाकर कैसे जोड़ूँ?"
+  Munni forgets: "I forgot! How do I add using jumps on the bead string?  ·  मैं भूल गया! मनकों की माला पर छलांग लगाकर कैसे जोड़ूँ?"
 
 **The lesson:**
 1. intro — "Let us jump on the string to add numbers.  ·  संख्याएँ जोड़ने के लिए माला पर कूदें।"
@@ -127,7 +127,7 @@ skill: sub2 · source: Page 1
 
 **Aims kept (what the teacher approves):**
 - The child can find a missing part by subtracting from the total.  ·  बच्चा कुल में से घटाकर छूटा हुआ भाग ढूँढ सकता है।  
-  Munni forgets: "I forgot! How do I find out how many seeds are hidden?  ·  मैं भूल गई! कितने बीज छिपे हैं, यह कैसे पता करूँ?"
+  Munni forgets: "I forgot! How do I find out how many seeds are hidden?  ·  मैं भूल गया! कितने बीज छिपे हैं, यह कैसे पता करूँ?"
 
 **The lesson:**
 1. intro — "Let us find the hidden seeds by subtracting.  ·  घटाकर छिपे हुए बीज ढूँढें।"

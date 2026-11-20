@@ -13,14 +13,14 @@
                    words in pieces for reading
      Kabir (demo)  the story sticks for shapes and sums, Munni reading
                    first for reading — and he takes the smaller digit
-                   from the bigger when borrowing (so Teach Munni's Munni
+                   from the bigger when borrowing (so Teach Appu's Appu
                    makes HIS mistake)
 
-   Both have taught Munni borrowing once, through Teach Munni's own
+   Both have taught Appu borrowing once, through Teach Appu's own
    session functions, so the teacher's loop card has a story to show:
    Asha couldn't say what a borrowed ten becomes, took "Let's learn it
    again", then could (gap → re-taught → explained); Kabir couldn't say
-   when to borrow and has been re-taught, with Munni still to ask him.
+   when to borrow and has been re-taught, with Appu still to ask him.
 
    Behind the parent PIN (the teacher view). Demo children are never
    synced (syncOn stays off), take profile slots like any child, and
@@ -83,7 +83,7 @@ function demoHabit(p){
   }finally{ S.age = age; }
 }
 
-/* One Teach Munni session on borrowing's two explain points (when to borrow,
+/* One Teach Appu session on borrowing's two explain points (when to borrow,
    what the borrowed ten becomes), heard by the phone's own rubric, then the
    "Let's learn it again" tap — teachMarkRetaught(), as the button does. */
 function demoTeach(p, who){

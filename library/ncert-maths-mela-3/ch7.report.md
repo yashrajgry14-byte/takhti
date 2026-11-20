@@ -39,7 +39,7 @@ skill: mult2x1 · source: Page 83
 
 **Aims kept (what the teacher approves):**
 - The child can calculate total flowers for multiple rakhis using multiplication.  ·  बच्चा गुणा करके कई राखियों के लिए कुल फूल निकाल सकता है।  
-  Munni forgets: "I forgot! How do I find the total number of flowers needed for making rakhis?  ·  मैं भूल गई! राखियाँ बनाने के लिए कुल कितने फूल चाहिए, यह कैसे पता करूँ?"
+  Munni forgets: "I forgot! How do I find the total number of flowers needed for making rakhis?  ·  मैं भूल गया! राखियाँ बनाने के लिए कुल कितने फूल चाहिए, यह कैसे पता करूँ?"
 
 **The lesson:**
 1. intro — "Let us find out how many flowers we need.  ·  आओ पता करें कि हमें कितने फूल चाहिए।"
@@ -59,7 +59,7 @@ skill: divshare · source: Page 87
 
 **Aims kept (what the teacher approves):**
 - The child can share a total number of items equally among people using division.  ·  बच्चा भाग का उपयोग करके लोगों में वस्तुओं को बराबर-बराबर बाँट सकता है।  
-  Munni forgets: "I forgot! How do I find how many sweets each person gets when shared equally?  ·  मैं भूल गई! बराबर बाँटने पर हर व्यक्ति को कितने लड्डू मिलेंगे, यह कैसे पता करूँ?"
+  Munni forgets: "I forgot! How do I find how many sweets each person gets when shared equally?  ·  मैं भूल गया! बराबर बाँटने पर हर व्यक्ति को कितने लड्डू मिलेंगे, यह कैसे पता करूँ?"
 
 **The lesson:**
 1. intro — "Let us share laddoos equally among friends.  ·  आओ दोस्तों में लड्डू बराबर-बराबर बाँटें।"
@@ -73,7 +73,7 @@ skill: divshare · source: Page 87
 
 **Aims kept (what the teacher approves):**
 - The child can share a total number of items equally among people using division.  ·  बच्चा भाग का उपयोग करके लोगों में वस्तुओं को बराबर-बराबर बाँट सकता है।  
-  Munni forgets: "I forgot! How do I find how many sweets each person gets when shared equally?  ·  मैं भूल गई! बराबर बाँटने पर हर व्यक्ति को कितने लड्डू मिलेंगे, यह कैसे पता करूँ?"
+  Munni forgets: "I forgot! How do I find how many sweets each person gets when shared equally?  ·  मैं भूल गया! बराबर बाँटने पर हर व्यक्ति को कितने लड्डू मिलेंगे, यह कैसे पता करूँ?"
 
 **The lesson:**
 1. intro — "Let us share laddoos equally among friends.  ·  आओ दोस्तों में लड्डू बराबर-बराबर बाँटें।"
@@ -90,7 +90,7 @@ skill: skip · source: Page 95
 
 **Aims kept (what the teacher approves):**
 - The child can find the number reached after multiple skip jumps.  ·  बच्चा कई छलांगों के बाद पहुँची हुई संख्या का पता लगा सकता है।  
-  Munni forgets: "I forgot! How do I find the number reached after taking equal skip jumps?  ·  मैं भूल गई! एक जैसी छलांगें लगाने के बाद कौन सी संख्या आएगी, यह कैसे निकालूँ?"
+  Munni forgets: "I forgot! How do I find the number reached after taking equal skip jumps?  ·  मैं भूल गया! एक जैसी छलांगें लगाने के बाद कौन सी संख्या आएगी, यह कैसे निकालूँ?"
 
 **The lesson:**
 1. intro — "Let us practice skip jumping on the number track.  ·  आओ संख्या रेखा पर छलांग लगाने का अभ्यास करें।"
@@ -123,7 +123,7 @@ skill: tables · source: Page 102
 
 **Aims kept (what the teacher approves):**
 - The child can calculate total legs for multiple spiders using multiplication.  ·  बच्चा गुणा करके कई मकड़ियों के कुल पैर निकाल सकता है।  
-  Munni forgets: "I forgot! How do I find the total legs of several spiders?  ·  मैं भूल गई! कई मकड़ियों के कुल पैर कैसे पता करूँ?"
+  Munni forgets: "I forgot! How do I find the total legs of several spiders?  ·  मैं भूल गया! कई मकड़ियों के कुल पैर कैसे पता करूँ?"
 
 **The lesson:**
 1. intro — "Let us count how many legs spiders have.  ·  आओ गिनें कि मकड़ियों के कुल कितने पैर होते हैं।"

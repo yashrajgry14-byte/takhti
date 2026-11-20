@@ -366,7 +366,7 @@ function sylDraftHTML(d, i, approved, badge){
     ${les.source ? `<div style="font-size:12px;opacity:.6">${hi ? 'स्रोत' : 'From'}: ${attr(les.source)}</div>` : ''}
     ${(les.aims || []).length ? `<div style="margin-top:6px"><div class="kicker2" style="font-size:10.5px">${hi ? 'उद्देश्य — बच्चा यह कर पाएगा' : 'AIMS — THE CHILD WILL BE ABLE TO'}</div>
       ${les.aims.map(a => `<div style="font-size:13.5px;margin:2px 0">• ${T(a.point)}</div>`).join('')}
-      <details style="margin-top:2px"><summary style="font-size:12px;cursor:pointer;opacity:.8">🐘 ${hi ? 'बाद में मुन्नी ये भूलेगी — बच्चा उसे वापस सिखाएगा' : 'Afterwards Munni forgets these — the child teaches her back'}</summary>
+      <details style="margin-top:2px"><summary style="font-size:12px;cursor:pointer;opacity:.8">🐘 ${hi ? 'बाद में अप्पू ये भूलेगा — बच्चा उसे वापस सिखाएगा' : 'Afterwards Appu forgets these — the child teaches him back'}</summary>
         ${les.aims.map(a => `<div style="font-size:12.5px;margin:3px 0 3px 10px">${T(a.short)}: "${T(a.forget)}"</div>`).join('')}</details></div>` : ''}
     ${(d.aimErrors || []).length ? `<div style="font-size:12px;opacity:.7;margin-top:2px">${hi ? 'छोड़े गए उद्देश्य' : 'Aims left out'}: ${d.aimErrors.slice(0, 2).map(attr).join('; ')}</div>` : ''}
     ${(d.aimFixes || []).length ? `<div style="font-size:12px;opacity:.7;margin-top:2px">${hi ? 'बदला गया संकेत' : 'Hint replaced'}: ${d.aimFixes.slice(0, 2).map(attr).join('; ')}</div>` : ''}
@@ -483,7 +483,7 @@ function planTeacherHTML(code){
       if(!p) continue;
       const sk = p.g && typeof skillById === 'function' ? skillById(p.g) : null;
       const key = p.k ? 'k' : p.g ? 'g:' + p.g : 'w:' + (p.w || '');
-      const label = p.k ? (hi ? 'पहले से आता था — दिखाते हैं, फिर मुन्नी को सिखाते हैं' : 'Already knew it — shows it, then teaches Munni')
+      const label = p.k ? (hi ? 'पहले से आता था — दिखाते हैं, फिर अप्पू को सिखाते हैं' : 'Already knew it — shows it, then teaches Appu')
         : p.g ? (hi ? `पहले नीचे की बात: ${sk ? sk.hi || sk.en : p.g}` : `Something underneath first: ${sk ? sk.en : p.g}`)
         : T(PLAN_TEACHER_WAY[p.w] || PLAN_TEACHER_WAY['']);
       (groups[key] = groups[key] || { label, kids: [] }).kids.push(`${attr(c.childName || '?')} <small style="opacity:.6">${p.d}/${p.n}</small>`);

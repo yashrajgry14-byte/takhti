@@ -381,7 +381,7 @@ function sylAimGaps(les){
     if(/\bname|recogni[sz]e|identify/.test(t)) return ['name', 'row'];
     return null;
   };
-  // an aim is a structured Teach Munni aim (its point is what the child can do); an older plain {en, hi} point still reads
+  // an aim is a structured Teach Appu aim (its point is what the child can do); an older plain {en, hi} point still reads
   return (les.aims || []).filter(a => { const n = need(a && (a.point ? a.point.en : a.en)); return n && !n.some(k => asked.has(k)); });
 }
 
@@ -501,7 +501,7 @@ function sylClean(raw, opts){
     skillId, source: sylPlain(raw.source) ? String(raw.source).slice(0, 120) : '',
     // what the child will be able to do — what the teacher approves
     // what the child will be able to do — what the teacher approves, and what
-    // Munni forgets afterwards (Teach Munni): each aim is a plain point plus her
+    // Appu forgets afterwards (Teach Appu): each aim is a plain point plus his
     // question, two hints and what a full explanation says (core/teachback.js)
     aims: [],
     beats: []

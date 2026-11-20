@@ -25,7 +25,7 @@
       "source": "Page 18",
       "aims": [
         {
-          "id": "s1u2b4du.0",
+          "id": "sl4cp0z.0",
           "kind": "explain",
           "short": {
             "en": "Count bundles for 50",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! How many bundles of 10 sticks make 50?",
-            "hi": "मैं भूल गई! 10 तीलियों के कितने बंडल मिलकर 50 बनाते हैं?"
+            "hi": "मैं भूल गया! 10 तीलियों के कितने बंडल मिलकर 50 बनाते हैं?"
           },
           "hints": [
             {
@@ -120,7 +120,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-1u2b4du"
+      "id": "sch-l4cp0z"
     }
   ],
   "notUsed": [

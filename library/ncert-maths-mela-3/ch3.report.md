@@ -31,7 +31,7 @@ skill: place3 · source: Page 18
 
 **Aims kept (what the teacher approves):**
 - The child can explain that 10 bundles of 10 make 100.  ·  बच्चा बता सकता है कि 10 के 10 बंडल मिलकर 100 बनाते हैं।  
-  Munni forgets: "I forgot! How many bundles of 10 sticks make 100?  ·  मैं भूल गई! 10 तीलियों के कितने बंडल मिलकर 100 बनाते हैं?"
+  Munni forgets: "I forgot! How many bundles of 10 sticks make 100?  ·  मैं भूल गया! 10 तीलियों के कितने बंडल मिलकर 100 बनाते हैं?"
 
 **The lesson:**
 1. intro — "Let us learn about 100 using bundles.  ·  आओ बंडलों की मदद से 100 के बारे में सीखें।"
@@ -46,7 +46,7 @@ skill: place3 · source: Page 18
 
 **Aims kept (what the teacher approves):**
 - The child can explain that 5 bundles of 10 make 50.  ·  बच्चा बता सकता है कि 10 के 5 बंडल मिलकर 50 बनाते हैं।  
-  Munni forgets: "I forgot! How many bundles of 10 sticks make 50?  ·  मैं भूल गई! 10 तीलियों के कितने बंडल मिलकर 50 बनाते हैं?"
+  Munni forgets: "I forgot! How many bundles of 10 sticks make 50?  ·  मैं भूल गया! 10 तीलियों के कितने बंडल मिलकर 50 बनाते हैं?"
 
 **The lesson:**
 1. intro — "Let us learn about groups using bundles.  ·  आओ बंडलों की मदद से समूहों के बारे में सीखें।"
@@ -170,7 +170,7 @@ skill: place3 · source: Page 26
 
 **Aims kept (what the teacher approves):**
 - The child can find 1 more and 1 less than any given number.  ·  बच्चा किसी दी गई संख्या से 1 ज्यादा और 1 कम बता सकता है।  
-  Munni forgets: "I forgot! How do we find 1 more than 40?  ·  मैं भूल गई! 40 से 1 ज्यादा कैसे पता करते हैं?"
+  Munni forgets: "I forgot! How do we find 1 more than 40?  ·  मैं भूल गया! 40 से 1 ज्यादा कैसे पता करते हैं?"
 
 **The lesson:**
 1. intro — "Let us find numbers that are 1 more or 1 less.  ·  आओ ऐसी संख्याएँ ढूँढ़ें जो 1 ज्यादा या 1 कम हों।"

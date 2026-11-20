@@ -24,7 +24,7 @@
       "source": "Page 2, 7",
       "aims": [
         {
-          "id": "sx61wjc.0",
+          "id": "s16sgpso.0",
           "kind": "explain",
           "short": {
             "en": "Nose to smell",
@@ -36,7 +36,7 @@
           },
           "forget": {
             "en": "I forgot! What do we do with our nose?",
-            "hi": "मैं भूल गई! हम अपनी नाक से क्या करते हैं?"
+            "hi": "मैं भूल गया! हम अपनी नाक से क्या करते हैं?"
           },
           "hints": [
             {
@@ -67,7 +67,7 @@
           ]
         },
         {
-          "id": "sx61wjc.1",
+          "id": "s16sgpso.1",
           "kind": "explain",
           "short": {
             "en": "Ears to hear",
@@ -79,7 +79,7 @@
           },
           "forget": {
             "en": "I forgot! What do we do with our ears?",
-            "hi": "मैं भूल गई! हम अपने कानों से क्या करते हैं?"
+            "hi": "मैं भूल गया! हम अपने कानों से क्या करते हैं?"
           },
           "hints": [
             {
@@ -187,7 +187,7 @@
       ],
       "lang": "en",
       "subject": "read",
-      "id": "sch-x61wjc"
+      "id": "sch-16sgpso"
     },
     {
       "band": "early",
@@ -205,7 +205,7 @@
       "source": "Page 11, 13",
       "aims": [
         {
-          "id": "sh11tzv.0",
+          "id": "s1hj7t2p.0",
           "kind": "explain",
           "short": {
             "en": "First sound a",
@@ -217,7 +217,7 @@
           },
           "forget": {
             "en": "I forgot! How do I find the first sound of this word?",
-            "hi": "मैं भूल गई! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
+            "hi": "मैं भूल गया! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
           },
           "hints": [
             {
@@ -246,7 +246,7 @@
           ]
         },
         {
-          "id": "sh11tzv.1",
+          "id": "s1hj7t2p.1",
           "kind": "explain",
           "short": {
             "en": "First sound b",
@@ -258,7 +258,7 @@
           },
           "forget": {
             "en": "I forgot! How do I know the first sound here?",
-            "hi": "मैं भूल गई! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
+            "hi": "मैं भूल गया! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
           },
           "hints": [
             {
@@ -375,7 +375,7 @@
       ],
       "lang": "en",
       "subject": "read",
-      "id": "sch-h11tzv"
+      "id": "sch-1hj7t2p"
     },
     {
       "band": "early",
@@ -393,7 +393,7 @@
       "source": "Page 11, 13",
       "aims": [
         {
-          "id": "snn6rv.0",
+          "id": "s1y5e80b.0",
           "kind": "explain",
           "short": {
             "en": "First sound d",
@@ -405,7 +405,7 @@
           },
           "forget": {
             "en": "I forgot! How do I find the first sound of this word?",
-            "hi": "मैं भूल गई! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
+            "hi": "मैं भूल गया! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
           },
           "hints": [
             {
@@ -434,7 +434,7 @@
           ]
         },
         {
-          "id": "snn6rv.1",
+          "id": "s1y5e80b.1",
           "kind": "explain",
           "short": {
             "en": "First sound e",
@@ -446,7 +446,7 @@
           },
           "forget": {
             "en": "I forgot! How do I know the first sound here?",
-            "hi": "मैं भूल गई! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
+            "hi": "मैं भूल गया! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
           },
           "hints": [
             {
@@ -563,7 +563,7 @@
       ],
       "lang": "en",
       "subject": "read",
-      "id": "sch-nn6rv"
+      "id": "sch-1y5e80b"
     }
   ],
   "notUsed": [

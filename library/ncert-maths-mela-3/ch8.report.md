@@ -45,7 +45,7 @@ skill: divshare · source: Page 107
 
 **Aims kept (what the teacher approves):**
 - The child can share objects equally between two parts.  ·  बच्चा वस्तुओं को दो बराबर भागों में बाँट सकता है।  
-  Munni forgets: "I forgot! How do I share things equally?  ·  मैं भूल गई! चीज़ों को बराबर कैसे बाँटते हैं?"
+  Munni forgets: "I forgot! How do I share things equally?  ·  मैं भूल गया! चीज़ों को बराबर कैसे बाँटते हैं?"
 
 **The lesson:**
 1. intro — "Let us share things between two bowls.  ·  आओ दो कटोरियों में चीज़ों को बाँटें।"
@@ -79,7 +79,7 @@ skill: fracunit · source: Page 108
 
 **Aims kept (what the teacher approves):**
 - The child can identify one half of a whole.  ·  बच्चा किसी पूरे का आधा हिस्सा पहचान सकता है।  
-  Munni forgets: "I forgot! What do we call one of the parts of a whole?  ·  मैं भूल गई! किसी पूरे के भागों में से एक को क्या कहते हैं?"
+  Munni forgets: "I forgot! What do we call one of the parts of a whole?  ·  मैं भूल गया! किसी पूरे के भागों में से एक को क्या कहते हैं?"
 
 **The lesson:**
 1. intro — "When 1 whole is shared, each share is a part.  ·  जब 1 पूरे को बाँटते हैं, तो हर हिस्सा एक भाग होता है।"
@@ -100,7 +100,7 @@ skill: divshare · source: Page 111
 
 **Aims kept (what the teacher approves):**
 - The child can find the half of an even number.  ·  बच्चा किसी सम संख्या का आधा बता सकता है।  
-  Munni forgets: "I forgot! How do I find the half of a number like 6?  ·  मैं भूल गई! 6 जैसी संख्या का आधा कैसे निकालते हैं?"
+  Munni forgets: "I forgot! How do I find the half of a number like 6?  ·  मैं भूल गया! 6 जैसी संख्या का आधा कैसे निकालते हैं?"
 
 **The lesson:**
 1. intro — "Let us learn about half and double of numbers.  ·  आओ संख्याओं के आधे और दुगुने के बारे में सीखें।"
@@ -153,7 +153,7 @@ skill: fracunit · source: Page 112
 
 **Aims kept (what the teacher approves):**
 - The child can identify one quarter of a whole.  ·  बच्चा किसी पूरे के एक चौथाई हिस्से को पहचान सकता है।  
-  Munni forgets: "I forgot! What do we call parts of a whole?  ·  मैं भूल गई! किसी पूरे के भागों को क्या कहते हैं?"
+  Munni forgets: "I forgot! What do we call parts of a whole?  ·  मैं भूल गया! किसी पूरे के भागों को क्या कहते हैं?"
 
 **The lesson:**
 1. intro — "When a whole is shared among people, each share is a piece.  ·  जब एक पूरे को लोगों में बाँटते हैं, तो हर हिस्सा एक टुकड़ा होता है।"

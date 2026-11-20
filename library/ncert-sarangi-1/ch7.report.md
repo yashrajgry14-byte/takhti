@@ -48,7 +48,7 @@ skill: h1-read · source: Page 45
 
 **Aims kept (what the teacher approves):**
 - The child can pick out words that end with the same sound.  ·  बच्चा एक जैसी अंतिम आवाज़ वाले शब्दों को पहचान सकता है।  
-  Munni forgets: "I forgot! How do I know if two words match?  ·  मैं भूल गई! मुझे कैसे पता चलेगा कि दो शब्द मिलते हैं?"
+  Munni forgets: "I forgot! How do I know if two words match?  ·  मैं भूल गया! मुझे कैसे पता चलेगा कि दो शब्द मिलते हैं?"
 
 **The lesson:**
 1. intro — "Some words end with the very same sound.  ·  कुछ शब्दों के आख़िरी हिस्से की आवाज़ एक जैसी होती है।"
@@ -73,7 +73,7 @@ skill: read1 · source: Page 45
 
 **Aims kept (what the teacher approves):**
 - The child can tell what sound a word ends with.  ·  बच्चा बता सकता है कि किसी शब्द का अंत किस आवाज़ से होता है।  
-  Munni forgets: "I forgot! How do I find the last sound of the word daal?  ·  मैं भूल गई! दाल शब्द की आख़िरी आवाज़ का कैसे पता लगाऊँ?"
+  Munni forgets: "I forgot! How do I find the last sound of the word daal?  ·  मैं भूल गया! दाल शब्द की आख़िरी आवाज़ का कैसे पता लगाऊँ?"
 
 **The lesson:**
 1. intro — "Every word starts with a sound and ends with one.  ·  हर शब्द की एक शुरुआती और एक आख़िरी आवाज़ होती है।"
@@ -95,7 +95,7 @@ skill: read1 · source: Page 45
 
 **Aims kept (what the teacher approves):**
 - The child can tell what sound a word ends with.  ·  बच्चा बता सकता है कि किसी शब्द का अंत किस आवाज़ से होता है।  
-  Munni forgets: "I forgot! How do I find the last sound?  ·  मैं भूल गई! आख़िरी आवाज़ का कैसे पता लगाऊँ?"
+  Munni forgets: "I forgot! How do I find the last sound?  ·  मैं भूल गया! आख़िरी आवाज़ का कैसे पता लगाऊँ?"
 
 **The lesson:**
 1. intro — "Every word starts with a sound and ends with one.  ·  हर शब्द की एक शुरुआती और एक आख़िरी आवाज़ होती है।"

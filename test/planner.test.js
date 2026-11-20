@@ -6,7 +6,7 @@
         · two children whose own records say different ways work for
           them get two different paths to the same approved aims (the
           buildathon demo: book in → aims approved → taught two ways);
-        · a child who already knows it shows it and teaches Munni;
+        · a child who already knows it shows it and teaches Appu;
         · a gap underneath comes first, with a built-in lesson;
         · a step's status comes from what the child really did;
         · opening a lesson labels the way it teaches (pictures, the
@@ -68,7 +68,7 @@ check('…and the plan holds: asked again, the same path (the mind keeps its cho
 
 // a child who already knows it
 vm.runInContext(`var nia = kid(); twinOf(nia).k.shapes2d = { p: 0.95, n: 6, at: Date.now(), days: ['a','b','c'], peak: 0.95 }; var pn = planFor(LES, nia);`, ctx);
-check('a child the twin says already knows it: no teaching — show it in the school\'s lesson, then teach Munni',
+check('a child the twin says already knows it: no teaching — show it in the school\'s lesson, then teach Appu',
   V(`[pn.knows, steps(pn).join(' '), pn.steps[0].label.en]`).join(' | ') === 'true | school teach | Show you know it', V(`pn`));
 
 // a gap underneath: perimeter needs add2, and this child's add2 hasn't settled
@@ -87,7 +87,7 @@ vm.runInContext(`asha.doneLessons.push(pa.steps[0].lesson); var pa2 = planFor(LE
 check('a step is done when the child really did it: after the pictures, the next step is the school\'s lesson',
   V(`[pa2.steps[0].done, pa2.next.k]`).join() === 'true,school', V(`pa2`));
 vm.runInContext(`asha.doneLessons.push(LES.id); teachOf(asha).units[LES.id] = { at: new Date().toISOString(), lessonId: LES.id, aims: {}, gaps: [] }; var pa3 = planFor(LES, asha);`, ctx);
-check('…and after teaching Munni, the path is complete', V(`pa3.next === null && pa3.steps.every(s => s.done)`), V(`pa3`));
+check('…and after teaching Appu, the path is complete', V(`pa3.next === null && pa3.steps.every(s => s.done)`), V(`pa3`));
 
 // labelling: how a lesson being opened counts as teaching
 check('opening a lesson labels its way: a built-in shapes lesson is "pictures first"; the school lesson is "the school\'s story" — or, after pictures, the check that labels nothing',
@@ -119,7 +119,7 @@ vm.runInContext(`mindTaught('sub2', 'cartoon', toon); var pt2 = planFor(MLES, to
 check('…the cartoon step is done once it was watched (its round open), the school\'s lesson next — and that lesson, after the cartoon, is the check that labels nothing',
   V(`[pt2.steps[0].done, pt2.next.k, planMarkWay(MLES, 'sub2', toon), planMarkWay(MLES, 'sub2', tale)]`).join() === 'true,school,,story', JSON.stringify(V(`[pt2.steps, planMarkWay(MLES, 'sub2', toon), planMarkWay(MLES, 'sub2', tale)]`)));
 vm.runInContext(`var skip = kid({ mind: JSON.parse(JSON.stringify(toon.mind)) }); skip.mind.pending = {}; skip.doneLessons.push(MLES.id); var pk2 = planFor(MLES, skip);`, ctx);
-check('…a step skipped on the way doesn\'t come back: the school\'s lesson done first, next is Teach Munni, not the cartoon', V(`pk2.next && pk2.next.k`) === 'teach', V(`pk2`));
+check('…a step skipped on the way doesn\'t come back: the school\'s lesson done first, next is Teach Appu, not the cartoon', V(`pk2.next && pk2.next.k`) === 'teach', V(`pk2`));
 
 // harder or easier after the school's lesson, from how its first answers went
 vm.runInContext(`
@@ -128,7 +128,7 @@ vm.runInContext(`
   var little = kid({ age: 5, mind: JSON.parse(JSON.stringify(tale.mind)), doneLessons: [MLES.id], lessonScores: { [MLES.id]: { r: 2, a: 2 } } });
   var pr = planFor(MLES, allRight), pm = planFor(MLES, missed), pl = planFor(MLES, little);
   var mr = pr.steps.find(s => s.k === 'more'), mm = pm.steps.find(s => s.k === 'more'), ml = pl.steps.find(s => s.k === 'more');`, ctx);
-check('every answer right first time → a harder step after the school\'s lesson: a take-away skill one up (it builds on two-digit taking away), before Teach Munni',
+check('every answer right first time → a harder step after the school\'s lesson: a take-away skill one up (it builds on two-digit taking away), before Teach Appu',
   V(`[steps(pr).join(' '), mr.up, SKILL_OPS[mr.skill], skillById(mr.skill).pre.includes('sub2'), pr.next.k]`).join(' | ') === 'school more teach | true | − | true | more', JSON.stringify(V(`[steps(pr), mr, pr.next]`)));
 check('one missed → an easier step instead: a skill underneath (a prerequisite of two-digit taking away), said kindly, never "wrong"',
   V(`[mm.up, (skillById('sub2').pre || []).concat('sub2').includes(mm.skill), mm.label.en, mm.why.en, /wrong/i.test(JSON.stringify(mm))]`).join(' | ').startsWith('false | true | One more, a little easier'), JSON.stringify(V(`mm`)));
@@ -138,7 +138,7 @@ check('a harder skill must be inside the child\'s band: a 5-year-old who got it 
 check('…no score yet (the school\'s lesson not finished), a shapes lesson, or a two-operation skill → no such step',
   V(`[planFor(MLES, tale).steps.some(s => s.k === 'more'), planFor(LES, kid({ doneLessons: [LES.id], lessonScores: { [LES.id]: { r: 1, a: 1 } } })).steps.some(s => s.k === 'more'), planMoreSkill('bodmas', true, allRight)]`).join() === 'false,false,', '');
 vm.runInContext(`allRight.lessonScores[MLES.id].x = 'y'; var pr2 = planFor(MLES, allRight);`, ctx);
-check('…answered once, the step is done (read from what is kept) and Teach Munni is next; the teacher\'s path counts it as a step, within the server\'s six',
+check('…answered once, the step is done (read from what is kept) and Teach Appu is next; the teacher\'s path counts it as a step, within the server\'s six',
   V(`[pr2.steps.find(s => s.k === 'more').done, pr2.next.k, planPathOf(MLES, allRight).n <= 6, planPathOf(MLES, allRight).d]`).join() === 'true,teach,true,2', JSON.stringify(V(`[pr2.steps, planPathOf(MLES, allRight)]`)));
 
 // reading: the way lives inside the school's lesson — how its passage is read
@@ -208,11 +208,11 @@ check('…with nothing in it a child said, read or wrote (only the keys w, k, g,
        S.mind = { v: 1, arms: { angles: { show: { a: 12, b: 0 }, story: { a: 0, b: 12 } } }, plan: {}, pending: {}, cool: {}, changes: [], school: {} }; go('lessons')`);
     await wait(20);
     const steps = [...win.document.querySelectorAll('.planstep')].map(x => x.textContent.trim());
-    check('the Story Fire shows this child\'s path under the school lesson — pictures first, the school\'s lesson, teach Munni — and why',
-      steps.length === 3 && /Pictures first/.test(steps[0]) && /▶/.test(steps[0]) && /The school’s lesson/.test(steps[1]) && /Teach Munni/.test(steps[2]) && /Munni's plan: this has worked for you before/.test(screen()),
+    check('the Story Fire shows this child\'s path under the school lesson — pictures first, the school\'s lesson, teach Appu — and why',
+      steps.length === 3 && /Pictures first/.test(steps[0]) && /▶/.test(steps[0]) && /The school’s lesson/.test(steps[1]) && /Teach Appu/.test(steps[2]) && /Munni's plan: this has worked for you before/.test(screen()),
       JSON.stringify(steps) + ' ' + screen().slice(0, 300));
     E(`S.lang = 'hi'; render()`);
-    check('…in Hindi too', /पहले चित्र/.test(screen()) && /स्कूल का पाठ/.test(screen()) && /मुन्नी को सिखाओ/.test(screen()) && /मुन्नी की योजना/.test(screen()), screen().slice(0, 300));
+    check('…in Hindi too', /पहले चित्र/.test(screen()) && /स्कूल का पाठ/.test(screen()) && /अप्पू को सिखाओ/.test(screen()) && /मुन्नी की योजना/.test(screen()), screen().slice(0, 300));
     E(`S.lang = 'en'; render()`);
     const want = E(`planFor(schoolLessons()[0]).next.lesson`);
     win.document.querySelector('.lescard[onclick^="planGo"]').click();
@@ -281,7 +281,7 @@ check('…with nothing in it a child said, read or wrote (only the keys w, k, g,
     await wait(30);
     check('…its button opens Counting Stones on a take-away sum of the harder skill', E(`S.screen`) === 'math' && E(`S.ctx.p && S.ctx.p.op`) === '−' && E(`!!S.ctx.planMore`) === true, E(`JSON.stringify([S.screen, S.ctx])`));
     E(`answerMath(S.ctx.p.ans)`);
-    check('…answering it marks the step done, and Teach Munni is next', E(`S.lessonScores[${JSON.stringify(sid)}].x`) === 'y' && E(`planFor(schoolLessons()[0]).next && planFor(schoolLessons()[0]).next.k`) === 'teach', E(`JSON.stringify([S.lessonScores, planFor(schoolLessons()[0]).steps])`));
+    check('…answering it marks the step done, and Teach Appu is next', E(`S.lessonScores[${JSON.stringify(sid)}].x`) === 'y' && E(`planFor(schoolLessons()[0]).next && planFor(schoolLessons()[0]).next.k`) === 'teach', E(`JSON.stringify([S.lessonScores, planFor(schoolLessons()[0]).steps])`));
     E(`S.lang = 'hi'; go('lessons')`); await wait(20);
     check('…in Hindi too', /थोड़ा कठिन/.test(screen()), screen().slice(0, 300));
     E(`S.lang = 'en'`);

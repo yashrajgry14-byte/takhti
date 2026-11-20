@@ -83,7 +83,7 @@ function standIn(url, init, tidyAlways){
   const body = { consent: true, lang: 'en', ask: 'borrow.when', aims: [{ id: 'borrow.when' }], transcript: 'you borrow one ten from the tens' };
   await judgeCore(body, { GEMINI_API_KEY: KEY, GEMINI_MODEL: 'draft-model', TAKHTI_TEACH_MODEL: 'good-model' }, 't1', standIn);
   await judgeCore(body, { GEMINI_API_KEY: KEY, GEMINI_MODEL: 'good-model' }, 't2', standIn);
-  check('Teach Munni\'s judge uses TAKHTI_TEACH_MODEL when set, else GEMINI_MODEL', calls[0].model === 'good-model' && calls[1].model === 'good-model' && calls.length === 2, JSON.stringify(calls));
+  check('Teach Appu\'s judge uses TAKHTI_TEACH_MODEL when set, else GEMINI_MODEL', calls[0].model === 'good-model' && calls[1].model === 'good-model' && calls.length === 2, JSON.stringify(calls));
 
   // only a tidier that hears well without the line → the advice says to send no line
   const out2 = await lc.run({ env, models: 'tidy-model', quiet: true }, standIn);

@@ -45,9 +45,9 @@ skill: e1-read · source: Page 2, 7
 
 **Aims kept (what the teacher approves):**
 - The child can tell that we smell with our nose.  ·  बच्चा बता सकता है कि हम नाक से सूँघते हैं।  
-  Munni forgets: "I forgot! What do we do with our nose?  ·  मैं भूल गई! हम अपनी नाक से क्या करते हैं?"
+  Munni forgets: "I forgot! What do we do with our nose?  ·  मैं भूल गया! हम अपनी नाक से क्या करते हैं?"
 - The child can tell that we hear with our ears.  ·  बच्चा बता सकता है कि हम कानों से सुनते हैं।  
-  Munni forgets: "I forgot! What do we do with our ears?  ·  मैं भूल गई! हम अपने कानों से क्या करते हैं?"
+  Munni forgets: "I forgot! What do we do with our ears?  ·  मैं भूल गया! हम अपने कानों से क्या करते हैं?"
 
 **The lesson:**
 1. intro — "Our body has many parts. Let us read.  ·  हमारे शरीर के कई अंग हैं। आओ पढ़ें।"
@@ -93,9 +93,9 @@ skill: u-sight · source: Page 2
 
 **Aims kept (what the teacher approves):**
 - The child can read the sight word one.  ·  बच्चा sight word one पढ़ सकता है।  
-  Munni forgets: "I forgot! How do I read the word o-n-e?  ·  मैं भूल गई! o-n-e शब्द को कैसे पढ़ूँ?"
+  Munni forgets: "I forgot! How do I read the word o-n-e?  ·  मैं भूल गया! o-n-e शब्द को कैसे पढ़ूँ?"
 - The child can read the sight word to.  ·  बच्चा sight word to पढ़ सकता है।  
-  Munni forgets: "I forgot! How do I read the word t-o?  ·  मैं भूल गई! t-o शब्द को कैसे पढ़ूँ?"
+  Munni forgets: "I forgot! How do I read the word t-o?  ·  मैं भूल गया! t-o शब्द को कैसे पढ़ूँ?"
 
 **The lesson:**
 1. intro — "Let us read words for our body.  ·  आओ अपने शरीर के लिए शब्द पढ़ें।"
@@ -138,9 +138,9 @@ skill: e1-decode · source: Page 11, 13
 
 **Aims kept (what the teacher approves):**
 - The child can identify the first sound of a word starting with a.  ·  बच्चा a से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
-  Munni forgets: "I forgot! How do I find the first sound of this word?  ·  मैं भूल गई! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
+  Munni forgets: "I forgot! How do I find the first sound of this word?  ·  मैं भूल गया! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
 - The child can identify the first sound of a word starting with b.  ·  बच्चा b से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
-  Munni forgets: "I forgot! How do I know the first sound here?  ·  मैं भूल गई! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
+  Munni forgets: "I forgot! How do I know the first sound here?  ·  मैं भूल गया! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
 
 **The lesson:**
 1. intro — "Let us listen to the first sounds.  ·  आओ पहली आवाज़ों को ध्यान से सुनें।"
@@ -184,9 +184,9 @@ skill: e1-decode · source: Page 11, 13
 
 **Aims kept (what the teacher approves):**
 - The child can identify the first sound of a word starting with d.  ·  बच्चा d से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
-  Munni forgets: "I forgot! How do I find the first sound of this word?  ·  मैं भूल गई! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
+  Munni forgets: "I forgot! How do I find the first sound of this word?  ·  मैं भूल गया! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
 - The child can identify the first sound of a word starting with e.  ·  बच्चा e से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
-  Munni forgets: "I forgot! How do I know the first sound here?  ·  मैं भूल गई! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
+  Munni forgets: "I forgot! How do I know the first sound here?  ·  मैं भूल गया! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
 
 **The lesson:**
 1. intro — "Let us find more first sounds.  ·  आओ और भी पहली आवाज़ें ढूँढें।"

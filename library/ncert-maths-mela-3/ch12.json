@@ -25,7 +25,7 @@
       "source": "Page 151",
       "aims": [
         {
-          "id": "s1gz7sge.0",
+          "id": "syc0kjt.0",
           "kind": "explain",
           "short": {
             "en": "Add on line",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! How do I use the number line to add?",
-            "hi": "मैं भूल गई! जोड़ने के लिए संख्या रेखा का उपयोग कैसे करते हैं?"
+            "hi": "मैं भूल गया! जोड़ने के लिए संख्या रेखा का उपयोग कैसे करते हैं?"
           },
           "hints": [
             {
@@ -99,14 +99,14 @@
             "hi": "20 से 2 की दो छलांग के बाद तुम किस संख्या पर पहुँचोगे?"
           },
           "opts": [
-            "22",
-            "24"
+            "24",
+            "22"
           ],
           "hiOpts": [
-            "22",
-            "24"
+            "24",
+            "22"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children only add 2 once instead of taking two hops of 2.",
             "hi": "बच्चे 2 की दो छलांग के बजाय केवल एक बार 2 जोड़ते हैं।"
@@ -121,7 +121,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-1gz7sge"
+      "id": "sch-yc0kjt"
     },
     {
       "band": "developing",
@@ -139,7 +139,7 @@
       "source": "Page 152",
       "aims": [
         {
-          "id": "s1utcycu.0",
+          "id": "s1ob02pj.0",
           "kind": "explain",
           "short": {
             "en": "Subtract step",
@@ -151,7 +151,7 @@
           },
           "forget": {
             "en": "I forgot! What do we do when we do not have enough ones to take away?",
-            "hi": "मैं भूल गई! जब घटाने के लिए पर्याप्त इकाई न हों, तब हम क्या करते हैं?"
+            "hi": "मैं भूल गया! जब घटाने के लिए पर्याप्त इकाई न हों, तब हम क्या करते हैं?"
           },
           "hints": [
             {
@@ -231,7 +231,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-1utcycu"
+      "id": "sch-1ob02pj"
     },
     {
       "band": "developing",
@@ -249,7 +249,7 @@
       "source": "Page 158",
       "aims": [
         {
-          "id": "s5d5yn.0",
+          "id": "s1lfbgvq.0",
           "kind": "explain",
           "short": {
             "en": "Match values",
@@ -261,7 +261,7 @@
           },
           "forget": {
             "en": "I forgot! How do we know if different notes have the same value?",
-            "hi": "मैं भूल गई! हमें कैसे पता चलता है कि अलग-अलग नोटों का मूल्य समान है?"
+            "hi": "मैं भूल गया! हमें कैसे पता चलता है कि अलग-अलग नोटों का मूल्य समान है?"
           },
           "hints": [
             {
@@ -341,7 +341,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-5d5yn"
+      "id": "sch-1lfbgvq"
     },
     {
       "band": "developing",
@@ -359,7 +359,7 @@
       "source": "Page 160",
       "aims": [
         {
-          "id": "skhhm6n.0",
+          "id": "slgn8vk.0",
           "kind": "explain",
           "short": {
             "en": "Find sum",
@@ -371,7 +371,7 @@
           },
           "forget": {
             "en": "I forgot! How do we draw a box diagram for a word problem?",
-            "hi": "मैं भूल गई! इबारती सवाल के लिए डिब्बा आरेख कैसे बनाते हैं?"
+            "hi": "मैं भूल गया! इबारती सवाल के लिए डिब्बा आरेख कैसे बनाते हैं?"
           },
           "hints": [
             {
@@ -452,7 +452,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-khhm6n"
+      "id": "sch-lgn8vk"
     }
   ],
   "notUsed": []

@@ -31,7 +31,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 /* ---------- lessons a stand-in Gemini sends ---------- */
 const MATH = { title:{ en:'Sharing mangoes', hi:'आम बाँटना' }, sub:{ en:'Take away with a bar', hi:'पट्टी से घटाना' }, ic:'🥭', skill:'sub2', source:'Chapter 4, page 31',
-  // aims in the one format: the point the teacher approves, and Munni's lines for Teach Munni
+  // aims in the one format: the point the teacher approves, and Munni's lines for Teach Appu
   aims:[{ short:{ en:'Part from a whole', hi:'पूरे में से हिस्सा' }, point:{ en:'The child can take a part away from a whole up to 100.', hi:'बच्चा 100 तक के पूरे में से हिस्सा घटा सकता है।' },
           forget:{ en:'Ravi had 45 mangoes and gave some away. I forgot how to find what is left!', hi:'रवि के पास 45 आम थे, कुछ दे दिए। बचे हुए कैसे निकालूँ, मैं भूल गई!' },
           hints:[{ en:'Is the pile getting bigger or smaller?', hi:'ढेर बड़ा हो रहा है या छोटा?' }, { en:'Which number is the whole?', hi:'पूरा कौन सी संख्या है?' }],

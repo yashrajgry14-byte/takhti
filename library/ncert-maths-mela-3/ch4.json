@@ -25,7 +25,7 @@
       "source": "Page 30",
       "aims": [
         {
-          "id": "s1fvwz07.0",
+          "id": "s16tsbs0.0",
           "kind": "explain",
           "short": {
             "en": "Find total sweets",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! How do I find how many sweets are there in total?",
-            "hi": "मैं भूल गई! कुल कितनी मिठाइयाँ हैं, यह कैसे पता करूँ?"
+            "hi": "मैं भूल गया! कुल कितनी मिठाइयाँ हैं, यह कैसे पता करूँ?"
           },
           "hints": [
             {
@@ -112,7 +112,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-1fvwz07"
+      "id": "sch-16tsbs0"
     },
     {
       "band": "developing",
@@ -130,7 +130,7 @@
       "source": "Page 32",
       "aims": [
         {
-          "id": "sqko0sx.0",
+          "id": "swk6vka.0",
           "kind": "explain",
           "short": {
             "en": "Jump forward",
@@ -142,7 +142,7 @@
           },
           "forget": {
             "en": "I forgot! How do I add using jumps on the bead string?",
-            "hi": "मैं भूल गई! मनकों की माला पर छलांग लगाकर कैसे जोड़ूँ?"
+            "hi": "मैं भूल गया! मनकों की माला पर छलांग लगाकर कैसे जोड़ूँ?"
           },
           "hints": [
             {
@@ -218,7 +218,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-qko0sx"
+      "id": "sch-wk6vka"
     },
     {
       "band": "developing",
@@ -236,7 +236,7 @@
       "source": "Page 1",
       "aims": [
         {
-          "id": "sjorssv.0",
+          "id": "s1rcfbhc.0",
           "kind": "explain",
           "short": {
             "en": "Find hidden part",
@@ -248,7 +248,7 @@
           },
           "forget": {
             "en": "I forgot! How do I find out how many seeds are hidden?",
-            "hi": "मैं भूल गई! कितने बीज छिपे हैं, यह कैसे पता करूँ?"
+            "hi": "मैं भूल गया! कितने बीज छिपे हैं, यह कैसे पता करूँ?"
           },
           "hints": [
             {
@@ -325,7 +325,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-jorssv"
+      "id": "sch-1rcfbhc"
     }
   ],
   "notUsed": [

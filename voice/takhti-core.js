@@ -35,7 +35,7 @@ const FILES = [
   'content/competencies.js',
   'core/profiles.js', 'core/matcher.js', 'core/adaptive.js',
   'core/daily-engine.js', 'core/mathgen.js', 'core/readability.js', 'core/explain.js', 'core/mind.js', 'core/twin.js', 'core/lang-mistakes.js',
-  // Teach Munni: the same aims, the same rubric and the same session as the
+  // Teach Appu: the same aims, the same rubric and the same session as the
   // app, so a phone call teaches back exactly what the app does
   'content/teach.js', 'core/teachback.js'
 ];

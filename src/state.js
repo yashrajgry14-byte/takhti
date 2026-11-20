@@ -51,7 +51,7 @@ function newProfile(name){
     talkApplied: [],       // talk sessions already replayed into this record, so a talk never counts twice
     readAgain: [],         // lines the clearer reading check had to skip (no service answered): read again later — the line only, never a recording
     voiceTerms: null,      // {v, at, by}: a grown-up accepted the reading terms (reading checked online by Gemini, Sarvam as backup, nothing kept) — see ui/cloud-read.js
-    teachWords: null,      // {v, at, by}: with no voice server, a grown-up let Teach Munni's words (typed or the phone's recognizer — never a recording) go to Gemini to be judged — see ui/teach-munni.js
+    teachWords: null,      // {v, at, by}: with no voice server, a grown-up let Teach Appu's words (typed or the phone's recognizer — never a recording) go to Gemini to be judged — see ui/teach-munni.js
     // the learning circle — see ui/circle.js. Progress only; never a voice, a photo or a typed question.
     circleSync: false,     // a parent ticked "always keep in sync"
     circleSyncAt: null,    // when they did
@@ -68,7 +68,7 @@ function newProfile(name){
     circleHw: null,        // assignedAt of class homework that came through the circle, so a withdrawal removes exactly it
     mind: null,            // how this child learns: which ways of teaching work, topic by topic — see core/mind.js (stays on this phone)
     assessments: [],       // school marks a parent typed or a class teacher sent: {skill, got, of, by, at}
-    teach: null,           // Teach Munni: which lesson points this child explained, and how (core/teachback.js) — stays on this phone except the points, with class sync
+    teach: null,           // Teach Appu: which lesson points this child explained, and how (core/teachback.js) — stays on this phone except the points, with class sync
     twin: null,            // how this child thinks: what they know and how it fades, the mistakes they repeat, the twin's guesses — see core/twin.js (stays on this phone)
     circleLeave: null      // {erase} — a parent's "off" or "delete" waiting for a signal to reach the server
   };

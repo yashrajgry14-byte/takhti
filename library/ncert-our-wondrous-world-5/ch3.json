@@ -25,7 +25,7 @@
       "source": "Pages 40–42",
       "aims": [
         {
-          "id": "s1q38kb2.0",
+          "id": "s2p3729.0",
           "kind": "explain",
           "short": {
             "en": "Why food spoils",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! Why did Disha's uttapam get those coloured patches?",
-            "hi": "मैं भूल गई! दिशा के उत्तपम पर रंगीन धब्बे क्यों आ गए?"
+            "hi": "मैं भूल गया! दिशा के उत्तपम पर रंगीन धब्बे क्यों आ गए?"
           },
           "hints": [
             {
@@ -94,14 +94,14 @@
             "hi": "उत्तपम पर रंगीन धब्बे क्या थे?"
           },
           "opts": [
-            "Mould",
-            "Salt"
+            "Salt",
+            "Mould"
           ],
           "hiOpts": [
-            "फफूँद",
-            "नमक"
+            "नमक",
+            "फफूँद"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "A child who skims may pick a familiar food word instead of the new word, mould.",
             "hi": "जल्दी पढ़ने वाला बच्चा नए शब्द फफूँद की जगह कोई जाना-पहचाना शब्द चुन सकता है।"
@@ -115,14 +115,14 @@
             "hi": "सूक्ष्मजीव देखने के लिए हमें क्या चाहिए?"
           },
           "opts": [
-            "Bright sunlight",
-            "A microscope"
+            "A microscope",
+            "Bright sunlight"
           ],
           "hiOpts": [
-            "तेज़ धूप",
-            "सूक्ष्मदर्शी"
+            "सूक्ष्मदर्शी",
+            "तेज़ धूप"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children often think anything small can be seen in good light.",
             "hi": "बच्चे अक्सर सोचते हैं कि छोटी चीज़ अच्छी रोशनी में दिख जाती है।"
@@ -138,7 +138,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-1q38kb2"
+      "id": "sch-2p3729"
     },
     {
       "band": "fluent",
@@ -156,7 +156,7 @@
       "source": "Pages 43–44",
       "aims": [
         {
-          "id": "s1hz2wb3.0",
+          "id": "svq2ejw.0",
           "kind": "explain",
           "short": {
             "en": "What microbes need",
@@ -168,7 +168,7 @@
           },
           "forget": {
             "en": "I forgot! Why does bread spoil in two days, but a pickle lasts for months?",
-            "hi": "मैं भूल गई! ब्रेड दो दिन में खराब हो जाती है, पर अचार महीनों तक कैसे चलता है?"
+            "hi": "मैं भूल गया! ब्रेड दो दिन में खराब हो जाती है, पर अचार महीनों तक कैसे चलता है?"
           },
           "hints": [
             {
@@ -280,7 +280,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-1hz2wb3"
+      "id": "sch-vq2ejw"
     },
     {
       "band": "fluent",
@@ -298,7 +298,7 @@
       "source": "Pages 44–47",
       "aims": [
         {
-          "id": "slad51c.0",
+          "id": "s1yyfz3m.0",
           "kind": "explain",
           "short": {
             "en": "Why we dry food",
@@ -310,7 +310,7 @@
           },
           "forget": {
             "en": "I forgot! Why do Amma and Appa put chillies in the Sun before making chilli powder?",
-            "hi": "मैं भूल गई! अम्मा और अप्पा मिर्च पाउडर बनाने से पहले मिर्चें धूप में क्यों रखते हैं?"
+            "hi": "मैं भूल गया! अम्मा और अप्पा मिर्च पाउडर बनाने से पहले मिर्चें धूप में क्यों रखते हैं?"
           },
           "hints": [
             {
@@ -341,7 +341,7 @@
           ]
         },
         {
-          "id": "slad51c.1",
+          "id": "s1yyfz3m.1",
           "kind": "explain",
           "short": {
             "en": "Why oil in pickle",
@@ -353,7 +353,7 @@
           },
           "forget": {
             "en": "I forgot! Why does Paati pour oil into the pickle jar?",
-            "hi": "मैं भूल गई! पाटी अचार के डिब्बे में तेल क्यों डालती है?"
+            "hi": "मैं भूल गया! पाटी अचार के डिब्बे में तेल क्यों डालती है?"
           },
           "hints": [
             {
@@ -402,14 +402,14 @@
             "hi": "मिर्चें धूप में क्यों सुखाई जाती हैं?"
           },
           "opts": [
-            "To remove moisture",
-            "To make them red"
+            "To make them red",
+            "To remove moisture"
           ],
           "hiOpts": [
-            "नमी निकालने के लिए",
-            "उन्हें लाल करने के लिए"
+            "उन्हें लाल करने के लिए",
+            "नमी निकालने के लिए"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Children see the chillies change colour and think that is the reason.",
             "hi": "बच्चे मिर्च का रंग बदलते देखते हैं और उसी को कारण मान लेते हैं।"
@@ -423,14 +423,14 @@
             "hi": "फ्रिज की ठंडक सूक्ष्मजीवों के साथ क्या करती है?"
           },
           "opts": [
-            "It helps them grow",
-            "It slows them down"
+            "It slows them down",
+            "It helps them grow"
           ],
           "hiOpts": [
-            "उन्हें बढ़ने में मदद करती है",
-            "उन्हें धीमा कर देती है"
+            "उन्हें धीमा कर देती है",
+            "उन्हें बढ़ने में मदद करती है"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children may think every kind of weather helps living things grow.",
             "hi": "बच्चे सोच सकते हैं कि हर मौसम जीवों को बढ़ने में मदद करता है।"
@@ -446,7 +446,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-lad51c"
+      "id": "sch-1yyfz3m"
     },
     {
       "band": "fluent",
@@ -464,7 +464,7 @@
       "source": "Pages 47–48",
       "aims": [
         {
-          "id": "s1mqdmfq.0",
+          "id": "s1gys9p9.0",
           "kind": "explain",
           "short": {
             "en": "Good microbes",
@@ -476,7 +476,7 @@
           },
           "forget": {
             "en": "I forgot! Are all microbes bad for us?",
-            "hi": "मैं भूल गई! क्या सारे सूक्ष्मजीव हमारे लिए बुरे होते हैं?"
+            "hi": "मैं भूल गया! क्या सारे सूक्ष्मजीव हमारे लिए बुरे होते हैं?"
           },
           "hints": [
             {
@@ -532,14 +532,14 @@
             "hi": "इडली के घोल को कौन फुलाता है?"
           },
           "opts": [
-            "Oil in the batter",
-            "Microbes in the air"
+            "Microbes in the air",
+            "Oil in the batter"
           ],
           "hiOpts": [
-            "घोल में तेल",
-            "हवा के सूक्ष्मजीव"
+            "हवा के सूक्ष्मजीव",
+            "घोल में तेल"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "After the last lesson, children may think microbes only spoil food.",
             "hi": "पिछले पाठ के बाद बच्चे सोच सकते हैं कि सूक्ष्मजीव सिर्फ़ खाना खराब करते हैं।"
@@ -553,14 +553,14 @@
             "hi": "अम्मा ने आदित्य को दही क्यों दिया?"
           },
           "opts": [
-            "To help digest food",
-            "Because it is sweet"
+            "Because it is sweet",
+            "To help digest food"
           ],
           "hiOpts": [
-            "खाना पचाने के लिए",
-            "क्योंकि वह मीठा है"
+            "क्योंकि वह मीठा है",
+            "खाना पचाने के लिए"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Children may give a taste reason instead of the reason in the passage.",
             "hi": "बच्चे पाठ में दिए कारण की जगह स्वाद वाला कारण दे सकते हैं।"
@@ -576,7 +576,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-1mqdmfq"
+      "id": "sch-1gys9p9"
     },
     {
       "band": "fluent",
@@ -594,7 +594,7 @@
       "source": "Pages 50–52",
       "aims": [
         {
-          "id": "s1b700r9.0",
+          "id": "s1g7mfzu.0",
           "kind": "explain",
           "short": {
             "en": "Why chew well",
@@ -606,7 +606,7 @@
           },
           "forget": {
             "en": "I forgot! Why should I chew my food slowly instead of gulping it down?",
-            "hi": "मैं भूल गई! खाना जल्दी-जल्दी निगलने की जगह धीरे-धीरे क्यों चबाना चाहिए?"
+            "hi": "मैं भूल गया! खाना जल्दी-जल्दी निगलने की जगह धीरे-धीरे क्यों चबाना चाहिए?"
           },
           "hints": [
             {
@@ -706,7 +706,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-1b700r9"
+      "id": "sch-1g7mfzu"
     }
   ],
   "notUsed": []

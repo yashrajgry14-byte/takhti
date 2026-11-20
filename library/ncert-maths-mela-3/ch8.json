@@ -25,7 +25,7 @@
       "source": "Page 107",
       "aims": [
         {
-          "id": "s15976a0.0",
+          "id": "srr0xon.0",
           "kind": "explain",
           "short": {
             "en": "Share equally",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! How do I share things equally?",
-            "hi": "मैं भूल गई! चीज़ों को बराबर कैसे बाँटते हैं?"
+            "hi": "मैं भूल गया! चीज़ों को बराबर कैसे बाँटते हैं?"
           },
           "hints": [
             {
@@ -108,7 +108,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-15976a0"
+      "id": "sch-rr0xon"
     },
     {
       "band": "developing",
@@ -126,7 +126,7 @@
       "source": "Page 108",
       "aims": [
         {
-          "id": "swnff4t.0",
+          "id": "s5onejk.0",
           "kind": "explain",
           "short": {
             "en": "Show half",
@@ -138,7 +138,7 @@
           },
           "forget": {
             "en": "I forgot! What do we call one of the parts of a whole?",
-            "hi": "मैं भूल गई! किसी पूरे के भागों में से एक को क्या कहते हैं?"
+            "hi": "मैं भूल गया! किसी पूरे के भागों में से एक को क्या कहते हैं?"
           },
           "hints": [
             {
@@ -187,14 +187,14 @@
             "hi": "जब हम किसी चीज़ को काटते हैं, तो कितने बराबर भाग बनते हैं?"
           },
           "opts": [
-            "4",
-            "2"
+            "2",
+            "4"
           ],
           "hiOpts": [
-            "4",
-            "2"
+            "2",
+            "4"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children might confuse halves with quarters and say 4.",
             "hi": "बच्चे आधे और चौथाई में भ्रमित होकर 4 कह सकते हैं।"
@@ -209,7 +209,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-wnff4t"
+      "id": "sch-5onejk"
     },
     {
       "band": "developing",
@@ -227,7 +227,7 @@
       "source": "Page 112",
       "aims": [
         {
-          "id": "s148ybkc.0",
+          "id": "s1w3hsuf.0",
           "kind": "explain",
           "short": {
             "en": "Show quarter",
@@ -239,7 +239,7 @@
           },
           "forget": {
             "en": "I forgot! What do we call parts of a whole?",
-            "hi": "मैं भूल गई! किसी पूरे के भागों को क्या कहते हैं?"
+            "hi": "मैं भूल गया! किसी पूरे के भागों को क्या कहते हैं?"
           },
           "hints": [
             {
@@ -287,14 +287,14 @@
             "hi": "कितने चौथाई मिलकर एक पूरा हिस्सा बनाते हैं?"
           },
           "opts": [
-            "4",
-            "2"
+            "2",
+            "4"
           ],
           "hiOpts": [
-            "4",
-            "2"
+            "2",
+            "4"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Children might confuse quarters with halves and say 2.",
             "hi": "बच्चे चौथाई और आधे में भ्रमित होकर 2 कह सकते हैं।"
@@ -309,7 +309,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-148ybkc"
+      "id": "sch-1w3hsuf"
     }
   ],
   "notUsed": [

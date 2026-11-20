@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* The live check: does Gemini really hear and judge the way Takhti needs?
 
-   Lesson drafting has been proven live; hearing a child, judging a Teach Munni
+   Lesson drafting has been proven live; hearing a child, judging a Teach Appu
    explanation and Munni's own voice have only met a stand-in. This runs each
    of them against the real API, once per model in the chain, and says which
    models work, how long each took against the phone's budget, and what to put
@@ -170,7 +170,7 @@ export async function run(opts, fetchImpl){
   } else if(Object.keys(clips).length) say('   sarvam: not tried (no SARVAM_API_KEY in voice/.env)');
 
   // 3. the judge, per model
-  say(`\n3. Judging a Teach Munni explanation (the phone waits ${BUDGET.judge / 1000} s)`);
+  say(`\n3. Judging a Teach Appu explanation (the phone waits ${BUDGET.judge / 1000} s)`);
   for(const model of models){
     const rows = []; let dead = 0;
     for(const c of JUDGE_CASES){
