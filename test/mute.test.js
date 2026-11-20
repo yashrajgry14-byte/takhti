@@ -38,18 +38,23 @@ console.log('=== speak(): the callback contract when muted ===');
     S: { lang:'en', muted:false, _voiceNoted:false },
     band: () => ({ speechRate: 0.85 }),
     log: () => {},
-    fetch: () => Promise.reject(new Error('no manifest in this test')),
+    AbortController,
+    fetch: async url => {
+      if(String(url)==='/api/tts') { googleRequests++; return {ok:true,json:async()=>({audio:'dGVzdA==',mime:'audio/mpeg',provider:'google'})}; }
+      throw new Error('not available in the test');
+    },
   };
   vm.createContext(ctx);
   ctx.window = ctx;   // speech.js checks `'speechSynthesis' in window` — window IS this context, as in a real page
 
   let speakCalled = false;
+  let googleRequests = 0;
   ctx.speechSynthesis = {
     cancel(){}, getVoices(){ return []; }, addEventListener(){}, removeEventListener(){},
     speak(u){ speakCalled = true; if(u.onend) u.onend(); }
   };
   ctx.SpeechSynthesisUtterance = function(text){ this.text = text; };
-  ctx.Audio = function(){ this.play = () => Promise.resolve(); this.pause = () => {}; };
+  ctx.Audio = function(){ this.play = () => { setTimeout(() => this.onended && this.onended(), 0); return Promise.resolve(); }; this.pause = () => {}; };
 
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','src/core/voice.js'),'utf8'), ctx);
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','src/core/speech.js'),'utf8'), ctx);
@@ -65,20 +70,19 @@ console.log('=== speak(): the callback contract when muted ===');
   // fires synchronously within this same tick — no need to wait a turn.
   check('speak() calls onDone exactly once, synchronously, when S.muted is true',
     doneCalled === 1, `onDone called ${doneCalled} time(s)`);
-  check('speak() never reaches real TTS when muted', speakCalled === false, `speechSynthesis.speak() was called: ${speakCalled}`);
+  check('muted speech neither calls Google nor browser TTS', googleRequests === 0 && speakCalled === false, `Google requests: ${googleRequests}, browser TTS: ${speakCalled}`);
 
   console.log('--- not muted: speak() genuinely attempts real speech ---');
   ctx.S.muted = false;
   speakCalled = false;
   let doneCalled2 = 0;
   return X.speak('Hello again', 'en', () => { doneCalled2++; }).then(() => {
-    // playRecorded() rejects (no manifest, no fetch), so speak() falls
-    // through to speakDevice(), which queues the utterance after a 70ms
-    // beat (see speech.js's own comment on why: Chrome drops an
-    // utterance queued in the same tick as cancel()).
+    // Voice is now online-first. Assert Google /api/tts was requested,
+    // and no browser voice (including Microsoft Heera) was invoked.
     setTimeout(() => {
-      check('speak() reaches real TTS when NOT muted (the muted branch is not just always a no-op)',
-        speakCalled === true, `speechSynthesis.speak() was called: ${speakCalled}`);
+      check('speak() uses Google TTS when not muted, never browser speechSynthesis',
+        googleRequests === 1 && speakCalled === false,
+        `Google requests: ${googleRequests}, browser speech: ${speakCalled}`);
       check('onDone still fires exactly once via the real TTS onend path when not muted',
         doneCalled2 === 1, `onDone called ${doneCalled2} time(s)`);
       runPass2();
