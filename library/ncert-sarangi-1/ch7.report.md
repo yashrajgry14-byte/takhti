@@ -1,157 +1,151 @@
 # Syllabus run — ahsr107.pdf
 
-2026-11-15T11:46:45.704Z · c1 (early, numbers to 20) · Gemini model **gemini-3.5-flash-lite** · chapter "वाह, मेरे घोड़े!"
+2026-11-20T09:20:59.178Z · c1 (early, numbers to 20) · Gemini model **gemini-3.5-flash-lite** · chapter "वाह, मेरे घोड़े!"
 
-**0 passed first time · 1 fixed by the repair round · 2 not used** (of 3)  
-Draft took 129 s · repair took 7 s (gemini-3.5-flash-lite)
+**0 passed first time · 2 fixed by the repair round · 1 not used** (of 3)  
+Draft took 154 s · repair took 8 s (gemini-3.5-flash-lite)
 
-Models for the draft: gemini-3.8-flash hung (60 s) → gemini-3.7-flash hung (60 s) → gemini-3.5-flash-lite ok (9 s, 7724 in / 3146 out tokens)  
-Models for the repair: gemini-3.5-flash-lite ok (7 s, 8055 in / 2902 out tokens)  
-Tokens used: gemini-3.5-flash-lite 15779 in / 6048 out  
-_Checked again on 2026-11-15T12:03:39.467Z by today's checker (the same drafts, no new call to Gemini)._  
+Models for the draft: gemini-4-hydrogen hung (60 s) → gemini-3.8-flash hung (60 s) → gemini-3.5-flash-lite ok (34 s, 7720 in / 3000 out tokens)  
+Models for the repair: gemini-3.5-flash-lite ok (8 s, 7898 in / 2951 out tokens)  
+Tokens used: gemini-3.5-flash-lite 15618 in / 5951 out  
+_Checked again on 2026-11-20T09:22:59.641Z by today's checker (the same drafts, no new call to Gemini)._  
 
 ## What the checker caught first time
-- 5× beat N: question decodes at "…", far above "…"
-- 1× the lesson needs its aims — N to N things the child will be able to do (aim N: Munni's que
-- 1× beat N: narration is N words, over the N-word limit for "…"
+- 2× the lesson needs its aims — N to N things the child will be able to do (aim N: hint N (en)
+- 2× beat N: the right answer "…" isn't in the passage
+- 1× the lesson needs its aims — N to N things the child will be able to do (aim N: Appu's ques
 - 1× every question's right answer is "…" — a child who always gives that answer passes them al
-- 1× the lesson needs its aims — N to N things the child will be able to do (aim N: hint N (en)
 
-## 1. Rhyming words  ·  एक जैसी आवाज़ वाले शब्द — REPAIRED
-skill: h1-read · source: Page 45
-
-*First draft*
-
-**Why it failed:**
-- the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (hi) already gives the explanation (it says "आख़िरी आवाज़"))
-- beat 0: narration is 16 words, over the 14-word limit for "early"
-- beat 2: question decodes at "fluent", far above "early"
-
-**Aims dropped:**
-- aim 1: Munni's question (hi) already gives the explanation (it says "आख़िरी आवाज़")
-
-**The lesson:**
-1. intro — "Some words end with the very same sound, like taal and chaal.  ·  कुछ शब्दों के आख़िरी हिस्से की आवाज़ बिल्कुल एक जैसी होती है, जैसे ताल और चाल।"
-2. passage: "ताल, चाल, दाल, कमाल  ·  ताल, चाल, दाल, कमाल"
-3. **Q:** Do taal and chaal end with the same sound?  ·  क्या ताल और चाल की आख़िरी आवाज़ एक जैसी है?  
-  options: **Yes ✓** / No  ·  हाँ / नहीं  
-  _teacher note:_ Children confuse rhyming words with words that start the same way.  ·  बच्चे एक जैसी आख़िरी आवाज़ वाले शब्दों को एक जैसी शुरुआती आवाज़ वाले शब्दों से मिला देते हैं।
-4. **Q:** Does taal rhyme with ghar?  ·  क्या ताल की आवाज़ घर से मिलती है?  
-  options: **No ✓** / Yes  ·  नहीं / हाँ  
-  _teacher note:_ Children pick any two words from the poem thinking they all rhyme.  ·  बच्चे कविता के कोई भी दो शब्द चुन लेते हैं यह सोचकर कि सबकी आवाज़ मिलती है।
-5. win — "Words that end the same way sound like magic together!  ·  जिन शब्दों का अंत एक जैसा हो, उनकी आवाज़ बहुत मज़ेदार लगती है!"
-
-*After the repair round*
-
-**Hints replaced:**
-- aim 1: hint 2 (en) already gives the explanation (it says "sound") — replaced with a general nudge
-
-**Aims kept (what the teacher approves):**
-- The child can pick out words that end with the same sound.  ·  बच्चा एक जैसी अंतिम आवाज़ वाले शब्दों को पहचान सकता है।  
-  Munni forgets: "I forgot! How do I know if two words match?  ·  मैं भूल गया! मुझे कैसे पता चलेगा कि दो शब्द मिलते हैं?"
-
-**The lesson:**
-1. intro — "Some words end with the very same sound.  ·  कुछ शब्दों के आख़िरी हिस्से की आवाज़ एक जैसी होती है।"
-2. passage: "ताल, चाल, दाल, कमाल  ·  ताल, चाल, दाल, कमाल"
-3. **Q:** Do taal and chaal match?  ·  क्या ताल और चाल मिलते हैं?  
-  options: **Yes ✓** / No  ·  हाँ / नहीं  
-  _teacher note:_ Children confuse rhyming words with words that start the same way.  ·  बच्चे एक जैसी आवाज़ वाले शब्दों को शुरुआती आवाज़ से मिला देते हैं।
-4. **Q:** Does taal rhyme with ghar?  ·  क्या ताल की आवाज़ घर से मिलती है?  
-  options: Yes / **No ✓**  ·  हाँ / नहीं  
-  _teacher note:_ Children pick any two words thinking they all rhyme.  ·  बच्चे कोई भी दो शब्द चुन लेते हैं यह सोचकर कि सबकी आवाज़ मिलती है।
-5. win — "Words that end the same way sound like magic!  ·  जिन शब्दों का अंत एक जैसा हो, उनकी आवाज़ मज़ेदार लगती है!"
-
-## 2. First and last sound  ·  पहली और आख़िरी आवाज़ — NOT USED
+## 1. Rhyming words  ·  मिलते-जुलते शब्द — REPAIRED
 skill: read1 · source: Page 45
 
 *First draft*
 
 **Why it failed:**
-- every question's right answer is "yes" — a child who always gives that answer passes them all: make at least one question's right answer different (a No / नहीं, or another word or number)
-- beat 2: question decodes at "fluent", far above "early"
-- beat 4: question decodes at "fluent", far above "early"
+- the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says "end sound"))
 
-**Aims kept (what the teacher approves):**
-- The child can tell what sound a word ends with.  ·  बच्चा बता सकता है कि किसी शब्द का अंत किस आवाज़ से होता है।  
-  Munni forgets: "I forgot! How do I find the last sound of the word daal?  ·  मैं भूल गया! दाल शब्द की आख़िरी आवाज़ का कैसे पता लगाऊँ?"
+**Aims dropped:**
+- aim 1: hint 1 (en) already gives the explanation (it says "end sound")
 
 **The lesson:**
-1. intro — "Every word starts with a sound and ends with one.  ·  हर शब्द की एक शुरुआती और एक आख़िरी आवाज़ होती है।"
-2. word — "Listen to the word daal. It ends with the sound 'l'.  ·  दाल शब्द को सुनो। इसके आख़िरी में 'ल' की आवाज़ आती है।"
-3. **Q:** Does the word daal end with 'l'?  ·  क्या दाल शब्द का अंत 'ल' से होता है?  
+1. intro — "Let us read words that sound alike at the end.  ·  आओ ऐसे शब्द पढ़ें जिनकी अंत ध्वनि एक जैसी हो।"
+2. word — "Listen to the word ताल. It ends with 'ल'.  ·  ताल शब्द सुनो। यह 'ल' पर खत्म होता है।"
+3. word — "Now listen to चाल. It also ends with 'ल'.  ·  अब चाल सुनो। यह भी 'ल' पर खत्म होता है।"
+4. **Q:** Does ताल rhyme with चाल?  ·  क्या ताल और चाल मिलते हैं?  
   options: **Yes ✓** / No  ·  हाँ / नहीं  
-  _teacher note:_ Children confuse the first sound with the last sound.  ·  बच्चे पहली आवाज़ और आख़िरी आवाज़ में भ्रमित हो जाते हैं।
-4. word — "Now listen to the word chaal. It also ends with 'l'.  ·  अब चाल शब्द को सुनो। इसका अंत भी 'ल' से होता है।"
-5. **Q:** Does the word chaal end with 'l'?  ·  क्या चाल शब्द का अंत 'ल' से होता है?  
-  options: **Yes ✓** / No  ·  हाँ / नहीं  
-  _teacher note:_ Children focus only on the middle part of the word.  ·  बच्चे केवल शब्द के बीच वाले हिस्से पर ध्यान देते हैं।
-6. win — "Listening carefully helps us catch the last sound!  ·  ध्यान से सुनने पर हमें आख़िरी आवाज़ साफ़ सुनाई देती है!"
+  _teacher note:_ Children may focus only on the first letter and ignore the ending.  ·  बच्चे केवल पहले अक्षर पर ध्यान देते हैं और अंत को भूल जाते हैं।
+5. **Q:** Does दाल rhyme with घर?  ·  क्या दाल और घर मिलते हैं?  
+  options: **No ✓** / Yes  ·  नहीं / हाँ  
+  _teacher note:_ Children might say yes just because both are simple words.  ·  बच्चे दोनों को सरल शब्द मानकर हाँ कह देते हैं।
+6. win — "Words with the same end sound rhyme together.  ·  एक जैसी अंत ध्वनि वाले शब्द मिलते-जुलते हैं।"
 
 *After the repair round*
 
-**Why it failed:**
-- beat 2: question decodes at "fluent", far above "early"
-- beat 4: question decodes at "fluent", far above "early"
+**Hints replaced:**
+- aim 1: hint 2 (en) already gives the explanation (it says "back") — replaced with a general nudge
 
 **Aims kept (what the teacher approves):**
-- The child can tell what sound a word ends with.  ·  बच्चा बता सकता है कि किसी शब्द का अंत किस आवाज़ से होता है।  
-  Munni forgets: "I forgot! How do I find the last sound?  ·  मैं भूल गया! आख़िरी आवाज़ का कैसे पता लगाऊँ?"
+- The child can find words ending alike.  ·  बच्चा एक जैसी अंत ध्वनि वाले शब्द पहचान सकता है।  
+  Appu forgets: "I forgot! How do I know if two words rhyme?  ·  मैं भूल गया! कैसे पता करूँ कि दो शब्द मिलते-जुलते हैं?"
 
 **The lesson:**
-1. intro — "Every word starts with a sound and ends with one.  ·  हर शब्द की एक शुरुआती और एक आख़िरी आवाज़ होती है।"
-2. word — "Listen to the word daal.  ·  दाल शब्द को सुनो।"
-3. **Q:** Does the word daal end with 'l'?  ·  क्या दाल शब्द का अंत 'ल' से होता है?  
+1. intro — "Let us read words that sound alike at the end.  ·  आओ ऐसे शब्द पढ़ें जिनकी अंत ध्वनि एक जैसी हो।"
+2. word — "Listen to the word ताल. It ends with 'ल'.  ·  ताल शब्द सुनो। यह 'ल' पर खत्म होता है।"
+3. word — "Now listen to चाल. It also ends with 'ल'.  ·  अब चाल सुनो। यह भी 'ल' पर खत्म होता है।"
+4. **Q:** Does ताल rhyme with चाल?  ·  क्या ताल और चाल मिलते हैं?  
   options: **Yes ✓** / No  ·  हाँ / नहीं  
-  _teacher note:_ Children confuse the first sound with the last sound.  ·  बच्चे पहली आवाज़ और आख़िरी आवाज़ में भ्रमित हो जाते हैं।
-4. word — "Now listen to the word.  ·  अब इस शब्द को सुनो।"
-5. **Q:** Does the word chaal end with 't'?  ·  क्या चाल शब्द का अंत 'ट' से होता है?  
-  options: **No ✓** / Yes  ·  नहीं / हाँ  
-  _teacher note:_ Children focus only on the middle part of the word.  ·  बच्चे केवल शब्द के बीच वाले हिस्से पर ध्यान देते हैं।
-6. win — "Listening carefully helps us catch the last sound!  ·  ध्यान से सुनने पर आख़िरी आवाज़ साफ़ सुनाई देती है!"
+  _teacher note:_ Children may focus only on the first letter and ignore the ending.  ·  बच्चे केवल पहले अक्षर पर ध्यान देते हैं और अंत को भूल जाते हैं।
+5. **Q:** Does दाल rhyme with घर?  ·  क्या दाल और घर मिलते हैं?  
+  options: Yes / **No ✓**  ·  हाँ / नहीं  
+  _teacher note:_ Children might say yes just because both are simple words.  ·  बच्चे दोनों को सरल शब्द मानकर हाँ कह देते हैं।
+6. win — "Words with the same end sound rhyme together.  ·  एक जैसी अंत ध्वनि वाले शब्द मिलते-जुलते हैं।"
 
-## 3. Letters त, घ and ड़  ·  वर्ण त, घ और ड़ — NOT USED
-skill: h1-read · source: Page 45
+## 2. First and last sound  ·  पहली और अंतिम ध्वनि — NOT USED
+skill: read1 · source: Page 45
 
 *First draft*
 
 **Why it failed:**
-- the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says "first letter"))
-- beat 2: question decodes at "fluent", far above "early"
-- beat 4: question decodes at "fluent", far above "early"
+- the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Appu's question (hi) already gives the explanation (it says "अंतिम आवाज़"))
+- beat 2: the right answer "दा" isn't in the passage
+- beat 3: the right answer "ल" isn't in the passage
 
 **Aims dropped:**
-- aim 1: hint 1 (en) already gives the explanation (it says "first letter")
+- aim 1: Appu's question (hi) already gives the explanation (it says "अंतिम आवाज़")
 
 **The lesson:**
-1. intro — "Let us find words that start with the letter त.  ·  आओ ऐसे शब्द ढूँढें जो त वर्ण से शुरू होते हैं।"
-2. word — "Look at the word tota. It starts with the letter त.  ·  तोता शब्द को देखो। यह त वर्ण से शुरू होता है।"
-3. **Q:** Does tota start with the letter त?  ·  क्या तोता शब्द त वर्ण से शुरू होता है?  
-  options: **Yes ✓** / No  ·  हाँ / नहीं  
-  _teacher note:_ Children confuse the letter त with similar looking letters like न.  ·  बच्चे त वर्ण को न जैसे मिलते-जुुलते वर्णों से मिला देते हैं।
-4. word — "Now look at the word ghoda. It starts with the letter घ.  ·  अब घोड़ा शब्द को देखो। यह घ वर्ण से शुरू होता है।"
-5. **Q:** Does ghoda start with the letter त?  ·  क्या घोड़ा शब्द त वर्ण से शुरू होता है?  
-  options: **No ✓** / Yes  ·  नहीं / हाँ  
-  _teacher note:_ Children say yes to every letter question without checking.  ·  बच्चे बिना जाँच किए हर वर्ण के सवाल पर हाँ कह देते हैं।
-6. win — "We can find many words starting with त, घ and ड़!  ·  हम त, घ और ड़ से शुरू होने वाले कई शब्द ढूँढ सकते हैं!"
+1. intro — "Every word starts with a sound and ends with one.  ·  हर शब्द की एक शुरुआती और एक अंतिम आवाज़ होती है।"
+2. word — "In ताल, the first sound is 'ता' and the last sound is 'ल'.  ·  ताल में पहली आवाज़ 'ता' है और अंतिम आवाज़ 'ल' है।"
+3. **Q:** What is the first sound in दाल?  ·  दाल में पहली आवाज़ क्या है?  
+  options: **दा ✓** / ल  ·  दा / ल  
+  _teacher note:_ Children often confuse the first sound with the last sound.  ·  बच्चे अक्सर पहली और अंतिम आवाज़ में उलझ जाते हैं।
+4. **Q:** What is the last sound in चाल?  ·  चाल में अंतिम आवाज़ क्या है?  
+  options: **ल ✓** / चा  ·  ल / चा  
+  _teacher note:_ Children pick the opening sound instead of the ending one.  ·  बच्चे अंत की बजाय शुरुआती आवाज़ चुन लेते हैं।
+5. win — "Listen carefully to find the first and last sound.  ·  पहली और अंतिम आवाज़ जानने के लिए ध्यान से सुनो।"
 
 *After the repair round*
 
 **Why it failed:**
-- the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (hi) already gives the explanation (it says "शुरुआत"))
-- beat 2: question decodes at "fluent", far above "early"
-- beat 4: question decodes at "fluent", far above "early"
+- beat 3: the right answer "ल" isn't in the passage
 
-**Aims dropped:**
-- aim 1: Munni's question (hi) already gives the explanation (it says "शुरुआत")
+**Hints replaced:**
+- aim 1: hint 2 (hi) already gives the explanation (it says "अंत") — replaced with a general nudge
+
+**Aims kept (what the teacher approves):**
+- The child can identify the first and last sound of a word.  ·  बच्चा किसी शब्द की पहली और अंतिम ध्वनि पहचान सकता है।  
+  Appu forgets: "I forgot! How do I find the first and last sound?  ·  मैं भूल गया! पहली और अंतिम आवाज़ कैसे ढूँढूँ?"
 
 **The lesson:**
-1. intro — "Let us find words that start with the letter त.  ·  आओ ऐसे शब्द ढूँढें जो त वर्ण से शुरू होते हैं।"
-2. word — "Look at the word tota.  ·  तोता शब्द को देखो।"
-3. **Q:** Does tota start with the letter त?  ·  क्या तोता शब्द त वर्ण से शुरू होता है?  
+1. intro — "Every word starts with a sound and ends with one.  ·  हर शब्द की एक शुरुआती और एक अंतिम आवाज़ होती है।"
+2. passage: "दाल starts with दा and ends with ल.  ·  दाल की शुरुआत दा से और अंत ल से होता है।"
+3. **Q:** What is the first sound in दाल?  ·  दाल में पहली आवाज़ क्या है?  
+  options: **दा ✓** / ल  ·  दा / ल  
+  _teacher note:_ Children often confuse the first sound with the last sound.  ·  बच्चे अक्सर पहली और अंतिम आवाज़ में उलझ जाते हैं।
+4. **Q:** What is the last sound in चाल?  ·  चाल में अंतिम आवाज़ क्या है?  
+  options: **ल ✓** / चा  ·  ल / चा  
+  _teacher note:_ Children pick the opening sound instead of the ending one.  ·  बच्चे अंत की बजाय शुरुआती आवाज़ चुन लेते हैं।
+5. win — "Listen carefully to find the first and last sound.  ·  पहली और अंतिम आवाज़ जानने के लिए ध्यान से सुनो।"
+
+## 3. Letters त, घ, ड़  ·  वर्ण त, घ, ड़ — REPAIRED
+skill: read2 · source: Page 45
+
+*First draft*
+
+**Why it failed:**
+- the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: hint 1 (en) already gives the explanation (it says "shape"))
+- every question's right answer is "yes" — a child who always gives that answer passes them all: make at least one question's right answer different (a No / नहीं, or another word or number)
+
+**Aims dropped:**
+- aim 1: hint 1 (en) already gives the explanation (it says "shape")
+
+**The lesson:**
+1. intro — "Let us find the letters त, घ, and ड़ in words.  ·  आओ शब्दों में त, घ, और ड़ वर्ण ढूँढें।"
+2. word — "Look at तोता. It starts with the letter त.  ·  तोता को देखो। यह त वर्ण से शुरू होता है।"
+3. **Q:** Does तोता have the letter त?  ·  क्या तोता में त वर्ण है?  
   options: **Yes ✓** / No  ·  हाँ / नहीं  
-  _teacher note:_ Children confuse the letter त with similar looking letters.  ·  बच्चे त वर्ण को मिलते-जुुलते वर्णों से मिला देते हैं।
-4. word — "Now look at this word.  ·  अब इस शब्द को देखो।"
-5. **Q:** Does ghoda start with the letter त?  ·  क्या घोड़ा शब्द त वर्ण से शुरू होता है?  
+  _teacher note:_ Children might miss the letter if they do not look at each part.  ·  बच्चे ध्यान न दें तो वर्ण छूट सकता है।
+4. **Q:** Does घर start with घ?  ·  क्या घर घ से शुरू होता है?  
+  options: **Yes ✓** / No  ·  हाँ / नहीं  
+  _teacher note:_ Children may confuse similar-looking Hindi consonants.  ·  बच्चे मिलते-जुलते व्यंजनों में भ्रमित हो सकते हैं।
+5. win — "Spot the letters त, घ, and ड़ in words easily.  ·  शब्दों में त, घ, और ड़ आसानी से पहचानो।"
+
+*After the repair round*
+
+**Hints replaced:**
+- aim 1: hint 1 (en) already gives the explanation (it says "form") — replaced with a general nudge
+
+**Aims kept (what the teacher approves):**
+- The child can recognise the letters त, घ, and ड़ in words.  ·  बच्चा शब्दों में त, घ, और ड़ वर्ण पहचान सकता है।  
+  Appu forgets: "I forgot! How do I spot the letters त, घ, or ड़ in a word?  ·  मैं भूल गया! किसी शब्द में त, घ, या ड़ कैसे पहचानूँ?"
+
+**The lesson:**
+1. intro — "Let us find the letters त, घ, and ड़ in words.  ·  आओ शब्दों में त, घ, और ड़ वर्ण ढूँढें।"
+2. word — "Look at तोता. It starts with the letter त.  ·  तोता को देखो। यह त वर्ण से शुरू होता है।"
+3. **Q:** Does तोता have the letter त?  ·  क्या तोता में त वर्ण है?  
+  options: No / **Yes ✓**  ·  नहीं / हाँ  
+  _teacher note:_ Children might miss the letter if they do not look at each part.  ·  बच्चे ध्यान न दें तो वर्ण छूट सकता है।
+4. **Q:** Does फल start with घ?  ·  क्या फल घ से शुरू होता है?  
   options: **No ✓** / Yes  ·  नहीं / हाँ  
-  _teacher note:_ Children say yes to every letter question without checking.  ·  बच्चे बिना जाँच किए हर वर्ण के सवाल पर हाँ कह देते हैं।
-6. win — "We can find many words starting with त, घ and ड़!  ·  हम त, घ और ड़ से शुरू होने वाले कई शब्द ढूँढ सकते हैं!"
+  _teacher note:_ Children may confuse different letters for घ.  ·  बच्चे अलग वर्ण को घ समझ सकते हैं।
+5. win — "Spot the letters त, घ, and ड़ in words easily.  ·  शब्दों में त, घ, और ड़ आसानी से पहचानो।"

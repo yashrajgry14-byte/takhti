@@ -89,7 +89,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v86` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v87` (recorded narration lives in a
 separate `takhti-audio-v2`, bumped only when a line is rendered again in a new
 voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
@@ -693,13 +693,22 @@ network and no waiting in the week.
   draft)`, the report says "drafted by", and they went through
   `--import` and the same checker — a Gemini build (`--force --only ch3`
   with the PDF) can replace them.
-- **Hindi, Class 1** (15 Nov): NCERT *Sarangi* 1, chapter 7 "वाह, मेरे
-  घोड़े!" — 1 lesson, rhyming words (ताल / चाल: yes; ताल / घर: no). Its first
-  build kept two lessons whose every answer was "हाँ", which the
-  mixed-answers rule now rejects; two rebuilds kept one lesson each (the
-  other drafts read too hard for a Class 1 child — "decodes at fluent"), and
-  the rhyming one was taken with `--import` from its saved run: the other
-  ("first sounds") asked back the sound its teaching line had just said.
+- **Hindi, Class 1** (rebuilt 20 Nov): NCERT *Sarangi* 1, chapter 7 "वाह,
+  मेरे घोड़े!" — 2 lessons, each with two questions: rhyming words (ताल / चाल:
+  yes; दाल / घर: no; `read1`) and the letters त, घ, ड़ (तोता has त: yes; फल
+  starts with घ: no; `read2`). `gemini-4-hydrogen` and `gemini-3.8-flash`
+  both hung, so flash-lite drafted; the repair round fixed two of three, and
+  "first and last sound" wasn't used (its answers "दा", "ल" weren't in what
+  the child read). Gemini tagged both kept lessons `h1-read` (reading a
+  sentence); they were retagged in the saved drafts (`skill`, which wins
+  over `skillId`), Appu's lines made masculine ("मैं भूल गया") and "कैसे
+  पता चलूँ" → "कैसे पता करूँ", then `--recheck`. The book-words index
+  (`ch7.book.json`) was made this time. The earlier build's one lesson
+  (rhyming, `h1-read`) is replaced — its id is gone, so a class that
+  approved it approves again. Weak spot for the teacher's reading: the
+  letters lesson's first question asks what its teaching line just said
+  (yes/no answers aren't caught by the "said it" check), and nothing asks
+  about ड़.
 
 ## This child's path — `core/planner.js`
 
