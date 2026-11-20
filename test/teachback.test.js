@@ -441,7 +441,9 @@ function box(){
       app.E(`(() => { const r = readClassShared('CLS777')[S.id]; return r && r.explained && r.explained['borrow.when'] === 'c' && Object.values(r.explained).every(v => ['c','p','g'].includes(v)); })()`), app.E(`JSON.stringify(readClassShared('CLS777'))`));
     app.E(`classMirrorUpdate('CLS777', all => { all['c-other'] = { childName: 'Asha', skillHistory: {}, explained: { 'borrow.when': 'g', 'borrow.ten': 'p' }, did: { 'borrow.when': 'y' }, at: Date.now() }; })`);
     app.E(`classMirrorUpdate('CLS777', all => { all['c-third'] = { childName: 'Ravi', skillHistory: {}, explained: { 'borrow.ten': 'g', 'borrow.when': 'g' }, loop: { 'borrow.ten': 'gr', 'borrow.when': 'g' }, at: Date.now() }; })`);
-    app.E(`go('teacher'); S.ctx.tcode = 'CLS777'; render()`);
+    app.E(`CLASS_AUTH.token='test-approved-session'; CLASS_AUTH.expires=Date.now()+600000;
+      CLASS_AUTH.role='teacher'; CLASS_AUTH.classes=['CLS777']; CLASS_AUTH.email='teacher@example.test';
+      go('teacher'); S.ctx.tcode = 'CLS777'; render()`);
     const tv = app.screen();
     check('the mirror carries the loop too — letters only', app.E(`(() => { const l = readClassShared('CLS777')[S.id].loop; return l['borrow.when'] === 'c' && l['borrow.ten'] === 'grc' && Object.values(l).every(v => /^[cpgr]{1,3}$/.test(v)); })()`), app.E(`JSON.stringify(readClassShared('CLS777')[S.id])`));
     check('the teacher sees the loop across the class: of the points not explained at first, how many were explained after Munni taught them again',
@@ -457,9 +459,13 @@ function box(){
       /WHAT THE CLASS COULD EXPLAIN/.test(tv) && /Knows to borrow when the top ones digit is smaller/.test(tv) && /1 explained · 0 partly · 2 still to come/.test(tv) && !!app.$('.teachbar'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 400));
     const { syncCore } = await import(pathToFileURL(path.join(root, 'api/class-sync.mjs')).href);
     const mem = new Map(), st = { get: async k => mem.get(k) || null, setJSON: async (k, v) => mem.set(k, JSON.parse(JSON.stringify(v))) };
-    const sy = await syncCore(st, { code: 'CLS777', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.when': 'c', 'Bad Id!': 'c', 'borrow.ten': 'yes' }, at: 5, said: 'x' } } });
-    const sy2 = await syncCore(st, { code: 'CLS778', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.ten': 'c' }, loop: { 'borrow.ten': 'grc', 'borrow.when': 'cgr', 'x.y': 'I said twelve', 'Bad!': 'c' }, at: 5 } } });
-    const sy3 = await syncCore(st, { code: 'CLS779', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.ten': 'c' }, did: { 'borrow.ten': 'y', 'borrow.when': 'maybe', 'Bad!': 'y' }, at: 5 } } });
+    const { authorizeClass } = await import(pathToFileURL(path.join(root, 'api/lib/class-auth.mjs')).href);
+    const guardianFor = code => authorizeClass({code,children:{'c-1':{}}}, {
+      role:'guardian',active:true,schoolId:'school-one',children:[{code,id:'c-1',consent:true}]
+    });
+    const sy = await syncCore(st, { code: 'CLS777', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.when': 'c', 'Bad Id!': 'c', 'borrow.ten': 'yes' }, at: 5, said: 'x' } } }, guardianFor('CLS777'));
+    const sy2 = await syncCore(st, { code: 'CLS778', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.ten': 'c' }, loop: { 'borrow.ten': 'grc', 'borrow.when': 'cgr', 'x.y': 'I said twelve', 'Bad!': 'c' }, at: 5 } } }, guardianFor('CLS778'));
+    const sy3 = await syncCore(st, { code: 'CLS779', children: { 'c-1': { childName: 'Jai', skillHistory: {}, explained: { 'borrow.ten': 'c' }, did: { 'borrow.ten': 'y', 'borrow.when': 'maybe', 'Bad!': 'y' }, at: 5 } } }, guardianFor('CLS779'));
     check('…and only y/n per well-formed point for what the child could do', JSON.stringify(sy3.json.children['c-1'].did) === '{"borrow.ten":"y"}', JSON.stringify(sy3.json.children['c-1']));
     check('the class sync keeps only well-formed loops (ids and the letters)', JSON.stringify(sy2.json.children['c-1'].loop) === '{"borrow.ten":"grc"}', JSON.stringify(sy2.json.children['c-1']));
     check('the class sync keeps only well-formed point ids and c/p/g — nothing the child said', JSON.stringify(sy.json.children['c-1'].explained) === '{"borrow.when":"c"}' && !sy.json.children['c-1'].said, JSON.stringify(sy.json));

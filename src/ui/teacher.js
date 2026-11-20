@@ -42,7 +42,16 @@ function teacherSkillOptions(){
 
 function teacherHTML(){
   const hi = S.lang === 'hi';
+  // The parent PIN is not a teacher credential. Never render local/remote
+  // class records until the school has verified a teacher identity.
+  if(typeof classAuthToken !== 'function' || !classAuthToken() || CLASS_AUTH.role !== 'teacher')
+    return '<button class="back" onclick="go(\'map\')">← Back</button><h3>Teacher account required</h3>'+
+      (typeof classAuthHTML === 'function' ? classAuthHTML() : '<p>Sign in to access class data.</p>');
   const code = teacherCode();
+  if(code && !CLASS_AUTH.classes.includes(code))
+    return '<button class="back" onclick="go(\'map\')">← Back</button>'+
+      '<h3>Choose an assigned class</h3>'+classAuthHTML()+
+      CLASS_AUTH.classes.map(c=>'<button class="btn" onclick="teacherSetCode(\''+attr(c)+'\')">'+attr(c)+'</button>').join('');
   const roster = code ? teacherRoster(code) : [];
   const skillId = S.ctx.tskill || '';
   const results = skillId && roster.length ? tDiagnose([skillId], roster, code) : [];
@@ -56,8 +65,9 @@ function teacherHTML(){
   const cell = c => c ? `${c.done}/${c.n}` : '—';
 
   return `
-  <button class="back" onclick="go('parent')">← ${t('back')}</button>
+  <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="display" style="font-size:22px;margin:4px 0">🧑‍🏫 ${hi?'शिक्षकों के लिए':'For teachers'}</div>
+  ${typeof classAuthHTML === 'function' ? classAuthHTML() : ''}
   <div class="muted" style="font-size:12.5px">${hi
     ? 'इस फ़ोन पर कक्षा कोड से जुड़े बच्चे, और दूसरे फ़ोनों के वे बच्चे जिनके माता-पिता ने सिंक चालू किया या प्रगति कोड भेजा।'
     : 'Children on this phone linked to the class code, plus children on other phones whose parent switched sync on or sent a progress code.'}</div>
@@ -209,7 +219,7 @@ function demoOff(){ demoRemove(); render(); }
 
 function teacherSetCode(v){
   const code = (v || '').trim().toUpperCase();
-  if(!/^[A-Z0-9]{6}$/.test(code)) return;
+  if(!/^[A-Z0-9]{6}$/.test(code) || !classAuthToken() || CLASS_AUTH.role !== 'teacher' || !CLASS_AUTH.classes.includes(code)) return;
   S.ctx.tcode = code; S.ctx.tskill = '';
   render();
 }

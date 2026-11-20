@@ -202,13 +202,24 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
   const { syncCore } = await import(pathToFileURL(path.join(root, 'api/class-sync.mjs')).href);
   const mem = new Map(), store = { get: async k => mem.get(k) || null, setJSON: async (k, v) => mem.set(k, JSON.parse(JSON.stringify(v))) };
   const pack = { items:[{ id:'sch-abc12', band:'developing', beats:[{ t:'intro' }] }], at: 1000 };
-  await syncCore(store, { code:'CLS001', teacherKey:'k'.repeat(32), lessons: pack });
-  const kid = await syncCore(store, { code:'CLS001', children:{} });
-  check('the class sync: lessons set by the teacher\'s phone reach a child\'s phone', kid.json.lessons && kid.json.lessons.items[0].id === 'sch-abc12', JSON.stringify(kid.json));
-  await syncCore(store, { code:'CLS001', lessons:{ items:[{ id:'sch-evil1', beats:[] }], at: 5000 } });
-  check("…and a phone without the teacher's key can't set them", (await syncCore(store, { code:'CLS001' })).json.lessons.items[0].id === 'sch-abc12', '');
-  await syncCore(store, { code:'CLS001', teacherKey:'k'.repeat(32), lessons:{ items:[{ id:'<script>', beats:[] }], at: 6000 } });
-  check('…only lesson-shaped items are kept (ids, beat counts, size)', (await syncCore(store, { code:'CLS001' })).json.lessons.items.length === 0, '');
+  // Cloud sync now requires an independently verified teacher/guardian ACL.
+  // A class code or the old teacherKey is never an authorization credential.
+  const { authorizeClass } = await import(pathToFileURL(path.join(root, 'api/lib/class-auth.mjs')).href);
+  const teacher = authorizeClass({code:'CLS001'}, {role:'teacher',active:true,schoolId:'school-one',classes:['CLS001']});
+  const guardian = authorizeClass({code:'CLS001',children:{}}, {role:'guardian',active:true,schoolId:'school-one',
+    children:[{code:'CLS001',id:'test-child',consent:true}]});
+  await syncCore(store, { code:'CLS001', lessons: pack }, teacher);
+  const kid = await syncCore(store, { code:'CLS001', children:{} }, guardian);
+  check('the class sync: lessons set by the verified teacher reach an authorized guardian',
+    kid.status === 200 && kid.json.lessons?.items[0]?.id === 'sch-abc12', JSON.stringify(kid.json));
+  const denied = await syncCore(store, { code:'CLS001', lessons:{ items:[{ id:'sch-evil1', beats:[] }], at: 5000 } }, guardian);
+  const unchanged = await syncCore(store, { code:'CLS001', children:{} }, guardian);
+  check('…and a guardian cannot set or replace teacher lessons',
+    denied.status === 403 && unchanged.json.lessons?.items[0]?.id === 'sch-abc12', JSON.stringify(denied));
+  await syncCore(store, { code:'CLS001', lessons:{ items:[{ id:'<script>', beats:[] }], at: 6000 } }, teacher);
+  const sanitized = await syncCore(store, { code:'CLS001', children:{} }, guardian);
+  check('…only lesson-shaped items are kept (ids, beat counts, size)',
+    sanitized.status === 200 && sanitized.json.lessons?.items.length === 0, JSON.stringify(sanitized.json));
 
   /* ---------- 2 & 3. the phone ---------- */
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
@@ -483,8 +494,15 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
       reCleaned.every((l, k) => l.id === many[k].lesson.id && slotsOf(l) === slotsOf(many[k].lesson)) && clean({ ...twoAsk(3), beats: twoAsk(3).beats.map(b => b.t === 'ask' ? { ...b, opts: b.opts.slice().reverse(), hiOpts: b.hiOpts.slice().reverse(), correct: 1 - b.correct } : b) }).lesson.id === many[3].lesson.id,
       JSON.stringify(reCleaned.map(slotsOf)));
 
-    // 3. the teacher drafts
-    E(`go('teacher'); S.ctx.tcode = 'CLS001'; S.online = true; render()`);
+    // 3. teacher syllabus tools are only visible after verified school sign-in.
+    E(`go('teacher')`);
+    check('anonymous visitors cannot see the teacher syllabus or class records',
+      /Teacher account required/.test(screen()) && !/THIS WEEK'S LESSONS FROM YOUR SYLLABUS/.test(screen()), screen().slice(0, 150));
+    // Simulate the role response from /api/class-identity for UI-only tests.
+    // Actual signature and tenant checks run separately in class-security.test.mjs.
+    E(`CLASS_AUTH.token = 'test-approved-session'; CLASS_AUTH.expires = Date.now()+600000;
+      CLASS_AUTH.role = 'teacher'; CLASS_AUTH.classes = ['CLS001']; CLASS_AUTH.email = 'teacher@example.test';
+      S.ctx.tcode = 'CLS001'; S.online = true; render()`);
     check('the teacher view has the syllabus card, in both languages', /THIS WEEK'S LESSONS FROM YOUR SYLLABUS/.test(screen()) && /Choose a PDF or photo/.test(screen()), screen().slice(0, 300));
     E(`S.ctx.sylText = ${JSON.stringify('Chapter 4. Subtraction. Ravi had 45 mangoes and gave away 20. '.repeat(3))}; S.ctx.sylCls = 'c2'; S.ctx.sylCount = 4`);
     E(`sylGo()`);

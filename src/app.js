@@ -8,7 +8,9 @@ load();
 // device or returning one — it is also where the browser gets its first
 // real user gesture, which the rest of the app's audio depends on.
 // arrFinish() routes onward: onboarding, the game picker, or goHub().
-S.screen = 'arrival';
+// ?role=teacher provides an independent teacher entry point without a parent PIN.
+// Server-approved teacher identity is still mandatory before any class data.
+S.screen = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('role') === 'teacher') ? 'teacher' : 'arrival';
 setOnline(false);
 render();
 // Find out (and, while online, fetch) what on-device speech this phone

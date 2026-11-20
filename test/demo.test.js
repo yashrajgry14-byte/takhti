@@ -32,7 +32,12 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     await new Promise(r => win.addEventListener('load', r));
     E(`arrSkip(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance();`);
     [...win.document.querySelectorAll('.ob-av')][0].click(); [...win.document.querySelectorAll('.ob-cakebtn')][5].click(); win.document.querySelector('.ob-go').click();
-    E(`S.game = S.game || 'cricket'; S.name = 'Riya'; S.age = 8; S.classCode = 'DEMO01'; go('map'); S.ctx.tcode = 'DEMO01'; S.ctx.sylCls = 'c3'; go('teacher')`);
+    E(`S.game = S.game || 'cricket'; S.name = 'Riya'; S.age = 8; S.classCode = 'DEMO01'; go('map');
+      S.ctx.tcode = 'DEMO01'; S.ctx.sylCls = 'c3'; go('teacher')`);
+    check('anonymous users cannot enter even the teacher demo dashboard',
+      /Teacher account required/.test(screen()) && !btn(/Add two demo children/), screen().slice(0,150));
+    E(`CLASS_AUTH.token='test-approved-session'; CLASS_AUTH.expires=Date.now()+600000;
+      CLASS_AUTH.role='teacher'; CLASS_AUTH.classes=['DEMO01']; CLASS_AUTH.email='teacher@example.test'; render()`);
     await wait(20);
     check('the teacher view offers the demo class, and says plainly what it is (not real children, never synced)',
       /DEMO CLASS/.test(screen()) && /aren't real children, are never synced/.test(screen()) && !!btn(/Add two demo children/), screen().slice(-500));
