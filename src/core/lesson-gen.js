@@ -365,7 +365,9 @@ function validateLesson(les){
   bi(les.title, 'title'); bi(les.sub, 'sub');
   if(!Array.isArray(les.beats) || les.beats.length < 3) errs.push('needs at least 3 beats');
 
-  const b = AGE_BANDS[les.band] || AGE_BANDS.developing;
+  // a lesson written for Classes 6–10 carries its class (core/syllabus.js): its numbers go to that class's ceiling
+  const b = les.cls && typeof bandFor === 'function' && typeof classById === 'function' && classById(les.cls)
+    ? bandFor({ cls: les.cls }) : (AGE_BANDS[les.band] || AGE_BANDS.developing);
   let last = null, asks = 0, pic = null;
   const taughtPics = [];   // shapes drawn to teach — a question about the same drawing would show its answer one step early
 

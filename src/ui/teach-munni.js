@@ -166,7 +166,7 @@ function teachNoHear(err){
 function teachPayload(){
   const s = TEACH.s, it = teachItem(s);
   return {
-    ask: it.aim.id, ages: band().ages,
+    ask: it.aim.id, ages: band().ages, cls: band().cls,   // the server's own profile of the class goes in the judge's prompt (api/class-profile.mjs)
     aims: s.items.filter(x => x.state === 'todo' && (!x.fix || x === it)).slice(0, 5).map(x => x.fix
       ? { id: x.aim.id, kind: 'fix', point: x.aim.point, mistake: x.fix.mistake, munni: x.fix.act.en, said: teachSaid(x, 'en') + ' ' + teachSaid(x, 'hi') }
       : { id: x.aim.id, kind: 'explain', point: x.aim.point, forget: x.aim.forget, ideas: x.aim.ideas.map(i => ({ en: i.en, hi: i.hi })),

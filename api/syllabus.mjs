@@ -35,6 +35,7 @@
    POST /syllabus — no serverless time limit there).
    ================================================================== */
 
+import { classProfile, classText } from './lib/class-profile.mjs';
 const BANDS = ['pre', 'early', 'developing', 'fluent'];
 const FILE_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
 const MAX_TEXT = 30000;
@@ -65,12 +66,16 @@ async function same(a, b){
 }
 
 /* The age band's rules, sent by the phone (from content/ages.js) and
-   clamped here, so the prompt can never be stretched past a sane range. */
-function cleanRules(r){
+   clamped here, so the prompt can never be stretched past a sane range.
+   With the class (body.cls), the class's own profile (api/class-profile.mjs)
+   sets the band, ages and biggest number — from this server's table, not
+   the phone's word — and its description goes into the prompt. */
+function cleanRules(r, prof){
   r = r || {};
-  const band = BANDS.includes(r.band) ? r.band : 'developing';
-  const ages = Array.isArray(r.ages) ? r.ages.map(a => clamp(a, 3, 16, 7)).slice(0, 2) : [7, 8];
-  return { band, ages, maxNumber: clamp(r.maxNumber, 5, 10000, 100), sayWords: clamp(r.sayWords, 6, 30, 18), read: BANDS.includes(r.read) ? r.read : band };
+  const band = prof ? prof.band : BANDS.includes(r.band) ? r.band : 'developing';
+  const ages = prof ? prof.ages : Array.isArray(r.ages) ? r.ages.map(a => clamp(a, 3, 16, 7)).slice(0, 2) : [7, 8];
+  const maxNumber = prof ? prof.maxNumber : clamp(r.maxNumber, 5, 10000, 100);
+  return { band, ages, maxNumber, sayWords: clamp(r.sayWords, 6, 30, 18), read: BANDS.includes(r.read) ? r.read : band, profile: prof || null };
 }
 
 /* The shape Gemini must answer in — Takhti's lesson format.
@@ -257,7 +262,7 @@ export const ENGLISH_EXAMPLE = `{"title":{"en":"What Meena hears","hi":"मी�
   {"t":"win","say":{"en":"We hear with our ears. Every word has a first sound.","hi":"हम कानों से सुनते हैं। हर शब्द की एक पहली आवाज़ होती है।"}}]}`;
 function englishText(rules){
   return `THIS IS AN ENGLISH LESSON, from the school's English textbook: the child is learning to read English.
-E1. What the child reads is English a child of ${rules.ages.join('–')} can read: the passage, word and readline text, each question's "en" and opts. Short everyday words, sentences of 3 to 6 words, one idea each.
+E1. What the child reads is English a child of ${rules.ages.join('–')} can read: the passage, word and readline text, each question's "en" and opts. Short everyday words, sentences of ${!rules.profile || rules.profile.g <= 2 ? '3 to 6' : rules.profile.g <= 5 ? '5 to 10' : '8 to 16'} words, one idea each.
 E2. The child sees the English passage, question and answers even when the app is in Hindi. hiOpts are the SAME English words as opts — copy them (["n","m"], ["the bird","the sun"]); this replaces rule 10 for hiOpts. The Hindi of p and q is for the teacher: natural Hindi, keeping the English word being learnt in English ("nose की पहली आवाज़").
 E3. Munni's say lines may explain, but never read out a word a question then asks for. A word beat SHOWS one word: its say is "Look at this word. Read it." — never the word itself, never "this word starts with b".
 E4. A question asks only about what the child has just read: the words its answer needs are in the passage or word beats right before it. Never "Which word is this?" — the word card has gone by then; ask about the word's sound or meaning, or put the words in a passage.
@@ -291,7 +296,7 @@ function rulesText(rules){
 
 function instructions(rules, count, skills, note, lang){
   return `You write short practice lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (age band "${rules.band}").
-A teacher has given you a chapter from their own school's syllabus. Write ${count} lesson(s) that practise what THIS chapter teaches — nothing from outside it.
+${rules.profile ? classText(rules.profile) + '\n' : ''}A teacher has given you a chapter from their own school's syllabus. Write ${count} lesson(s) that practise what THIS chapter teaches — nothing from outside it.
 
 Every lesson starts with its AIMS: 1 to 4 (3 is best) points a teacher can approve. After the lesson, Appu, a little boy elephant, pretends he forgot them, and the child explains each one back to him. Each aim has:
 - point: what the child will be able to do or explain ("The child can …"), the Hindi saying exactly what the English says;
@@ -313,7 +318,7 @@ Answer with JSON only, in the given schema.`;
 
 function repairInstructions(rules, lang){
   return `You fix lessons for Takhti, a tutor app for Indian children aged ${rules.ages.join('–')} (band "${rules.band}"). Each lesson below was rejected by Takhti's checker; its reasons are listed. Return each lesson fixed — same topic, same format, same aims, every reason addressed — and change nothing else.
-How to read the reasons: "must say what is asked (ask)" → set the figure's ask to what the next question asks (sides, corners, name…); "a rectangle needs w and h" → give both; "say the answer … (in the intro)" or "(in beat N's words)" → rewrite THAT line so it no longer says the answer (an intro may say what we will do — "let us fold a paper circle" — not what we will find), or ask about a new example whose answer is different (teach a square's 4 sides, ask a triangle's); "the teaching picture again" → change the question picture to another shape whose answer is different; "say the answer" also counts number words (three, तीन) — teach the idea without the number; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi; "a question needs exactly 2 answers" → give opts, hiOpts and correct; "needs a circle with 2 or more folds" / "doesn't show the folds" → set folds to 2 or more (a number, not text); "a row needs its find" → set find to the one shape the question looks for; "exactly one picture may have a square corner" → change the row so only one item has one; a teaching picture's say may tell what to look at, never the number or name asked for; "the clock … must say what is asked" → give the clock ask:"time" (or two clocks ask:"minutes"/"hours"); "a clock is read to" → change m to a time this age reads; "isn't what the clock shows" → mark the time the hands really show; "a whole number of hours" → ask minutes instead; "the question must say how much later" → put k in the question in both languages ("3 months later", "3 महीने बाद"); "isn't what the calendar shows" → mark the month or day the picture really gives; "every question's right answer is …" → change one question so its right answer is different (a No / नहीं, or another word or number), keeping it true to the picture or passage; "asks at least 2 questions" → add a second question: a NEW picture (another shape, time, month or date, with its ask) and its ask beat, before the win; "already gives the explanation (it says …)" → rewrite that question or hint so it no longer uses those words (a hint asks, it doesn't tell), keeping the aim's words as they are; "Appu's question says "this word" without naming it" → put the word itself in Appu's question in both languages ("What sound does ant start with?" / "ant किस आवाज़ से शुरू होता है?"); "words are only single letters or little words" → replace them with phrases that show the idea ("starts with a", "letter a").
+${rules.profile ? classText(rules.profile) + '\n' : ''}How to read the reasons: "must say what is asked (ask)" → set the figure's ask to what the next question asks (sides, corners, name…); "a rectangle needs w and h" → give both; "say the answer … (in the intro)" or "(in beat N's words)" → rewrite THAT line so it no longer says the answer (an intro may say what we will do — "let us fold a paper circle" — not what we will find), or ask about a new example whose answer is different (teach a square's 4 sides, ask a triangle's); "the teaching picture again" → change the question picture to another shape whose answer is different; "say the answer" also counts number words (three, तीन) — teach the idea without the number; "teach before you ask" → add a teaching picture (a different shape or size from the question's) before the first question; "names the shape" → ask without naming it; "Hindi answers must be in Devanagari" → write hiOpts in Hindi; "a question needs exactly 2 answers" → give opts, hiOpts and correct; "needs a circle with 2 or more folds" / "doesn't show the folds" → set folds to 2 or more (a number, not text); "a row needs its find" → set find to the one shape the question looks for; "exactly one picture may have a square corner" → change the row so only one item has one; a teaching picture's say may tell what to look at, never the number or name asked for; "the clock … must say what is asked" → give the clock ask:"time" (or two clocks ask:"minutes"/"hours"); "a clock is read to" → change m to a time this age reads; "isn't what the clock shows" → mark the time the hands really show; "a whole number of hours" → ask minutes instead; "the question must say how much later" → put k in the question in both languages ("3 months later", "3 महीने बाद"); "isn't what the calendar shows" → mark the month or day the picture really gives; "every question's right answer is …" → change one question so its right answer is different (a No / नहीं, or another word or number), keeping it true to the picture or passage; "asks at least 2 questions" → add a second question: a NEW picture (another shape, time, month or date, with its ask) and its ask beat, before the win; "already gives the explanation (it says …)" → rewrite that question or hint so it no longer uses those words (a hint asks, it doesn't tell), keeping the aim's words as they are; "Appu's question says "this word" without naming it" → put the word itself in Appu's question in both languages ("What sound does ant start with?" / "ant किस आवाज़ से शुरू होता है?"); "words are only single letters or little words" → replace them with phrases that show the idea ("starts with a", "letter a").
 
 ${beatsText()}
 
@@ -458,7 +463,7 @@ export async function draftCore(body, env, ip, fetchImpl){
 export function buildRequest(body, opts = {}){
   body = body || {};
   const env = opts.env || {};
-  const rules = cleanRules(body.rules);
+  const rules = cleanRules(body.rules, classProfile(body.cls));
   const lang = body.lang === 'en' ? 'en' : '';          // an English book's lesson (englishText)
   if(body.mode === 'repair'){
     const items = (Array.isArray(body.repair) ? body.repair : []).slice(0, 5)

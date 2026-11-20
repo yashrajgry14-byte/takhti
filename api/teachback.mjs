@@ -19,7 +19,7 @@
    what the child said, or only repeats Appu, becomes "partly" (and a
    "partly" becomes "missing") — here and again on the phone.
 
-   POST { consent:true, lang, ages?, transcript | audio+mime, ask, aims:[…], said? }
+   POST { consent:true, lang, ages?, cls?, transcript | audio+mime, ask, aims:[…], said? }
    → { transcript, provider?, judge:{ aims:[{ id, verdict, quote }] } | null, model? }
    judge is null when Gemini isn't set up: the phone then judges with
    its own rubric (the offline judge) on the transcript.
@@ -34,6 +34,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import path from 'node:path';
+import { classProfile, classJudgeText } from './lib/class-profile.mjs';
 
 const ID = /^[a-z0-9.-]{1,32}$/;
 const VERDICTS = ['covered', 'partly', 'missing', 'unsure'];
@@ -112,8 +113,8 @@ const SCHEMA = {
   }, required: ['id', 'verdict', 'quote'] } } },
   required: ['aims']
 };
-function instructions(ages){
-  return `You check how well a child explained ideas to Appu, a baby elephant in a learning app for Indian children aged ${ages}. Appu pretended to forget what they just learnt, and the child is teaching him.
+function instructions(ages, prof){
+  return `You check how well a child explained ideas to Appu, a baby elephant in a learning app for Indian children aged ${ages}.${prof ? ' ' + classJudgeText(prof) : ''} Appu pretended to forget what they just learnt, and the child is teaching him.
 The child may speak English, Hindi or a mix, in any script, with a child's grammar; a speech recogniser wrote the words down and may have small errors. Judge the MEANING, not grammar, spelling or pronunciation.
 For each point, decide:
 - covered: the child's words contain every idea listed for the point, in any wording.
@@ -149,9 +150,9 @@ export function judgeModels(env){
   return [first, ...rest].filter((m, i, a) => a.indexOf(m) === i).slice(0, 3);
 }
 
-async function callGemini(payload, ages, env, fetchImpl){
+async function callGemini(payload, ages, env, fetchImpl, prof){
   const key = env.GEMINI_API_KEY || env.GOOGLE_API_KEY;
-  const base = { systemInstruction: { parts: [{ text: instructions(ages) }] }, contents: [{ role: 'user', parts: [{ text: JSON.stringify(payload) }] }] };
+  const base = { systemInstruction: { parts: [{ text: instructions(ages, prof) }] }, contents: [{ role: 'user', parts: [{ text: JSON.stringify(payload) }] }] };
   // the current structured-output field first, then the older one (as api/syllabus.mjs)
   // Thinking is asked for at a low level: the default on newer Flash models
   // thinks long before answering, and the judge must answer in the phone's 9 s.
@@ -212,8 +213,10 @@ export async function judgeCore(body, env, ip, fetchImpl, hear){
   if(!transcript) return { status: 200, json: { transcript: '', provider, judge: null } };
   if(!(env.GEMINI_API_KEY || env.GOOGLE_API_KEY)) return { status: 200, json: { transcript, provider, judge: null } };
 
-  const ages = Array.isArray(body.ages) ? body.ages.map(n => Math.max(4, Math.min(12, Math.floor(Number(n)) || 7))).slice(0, 2).join('–') : '5–10';
-  const r = await callGemini({ points: aims.map(a => ({ id: a.id, point: a.point, ideas: a.ideas, munni_said: a.munni })), child_said: transcript }, ages, env, fetchImpl);
+  // the class, from this server's own table (api/class-profile.mjs): its ages, and what to expect of it
+  const prof = classProfile(body.cls);
+  const ages = prof ? prof.ages.join('–') : Array.isArray(body.ages) ? body.ages.map(n => Math.max(4, Math.min(12, Math.floor(Number(n)) || 7))).slice(0, 2).join('–') : '5–10';
+  const r = await callGemini({ points: aims.map(a => ({ id: a.id, point: a.point, ideas: a.ideas, munni_said: a.munni })), child_said: transcript }, ages, env, fetchImpl, prof);
   if(r.error) return { status: 200, json: { transcript, provider, judge: null, error: r.error } };   // the phone's rubric takes over
   const out = [];
   for(const j of (Array.isArray(r.out.aims) ? r.out.aims : [])){

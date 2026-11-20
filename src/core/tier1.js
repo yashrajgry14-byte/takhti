@@ -75,7 +75,8 @@ async function t1FromModel(words, lang){
     session = await LanguageModel.create({
       expectedInputs:[{ type:'text', languages:[l] }], expectedOutputs:[{ type:'text', languages:[l] }],
       initialPrompts:[{ role:'system', content:
-        'You write ONE short, simple, kind sentence for a young child in India to read aloud. ' +
+        // the class decides the level (content/ages.js): a Class 8 reader isn't written for like a five-year-old
+        `You write ONE short, simple, kind sentence for a ${band().g >= 6 ? 'student' : 'young child'} in India, in ${band().clsEn}, to read aloud. ` +
         'Use everyday words about family, school, animals, food, weather or games. ' +
         'No names of real people, brands or places. Reply with the sentence only.' +
         // how this child reads (core/twin.js): letters to practise, what to keep easy — on the phone only

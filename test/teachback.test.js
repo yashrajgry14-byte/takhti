@@ -291,6 +291,8 @@ function box(){
   const lam = fs.mkdtempSync(path.join(os.tmpdir(), 'takhti-lambda-'));
   fs.mkdirSync(path.join(lam, 'fn')); fs.mkdirSync(path.join(lam, 'src/content'), { recursive: true });
   fs.copyFileSync(path.join(root, 'api/teachback.mjs'), path.join(lam, 'fn/teachback.mjs'));
+  // Netlify traces a function's local imports and ships them beside it (api/lib/class-profile.mjs)
+  fs.mkdirSync(path.join(lam, 'fn/lib')); fs.copyFileSync(path.join(root, 'api/lib/class-profile.mjs'), path.join(lam, 'fn/lib/class-profile.mjs'));
   fs.copyFileSync(path.join(root, 'src/content/teach.js'), path.join(lam, 'src/content/teach.js'));
   const oldRoot = process.env.LAMBDA_TASK_ROOT, oldKey = process.env.GEMINI_API_KEY;
   process.env.LAMBDA_TASK_ROOT = lam; delete process.env.GEMINI_API_KEY;
