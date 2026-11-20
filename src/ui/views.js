@@ -12,6 +12,7 @@ function render(){ $('screen').innerHTML = VIEWS[S.screen](); if(AFTER[S.screen]
    PP/RN/etc. read back NULL immediately after playGame() without this
    exclusion — see test/shell-integration.test.js. */
 function go(s){
+  if(typeof stopOnlineSpeech === 'function') stopOnlineSpeech(); // prevent narration from a departed screen
   arrivalStop();
   stopListening();      // a recognizer still listening must not fire against the screen being left
   selfListenReset();    // stop/discard any in-flight self-listen clip — it must never outlive the reading screen
