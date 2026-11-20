@@ -195,6 +195,8 @@ export function report(r){
   for(const x of [...(r.tried || []), ...((r.repair && r.repair.tried) || [])]) if(x.tokens){ const u = used[x.model] = used[x.model] || { in: 0, out: 0 }; u.in += x.tokens.in; u.out += x.tokens.out; }
   if(Object.keys(used).length) L.push(`Tokens used: ${Object.entries(used).map(([m, u]) => `${m} ${u.in} in / ${u.out} out`).join('; ')}  `);
   if(r.rechecked) L.push(`_Checked again on ${r.rechecked} by today's checker (the same drafts, no new call to Gemini)._  `);
+  // a person's edits to the saved drafts, kept in raw.json so every recheck still says so
+  if(Array.isArray(r.handEdits) && r.handEdits.length) L.push('', '## Edited by hand', '', ...r.handEdits.map(e => `- ${e}`));
   L.push('');
   const why = {};
   r.drafts.forEach(x => (x.first.errors || []).forEach(e => { const k = e.replace(/\d+/g, 'N').replace(/"[^"]*"/g, '"…"').slice(0, 90); why[k] = (why[k] || 0) + 1; }));

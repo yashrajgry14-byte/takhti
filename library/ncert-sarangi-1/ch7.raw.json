@@ -1562,5 +1562,10 @@
       "verdict": "repaired"
     }
   ],
-  "rechecked": "2026-11-20T09:22:59.641Z"
+  "rechecked": "2026-11-20T09:40:56.720Z",
+  "handEdits": [
+    "Skills: Gemini tagged both kept lessons `h1-read` (reading a sentence); retagged in the drafts (`skill` and `skillId`, draft and repair) — rhyming words → `read1`, letters त, घ, ड़ → `read2` — then `--recheck` (20 Nov).",
+    "Appu's lines: \"मैं भूल गई\" → \"मैं भूल गया\" (Teach Appu: Appu is a boy).",
+    "\"कैसे पता चलूँ\" → \"कैसे पता करूँ\" (on the checker's SYL_HI_WATCH list)."
+  ]
 }
