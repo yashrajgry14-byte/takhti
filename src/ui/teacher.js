@@ -58,6 +58,7 @@ function teacherHTML(){
   return `
   <button class="back" onclick="go('parent')">← ${t('back')}</button>
   <div class="display" style="font-size:22px;margin:4px 0">🧑‍🏫 ${hi?'शिक्षकों के लिए':'For teachers'}</div>
+  ${typeof classAuthHTML === 'function' ? classAuthHTML() : ''}
   <div class="muted" style="font-size:12.5px">${hi
     ? 'इस फ़ोन पर कक्षा कोड से जुड़े बच्चे, और दूसरे फ़ोनों के वे बच्चे जिनके माता-पिता ने सिंक चालू किया या प्रगति कोड भेजा।'
     : 'Children on this phone linked to the class code, plus children on other phones whose parent switched sync on or sent a progress code.'}</div>
