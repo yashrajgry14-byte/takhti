@@ -48,6 +48,10 @@ function teacherHTML(){
     return '<button class="back" onclick="go(\'parent\')">← Back</button><h3>Teacher account required</h3>'+
       (typeof classAuthHTML === 'function' ? classAuthHTML() : '<p>Sign in to access class data.</p>');
   const code = teacherCode();
+  if(code && !CLASS_AUTH.classes.includes(code))
+    return '<button class="back" onclick="go(\'parent\')">← Back</button>'+
+      '<h3>Choose an assigned class</h3>'+classAuthHTML()+
+      CLASS_AUTH.classes.map(c=>'<button class="btn" onclick="teacherSetCode(\''+attr(c)+'\')">'+attr(c)+'</button>').join('');
   const roster = code ? teacherRoster(code) : [];
   const skillId = S.ctx.tskill || '';
   const results = skillId && roster.length ? tDiagnose([skillId], roster, code) : [];
@@ -215,7 +219,7 @@ function demoOff(){ demoRemove(); render(); }
 
 function teacherSetCode(v){
   const code = (v || '').trim().toUpperCase();
-  if(!/^[A-Z0-9]{6}$/.test(code)) return;
+  if(!/^[A-Z0-9]{6}$/.test(code) || !classAuthToken() || CLASS_AUTH.role !== 'teacher' || !CLASS_AUTH.classes.includes(code)) return;
   S.ctx.tcode = code; S.ctx.tskill = '';
   render();
 }
