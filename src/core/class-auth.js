@@ -1,6 +1,19 @@
 /* Verified teacher/guardian sign-in for cloud class sync. A local parent PIN
    remains a screen lock only; the server always verifies Firebase ID tokens.
    Credentials are never saved in Takhti's profile/localStorage. */
+function classAuthClearClassCache(){
+  // Class mirrors can hold classmates' educational records. Never allow a
+  // previous school's cached data to survive across verified user sessions.
+  try{
+    const keys=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k && k.startsWith('takhti-class-')) keys.push(k);
+    }
+    for(const k of keys) localStorage.removeItem(k);
+  }catch(e){ /* inaccessible localStorage: cannot expose its contents */ }
+}
+classAuthClearClassCache(); // anonymous page loads must never show old class rosters
 let CLASS_AUTH = { token:'',email:'',role:'',classes:[],expires:0,apiKey:'',loading:false,error:'' };
 async function classAuthConfig(){
   if(CLASS_AUTH.apiKey) return CLASS_AUTH.apiKey;
@@ -26,12 +39,13 @@ async function classAuthSignIn(){
     const roleResponse=await fetch('/api/class-identity',{headers:{Authorization:'Bearer '+d.idToken},cache:'no-store'});
     const role=await roleResponse.json();
     if(!roleResponse.ok || !['teacher','guardian'].includes(role.role)) throw new Error(role.error||'Your school has not approved this account');
+    classAuthClearClassCache();
     CLASS_AUTH.token=d.idToken; CLASS_AUTH.email=d.email||email; CLASS_AUTH.role=role.role; CLASS_AUTH.classes=role.classes||[];
     CLASS_AUTH.expires=Date.now()+Math.max(0,Number(d.expiresIn)||3600)*1000;
   }catch(e){CLASS_AUTH.error=e.message||'Sign-in unavailable';}
   finally{CLASS_AUTH.loading=false;render();}
 }
-function classAuthSignOut(){CLASS_AUTH={token:'',email:'',role:'',classes:[],expires:0,apiKey:CLASS_AUTH.apiKey,loading:false,error:''};render();}
+function classAuthSignOut(){classAuthClearClassCache();CLASS_AUTH={token:'',email:'',role:'',classes:[],expires:0,apiKey:CLASS_AUTH.apiKey,loading:false,error:''};render();}
 function classAuthToken(){return CLASS_AUTH.token && Date.now()+10000<CLASS_AUTH.expires?CLASS_AUTH.token:null;}
 function classAuthHTML(){
   if(classAuthToken()) return '<div class="paper"><b>'+attr(CLASS_AUTH.role)+' account: '+attr(CLASS_AUTH.email)+'</b><p class="muted">Verified access is checked by the school server for every class request.</p><button class="btn ghost" onclick="classAuthSignOut()">Sign out</button></div>';
