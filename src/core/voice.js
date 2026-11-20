@@ -93,38 +93,61 @@ async function playRecorded(text, lang, onDone){
   }
 }
 
-/* The live backup for a line the offline pack lacks: the voice server's
-   POST /reading/tts, which speaks only through the backup provider
-   (Sarvam / ElevenLabs — voice/speech.js). The order at run time is the
-   pack → this → the phone's own voice. A short line, online, with a voice
-   server; never longer than LIVE_TTS_MS to answer, so nothing waits on it.
-   Returns true if it played. */
-const LIVE_TTS = new Map(); // text|lang|pace -> data URL, for this session
-const LIVE_TTS_MS = 2500;
-async function playLive(text, lang, onDone, pace){
-  if(!(typeof TALK_URL !== 'undefined' && TALK_URL && S.online) || !text || String(text).length > 160) return false;
-  const k = `${text}|${lang}|${pace || 0.95}`;
+/* Always-online speech: Google Cloud TTS first, then the existing
+   Sarvam / ElevenLabs voice server, then existing pre-recorded narration.
+   Never silently select a device voice (Microsoft Heera etc).
+   Audio is cached in memory by language and text for this session. */
+const LIVE_TTS = new Map();
+const LIVE_TTS_MS = 8500;
+let LIVE_AUDIO = null;
+let SPEECH_REQUEST = 0;
+function stopOnlineSpeech(){
+  SPEECH_REQUEST++;
+  if(LIVE_AUDIO){ LIVE_AUDIO.onended = null; LIVE_AUDIO.onerror = null; LIVE_AUDIO.pause(); LIVE_AUDIO = null; }
+  if(VOICE_EL){ VOICE_EL.onended = null; VOICE_EL.onerror = null; VOICE_EL.pause(); }
+}
+async function requestSpeech(url, text, lang, pace, timeoutMs){
+  const ctl = new AbortController();
+  const timer = setTimeout(()=>ctl.abort(),timeoutMs);
   try{
-    let src = LIVE_TTS.get(k);
-    if(!src){
-      const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      const to = setTimeout(() => ctl && ctl.abort(), LIVE_TTS_MS);
-      const res = await fetch(TALK_URL + '/reading/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl ? ctl.signal : undefined,
-        body: JSON.stringify({ text, lang, pace: pace || 0.95 }) });
-      clearTimeout(to);
-      const d = await res.json().catch(() => ({}));
-      if(!res.ok || !d.audio) return false;
-      src = 'data:' + (d.mime || 'audio/mpeg') + ';base64,' + d.audio;
-      LIVE_TTS.set(k, src);
-      if(LIVE_TTS.size > 200) LIVE_TTS.delete(LIVE_TTS.keys().next().value);
-    }
-    const a = new Audio(src);
-    a.onended = () => onDone && onDone(); a.onerror = () => onDone && onDone();
+    const res = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+      signal:ctl.signal,body:JSON.stringify({text,lang,pace})});
+    if(!res.ok) return null;
+    const d = await res.json();
+    if(!d.audio || !/^audio\/(mpeg|mp3|wav|ogg)$/.test(d.mime || 'audio/mpeg')) return null;
+    return {src:'data:'+(d.mime || 'audio/mpeg')+';base64,'+d.audio,provider:d.provider || 'voice server'};
+  }finally{clearTimeout(timer);}
+}
+async function playOnlineSource(url,text,lang,onDone,pace,requestId){
+  const key = url+'|'+lang+'|'+text;
+  let data = LIVE_TTS.get(key);
+  if(!data){
+    try{data = await requestSpeech(url,text,lang,pace,LIVE_TTS_MS);}catch(e){return false;}
+    if(!data) return false;
+    LIVE_TTS.set(key,data);
+    if(LIVE_TTS.size>120) LIVE_TTS.delete(LIVE_TTS.keys().next().value);
+  }
+  if(requestId !== SPEECH_REQUEST) return true; // superseded by newer speech
+  try{
+    const a = new Audio(data.src);
+    LIVE_AUDIO = a;
+    let finished = false;
+    const finish = () => { if(finished || requestId !== SPEECH_REQUEST) return;
+      finished = true; if(LIVE_AUDIO===a) LIVE_AUDIO=null; if(onDone) onDone(); };
+    a.onended = finish;
+    a.onerror = finish;
+    a.playbackRate = 1; // Google generates natural pace; no pitch distortion
     await a.play();
-    log(2, `Voice · a line the offline pack lacks, said live by the backup voice (${src.slice(5, 15)})`);
+    log(0,'TTS · '+data.provider);
     return true;
   }catch(e){ return false; }
 }
-/* Is there an offline pack for this language at all? (A build without one
-   speaks with the phone's voice rather than going online for every line.) */
-function voicePackLoaded(lang){ return !!(VOICE_MANIFEST[lang] && Object.keys(VOICE_MANIFEST[lang]).length); }
+async function playLive(text,lang,onDone,pace,requestId){
+  if(!text || !String(text).trim() || String(text).length>240) return false;
+  return playOnlineSource('/api/tts',String(text),lang,onDone,pace,requestId);
+}
+async function playBackup(text,lang,onDone,pace,requestId){
+  if(!(typeof TALK_URL!=='undefined' && TALK_URL) || !text || String(text).length>160) return false;
+  return playOnlineSource(TALK_URL+'/reading/tts',String(text),lang,onDone,pace,requestId);
+}
+function voicePackLoaded(lang){return !!(VOICE_MANIFEST[lang] && Object.keys(VOICE_MANIFEST[lang]).length);}
