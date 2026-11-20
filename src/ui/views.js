@@ -647,6 +647,7 @@ parent(){
       ? 'कोई स्ट्रीक नहीं, कोई दबाव नहीं। तख़्ती बच्चों को याद दिलाने वाले संदेश नहीं भेजती।'
       : 'No streaks, no daily pressure. Takhti does not send reminders to children.'}</div>
   </div>
+  ${typeof classAuthHTML === 'function' ? classAuthHTML() : ''}
   <button class="btn ghost" style="margin-top:12px" onclick="go('teacher')">🧑‍🏫 ${S.lang==='hi'?'शिक्षकों के लिए →':'For teachers →'}</button>`;
 }
 };
