@@ -2,15 +2,15 @@
 
 2026-11-15T12:09:24.729Z · c1 (early, numbers to 20) · Gemini model **gemini-3.8-flash** · chapter "Two Little Hands"
 
-**0 passed first time · 3 fixed by the repair round · 1 not used** (of 4)  
+**2 passed first time · 1 fixed by the repair round · 1 not used** (of 4)  
 Draft took 0 s · repair took 0 s (gemini-3.8-flash)
 
 Models for the draft: gemini-3.8-flash batch (0 s, 14872 in / 14988 out tokens)  
 Models for the repair: gemini-3.8-flash batch (0 s, 10827 in / 18743 out tokens)  
 Tokens used: gemini-3.8-flash 25699 in / 33731 out  
+_Checked again on 2026-11-20T09:46:53.596Z by today's checker (the same drafts, no new call to Gemini)._  
 
 ## What the checker caught first time
-- 2× the lesson needs its aims — N to N things the child will be able to do (aim N: Munni's que
 - 1× the lesson needs its aims — N to N things the child will be able to do (aim N: hint N (en)
 - 1× copies the textbook word for word ("…") — write the idea in your own words and sentences
 - 1× the lesson needs its aims — N to N things the child will be able to do (aim N: the short n
@@ -45,9 +45,9 @@ skill: e1-read · source: Page 2, 7
 
 **Aims kept (what the teacher approves):**
 - The child can tell that we smell with our nose.  ·  बच्चा बता सकता है कि हम नाक से सूँघते हैं।  
-  Munni forgets: "I forgot! What do we do with our nose?  ·  मैं भूल गया! हम अपनी नाक से क्या करते हैं?"
+  Appu forgets: "I forgot! What do we do with our nose?  ·  मैं भूल गया! हम अपनी नाक से क्या करते हैं?"
 - The child can tell that we hear with our ears.  ·  बच्चा बता सकता है कि हम कानों से सुनते हैं।  
-  Munni forgets: "I forgot! What do we do with our ears?  ·  मैं भूल गया! हम अपने कानों से क्या करते हैं?"
+  Appu forgets: "I forgot! What do we do with our ears?  ·  मैं भूल गया! हम अपने कानों से क्या करते हैं?"
 
 **The lesson:**
 1. intro — "Our body has many parts. Let us read.  ·  हमारे शरीर के कई अंग हैं। आओ पढ़ें।"
@@ -57,7 +57,7 @@ skill: e1-read · source: Page 2, 7
   _teacher note:_ Children mix up smelling with hearing from the same story.  ·  बच्चे उसी कहानी में आए सुनने के काम से उलझ जाते हैं।
 4. readline — "Read this line out loud.  ·  इस पंक्ति को ज़ोर से पढ़ो।"
 5. **Q:** What do we do with our ears?  ·  हम ears से क्या करते हैं?  
-  options: smell / **hear ✓**  ·  smell / hear  
+  options: **hear ✓** / smell  ·  hear / smell  
   _teacher note:_ Children confuse the job of ears with the job of the nose.  ·  बच्चे कानों के काम को नाक के काम के साथ मिला देते हैं।
 6. win — "We smell with the nose and hear with ears.  ·  हम नाक से सूँघते हैं और कानों से सुनते हैं।"
 
@@ -93,9 +93,9 @@ skill: u-sight · source: Page 2
 
 **Aims kept (what the teacher approves):**
 - The child can read the sight word one.  ·  बच्चा sight word one पढ़ सकता है।  
-  Munni forgets: "I forgot! How do I read the word o-n-e?  ·  मैं भूल गया! o-n-e शब्द को कैसे पढ़ूँ?"
+  Appu forgets: "I forgot! How do I read the word o-n-e?  ·  मैं भूल गया! o-n-e शब्द को कैसे पढ़ूँ?"
 - The child can read the sight word to.  ·  बच्चा sight word to पढ़ सकता है।  
-  Munni forgets: "I forgot! How do I read the word t-o?  ·  मैं भूल गया! t-o शब्द को कैसे पढ़ूँ?"
+  Appu forgets: "I forgot! How do I read the word t-o?  ·  मैं भूल गया! t-o शब्द को कैसे पढ़ूँ?"
 
 **The lesson:**
 1. intro — "Let us read words for our body.  ·  आओ अपने शरीर के लिए शब्द पढ़ें।"
@@ -109,17 +109,38 @@ skill: u-sight · source: Page 2
   _teacher note:_ Children confuse the sight word to with the number word two.  ·  बच्चे sight word to को संख्या शब्द two के साथ मिला देते हैं।
 6. win — "One head and two legs to walk.  ·  एक सिर और चलने के लिए दो पैर।"
 
-## 3. Sounds of a and b  ·  a और b की आवाज़ें — REPAIRED
+## 3. Sounds of a and b  ·  a और b की आवाज़ें — PASSED
 skill: e1-decode · source: Page 11, 13
 
 *First draft*
 
+**Aims kept (what the teacher approves):**
+- The child can identify the first sound of a word starting with a.  ·  बच्चा a से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
+  Appu forgets: "I forgot! How do I find the first sound of ant?  ·  मैं भूल गया! ant की पहली आवाज़ कैसे ढूँढूँ?"
+- The child can identify the first sound of a word starting with b.  ·  बच्चा b से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
+  Appu forgets: "I forgot! How do I find the first sound of bag?  ·  मैं भूल गया! bag की पहली आवाज़ कैसे ढूँढूँ?"
+
+**The lesson:**
+1. intro — "Let us listen to the first sounds.  ·  आओ पहली आवाज़ों को ध्यान से सुनें।"
+2. passage: "An ant is on a leaf. A boy has a bag. The bag is big.  ·  एक ant पत्ती पर है। एक boy के पास bag है। bag बड़ा है।"
+3. word — "Look at this word. Read it.  ·  इस शब्द को देखो और पढ़ो।"
+4. **Q:** What is the first sound of ant?  ·  ant की पहली आवाज़ क्या है?  
+  options: **a ✓** / e  ·  a / e  
+  _teacher note:_ Children confuse the short vowel sounds of a and e.  ·  बच्चे a और e की छोटी स्वर ध्वनियों में उलझ जाते हैं।
+5. word — "Look at this word. Read it.  ·  इस शब्द को देखो और पढ़ो।"
+6. **Q:** What is the first sound of bag?  ·  bag की पहली आवाज़ क्या है?  
+  options: d / **b ✓**  ·  d / b  
+  _teacher note:_ Children mix up b and d, which look and sound similar.  ·  बच्चे b और d में उलझते हैं, जो देखने और सुनने में मिलते-जुलते हैं।
+7. win — "Ant starts with a, bag starts with b.  ·  Ant a से शुरू होता है, bag b से।"
+
+*After the repair round*
+
 **Why it failed:**
-- the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says "ant"))
+- the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Appu's question says "this word" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?')
 
 **Aims dropped:**
-- aim 1: Munni's question (en) already gives the explanation (it says "ant")
-- aim 2: Munni's question (en) already gives the explanation (it says "bag")
+- aim 1: Appu's question says "this word" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?'
+- aim 2: Appu's question says "here" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?'
 
 **The lesson:**
 1. intro — "Let us listen to the first sounds.  ·  आओ पहली आवाज़ों को ध्यान से सुनें।"
@@ -134,38 +155,38 @@ skill: e1-decode · source: Page 11, 13
   _teacher note:_ Children mix up b and d, which look and sound similar.  ·  बच्चे b और d में उलझते हैं, जो देखने और सुनने में मिलते-जुलते हैं।
 7. win — "Ant starts with a, bag starts with b.  ·  Ant a से शुरू होता है, bag b से।"
 
-*After the repair round*
-
-**Aims kept (what the teacher approves):**
-- The child can identify the first sound of a word starting with a.  ·  बच्चा a से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
-  Munni forgets: "I forgot! How do I find the first sound of this word?  ·  मैं भूल गया! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
-- The child can identify the first sound of a word starting with b.  ·  बच्चा b से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
-  Munni forgets: "I forgot! How do I know the first sound here?  ·  मैं भूल गया! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
-
-**The lesson:**
-1. intro — "Let us listen to the first sounds.  ·  आओ पहली आवाज़ों को ध्यान से सुनें।"
-2. passage: "An ant is on a leaf. A boy has a bag. The bag is big.  ·  एक ant पत्ती पर है। एक boy के पास bag है। bag बड़ा है।"
-3. word — "Look at this word. Read it.  ·  इस शब्द को देखो और पढ़ो।"
-4. **Q:** What is the first sound of ant?  ·  ant की पहली आवाज़ क्या है?  
-  options: e / **a ✓**  ·  e / a  
-  _teacher note:_ Children confuse the short vowel sounds of a and e.  ·  बच्चे a और e की छोटी स्वर ध्वनियों में उलझ जाते हैं।
-5. word — "Look at this word. Read it.  ·  इस शब्द को देखो और पढ़ो।"
-6. **Q:** What is the first sound of bag?  ·  bag की पहली आवाज़ क्या है?  
-  options: d / **b ✓**  ·  d / b  
-  _teacher note:_ Children mix up b and d, which look and sound similar.  ·  बच्चे b और d में उलझते हैं, जो देखने और सुनने में मिलते-जुलते हैं।
-7. win — "Ant starts with a, bag starts with b.  ·  Ant a से शुरू होता है, bag b से।"
-
-## 4. Sounds of d and e  ·  d और e की आवाज़ें — REPAIRED
+## 4. Sounds of d and e  ·  d और e की आवाज़ें — PASSED
 skill: e1-decode · source: Page 11, 13
 
 *First draft*
 
+**Aims kept (what the teacher approves):**
+- The child can identify the first sound of a word starting with d.  ·  बच्चा d से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
+  Appu forgets: "I forgot! How do I find the first sound of dog?  ·  मैं भूल गया! dog की पहली आवाज़ कैसे ढूँढूँ?"
+- The child can identify the first sound of a word starting with e.  ·  बच्चा e से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
+  Appu forgets: "I forgot! How do I find the first sound of egg?  ·  मैं भूल गया! egg की पहली आवाज़ कैसे ढूँढूँ?"
+
+**The lesson:**
+1. intro — "Let us find more first sounds.  ·  आओ और भी पहली आवाज़ें ढूँढें।"
+2. passage: "A dog runs to a den. The dog sees an egg.  ·  एक dog den की ओर दौड़ता है। dog एक egg देखता है।"
+3. word — "Look at this word. Read it.  ·  इस शब्द को देखो और पढ़ो।"
+4. **Q:** What is the first sound of dog?  ·  dog की पहली आवाज़ क्या है?  
+  options: b / **d ✓**  ·  b / d  
+  _teacher note:_ Children confuse the mirror letters and sounds of d and b.  ·  बच्चे d और b की उलटी आकृतियों और ध्वनियों में उलझ जाते हैं।
+5. word — "Look at this word. Read it.  ·  इस शब्द को देखो और पढ़ो।"
+6. **Q:** What is the first sound of egg?  ·  egg की पहली आवाज़ क्या है?  
+  options: **e ✓** / a  ·  e / a  
+  _teacher note:_ Children confuse the short vowel sounds of e and a.  ·  बच्चे e और a के स्वरों में भ्रमित हो जाते हैं।
+7. win — "Dog starts with d, egg starts with e.  ·  Dog d से शुरू होता है, egg e से।"
+
+*After the repair round*
+
 **Why it failed:**
-- the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says "dog"))
+- the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Appu's question says "this word" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?')
 
 **Aims dropped:**
-- aim 1: Munni's question (en) already gives the explanation (it says "dog")
-- aim 2: Munni's question (en) already gives the explanation (it says "egg")
+- aim 1: Appu's question says "this word" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?'
+- aim 2: Appu's question says "here" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?'
 
 **The lesson:**
 1. intro — "Let us find more first sounds.  ·  आओ और भी पहली आवाज़ें ढूँढें।"
@@ -177,26 +198,5 @@ skill: e1-decode · source: Page 11, 13
 5. word — "Look at this word. Read it.  ·  इस शब्द को देखो और पढ़ो।"
 6. **Q:** What is the first sound of egg?  ·  egg की पहली आवाज़ क्या है?  
   options: **e ✓** / a  ·  e / a  
-  _teacher note:_ Children confuse the short vowel sounds of e and a.  ·  बच्चे e और a के स्वरों में भ्रमित हो जाते हैं।
-7. win — "Dog starts with d, egg starts with e.  ·  Dog d से शुरू होता है, egg e से।"
-
-*After the repair round*
-
-**Aims kept (what the teacher approves):**
-- The child can identify the first sound of a word starting with d.  ·  बच्चा d से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
-  Munni forgets: "I forgot! How do I find the first sound of this word?  ·  मैं भूल गया! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
-- The child can identify the first sound of a word starting with e.  ·  बच्चा e से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।  
-  Munni forgets: "I forgot! How do I know the first sound here?  ·  मैं भूल गया! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
-
-**The lesson:**
-1. intro — "Let us find more first sounds.  ·  आओ और भी पहली आवाज़ें ढूँढें।"
-2. passage: "A dog runs to a den. The dog sees an egg.  ·  एक dog den की ओर दौड़ता है। dog एक egg देखता है।"
-3. word — "Look at this word. Read it.  ·  इस शब्द को देखो और पढ़ो।"
-4. **Q:** What is the first sound of dog?  ·  dog की पहली आवाज़ क्या है?  
-  options: b / **d ✓**  ·  b / d  
-  _teacher note:_ Children confuse the mirror letters and sounds of d and b.  ·  बच्चे d और b की उलटी आकृतियों और ध्वनियों में उलझ जाते हैं।
-5. word — "Look at this word. Read it.  ·  इस शब्द को देखो और पढ़ो।"
-6. **Q:** What is the first sound of egg?  ·  egg की पहली आवाज़ क्या है?  
-  options: a / **e ✓**  ·  a / e  
   _teacher note:_ Children confuse the short vowel sounds of e and a.  ·  बच्चे e और a के स्वरों में भ्रमित हो जाते हैं।
 7. win — "Dog starts with d, egg starts with e.  ·  Dog d से शुरू होता है, egg e से।"

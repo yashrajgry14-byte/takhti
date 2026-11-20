@@ -5,8 +5,9 @@
     "en": "Two Little Hands",
     "hi": "दो छोटे हाथ"
   },
-  "built": "2026-11-15T12:09:24.729Z",
+  "built": "2026-11-20T09:46:53.596Z",
   "model": "gemini-3.8-flash",
+  "rechecked": "2026-11-20T09:46:53.596Z",
   "lessons": [
     {
       "band": "early",
@@ -162,14 +163,14 @@
             "hi": "हम ears से क्या करते हैं?"
           },
           "opts": [
-            "smell",
-            "hear"
+            "hear",
+            "smell"
           ],
           "hiOpts": [
-            "smell",
-            "hear"
+            "hear",
+            "smell"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children confuse the job of ears with the job of the nose.",
             "hi": "बच्चे कानों के काम को नाक के काम के साथ मिला देते हैं।"
@@ -205,7 +206,7 @@
       "source": "Page 11, 13",
       "aims": [
         {
-          "id": "s1hj7t2p.0",
+          "id": "s17na79d.0",
           "kind": "explain",
           "short": {
             "en": "First sound a",
@@ -216,13 +217,13 @@
             "hi": "बच्चा a से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
           },
           "forget": {
-            "en": "I forgot! How do I find the first sound of this word?",
-            "hi": "मैं भूल गया! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
+            "en": "I forgot! How do I find the first sound of ant?",
+            "hi": "मैं भूल गया! ant की पहली आवाज़ कैसे ढूँढूँ?"
           },
           "hints": [
             {
-              "en": "Say this word slowly. What sound comes out first?",
-              "hi": "यह शब्द धीरे से बोलो। सबसे पहले क्या आवाज़ निकलती है?"
+              "en": "Say ant slowly. What sound comes out first?",
+              "hi": "ant धीरे से बोलो। सबसे पहले क्या आवाज़ निकलती है?"
             },
             {
               "en": "Does it start like axe and apple?",
@@ -234,19 +235,16 @@
               "en": "the word ant starts with the letter sound a",
               "hi": "ant शब्द a की आवाज़ से शुरू होता है",
               "words": [
-                "a",
                 "letter a",
-                "ant",
                 "starts with a",
                 "a sound",
-                "ए",
-                "shuru"
+                "ए"
               ]
             }
           ]
         },
         {
-          "id": "s1hj7t2p.1",
+          "id": "s17na79d.1",
           "kind": "explain",
           "short": {
             "en": "First sound b",
@@ -257,13 +255,13 @@
             "hi": "बच्चा b से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
           },
           "forget": {
-            "en": "I forgot! How do I know the first sound here?",
-            "hi": "मैं भूल गया! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
+            "en": "I forgot! How do I find the first sound of bag?",
+            "hi": "मैं भूल गया! bag की पहली आवाज़ कैसे ढूँढूँ?"
           },
           "hints": [
             {
-              "en": "Say this word slowly. What sound do your lips make first?",
-              "hi": "यह शब्द धीरे से बोलो। तुम्हारे होंठ पहले कैसी आवाज़ निकालते हैं?"
+              "en": "Say bag slowly. What sound do your lips make first?",
+              "hi": "bag धीरे से बोलो। तुम्हारे होंठ पहले कैसी आवाज़ निकालते हैं?"
             },
             {
               "en": "Does it start like boy and bee?",
@@ -275,13 +273,10 @@
               "en": "the word bag starts with the letter sound b",
               "hi": "bag शब्द b की आवाज़ से शुरू होता है",
               "words": [
-                "b",
                 "letter b",
-                "bag",
                 "starts with b",
                 "b sound",
-                "बी",
-                "shuru"
+                "बी"
               ]
             }
           ]
@@ -319,14 +314,14 @@
             "hi": "ant की पहली आवाज़ क्या है?"
           },
           "opts": [
-            "e",
-            "a"
+            "a",
+            "e"
           ],
           "hiOpts": [
-            "e",
-            "a"
+            "a",
+            "e"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children confuse the short vowel sounds of a and e.",
             "hi": "बच्चे a और e की छोटी स्वर ध्वनियों में उलझ जाते हैं।"
@@ -375,7 +370,7 @@
       ],
       "lang": "en",
       "subject": "read",
-      "id": "sch-1hj7t2p"
+      "id": "sch-17na79d"
     },
     {
       "band": "early",
@@ -393,7 +388,7 @@
       "source": "Page 11, 13",
       "aims": [
         {
-          "id": "s1y5e80b.0",
+          "id": "stz0bok.0",
           "kind": "explain",
           "short": {
             "en": "First sound d",
@@ -404,13 +399,13 @@
             "hi": "बच्चा d से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
           },
           "forget": {
-            "en": "I forgot! How do I find the first sound of this word?",
-            "hi": "मैं भूल गया! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
+            "en": "I forgot! How do I find the first sound of dog?",
+            "hi": "मैं भूल गया! dog की पहली आवाज़ कैसे ढूँढूँ?"
           },
           "hints": [
             {
-              "en": "Say this word slowly to yourself. What sound comes first?",
-              "hi": "इस शब्द को मन में धीरे से बोलो। पहले कौन सी आवाज़ आती है?"
+              "en": "Say dog slowly to yourself. What sound comes first?",
+              "hi": "dog मन में धीरे से बोलो। पहले कौन सी आवाज़ आती है?"
             },
             {
               "en": "Does it start like den and door?",
@@ -422,19 +417,16 @@
               "en": "the word dog starts with the letter sound d",
               "hi": "dog शब्द d की आवाज़ से शुरू होता है",
               "words": [
-                "d",
                 "letter d",
-                "dog",
                 "starts with d",
                 "d sound",
-                "डी",
-                "shuru"
+                "डी"
               ]
             }
           ]
         },
         {
-          "id": "s1y5e80b.1",
+          "id": "stz0bok.1",
           "kind": "explain",
           "short": {
             "en": "First sound e",
@@ -445,13 +437,13 @@
             "hi": "बच्चा e से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
           },
           "forget": {
-            "en": "I forgot! How do I know the first sound here?",
-            "hi": "मैं भूल गया! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
+            "en": "I forgot! How do I find the first sound of egg?",
+            "hi": "मैं भूल गया! egg की पहली आवाज़ कैसे ढूँढूँ?"
           },
           "hints": [
             {
-              "en": "Say this word slowly. What sound do you hear at the start?",
-              "hi": "यह शब्द धीरे से बोलो। शुरुआत में कौन सी आवाज़ सुनते हो?"
+              "en": "Say egg slowly. What sound do you hear at the start?",
+              "hi": "egg धीरे से बोलो। शुरुआत में कौन सी आवाज़ सुनते हो?"
             },
             {
               "en": "Does it start like elephant and ear?",
@@ -463,13 +455,10 @@
               "en": "the word egg starts with the letter sound e",
               "hi": "egg शब्द e की आवाज़ से शुरू होता है",
               "words": [
-                "e",
                 "letter e",
-                "egg",
                 "starts with e",
                 "e sound",
-                "ई",
-                "shuru"
+                "ई"
               ]
             }
           ]
@@ -538,14 +527,14 @@
             "hi": "egg की पहली आवाज़ क्या है?"
           },
           "opts": [
-            "a",
-            "e"
+            "e",
+            "a"
           ],
           "hiOpts": [
-            "a",
-            "e"
+            "e",
+            "a"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children confuse the short vowel sounds of e and a.",
             "hi": "बच्चे e और a के स्वरों में भ्रमित हो जाते हैं।"
@@ -563,7 +552,7 @@
       ],
       "lang": "en",
       "subject": "read",
-      "id": "sch-1y5e80b"
+      "id": "sch-tz0bok"
     }
   ],
   "notUsed": [

@@ -89,7 +89,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v87` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v88` (recorded narration lives in a
 separate `takhti-audio-v2`, bumped only when a line is rendered again in a new
 voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
@@ -473,6 +473,15 @@ child sees.
   the `ideas` an explanation needs; `teachCleanAims()` — see **Teach
   Appu**): a word both Appu's question and the aim's point say is the
   topic, not the explanation, and comes out of the explanation words first;
+  so does the word Appu's question names (quoted, or an English word in Latin
+  letters inside the Hindi question — "ant किस आवाज़ से…": naming it is no
+  giveaway); an idea word that is one Latin letter, a little English word or
+  "shuru" on its own (`teachLoneWord()`: "a", "the", "is" — the article in
+  "maybe it is a dog" matched the idea word "a") is dropped, a phrase with it
+  ("starts with a") kept, and an idea left with none drops its aim with a
+  reason; Appu's question that says "this word", "this one", "here", "यह
+  शब्द" or "इस शब्द" without naming the word is dropped ("name the word Appu
+  is asking about", `teachVagueForget()`; the draft and repair prompts say so);
   an aim that fails its check is dropped and named (`aimErrors`, a giveaway
   naming the words it says), a lesson left with none is rejected; the repair
   round gets every dropped aim's reason (`sylRepairReasons()`), and after it a
@@ -497,8 +506,14 @@ child sees.
   flagged for the teacher (`sylAimGaps()`, not a rejection), and a repair
   that came back unchanged is marked. A failure goes back to
   Gemini **once** with its reasons; still failing → shown as "not used",
-  with why. The right answer is shuffled (stable, by content); the id is a
-  hash of the content, so a lesson edited later gets a different id.
+  with why. The right answer is shuffled (stable, by content: each
+  question's slot from the id, so re-checking a stored lesson gives the same
+  order); with two or more questions the right answers are never all in one
+  slot — if every later one lands where the first did, the last is flipped
+  (Mridang ch1 had 6 of 6 on the second button: the hash's low bit follows
+  the beat's index, so evenly spaced questions all matched). The id is a
+  hash of the content made before the shuffle, so the order never moves it;
+  a lesson edited later gets a different id.
 - **The teacher approves the aims** (`sylDraftHTML()`: the aims' points
   first, *Approve these aims*, Appu's questions for them folded under
   "Afterwards Appu forgets these", any aim left out and why, then
@@ -554,7 +569,9 @@ network and no waiting in the week.
   drafts and the report beside it. A chapter already built is skipped (a
   run cut short carries on); `--force --only ch5` builds one again;
   `--import ch5 syllabus-run/raw.json` turns a try-syllabus run into a
-  chapter; `--recheck` checks every saved draft again with today's checker.
+  chapter; `--recheck` checks every saved draft again with today's checker;
+  `--no-bundle` writes the chapters but leaves `src/content/library.js` as it
+  was, so a build can be read before the app changes (`--bundle` later).
   Neither of the last two calls Gemini. A whole book: `--scan` lists every
   chapter PDF in the folder in book.json in natural order (01, 02, 10),
   front matter and answer files left out (NCERT's `…ps.pdf`, `…an.pdf`), a
@@ -660,7 +677,14 @@ network and no waiting in the week.
   bag and of dog / egg (a / e, b / d: the real mix-ups). "One and to" (the
   sight words) wasn't used: its answer "to" wasn't in what the child read.
   The four live builds before it found the English checks, the book-words
-  check and the "which word is on the card" rule above.
+  check and the "which word is on the card" rule above. Re-checked 20 Nov
+  (no Gemini call) after a review: the two sound lessons' first drafts now
+  pass and replace the repaired ones (new ids — a class that approved them
+  approves again). Those drafts named the word ("How do I find the first
+  sound of ant?") and had been dropped as giving it away, so the repair round
+  wrote "this word" instead. Their idea words are now "letter a", "starts
+  with a", "a sound", ए (no lone "a", no "ant"). Still 3 lessons; the right
+  answers are now mixed between the two buttons.
 - **In the library now**: NCERT *Maths Mela* Class 3 — 42 lessons across
   all 14 chapters (built 13–15 Nov, all drafted by flash-lite). Chapter 13
   (time) was rebuilt with clocks and calendars on 15 Nov: 3 lessons, each
@@ -669,7 +693,9 @@ network and no waiting in the week.
   (another kept 2; two more were busy or a runaway draft and built nothing).
   Chapters 2 and 5 still keep 4 one-question picture lessons each from their
   older builds: the library's two-question rule rejects those on the next
-  rebuild. 12 lessons are still taught only by a sentence to read (measuring, weighing, symmetry, a map; and three in
+  rebuild. A `--recheck` already does (20 Nov: ch2 and ch5 to 0, and
+  ch13 to 4 with "Time Taken" back), so Maths Mela's re-check was not
+  committed: the demo and the library test use ch5's four shape lessons. 12 lessons are still taught only by a sentence to read (measuring, weighing, symmetry, a map; and three in
   chapters 1 and 9 tagged with a reading skill): Takhti has no picture for
   those topics yet, and the teacher is warned on the nine with a maths skill
   (`sylLessonWarnings()`) — the three tagged with a reading skill get no

@@ -31,6 +31,8 @@
    --import <ch> <raw.json>   a try-syllabus run becomes that chapter (no Gemini)
    --recheck         every built chapter checked again by today's checker (no Gemini)
    --bundle          only rewrite src/content/library.js
+   --no-bundle       build or re-check the chapters but leave src/content/library.js
+                     as it is, so the result can be read before the app changes
   --batch           every chapter to build through the Gemini Batch API
                     (half price; the full Flash model, which is too busy
                     live; PDFs up to 50 MB through the Files API). The job
@@ -487,6 +489,7 @@ function args(argv){
     else if(k === '--force') o.force = true;
     else if(k === '--recheck') o.recheck = true;
     else if(k === '--bundle') o.bundleOnly = true;
+    else if(k === '--no-bundle') o.noBundle = true;
     else if(k === '--scan') o.scan = true;
     else if(k === '--batch') o.batch = true;
     else if(k === '--replace') o.replace = true;
@@ -500,7 +503,7 @@ if(process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.met
   const o = args(process.argv.slice(2));
   if(o.help || (!o.book && !o.bundleOnly)){
     console.log('node tools/build-library.mjs --book library/<book> --scan          (list every chapter PDF in the folder)');
-    console.log('node tools/build-library.mjs --book library/<book> [--pdfs folder] [--only ch] [--force] [--recheck] [--import ch raw.json]');
+    console.log('node tools/build-library.mjs --book library/<book> [--pdfs folder] [--only ch] [--force] [--recheck] [--import ch raw.json] [--no-bundle]');
     console.log('node tools/build-library.mjs --book library/<book> --batch [--wait 60] [--only ch] [--force] [--replace]   (half price, through the Batch API)');
     console.log('node tools/build-library.mjs --bundle');
     process.exit(o.help ? 0 : 1);
@@ -516,6 +519,7 @@ if(process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.met
     }
     if(o.book && o.batch) await batchBook(o.book, { ...o, say: s => console.log('· ' + s) });
     else if(o.book) await buildBook(o.book, { ...o, say: s => console.log('· ' + s) });
+    if(o.noBundle && !o.bundleOnly){ console.log('\n--no-bundle: src/content/library.js left as it was — run --bundle when the chapters are right.'); return; }
     const b = bundle();
     console.log(`\nsrc/content/library.js: ${b.books} book(s), ${b.lessons} lesson(s). Bump CACHE in sw.js before you ship it.`);
   })().catch(e => { console.error('\n✗ ' + e.message); process.exit(1); });

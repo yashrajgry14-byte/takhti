@@ -174,6 +174,30 @@ function box(){
     E(`TM.aims.length === 1 && TM.aims[0].hints[0].en === TEACH_NUDGES[0].en && TM.aims[0].hints[1].en === 'Do it twice. What do you see?' && /replaced with a general nudge/.test(TM.fixes[0])`), E(`JSON.stringify(TM)`));
   E(`var TQ = teachCleanAims(${JSON.stringify([{ ...TELLS, forget: { en: 'Do I fold it in half to find the centre?', hi: 'क्या केंद्र के लिए आधा मोड़ूँ?' } }])}, 'sch-t3', { mendHints: true })`);
   check('…but a question that gives the method away is never mended — only hints are', E(`TQ.aims.length === 0 && TQ.fixes.length === 0`), E(`JSON.stringify(TQ)`));
+  // Mridang ch1 (20 Nov 2026 review): the idea word "a" was matched by the article in any sentence
+  const SOUND = { short: { en: 'First sound a', hi: 'पहली आवाज़ a' }, point: { en: 'The child can say the first sound of a word starting with a.', hi: 'बच्चा a से शुरू होने वाले शब्द की पहली आवाज़ बता सकता है।' },
+    forget: { en: 'I forgot! What sound does ant start with?', hi: 'मैं भूल गया! ant किस आवाज़ से शुरू होता है?' },
+    hints: [{ en: 'Say it slowly. What comes out of your mouth before the rest?', hi: 'धीरे से बोलो। मुँह से सबसे पहले क्या निकलता है?' }, { en: 'Is it like axe and apple?', hi: 'क्या यह axe और apple जैसा है?' }],
+    ideas: [{ en: 'ant starts with the sound a', hi: 'ant a की आवाज़ से शुरू होता है', words: ['a', 'letter a', 'ant', 'starts with a', 'a sound', 'ए', 'shuru'] }] };
+  E(`var SA = teachCleanAims(${JSON.stringify([SOUND])}, 'sch-s1')`);
+  check('a single letter, a little word or "shuru" alone is no idea word (dropped), a phrase with it stays; the word Appu names (ant) is the topic, not a giveaway — the aim is kept',
+    E(`SA.aims.length === 1 && JSON.stringify(SA.aims[0].ideas[0].words) === JSON.stringify(['letter a', 'starts with a', 'a sound', 'ए'])`), E(`JSON.stringify(SA)`));
+  check('…so "maybe it is a dog" no longer counts as explaining it, and "ant starts with a" does',
+    E(`teachRubric(SA.aims[0].ideas, 'maybe it is a dog').verdict`) === 'missing' && E(`teachRubric(SA.aims[0].ideas, 'ant starts with a').verdict`) === 'covered',
+    E(`JSON.stringify([teachRubric(SA.aims[0].ideas, 'maybe it is a dog'), teachRubric(SA.aims[0].ideas, 'ant starts with a')])`));
+  check('…and the named question passes teachCheckAim as it is', E(`teachCheckAim(SA.aims[0]).length === 0`), E(`JSON.stringify(teachCheckAim(SA.aims[0]))`));
+  E(`var SL = teachCleanAims(${JSON.stringify([{ ...SOUND, ideas: [{ ...SOUND.ideas[0], words: ['a', 'the', 'shuru', 'I'] }] }])}, 'sch-s2')`);
+  check('an idea left with no words drops its aim, with a reason for the repair round', E(`SL.aims.length === 0 && /only single letters or little words/.test(SL.errors[0])`), E(`JSON.stringify(SL.errors)`));
+  const vague = f => E(`(() => { const r = teachCleanAims(${JSON.stringify([{ ...SOUND, forget: f }])}, 'sch-s3'); return r.aims.length === 0 && /without naming it — name the word Appu is asking about, e\.g\. 'What sound does ant start with/.test(r.errors[0]); })()`);
+  check('Appu\'s question must name its word: "this word", "this one", "here", यह शब्द and इस शब्द alone are each dropped with the reason',
+    vague({ en: 'I forgot! How do I find the first sound of this word?', hi: 'मैं भूल गया! ant की पहली आवाज़ कैसे ढूँढूँ?' })
+    && vague({ en: 'What sound does this one start with?', hi: 'ant किस आवाज़ से शुरू होता है?' })
+    && vague({ en: 'Which sound do you hear first here?', hi: 'ant किस आवाज़ से शुरू होता है?' })
+    && vague({ en: 'What sound does ant start with?', hi: 'यह शब्द किस आवाज़ से शुरू होता है?' })
+    && vague({ en: 'What sound does ant start with?', hi: 'इस शब्द की पहली आवाज़ क्या है?' }), '');
+  check('…but "this word" with the word named ("this word, ant" / quoted / इस शब्द ant) is fine',
+    !vague({ en: 'What sound does this word, ant, start with?', hi: 'इस शब्द ant की पहली आवाज़ क्या है?' })
+    && !vague({ en: 'What sound does this word "ant" start with?', hi: 'यह शब्द "ant" किस आवाज़ से शुरू होता है?' }), '');
   check('a failed lesson goes back to Gemini with why each aim was dropped too, each reason once',
     E(`JSON.stringify(sylRepairReasons({ errors: ['beat 2: x', 'the lesson needs its aims (aim 1: y)'], aimErrors: ['aim 1: y', 'aim 2: z'] }))`) === JSON.stringify(['beat 2: x', 'the lesson needs its aims (aim 1: y)', 'aim 1: y', 'aim 2: z']), '');
   const READ = { title: { en: "Meena's kite", hi: 'मीना की पतंग' }, sub: { en: 'Read and answer', hi: 'पढ़ो और जवाब दो' }, ic: '🪁', skill: 'read5',

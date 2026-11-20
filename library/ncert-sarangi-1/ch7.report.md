@@ -8,7 +8,7 @@ Draft took 154 s · repair took 8 s (gemini-3.5-flash-lite)
 Models for the draft: gemini-4-hydrogen hung (60 s) → gemini-3.8-flash hung (60 s) → gemini-3.5-flash-lite ok (34 s, 7720 in / 3000 out tokens)  
 Models for the repair: gemini-3.5-flash-lite ok (8 s, 7898 in / 2951 out tokens)  
 Tokens used: gemini-3.5-flash-lite 15618 in / 5951 out  
-_Checked again on 2026-11-20T09:40:56.720Z by today's checker (the same drafts, no new call to Gemini)._  
+_Checked again on 2026-11-20T09:46:54.239Z by today's checker (the same drafts, no new call to Gemini)._  
 
 ## Edited by hand
 

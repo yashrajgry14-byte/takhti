@@ -296,14 +296,14 @@
                 "hi": "हम ears से क्या करते हैं?"
               },
               "opts": [
-                "smell",
-                "hear"
+                "hear",
+                "smell"
               ],
               "hiOpts": [
-                "smell",
-                "hear"
+                "hear",
+                "smell"
               ],
-              "correct": 1,
+              "correct": 0,
               "why": {
                 "en": "Children confuse the job of ears with the job of the nose.",
                 "hi": "बच्चे कानों के काम को नाक के काम के साथ मिला देते हैं।"
@@ -528,7 +528,7 @@
           "source": "Page 2, 7",
           "aims": [
             {
-              "id": "sx61wjc.0",
+              "id": "s16sgpso.0",
               "kind": "explain",
               "short": {
                 "en": "Nose to smell",
@@ -571,7 +571,7 @@
               ]
             },
             {
-              "id": "sx61wjc.1",
+              "id": "s16sgpso.1",
               "kind": "explain",
               "short": {
                 "en": "Ears to hear",
@@ -666,14 +666,14 @@
                 "hi": "हम ears से क्या करते हैं?"
               },
               "opts": [
-                "smell",
-                "hear"
+                "hear",
+                "smell"
               ],
               "hiOpts": [
-                "smell",
-                "hear"
+                "hear",
+                "smell"
               ],
-              "correct": 1,
+              "correct": 0,
               "why": {
                 "en": "Children confuse the job of ears with the job of the nose.",
                 "hi": "बच्चे कानों के काम को नाक के काम के साथ मिला देते हैं।"
@@ -691,7 +691,7 @@
           ],
           "lang": "en",
           "subject": "read",
-          "id": "sch-x61wjc"
+          "id": "sch-16sgpso"
         },
         "ok": true,
         "errors": [],
@@ -939,14 +939,14 @@
                 "hi": "walk से पहले कौन सा शब्द आया?"
               },
               "opts": [
-                "to",
-                "two"
+                "two",
+                "to"
               ],
               "hiOpts": [
-                "to",
-                "two"
+                "two",
+                "to"
               ],
-              "correct": 0,
+              "correct": 1,
               "why": {
                 "en": "Children confuse the sight word to with the number word two.",
                 "hi": "बच्चे sight word to को संख्या शब्द two के साथ मिला देते हैं।"
@@ -1163,7 +1163,7 @@
           "source": "Page 2",
           "aims": [
             {
-              "id": "s13m9ezb.0",
+              "id": "s1lckc6d.0",
               "kind": "explain",
               "short": {
                 "en": "Word one",
@@ -1204,7 +1204,7 @@
               ]
             },
             {
-              "id": "s13m9ezb.1",
+              "id": "s1lckc6d.1",
               "kind": "explain",
               "short": {
                 "en": "Word to",
@@ -1267,14 +1267,14 @@
                 "hi": "रवि के पास कितने head हैं?"
               },
               "opts": [
-                "two",
-                "one"
+                "one",
+                "two"
               ],
               "hiOpts": [
-                "two",
-                "one"
+                "one",
+                "two"
               ],
-              "correct": 1,
+              "correct": 0,
               "why": {
                 "en": "Children confuse one with two because eyes come as two.",
                 "hi": "बच्चे two eyes की वजह से one को two समझ लेते हैं।"
@@ -1322,7 +1322,7 @@
           ],
           "lang": "en",
           "subject": "read",
-          "id": "sch-13m9ezb"
+          "id": "sch-1lckc6d"
         },
         "ok": false,
         "errors": [
@@ -1530,7 +1530,84 @@
           },
           "skillId": "e1-decode",
           "source": "Page 11, 13",
-          "aims": [],
+          "aims": [
+            {
+              "id": "s17na79d.0",
+              "kind": "explain",
+              "short": {
+                "en": "First sound a",
+                "hi": "पहली आवाज़ a"
+              },
+              "point": {
+                "en": "The child can identify the first sound of a word starting with a.",
+                "hi": "बच्चा a से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I find the first sound of ant?",
+                "hi": "मैं भूल गया! ant की पहली आवाज़ कैसे ढूँढूँ?"
+              },
+              "hints": [
+                {
+                  "en": "Say ant slowly. What sound comes out first?",
+                  "hi": "ant धीरे से बोलो। सबसे पहले क्या आवाज़ निकलती है?"
+                },
+                {
+                  "en": "Does it start like axe and apple?",
+                  "hi": "क्या यह axe और apple की तरह शुरू होता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the word ant starts with the letter sound a",
+                  "hi": "ant शब्द a की आवाज़ से शुरू होता है",
+                  "words": [
+                    "letter a",
+                    "starts with a",
+                    "a sound",
+                    "ए"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "s17na79d.1",
+              "kind": "explain",
+              "short": {
+                "en": "First sound b",
+                "hi": "पहली आवाज़ b"
+              },
+              "point": {
+                "en": "The child can identify the first sound of a word starting with b.",
+                "hi": "बच्चा b से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I find the first sound of bag?",
+                "hi": "मैं भूल गया! bag की पहली आवाज़ कैसे ढूँढूँ?"
+              },
+              "hints": [
+                {
+                  "en": "Say bag slowly. What sound do your lips make first?",
+                  "hi": "bag धीरे से बोलो। तुम्हारे होंठ पहले कैसी आवाज़ निकालते हैं?"
+                },
+                {
+                  "en": "Does it start like boy and bee?",
+                  "hi": "क्या यह boy और bee की तरह शुरू होता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the word bag starts with the letter sound b",
+                  "hi": "bag शब्द b की आवाज़ से शुरू होता है",
+                  "words": [
+                    "letter b",
+                    "starts with b",
+                    "b sound",
+                    "बी"
+                  ]
+                }
+              ]
+            }
+          ],
           "beats": [
             {
               "t": "intro",
@@ -1563,18 +1640,19 @@
                 "hi": "ant की पहली आवाज़ क्या है?"
               },
               "opts": [
-                "e",
-                "a"
+                "a",
+                "e"
               ],
               "hiOpts": [
-                "e",
-                "a"
+                "a",
+                "e"
               ],
-              "correct": 1,
+              "correct": 0,
               "why": {
                 "en": "Children confuse the short vowel sounds of a and e.",
                 "hi": "बच्चे a और e की छोटी स्वर ध्वनियों में उलझ जाते हैं।"
               },
+              "aim": 1,
               "derived": true
             },
             {
@@ -1605,6 +1683,7 @@
                 "en": "Children mix up b and d, which look and sound similar.",
                 "hi": "बच्चे b और d में उलझते हैं, जो देखने और सुनने में मिलते-जुलते हैं।"
               },
+              "aim": 2,
               "derived": true
             },
             {
@@ -1617,20 +1696,15 @@
           ],
           "lang": "en",
           "subject": "read",
-          "id": "sch-1qhqfkv"
+          "id": "sch-17na79d"
         },
-        "ok": false,
-        "errors": [
-          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"ant\"))"
-        ],
+        "ok": true,
+        "errors": [],
         "checks": [
           "text",
           "text"
         ],
-        "aimErrors": [
-          "aim 1: Munni's question (en) already gives the explanation (it says \"ant\")",
-          "aim 2: Munni's question (en) already gives the explanation (it says \"bag\")"
-        ],
+        "aimErrors": [],
         "aimFixes": []
       },
       "repairRaw": {
@@ -1825,90 +1899,7 @@
           },
           "skillId": "e1-decode",
           "source": "Page 11, 13",
-          "aims": [
-            {
-              "id": "sh11tzv.0",
-              "kind": "explain",
-              "short": {
-                "en": "First sound a",
-                "hi": "पहली आवाज़ a"
-              },
-              "point": {
-                "en": "The child can identify the first sound of a word starting with a.",
-                "hi": "बच्चा a से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
-              },
-              "forget": {
-                "en": "I forgot! How do I find the first sound of this word?",
-                "hi": "मैं भूल गया! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
-              },
-              "hints": [
-                {
-                  "en": "Say this word slowly. What sound comes out first?",
-                  "hi": "यह शब्द धीरे से बोलो। सबसे पहले क्या आवाज़ निकलती है?"
-                },
-                {
-                  "en": "Does it start like axe and apple?",
-                  "hi": "क्या यह axe और apple की तरह शुरू होता है?"
-                }
-              ],
-              "ideas": [
-                {
-                  "en": "the word ant starts with the letter sound a",
-                  "hi": "ant शब्द a की आवाज़ से शुरू होता है",
-                  "words": [
-                    "a",
-                    "letter a",
-                    "ant",
-                    "starts with a",
-                    "a sound",
-                    "ए",
-                    "shuru"
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "sh11tzv.1",
-              "kind": "explain",
-              "short": {
-                "en": "First sound b",
-                "hi": "पहली आवाज़ b"
-              },
-              "point": {
-                "en": "The child can identify the first sound of a word starting with b.",
-                "hi": "बच्चा b से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
-              },
-              "forget": {
-                "en": "I forgot! How do I know the first sound here?",
-                "hi": "मैं भूल गया! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
-              },
-              "hints": [
-                {
-                  "en": "Say this word slowly. What sound do your lips make first?",
-                  "hi": "यह शब्द धीरे से बोलो। तुम्हारे होंठ पहले कैसी आवाज़ निकालते हैं?"
-                },
-                {
-                  "en": "Does it start like boy and bee?",
-                  "hi": "क्या यह boy और bee की तरह शुरू होता है?"
-                }
-              ],
-              "ideas": [
-                {
-                  "en": "the word bag starts with the letter sound b",
-                  "hi": "bag शब्द b की आवाज़ से शुरू होता है",
-                  "words": [
-                    "b",
-                    "letter b",
-                    "bag",
-                    "starts with b",
-                    "b sound",
-                    "बी",
-                    "shuru"
-                  ]
-                }
-              ]
-            }
-          ],
+          "aims": [],
           "beats": [
             {
               "t": "intro",
@@ -1953,7 +1944,6 @@
                 "en": "Children confuse the short vowel sounds of a and e.",
                 "hi": "बच्चे a और e की छोटी स्वर ध्वनियों में उलझ जाते हैं।"
               },
-              "aim": 1,
               "derived": true
             },
             {
@@ -1972,19 +1962,18 @@
                 "hi": "bag की पहली आवाज़ क्या है?"
               },
               "opts": [
-                "d",
-                "b"
+                "b",
+                "d"
               ],
               "hiOpts": [
-                "d",
-                "b"
+                "b",
+                "d"
               ],
-              "correct": 1,
+              "correct": 0,
               "why": {
                 "en": "Children mix up b and d, which look and sound similar.",
                 "hi": "बच्चे b और d में उलझते हैं, जो देखने और सुनने में मिलते-जुलते हैं।"
               },
-              "aim": 2,
               "derived": true
             },
             {
@@ -1997,18 +1986,23 @@
           ],
           "lang": "en",
           "subject": "read",
-          "id": "sch-h11tzv"
+          "id": "sch-1qhqfkv"
         },
-        "ok": true,
-        "errors": [],
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Appu's question says \"this word\" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?')"
+        ],
         "checks": [
           "text",
           "text"
         ],
-        "aimErrors": [],
+        "aimErrors": [
+          "aim 1: Appu's question says \"this word\" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?'",
+          "aim 2: Appu's question says \"here\" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?'"
+        ],
         "aimFixes": []
       },
-      "verdict": "repaired"
+      "verdict": "passed"
     },
     {
       "raw": {
@@ -2203,7 +2197,84 @@
           },
           "skillId": "e1-decode",
           "source": "Page 11, 13",
-          "aims": [],
+          "aims": [
+            {
+              "id": "stz0bok.0",
+              "kind": "explain",
+              "short": {
+                "en": "First sound d",
+                "hi": "पहली आवाज़ d"
+              },
+              "point": {
+                "en": "The child can identify the first sound of a word starting with d.",
+                "hi": "बच्चा d से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I find the first sound of dog?",
+                "hi": "मैं भूल गया! dog की पहली आवाज़ कैसे ढूँढूँ?"
+              },
+              "hints": [
+                {
+                  "en": "Say dog slowly to yourself. What sound comes first?",
+                  "hi": "dog मन में धीरे से बोलो। पहले कौन सी आवाज़ आती है?"
+                },
+                {
+                  "en": "Does it start like den and door?",
+                  "hi": "क्या यह den और door की तरह शुरू होता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the word dog starts with the letter sound d",
+                  "hi": "dog शब्द d की आवाज़ से शुरू होता है",
+                  "words": [
+                    "letter d",
+                    "starts with d",
+                    "d sound",
+                    "डी"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "stz0bok.1",
+              "kind": "explain",
+              "short": {
+                "en": "First sound e",
+                "hi": "पहली आवाज़ e"
+              },
+              "point": {
+                "en": "The child can identify the first sound of a word starting with e.",
+                "hi": "बच्चा e से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
+              },
+              "forget": {
+                "en": "I forgot! How do I find the first sound of egg?",
+                "hi": "मैं भूल गया! egg की पहली आवाज़ कैसे ढूँढूँ?"
+              },
+              "hints": [
+                {
+                  "en": "Say egg slowly. What sound do you hear at the start?",
+                  "hi": "egg धीरे से बोलो। शुरुआत में कौन सी आवाज़ सुनते हो?"
+                },
+                {
+                  "en": "Does it start like elephant and ear?",
+                  "hi": "क्या यह elephant और ear की तरह शुरू होता है?"
+                }
+              ],
+              "ideas": [
+                {
+                  "en": "the word egg starts with the letter sound e",
+                  "hi": "egg शब्द e की आवाज़ से शुरू होता है",
+                  "words": [
+                    "letter e",
+                    "starts with e",
+                    "e sound",
+                    "ई"
+                  ]
+                }
+              ]
+            }
+          ],
           "beats": [
             {
               "t": "intro",
@@ -2248,6 +2319,7 @@
                 "en": "Children confuse the mirror letters and sounds of d and b.",
                 "hi": "बच्चे d और b की उलटी आकृतियों और ध्वनियों में उलझ जाते हैं।"
               },
+              "aim": 1,
               "derived": true
             },
             {
@@ -2266,18 +2338,19 @@
                 "hi": "egg की पहली आवाज़ क्या है?"
               },
               "opts": [
-                "a",
-                "e"
+                "e",
+                "a"
               ],
               "hiOpts": [
-                "a",
-                "e"
+                "e",
+                "a"
               ],
-              "correct": 1,
+              "correct": 0,
               "why": {
                 "en": "Children confuse the short vowel sounds of e and a.",
                 "hi": "बच्चे e और a के स्वरों में भ्रमित हो जाते हैं।"
               },
+              "aim": 2,
               "derived": true
             },
             {
@@ -2290,20 +2363,15 @@
           ],
           "lang": "en",
           "subject": "read",
-          "id": "sch-f43spd"
+          "id": "sch-tz0bok"
         },
-        "ok": false,
-        "errors": [
-          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (en) already gives the explanation (it says \"dog\"))"
-        ],
+        "ok": true,
+        "errors": [],
         "checks": [
           "text",
           "text"
         ],
-        "aimErrors": [
-          "aim 1: Munni's question (en) already gives the explanation (it says \"dog\")",
-          "aim 2: Munni's question (en) already gives the explanation (it says \"egg\")"
-        ],
+        "aimErrors": [],
         "aimFixes": []
       },
       "repairRaw": {
@@ -2498,90 +2566,7 @@
           },
           "skillId": "e1-decode",
           "source": "Page 11, 13",
-          "aims": [
-            {
-              "id": "snn6rv.0",
-              "kind": "explain",
-              "short": {
-                "en": "First sound d",
-                "hi": "पहली आवाज़ d"
-              },
-              "point": {
-                "en": "The child can identify the first sound of a word starting with d.",
-                "hi": "बच्चा d से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
-              },
-              "forget": {
-                "en": "I forgot! How do I find the first sound of this word?",
-                "hi": "मैं भूल गया! इस शब्द की पहली आवाज़ कैसे ढूँढूँ?"
-              },
-              "hints": [
-                {
-                  "en": "Say this word slowly to yourself. What sound comes first?",
-                  "hi": "इस शब्द को मन में धीरे से बोलो। पहले कौन सी आवाज़ आती है?"
-                },
-                {
-                  "en": "Does it start like den and door?",
-                  "hi": "क्या यह den और door की तरह शुरू होता है?"
-                }
-              ],
-              "ideas": [
-                {
-                  "en": "the word dog starts with the letter sound d",
-                  "hi": "dog शब्द d की आवाज़ से शुरू होता है",
-                  "words": [
-                    "d",
-                    "letter d",
-                    "dog",
-                    "starts with d",
-                    "d sound",
-                    "डी",
-                    "shuru"
-                  ]
-                }
-              ]
-            },
-            {
-              "id": "snn6rv.1",
-              "kind": "explain",
-              "short": {
-                "en": "First sound e",
-                "hi": "पहली आवाज़ e"
-              },
-              "point": {
-                "en": "The child can identify the first sound of a word starting with e.",
-                "hi": "बच्चा e से शुरू होने वाले शब्द की पहली आवाज़ पहचान सकता है।"
-              },
-              "forget": {
-                "en": "I forgot! How do I know the first sound here?",
-                "hi": "मैं भूल गया! मुझे यहाँ पहली आवाज़ कैसे पता चलेगी?"
-              },
-              "hints": [
-                {
-                  "en": "Say this word slowly. What sound do you hear at the start?",
-                  "hi": "यह शब्द धीरे से बोलो। शुरुआत में कौन सी आवाज़ सुनते हो?"
-                },
-                {
-                  "en": "Does it start like elephant and ear?",
-                  "hi": "क्या यह elephant और ear की तरह शुरू होता है?"
-                }
-              ],
-              "ideas": [
-                {
-                  "en": "the word egg starts with the letter sound e",
-                  "hi": "egg शब्द e की आवाज़ से शुरू होता है",
-                  "words": [
-                    "e",
-                    "letter e",
-                    "egg",
-                    "starts with e",
-                    "e sound",
-                    "ई",
-                    "shuru"
-                  ]
-                }
-              ]
-            }
-          ],
+          "aims": [],
           "beats": [
             {
               "t": "intro",
@@ -2626,7 +2611,6 @@
                 "en": "Children confuse the mirror letters and sounds of d and b.",
                 "hi": "बच्चे d और b की उलटी आकृतियों और ध्वनियों में उलझ जाते हैं।"
               },
-              "aim": 1,
               "derived": true
             },
             {
@@ -2645,19 +2629,18 @@
                 "hi": "egg की पहली आवाज़ क्या है?"
               },
               "opts": [
-                "a",
-                "e"
+                "e",
+                "a"
               ],
               "hiOpts": [
-                "a",
-                "e"
+                "e",
+                "a"
               ],
-              "correct": 1,
+              "correct": 0,
               "why": {
                 "en": "Children confuse the short vowel sounds of e and a.",
                 "hi": "बच्चे e और a के स्वरों में भ्रमित हो जाते हैं।"
               },
-              "aim": 2,
               "derived": true
             },
             {
@@ -2670,18 +2653,24 @@
           ],
           "lang": "en",
           "subject": "read",
-          "id": "sch-nn6rv"
+          "id": "sch-f43spd"
         },
-        "ok": true,
-        "errors": [],
+        "ok": false,
+        "errors": [
+          "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Appu's question says \"this word\" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?')"
+        ],
         "checks": [
           "text",
           "text"
         ],
-        "aimErrors": [],
+        "aimErrors": [
+          "aim 1: Appu's question says \"this word\" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?'",
+          "aim 2: Appu's question says \"here\" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?'"
+        ],
         "aimFixes": []
       },
-      "verdict": "repaired"
+      "verdict": "passed"
     }
-  ]
+  ],
+  "rechecked": "2026-11-20T09:46:53.596Z"
 }

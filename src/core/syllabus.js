@@ -708,11 +708,15 @@ function sylClean(raw, opts){
     // only when set, so a lesson without one (every maths lesson) keeps the id it always had
     ...(les.lang ? { l: les.lang } : {}) });
   les.aims.forEach((a, k) => { a.id = ('s' + id.replace(/^sch-/, '') + '.' + k).slice(0, 32); });
-  les.beats.forEach((b, i) => {
-    if(b.t === 'ask' && b.opts && b.hiOpts && b.opts.length === 2 && b.hiOpts.length === 2 && Number.isInteger(b.correct) && b.correct < 2 && (seedOf(id + i) & 1) !== b.correct){
-      b.opts = [b.opts[1], b.opts[0]]; b.hiOpts = [b.hiOpts[1], b.hiOpts[0]]; b.correct = 1 - b.correct;
-    }
-  });
+  // Each question's slot comes from the id, whatever order it arrived in (so checking a
+  // stored lesson again gives the same order); with two or more, the right answers are
+  // never all in one slot — every later one landing where the first did flips the last
+  // (Mridang ch1 had 6 of 6 on the second button). The id is made before, so it never moves.
+  const flip = b => { b.opts = [b.opts[1], b.opts[0]]; b.hiOpts = [b.hiOpts[1], b.hiOpts[0]]; b.correct = 1 - b.correct; };
+  const two = les.beats.map((b, i) => [b, i]).filter(([b]) => b.t === 'ask' && b.opts && b.hiOpts && b.opts.length === 2 && b.hiOpts.length === 2 && Number.isInteger(b.correct) && b.correct < 2);
+  const slots = two.map(([, i]) => seedOf(id + i) & 1);
+  if(slots.length >= 2 && slots.every(s => s === slots[0])) slots[slots.length - 1] = 1 - slots[0];
+  two.forEach(([b], k) => { if(slots[k] !== b.correct) flip(b); });
   les.id = id;
   const v = validateLesson(les);
   const errors = errs.concat(v.errors);

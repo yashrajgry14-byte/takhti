@@ -80,6 +80,13 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     await lib.buildBook(dir, { import: { ch: 'ch5', file: path.join(tmp, 'run7-two.json') } });
     check('--recheck checks the saved drafts again and --import turns a try-syllabus run into a chapter — neither calls Gemini',
       calls === c0 && re.length === 1 && JSON.parse(fs.readFileSync(path.join(dir, 'ch5.json'), 'utf8')).lessons.length === 4, calls - c0);
+    // --no-bundle: a build or re-check can be read before the app's src/content/library.js changes
+    {
+      const libJs = path.join(root, 'src', 'content', 'library.js'), was = fs.readFileSync(libJs, 'utf8');
+      const r = require('child_process').spawnSync(process.execPath, [path.join(root, 'tools', 'build-library.mjs'), '--book', dir, '--recheck', '--no-bundle'], { cwd: root, encoding: 'utf8' });
+      check('--no-bundle re-checks the chapters and leaves src/content/library.js exactly as it was',
+        r.status === 0 && /checked again/.test(r.stdout) && /--no-bundle: src\/content\/library\.js left as it was/.test(r.stdout) && fs.readFileSync(libJs, 'utf8') === was, r.stdout + r.stderr);
+    }
     // 1b. the seventh run's own drafts ask one question each: the library keeps none of them now
     fs.unlinkSync(path.join(dir, 'ch5.json'));
     await lib.buildBook(dir, { import: { ch: 'ch5', file: path.join(root, 'library/ncert-maths-mela-3/ch5.raw.json') } });

@@ -138,6 +138,42 @@ const TEACH_NUDGES = [
   { en: 'Think back to the lesson. What did you do first?', hi: 'पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?' },
   { en: 'Show me with your finger, then tell me what you did.', hi: 'उँगली से दिखाओ, फिर बताओ तुमने क्या किया।' }
 ];
+/* An idea word that is one single Latin letter or a little English word
+   (or "shuru" — just "start") on its own: never evidence of an idea. */
+const TEACH_LONE = ['a', 'i', 'an', 'the', 'is', 'it', 'shuru'];
+function teachLoneWord(w){
+  const t = teachTokens(w);
+  return t.length === 1 && (/^[a-z]$/.test(t[0]) || TEACH_LONE.includes(t[0]));
+}
+/* "this word", "this one", "here", "यह शब्द", "इस शब्द" with no word named
+   (a quoted word, or a word right after "word"/"शब्द") → what it said. */
+const TEACH_NOT_A_NAME = ['is', 'start', 'starts', 'begin', 'begins', 'sound', 'sounds', 'has', 'have', 'end', 'ends',
+  'mean', 'means', 'say', 'says', 'from', 'with', 'and', 'or', 'in', 'on', 'of', 'to', 'here', 'now', 'again', 'first', 'that', 'the', 'a'];
+function teachVagueForget(f){
+  if(!f) return '';
+  const quoted = s => /["“”‘’'«»][^"“”‘’'«»\s]{1,24}["“”‘’'«»]/.test(s);
+  const en = String(f.en || ''), hi = String(f.hi || '');
+  const named = (s, re) => { const m = s.match(re); return !!m && !!m[1] && !TEACH_NOT_A_NAME.includes(m[1].toLowerCase()); };
+  if(!quoted(en)){
+    const m = en.match(/\b(this word|this one|here)\b/i);
+    if(m && !(/word/i.test(m[1]) && named(en, /\bthis word[,:]?\s+([A-Za-z]+)/i))) return m[1];
+  }
+  if(!quoted(hi)){
+    const m = hi.match(/(यह शब्द|इस शब्द)/);
+    if(m && !named(hi, /(?:यह|इस) शब्द[,:]?\s+([A-Za-z]+)/)) return m[1];
+  }
+  return '';
+}
+/* The words Appu's question names: quoted in either language, or written in
+   Latin letters inside the Hindi question — and said in the English one. */
+function teachNamedWords(f){
+  if(!f) return [];
+  const en = teachTokens(f.en), out = new Set();
+  for(const s of [String(f.en || ''), String(f.hi || '')])
+    for(const m of s.matchAll(/["“”‘’'«»]([^"“”‘’'«»\s]{1,24})["“”‘’'«»]/g)) teachTokens(m[1]).forEach(t => out.add(t));
+  (String(f.hi || '').match(/[A-Za-z]{2,}/g) || []).forEach(w => out.add(w.toLowerCase()));
+  return [...out].filter(t => en.includes(t) && !TEACH_NOT_A_NAME.includes(t) && !TEACH_LONE.includes(t));
+}
 function teachCleanAims(raw, lessonId, opts){
   const aims = [], errors = [], fixes = [], kept = [];
   (Array.isArray(raw) ? raw : []).slice(0, 4).forEach((r, k) => {
@@ -165,6 +201,33 @@ function teachCleanAims(raw, lessonId, opts){
       return teachTokens(w).every(t => have.includes(stem(t)) || teachHit(o[l], [t]));
     });
     if(a.forget) a.ideas.forEach(i => { i.words = i.words.filter(w => !(says(a.forget, w) && (says(a.point, w) || says(a.short, w)))); });
+    // The word Appu's question NAMES is the topic too ("What sound does ant
+    // start with?" — ant is what he asks about, a is the explanation): Mridang
+    // ch1's first draft named it and was dropped as a giveaway for it, and the
+    // repair round answered with "this word". Named = quoted, or an English
+    // word in Latin letters inside the Hindi question ("ant किस आवाज़ से…"),
+    // and said in the English question too. A Hindi question that says the
+    // answer in Hindi ("छत पर?") still fails the check below.
+    const named = teachNamedWords(a.forget);
+    if(named.length) a.ideas.forEach(i => { i.words = i.words.filter(w => !(teachTokens(w).length === 1 && named.includes(teachTokens(w)[0]))); });
+    // A word on its own that any sentence has can't show an idea: teachHit
+    // matches whole tokens, so the idea word "a" (Mridang ch1's "Sounds of a
+    // and b") was matched by the article in "maybe it is a dog". Inside a
+    // phrase ("letter a", "starts with a") it still counts.
+    const hadWords = a.ideas.map(i => i.words.length);
+    a.ideas.forEach(i => { i.words = i.words.filter(w => !teachLoneWord(w)); });
+    const emptied = a.ideas.findIndex((i, j) => hadWords[j] && !i.words.length);
+    if(emptied >= 0){
+      errors.push(`aim ${k + 1}: idea ${emptied + 1}'s words are only single letters or little words every sentence has ("a", "the", "shuru") — give words or phrases that show the idea ("starts with a", "letter a")`);
+      return;
+    }
+    // Appu's question must name what it is about: "the first sound of this
+    // word?" on its own, after the lesson, points at nothing (Mridang ch1).
+    const vague = teachVagueForget(a.forget);
+    if(vague){
+      errors.push(`aim ${k + 1}: Appu's question says "${vague}" without naming it — name the word Appu is asking about, e.g. 'What sound does ant start with?'`);
+      return;
+    }
     a.id = 's0.' + aims.length;          // a valid id while it is checked
     let errs = teachCheckAim(a);
     if(errs.length && opts && opts.mendHints && errs.every(e => /^hint \d/.test(e))){

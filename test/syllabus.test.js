@@ -467,6 +467,21 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     // the shuffle is by content, so check over many lessons rather than trusting a few to land both ways
     const sides = Array.from({ length: 12 }, (_, k) => { const x = clone(k % 2 ? MATH : READ); x.title = { en: x.title.en + ' ' + k, hi: x.title.hi + ' ' + k }; return clean(x).lesson.beats.find(b => b.t === 'ask').correct; });
     check('the right answer is not always the first option', new Set(sides).size === 2, JSON.stringify(sides));
+    // and in one lesson with 2+ questions the right answers are never all in one slot (Mridang ch1: 6 of 6 on the second button)
+    const slotsOf = l => l.beats.filter(b => b.t === 'ask').map(b => b.correct).join('');
+    const twoAsk = k => { const x = clone(READ); x.title = { en: x.title.en + ' two ' + k, hi: x.title.hi + ' ' + k }; const a = x.beats.find(b => b.t === 'ask');
+      x.beats.splice(x.beats.indexOf(a) + 1, 0, ...(k % 2 ? [{ t: 'readline', say: { en: 'Read this line.', hi: 'यह पंक्ति पढ़ो।' }, text: 'Meena has a red kite.' }] : []),
+        { ...clone(a), q: { en: 'Is the kite red?', hi: 'क्या पतंग लाल है?' }, opts: ['Yes', 'No'], hiOpts: ['हाँ', 'नहीं'], correct: 0 }); return x; };   // questions 1 or 2 beats apart
+    const many = Array.from({ length: 24 }, (_, k) => clean(twoAsk(k)));
+    const plain = many.map(r => r.lesson.beats.map((b, i) => [b, i]).filter(([b]) => b.t === 'ask').map(([, i]) => Number(E(`seedOf(${JSON.stringify(r.lesson.id + i)}) & 1`))).join(''));
+    check('two questions: the right answers are never both in one slot — the first from the hash, the last flipped when every later one matched (both cases met)',
+      many.every(r => r.ok && new Set(slotsOf(r.lesson)).size === 2) && plain.some(p => p[0] === p[1]) && plain.some(p => p[0] !== p[1])
+      && many.every((r, k) => slotsOf(r.lesson)[0] === plain[k][0] && (plain[k][0] !== plain[k][1] ? slotsOf(r.lesson) === plain[k] : slotsOf(r.lesson)[1] !== plain[k][1])),
+      JSON.stringify([many.map(r => slotsOf(r.lesson)), plain, many.filter(r => !r.ok).map(r => r.errors)]));
+    const reCleaned = many.map(r => JSON.parse(E(`JSON.stringify(sylClean(${JSON.stringify(r.lesson)}, { band: 'developing' }).lesson)`)));
+    check('…the id doesn\'t move with the order, and checking a stored lesson again (as schoolLessons() does) gives the same id and the same order',
+      reCleaned.every((l, k) => l.id === many[k].lesson.id && slotsOf(l) === slotsOf(many[k].lesson)) && clean({ ...twoAsk(3), beats: twoAsk(3).beats.map(b => b.t === 'ask' ? { ...b, opts: b.opts.slice().reverse(), hiOpts: b.hiOpts.slice().reverse(), correct: 1 - b.correct } : b) }).lesson.id === many[3].lesson.id,
+      JSON.stringify(reCleaned.map(slotsOf)));
 
     // 3. the teacher drafts
     E(`go('teacher'); S.ctx.tcode = 'CLS001'; S.online = true; render()`);
