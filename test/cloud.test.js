@@ -88,6 +88,15 @@ function req(port, method, p, body){
   check('with the key from Secret Manager, a chapter goes to Gemini — the key in a header, never in the URL — and the drafts come back',
     syl.status === 200 && Array.isArray(syl.json.lessons) && seen.length === 1 && seen[0].key === 'test-key-not-real' && !seen[0].url.includes('test-key') && /Square has four|square has four/i.test(seen[0].body),
     JSON.stringify([syl.status, seen.map(s => s.url)]));
+  const before = seen.length;
+  const ask = await req(port, 'POST', '/api/ask', { max_tokens: 1000, messages: [{ role: 'user', content: 'A child aged 6-9 in India asked: "why is the sky blue?"' }] });
+  const asked = seen.slice(before);
+  check('Ask me: a saved question goes to Gemini with the same key (in a header), and comes back in the shape the app reads (content[0].text)',
+    ask.status === 200 && Array.isArray(ask.json.content) && ask.json.content[0].type === 'text' && typeof ask.json.content[0].text === 'string'
+      && asked.length >= 1 && asked[0].key === 'test-key-not-real' && !asked[0].url.includes('test-key') && /:generateContent$/.test(asked[0].url) && /sky blue/.test(asked[0].body),
+    JSON.stringify([ask.status, ask.json, asked.map(s => s.url)]));
+  const askEmpty = await req(port, 'POST', '/api/ask', { messages: [] });
+  check('…a request with no question is a 400, and Gemini is never called for it', askEmpty.status === 400 && seen.length === before + asked.length, askEmpty.status);
   check('…Cloud Run takes a whole chapter (12 MB) and the full model chain (180 s), unlike a serverless host', process.env.TAKHTI_SYLLABUS_MAX_MB === '12' && process.env.TAKHTI_SYLLABUS_TIMEOUT_MS === '180000', process.env.TAKHTI_SYLLABUS_MAX_MB + ' ' + process.env.TAKHTI_SYLLABUS_TIMEOUT_MS);
 
   // ---- class sync through Cloud Storage, the token from the metadata server ----

@@ -522,35 +522,58 @@ function submitQuestion(q){
     } else if(S.online){
       askCloud(q).then(ok => resolve(ok ? 'answered' : 'queued'));
     } else {
-      S.queue.push({ id:'q'+Date.now(), q });
+      queueQuestion(q);
       log(0,'No signal · question queued to disk, nothing lost');
       resolve('queued');
     }
   }), (outcome) => { if(outcome === 'answered' && S.ctx.answer) speakPanel(0); });
 }
-async function askCloud(q){
-  log(2,'Signal available · generating answer + storyboard');
+/* One saved question per wording: asking again while it waits doesn't add a copy. */
+function queueQuestion(q){
+  const key = q.trim().toLowerCase();
+  if(!S.queue.some(x => String(x.q).trim().toLowerCase() === key)) S.queue.push({ id:'q'+Date.now(), q: q.trim() });
+}
+/* The Tier 2 call itself, shared by a live question and the queue's sync. */
+async function cloudAnswer(prompt){
+  const res = await fetch(API_URL,{
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ max_tokens:1000, messages:[{role:"user",content:prompt}] })
+  });
+  if(!res.ok){
+    const body = await res.text().catch(()=>'');
+    const err = new Error('Tier 2 proxy returned HTTP '+res.status);
+    err.status = res.status; err.body = body;
+    throw err;
+  }
+  const data = await res.json();
+  const txt = (data.content||[]).filter(x=>x.type==='text').map(x=>x.text).join('').replace(/```json|```/g,'').trim();
+  const a = JSON.parse(txt);
+  if(!a || !Array.isArray(a.panels) || !a.panels.length) throw new Error('Tier 2 answer had no panels');
+  return a;
+}
+/* What went wrong, in words for the trace panel — never a page of HTML. */
+function cloudProblem(e){
+  if(!e || !e.status) return 'could not be reached';
+  let why = '';
+  try{ why = (JSON.parse(e.body||'{}').error) || ''; }catch(x){ why = ''; }
+  if(e.status === 404) return 'has no /api/ask on this server (start the app with npm run dev, not a static server)';
+  if(e.status === 503) return 'has no Gemini key on this server (GEMINI_API_KEY)';
+  return `returned an error (HTTP ${e.status}${why ? ' · ' + String(why).slice(0,80) : ''})`;
+}
+function askPrompt(q){
   // pitched for THIS child (core/twin.js) — only if a parent agreed to share
   // progress (the learning circle or Talking Munni); ids made into sentences, no name
   const about = (S.circleSync || S.talkMunni) && typeof twinPrompt === 'function' ? `\nAbout this child: ${twinPrompt(twinProfile())}` : '';
-  const prompt = `A child aged 6-9 in India asked: "${q}".${about}
+  return `A child aged 6-9 in India asked: "${q}".${about}
 Reply ONLY with JSON, no markdown fences:
 {"title":"the question restated simply","panels":[{"art":"ONE emoji","en":"one short simple sentence","hi":"same sentence in simple Hindi"},{...},{...}],"quiz":{"en":"one simple check question","hi":"same in Hindi","opts":["right","wrong"],"hiOpts":["right in Hindi","wrong in Hindi"],"correct":0}}
 Exactly 3 panels. Each sentence under 18 words, warm, concrete, no jargon. Keep it factual and age-appropriate.`;
+}
+async function askCloud(q){
+  log(2,'Signal available · generating answer + storyboard');
+  const prompt = askPrompt(q);
   try{
-    const res = await fetch(API_URL,{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ max_tokens:1000, messages:[{role:"user",content:prompt}] })
-    });
-    if(!res.ok){
-      const body = await res.text().catch(()=>'');
-      const err = new Error('Tier 2 proxy returned HTTP '+res.status);
-      err.status = res.status; err.body = body;
-      throw err;
-    }
-    const data = await res.json();
-    const txt = data.content.filter(x=>x.type==='text').map(x=>x.text).join('').replace(/```json|```/g,'').trim();
-    const a = JSON.parse(txt);
+    const a = await cloudAnswer(prompt);
     a.id = 'a'+Date.now();
     S.answered.unshift(a);
     log(2,'Answer cached to device · available offline from now on');
@@ -562,11 +585,11 @@ Exactly 3 panels. Each sentence under 18 words, warm, concrete, no jargon. Keep 
     // The cloud is optional, but honesty is not: showing a cached answer to a
     // DIFFERENT question would teach the child that Takhti makes things up.
     // Queue it instead — exactly what happens with no signal.
-    S.queue.push({ id:'q'+Date.now(), q });
+    queueQuestion(q);
     // A silent Tier 2 failure in front of judges is the worst case — tell the
     // trace panel WHICH kind of failure this was, not just that one happened.
     if(e && e.status){
-      log(null, `Tier 2 proxy returned an error (HTTP ${e.status}) · question queued · ${String(e.body||'').slice(0,140)}`);
+      log(null, `Tier 2 ${cloudProblem(e)} · question queued, nothing lost`);
     } else {
       log(0, S._cloudNoted
         ? 'No Tier 2 endpoint reachable · question queued'
@@ -748,6 +771,9 @@ function setOnline(v){
   if(v && typeof circleSync === 'function') circleSync(true);   // the learning circle, if a parent turned it on
 }
 async function flushQueue(){
+  // a queue saved before copies were stopped may hold the same question twice
+  const seen = new Set();
+  S.queue = S.queue.filter(x => { const k = String(x.q).trim().toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; });
   log(2,`Sync · ${S.queue.length} saved question(s) being answered in the background`);
   const items=[...S.queue];
   for(const it of items){
@@ -755,15 +781,12 @@ async function flushQueue(){
     if(local){ S.answered.unshift({...local, id:it.id}); }
     else {
       try{
-        const res = await fetch(API_URL,{ method:"POST", headers:{"Content-Type":"application/json"},
-          body: JSON.stringify({ max_tokens:1000, messages:[{role:"user",content:`A child aged 6-9 in India asked: "${it.q}". Reply ONLY with JSON: {"title":"...","panels":[{"art":"emoji","en":"...","hi":"..."},{...},{...}],"quiz":{"en":"...","hi":"...","opts":["a","b"],"hiOpts":["a","b"],"correct":0}} Exactly 3 panels, each under 18 words, warm and simple.`}] })});
-        const d=await res.json();
-        const a=JSON.parse(d.content.filter(x=>x.type==='text').map(x=>x.text).join('').replace(/```json|```/g,'').trim());
+        const a = await cloudAnswer(askPrompt(it.q));
         a.id=it.id; S.answered.unshift(a);
       }catch(e){
         // leave it in the queue rather than inventing an answer;
         // it will be retried the next time a signal appears
-        log(null, `Still no answer for "${it.q}" · staying in the queue`);
+        log(null, `Still no answer for "${it.q}" · Tier 2 ${cloudProblem(e)} · staying in the queue`);
         continue;
       }
     }

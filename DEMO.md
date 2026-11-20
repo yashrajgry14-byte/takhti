@@ -57,8 +57,9 @@ optional live step (4b).
   or, with no voice server, the phone's own recognizer (Chrome).
 - **Gemini didn't judge it (the trace says "the phone judges"):** the signal
   is off, the grown-up's card wasn't agreed (parent page → *Teach Munni:
-  checked by Gemini*), or the site has no `GEMINI_API_KEY`. `npm run dev` has
-  no `/api` — Gemini judges there only through the voice server.
+  checked by Gemini*), or the site has no `GEMINI_API_KEY`. `npm run dev` reads
+  the key from `voice/.env` and serves `/api` (Ask me, the syllabus, Teach
+  Munni's judge on words) on the same origin, like Cloud Run.
 - **Start clean:** teacher view → **Remove the demo children**, then add them
   again.
 

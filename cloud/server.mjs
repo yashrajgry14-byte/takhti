@@ -35,7 +35,7 @@ process.env.TAKHTI_SYLLABUS_TIMEOUT_MS ||= '180000';
 const { draftCore } = await import('../api/syllabus.mjs');
 const { judgeCore } = await import('../api/teachback.mjs');
 const { syncCore } = await import('../api/class-sync.mjs');
-const ask = (await import('../api/ask.js')).default;
+const { askCore } = await import('../api/ask.js');
 
 /* ---------- the app's files: a whitelist, never the whole repo ---------- */
 const FILES = new Set(['/index.html', '/sw.js', '/manifest.webmanifest']);
@@ -138,13 +138,7 @@ export async function handle(req, res){
         try{ const out = await syncCore(gcsStore(process.env.TAKHTI_SYNC_BUCKET), body); return json(res, out.status, out.json); }
         catch(e){ return json(res, 503, { error: 'sync storage unavailable' }); }
       }
-      if(p === '/api/ask'){
-        // api/ask.js speaks the Vercel shape: req.body, res.status().json()
-        req.body = body;
-        let code = 200;
-        const shim = { status(c){ code = c; return shim; }, json(b){ json(res, code, b); return shim; } };
-        return ask(req, shim);
-      }
+      if(p === '/api/ask'){ const out = await askCore(body, process.env, clientIp(req)); return json(res, out.status, out.json); }
       return json(res, 404, { error: 'not found' });
     }
     if((req.method === 'GET' || req.method === 'HEAD') && await serveFile(req, res, p)) return;
@@ -155,7 +149,28 @@ export async function handle(req, res){
   }
 }
 
+/* `npm run dev` runs this same server on the laptop (--local): the app and
+   its /api endpoints on one origin, like Cloud Run. The Gemini key is read
+   from voice/.env into this process only — never printed, never served
+   (the whitelist above never serves voice/). Cloud Run sets K_SERVICE and
+   gets its key from Secret Manager instead. */
+async function loadLocalEnv(){
+  try{
+    const txt = await readFile(path.join(ROOT, 'voice', '.env'), 'utf8');
+    for(const line of txt.split(/\r?\n/)){
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+      if(m && !(m[1] in process.env)) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+    }
+  }catch(e){ /* no voice/.env: the app still runs, Tier 2 answers 503 and questions wait in the queue */ }
+}
+
 if(process.argv[1] === fileURLToPath(import.meta.url)){
-  const port = Number(process.env.PORT || 8080);
-  http.createServer(handle).listen(port, () => console.log(`[takhti] on :${port} · Gemini ${process.env.GEMINI_API_KEY ? 'set' : 'not set'} · sync ${process.env.TAKHTI_SYNC_BUCKET || 'off'}`));
+  const args = process.argv.slice(2);
+  const local = args.includes('--local');
+  if(local && !process.env.K_SERVICE) await loadLocalEnv();
+  const pi = args.indexOf('--port');
+  const port = Number((pi >= 0 && args[pi + 1]) || process.env.PORT || 8080);
+  // on the laptop, only this machine (and adb port forwarding) can reach it
+  const host = local ? '127.0.0.1' : undefined;
+  http.createServer(handle).listen(port, host, () => console.log(`[takhti] on ${local ? 'http://localhost:' + port : ':' + port} · Gemini ${(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) ? 'set' : 'not set'} · sync ${process.env.TAKHTI_SYNC_BUCKET || 'off'}`));
 }
