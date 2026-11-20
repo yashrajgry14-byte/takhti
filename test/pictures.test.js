@@ -35,7 +35,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 
 const LOAD = ['src/state.js','src/core/matcher.js','src/core/readability.js','src/content/sentences.js','src/content/games.js','src/content/facts.js','src/content/ages.js',
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js','src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-  'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/content/calendar.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'];
+  'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/content/calendar.js','src/content/upper.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'];
 const { verifyLoadListHasAllContent } = require('./_helpers/load-order');
 const lo = verifyLoadListHasAllContent(LOAD, 'src/core/diagnose.js');
 check('this suite loads every content file index.html loads before diagnose.js', lo.pass, lo.missing.join(', '));

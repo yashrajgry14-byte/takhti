@@ -88,6 +88,10 @@ function skillProblem(skillId, seed){
 
 /* ---------------- free-practice generator (Tier 0) ---------------- */
 function genProblem(lvl){
+  // column sums only: levels 7–10 (Classes 6–10) are content/upper.js's own
+  // problems, so a caller that only speaks column sums (a phone call) gets
+  // the top column level instead
+  if(lvl > 6) lvl = 6;
   const r=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
   let a,b,op,ans;
   if(lvl===1){ a=r(1,4); b=r(1,4); op='+'; }

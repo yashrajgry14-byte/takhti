@@ -16,7 +16,7 @@ const LOAD_LIST = ['src/core/matcher.js','src/core/readability.js','src/content/
                 'src/content/games.js','src/content/facts.js','src/content/ages.js',
                 'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js',
                 'src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-                'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/content/calendar.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'];
+                'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/content/calendar.js','src/content/upper.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'];
 for(const f of LOAD_LIST)
   vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
 // game-core.js calls log(0, ...) inside gameStart()/gameEnd() — a no-op
@@ -47,8 +47,8 @@ console.log('=== pool ===');
 const pool = X.gamePool();
 console.log('pool items:', pool.length);
 console.log('same array on a second call (cached)?', X.gamePool() === pool);
-check('gamePool() builds ~517 items from the real lesson bank (every ask-beat with 2+ options)',
-  pool.length >= 500 && pool.length <= 540, `got ${pool.length}`);
+check('gamePool() builds ~733 items from the real lesson bank (every ask-beat with 2+ options; 216 of them Class 6–10 maths, shown only to those classes)',
+  pool.length >= 715 && pool.length <= 750, `got ${pool.length}`);
 check('gamePool() caches on S._gamePool — a second call returns the identical array, not a rebuild',
   X.gamePool() === pool, 'second call produced a different array');
 

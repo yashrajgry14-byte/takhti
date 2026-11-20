@@ -288,7 +288,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     check('…a teacher\'s own upload keeps the lesson, with the warning (EN/HI)',
       backUp.ok && backWarn.some(w => /"क्या तोता में त वर्ण है\?" asks back what the line just before it said/.test(w.en) && /ठीक पहले की पंक्ति/.test(w.hi)), JSON.stringify([backUp.errors, backWarn]));
     check('…the builder sets it on every draft, repair and re-check, live and batch; the prompt and the repair round say why',
-      /const LIB_SAID_BACK = true/.test(libSrc) && (libSrc.match(/saidBack: LIB_SAID_BACK/g) || []).length === 3 && (libSrc.match(/langOf\(book\), LIB_SAID_BACK\)/g) || []).length === 2
+      /const LIB_SAID_BACK = true/.test(libSrc) && (libSrc.match(/saidBack: LIB_SAID_BACK/g) || []).length === 3 && (libSrc.match(/langOf\(book\), LIB_SAID_BACK(, cls\.id)?\)/g) || []).length === 2
       && /A YES\/NO QUESTION MUST NOT SAY A TEACHING LINE BACK/.test(promptSrc) && /rulesText\(rules\)[\s\S]*rulesText\(rules\)/.test(promptSrc), '');
     // a reader's lesson never copies its textbook (tools/book-words.mjs): the first live Mridang
     // build kept two lessons whose passages were page 7's own sentences, word for word

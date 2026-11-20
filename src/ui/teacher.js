@@ -36,7 +36,7 @@ function teacherRoster(code){
 /* The skills a teacher can pick as "what the class got wrong": anything
    the graph knows at the school grades this app reaches. */
 function teacherSkillOptions(){
-  return SKILLS.filter(s => s.g >= 1 && s.g <= 6 && s.strand !== 'lit')
+  return SKILLS.filter(s => s.g >= 1 && s.g <= 10 && s.strand !== 'lit')
     .sort((a,b) => a.g - b.g || a.en.localeCompare(b.en));
 }
 
@@ -257,7 +257,10 @@ function toggleClassSync(code){
 /* ---------- the school's own syllabus → this week's lessons ---------- */
 function syllabusHTML(code){
   const hi = S.lang === 'hi', c = S.ctx, res = c.sylRes, approved = sylApproved(code), plan = libPlan(code);
-  const cls = sylClass(c.sylCls || (plan && plan.book.cls) || 'c2');
+  // the class the teacher set for this class code (the roster) is the card's first guess
+  const ro = (readClassShared(code)._roster || {}).cls;
+  const rosterSyl = ro ? (['nur', 'lkg', 'ukg'].includes(ro) ? 'kg' : ro) : null;
+  const cls = sylClass(c.sylCls || (plan && plan.book.cls) || rosterSyl || 'c2');
   const badge = k => ({ sum: hi ? '✓ जवाब गणित से जाँचा' : '✓ answer checked by the arithmetic',
                         text: hi ? '✓ जवाब पाठ में मिला' : '✓ answer found in the passage',
                         shape: hi ? '✓ जवाब चित्र से जाँचा' : '✓ answer checked against the drawing',

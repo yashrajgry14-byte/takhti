@@ -50,7 +50,7 @@ function box(){
   ctx.window = ctx; vm.createContext(ctx);
   const files = ['src/config.js', 'src/state.js', 'src/content/sentences.js', 'src/content/games.js', 'src/content/themes.js', 'src/content/facts.js', 'src/content/ages.js',
     'src/content/skills.js', 'src/content/curriculum-early.js', 'src/content/lessons.js', 'src/core/lesson-gen.js', 'src/content/literacy.js', 'src/content/comprehension.js',
-    'src/content/geometry.js','src/content/clock.js','src/content/calendar.js', 'src/core/diagnose.js', 'src/core/class-share.js', 'src/core/syllabus.js', 'src/core/srs.js', 'src/core/log.js', 'src/core/store.js',
+    'src/content/geometry.js','src/content/clock.js','src/content/calendar.js','src/content/upper.js', 'src/core/diagnose.js', 'src/core/class-share.js', 'src/core/syllabus.js', 'src/core/srs.js', 'src/core/log.js', 'src/core/store.js',
     'src/core/profiles.js', 'src/core/matcher.js', 'src/core/adaptive.js', 'src/core/daily-engine.js', 'src/core/mathgen.js', 'src/core/readability.js', 'src/core/explain.js', 'src/core/mind.js',
     'src/core/twin.js', 'src/core/lang-mistakes.js', 'src/content/teach.js', 'src/core/teachback.js'];
   let src = '';
@@ -291,6 +291,8 @@ function box(){
   const lam = fs.mkdtempSync(path.join(os.tmpdir(), 'takhti-lambda-'));
   fs.mkdirSync(path.join(lam, 'fn')); fs.mkdirSync(path.join(lam, 'src/content'), { recursive: true });
   fs.copyFileSync(path.join(root, 'api/teachback.mjs'), path.join(lam, 'fn/teachback.mjs'));
+  // Netlify traces a function's local imports and ships them beside it (api/lib/class-profile.mjs)
+  fs.mkdirSync(path.join(lam, 'fn/lib')); fs.copyFileSync(path.join(root, 'api/lib/class-profile.mjs'), path.join(lam, 'fn/lib/class-profile.mjs'));
   fs.copyFileSync(path.join(root, 'src/content/teach.js'), path.join(lam, 'src/content/teach.js'));
   const oldRoot = process.env.LAMBDA_TASK_ROOT, oldKey = process.env.GEMINI_API_KEY;
   process.env.LAMBDA_TASK_ROOT = lam; delete process.env.GEMINI_API_KEY;

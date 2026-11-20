@@ -570,7 +570,7 @@ function queueQuestion(q){
 async function cloudAnswer(prompt){
   const res = await fetch(API_URL,{
     method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ max_tokens:1000, messages:[{role:"user",content:prompt}] })
+    body: JSON.stringify({ max_tokens:1000, messages:[{role:"user",content:prompt}], cls: band().cls })
   });
   if(!res.ok){
     const body = await res.text().catch(()=>'');
@@ -597,7 +597,8 @@ function askPrompt(q){
   // pitched for THIS child (core/twin.js) — only if a parent agreed to share
   // progress (the learning circle or Talking Munni); ids made into sentences, no name
   const about = (S.circleSync || S.talkMunni) && typeof twinPrompt === 'function' ? `\nAbout this child: ${twinPrompt(twinProfile())}` : '';
-  return `A child aged 6-9 in India asked: "${q}".${about}
+  // the class goes to the server as its id (cloudAnswer): the server puts its own profile of it first (api/lib/class-profile.mjs)
+  return `A child in India, in ${band().clsEn}, asked: "${q}".${about}
 Reply ONLY with JSON, no markdown fences:
 {"title":"the question restated simply","panels":[{"art":"ONE emoji","en":"one short simple sentence","hi":"same sentence in simple Hindi"},{...},{...}],"quiz":{"en":"one simple check question","hi":"same in Hindi","opts":["right","wrong"],"hiOpts":["right in Hindi","wrong in Hindi"],"correct":0}}
 Exactly 3 panels. Each sentence under 18 words, warm, concrete, no jargon. Keep it factual and age-appropriate.`;
@@ -849,4 +850,28 @@ async function flushQueue(){
     log(2,`Cached: "${it.q}" — now permanent on this device`);
     render();
   }
+}
+
+/* Ask by voice (20 Nov): a young child says the question instead of typing
+   it. It goes through the same submitQuestion() as a typed one. Held in
+   ACTIVE_LISTEN so leaving the screen (go() → stopListening()) stops it,
+   and a question heard after the child has left is dropped. */
+function askByVoice(){
+  const hi = S.lang === 'hi';
+  const btn = $('askmic');
+  if(ACTIVE_LISTEN){ stopListening(); if(btn){ btn.classList.remove('live'); } return; }
+  if(btn){ btn.classList.add('live'); btn.textContent = '👂 ' + (hi ? 'मुन्नी सुन रही है…' : 'Munni is listening…'); }
+  let heard = '';
+  ACTIVE_LISTEN = listen(alts => { heard = ((alts[0] && alts[0].transcript) || '').trim(); }, err => {
+    ACTIVE_LISTEN = null;
+    if(S.screen !== 'ask') return;
+    if(heard){ submitQuestion(heard); return; }
+    const b = $('askmic');
+    if(b){ b.classList.remove('live'); b.textContent = '🎤 ' + (hi ? 'फिर से बोलो' : 'Tap and try again'); }
+    // the recognizer can't run here: the typing box comes back for a grown-up
+    if(err && err !== 'no-speech' && err !== 'aborted'){
+      const box = document.querySelector('#screen .kid-type');
+      if(box) box.classList.add('show');
+    }
+  });
 }

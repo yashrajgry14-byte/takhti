@@ -12,6 +12,8 @@
    and the app queues the question — nothing is invented.
    ================================================================== */
 
+import { classProfile, classText } from './lib/class-profile.mjs';
+
 const MAX_BODY = 16 * 1024;
 const MAX_PROMPT = 4000;
 
@@ -106,8 +108,11 @@ export async function askCore(body, env, ip, fetchImpl){
   env = env || {}; fetchImpl = fetchImpl || fetch;
   const gemini = !!(env.GEMINI_API_KEY || env.GOOGLE_API_KEY);
   if(!gemini && !env.ANTHROPIC_API_KEY) return { status: 503, json: { error: 'No key configured' } };
-  const prompt = promptFrom(body);
-  if(!prompt) return { status: 400, json: { error: 'no question' } };
+  const asked = promptFrom(body);
+  if(!asked) return { status: 400, json: { error: 'no question' } };
+  // the class, from this server's own table (lib/class-profile.mjs): the answer is pitched at it
+  const prof = classProfile(body && body.cls);
+  const prompt = prof ? `${classText(prof)}\n${asked}` : asked;
   if(!rateOk(ip || '?', env)) return { status: 429, json: { error: 'enough for now — try again in a while' } };
   const r = gemini ? await askGemini(prompt, env, fetchImpl) : await askAnthropic(prompt, env, fetchImpl);
   if(r.error) return { status: r.status || 502, json: { error: r.error } };

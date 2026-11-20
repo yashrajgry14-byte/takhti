@@ -74,12 +74,14 @@ function mindDomain(skill){
   if(/^read\d$/.test(skill)) return 'read';
   if(MIND_SHAPES.includes(skill)) return 'shape';
   if(typeof SKILL_OPS !== 'undefined' && SKILL_OPS[skill]) return 'math';
+  if(typeof upperHasProblem === 'function' && upperHasProblem(skill)) return 'math';   // Classes 6–10 (content/upper.js)
   return null;
 }
 
 /* The skill a free-practice sum really exercises (Counting Stones). */
 function skillOfProblem(p){
   if(!p) return null;
+  if(p.kind === 'upper') return p.skill;   // content/upper.js
   const a = +p.a, b = +p.b;
   if(p.op === '+') return a + b <= 10 ? 'add10' : (a >= 10 || b >= 10) ? ((a % 10) + (b % 10) >= 10 ? 'carry' : 'add2') : 'bonds10';
   if(p.op === '−' || p.op === '-') return a <= 10 ? 'sub10' : (a % 10) < (b % 10) ? 'borrow' : 'sub2';

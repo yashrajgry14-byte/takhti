@@ -9,7 +9,7 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v93';
+const CACHE = 'takhti-v95';
 // Recorded audio clips are named by a hash of their text (see core/voice.js),
 // so they live in a cache of their own that the version cleanup below never
 // touches: bumping CACHE on a normal deploy must not re-download tens of MB
@@ -21,12 +21,12 @@ const AUDIO_CACHE = 'takhti-audio-v2';
 
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
-  './src/styles.css', './src/theme-light.css',
+  './src/styles.css', './src/theme-light.css', './src/theme-play.css',
   './src/config.js', './src/state.js', './src/content/sentences.js',
   './src/content/games.js', './src/content/themes.js', './src/content/facts.js',
   './src/content/ages.js', './src/content/skills.js', './src/content/curriculum-early.js',
   './src/content/lessons.js', './src/core/lesson-gen.js', './src/content/literacy.js',
-  './src/content/comprehension.js', './src/content/geometry.js', './src/content/clock.js', './src/content/calendar.js', './src/core/diagnose.js', './src/core/class-share.js',
+  './src/content/comprehension.js', './src/content/geometry.js', './src/content/clock.js', './src/content/calendar.js', './src/content/upper.js', './src/core/diagnose.js', './src/core/class-share.js',
   './src/core/class-sync.js', './src/core/syllabus.js', './src/content/library.js', './src/core/library.js', './src/core/generative-brain.js', './src/core/video-library-catalog.js', './src/core/cartoon-series.js',
   './src/core/srs.js', './src/core/sfx.js', './src/games/game-core.js',
   './src/content/anim.js', './src/content/copy.js', './src/content/competencies.js',
@@ -40,8 +40,9 @@ const SHELL = [
   './src/ui/jungle-map.js', './src/ui/video-player.js', './src/ui/teacher.js',
   './src/games/runner.js', './src/games/pop.js', './src/games/tower.js',
   './src/games/match.js', './src/games/sort.js', './src/games/archer.js',
-  './src/ui/self-listen.js', './src/ui/talk-munni.js', './src/ui/cloud-read.js', './src/ui/say-it.js', './src/ui/circle.js', './src/ui/ask-munni.js', './src/ui/mind-ui.js', './src/ui/teach-munni.js', './src/content/stories.js', './src/ui/story-time.js', './src/ui/handlers.js', './src/app.js',
-  './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png'
+  './src/ui/self-listen.js', './src/ui/talk-munni.js', './src/ui/cloud-read.js', './src/ui/say-it.js', './src/ui/circle.js', './src/ui/ask-munni.js', './src/ui/mind-ui.js', './src/ui/teach-munni.js', './src/content/stories.js', './src/ui/story-time.js', './src/ui/handlers.js', './src/app.js', './src/ui/playful.js',
+  './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
+  './fonts/baloo-2-devanagari-500-normal.woff2', './fonts/baloo-2-devanagari-600-normal.woff2', './fonts/baloo-2-devanagari-700-normal.woff2', './fonts/baloo-2-devanagari-800-normal.woff2', './fonts/baloo-2-latin-500-normal.woff2', './fonts/baloo-2-latin-600-normal.woff2', './fonts/baloo-2-latin-700-normal.woff2', './fonts/baloo-2-latin-800-normal.woff2', './fonts/mukta-devanagari-400-normal.woff2', './fonts/mukta-devanagari-500-normal.woff2', './fonts/mukta-devanagari-600-normal.woff2', './fonts/mukta-devanagari-700-normal.woff2', './fonts/mukta-latin-400-normal.woff2', './fonts/mukta-latin-500-normal.woff2', './fonts/mukta-latin-600-normal.woff2', './fonts/mukta-latin-700-normal.woff2'
 ];
 
 self.addEventListener('install', e => {

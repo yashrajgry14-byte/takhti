@@ -101,7 +101,7 @@ export function readBook(dir){
   const b = readJSON(f), errs = [];
   if(!/^[a-z0-9-]{3,40}$/.test(b.id || '')) errs.push('id: lower-case letters, digits and dashes');
   if(!b.title || !b.title.en) errs.push('title: { "en": …, "hi": … }');
-  if(!/^(kg|c[1-5])$/.test(b.cls || '')) errs.push('cls: kg or c1 … c5');
+  if(!/^(kg|c([1-9]|10))$/.test(b.cls || '')) errs.push('cls: kg or c1 … c10');
   if(!Array.isArray(b.chapters) || !b.chapters.length) errs.push('chapters: a list');
   const ids = new Set();
   for(const c of b.chapters || []){
@@ -288,7 +288,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
   const model = env.GEMINI_BATCH_MODEL || env.GEMINI_MODEL || 'gemini-4-hydrogen';
   const g = gemini(env, fetchImpl), pollMs = Number(opts.pollMs != null ? opts.pollMs : 30000);
   const until = Date.now() + Number(opts.waitMs != null ? opts.waitMs : 60 * 60000);
-  const ph = phoneChecker(), cls = ph.cls(book.cls), rules = ph.rules(cls.band), skills = ph.skills(cls.id, book.subject);
+  const ph = phoneChecker(), cls = ph.cls(book.cls), rules = ph.rules(cls.band, cls.id), skills = ph.skills(cls.id, book.subject);
   const statePath = path.join(dir, '.batch.json');
   let st = fs.existsSync(statePath) ? readJSON(statePath) : null;
   const save = () => writeJSON(statePath, st);
@@ -322,7 +322,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
   }
 
   const metaOf = id => book.chapters.find(c => c.id === id) || { id };
-  const draftReq = c => { const meta = metaOf(c.id); return buildRequest({ mode: 'draft', rules, count: meta.count || 4, skills, note: meta.note || '', lang: langOf(book) }, { fileUri: c.uri, mime: c.mime }); };
+  const draftReq = c => { const meta = metaOf(c.id); return buildRequest({ mode: 'draft', rules, cls: cls.id, count: meta.count || 4, skills, note: meta.note || '', lang: langOf(book) }, { fileUri: c.uri, mime: c.mime }); };
   const asRequest = (q, shape) => ({ systemInstruction: { parts: [{ text: q.system }] }, contents: [{ role: 'user', parts: q.parts }], ...GEN_SHAPES[shape] });
   // every request erred as a bad request (the field names) → the next request shape, once each
   const allBad = list => list.length && list.every(x => x.error && (x.error.code === 400 || /INVALID_ARGUMENT/.test(x.error.status || '')));
@@ -360,7 +360,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
       if(!o){ st.checked[c.id] = { error: (x && x.error && x.error.message) || 'no answer in the lesson format' }; continue; }
       const q = draftReq(c), got = lessonsFrom(o, q, { model: st.model });
       st.checked[c.id] = { chapter: got.chapter, tokens: tokensOf(d),
-        drafts: got.lessons.map(raw => ({ raw, first: vetted(ph.clean(raw, cls.band, skills, false, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS, langOf(book), LIB_SAID_BACK), vetOf(idxs[c.id])) })) };
+        drafts: got.lessons.map(raw => ({ raw, first: vetted(ph.clean(raw, cls.band, skills, false, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS, langOf(book), LIB_SAID_BACK, cls.id), vetOf(idxs[c.id])) })) };
     }
     save();
     const n = Object.values(st.checked).reduce((a, c) => a + (c.drafts ? c.drafts.length : 0), 0), ok = Object.values(st.checked).reduce((a, c) => a + (c.drafts ? c.drafts.filter(x => x.first.ok).length : 0), 0);
@@ -369,7 +369,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
 
   // 2. one repair round, every chapter's failures in the same batch
   const toFix = id => (st.checked[id].drafts || []).map((x, i) => ({ x, i })).filter(({ x }) => !x.first.ok);
-  const repairReq = id => buildRequest({ mode: 'repair', rules, lang: langOf(book), repair: toFix(id).map(({ x }) => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })) });
+  const repairReq = id => buildRequest({ mode: 'repair', rules, cls: cls.id, lang: langOf(book), repair: toFix(id).map(({ x }) => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })) });
   const repairs = await job('repairs', () => st.chapters.filter(c => st.checked[c.id].drafts && toFix(c.id).length).map(c => [c.id, repairReq(c.id)]).filter(([, q]) => !q.error));
   if(repairs === null){ say(`The repairs are still running on Google's side (${st.repairs.job}). Run the same command again later — it picks the job up.`); return out; }
 
@@ -379,7 +379,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
     if(k.error){ say(`${c.id}: not built — ${k.error}`); failed.push({ id: c.id, why: k.error }); continue; }
     const rx = repairs[c.id], rd = rx && rx.response, ro = rd && answerJSON(rd);
     const fixes = toFix(c.id);
-    if(ro){ const got = lessonsFrom(ro, { mode: 'repair', count: fixes.length }); got.lessons.forEach((raw, j) => { const f = fixes[j]; if(f){ f.x.repairRaw = raw; f.x.second = vetted(ph.clean(raw, cls.band, skills, true, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS, langOf(book), LIB_SAID_BACK), vetOf(idxs[c.id])); } }); }
+    if(ro){ const got = lessonsFrom(ro, { mode: 'repair', count: fixes.length }); got.lessons.forEach((raw, j) => { const f = fixes[j]; if(f){ f.x.repairRaw = raw; f.x.second = vetted(ph.clean(raw, cls.band, skills, true, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS, langOf(book), LIB_SAID_BACK, cls.id), vetOf(idxs[c.id])); } }); }
     const r = {
       at: new Date().toISOString(), cls: cls.id, band: cls.band, rules, note: meta.note || '', ...(langOf(book) ? { lang: langOf(book) } : {}), source: c.file, model: st.model, chapter: k.chapter,
       draftMs: 0, batch: { drafts: st.drafts && st.drafts.job, repairs: st.repairs && st.repairs.job || null },

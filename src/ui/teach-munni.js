@@ -166,7 +166,7 @@ function teachNoHear(err){
 function teachPayload(){
   const s = TEACH.s, it = teachItem(s);
   return {
-    ask: it.aim.id, ages: band().ages,
+    ask: it.aim.id, ages: band().ages, cls: band().cls,   // the server's own profile of the class goes in the judge's prompt (api/class-profile.mjs)
     aims: s.items.filter(x => x.state === 'todo' && (!x.fix || x === it)).slice(0, 5).map(x => x.fix
       ? { id: x.aim.id, kind: 'fix', point: x.aim.point, mistake: x.fix.mistake, munni: x.fix.act.en, said: teachSaid(x, 'en') + ' ' + teachSaid(x, 'hi') }
       : { id: x.aim.id, kind: 'explain', point: x.aim.point, forget: x.aim.forget, ideas: x.aim.ideas.map(i => ({ en: i.en, hi: i.hi })),
@@ -292,7 +292,7 @@ function teachHTML(){
       : judging ? (hi ? '🤔 सोच रही हूँ…' : '🤔 Thinking…')
       : (hi ? '🎤 छुओ और समझाओ' : '🎤 Tap and explain')}</button>
     ${TEACH.msg ? `<div class="retry" style="font-size:12.5px;margin-top:6px">${attr(TEACH.msg)}</div>` : ''}
-    ${!TALK_URL && !S.online ? `<div class="muted" style="font-size:12px;margin-top:6px">${hi ? 'सिग्नल नहीं: यही फ़ोन जाँचता है। सिग्नल हो तो Gemini जाँचता है।' : 'No signal: this phone checks it. With a signal, Gemini checks it.'}</div>`
+    ${!TALK_URL && !S.online ? `<div class="muted netnote" style="font-size:12px;margin-top:6px">${hi ? 'सिग्नल नहीं: यही फ़ोन जाँचता है। सिग्नल हो तो Gemini जाँचता है।' : 'No signal: this phone checks it. With a signal, Gemini checks it.'}</div>`
       : teachWordsOk() && S.online ? `<div class="muted" style="font-size:12px;margin-top:6px">${hi ? 'Gemini जाँचता है कि कौन-सी बात समझाई — तुम्हारे अपने शब्दों से।' : 'Gemini checks which points you explained — from your own words.'}</div>` : ''}
     ${TEACH.typing ? `<div class="row" style="gap:6px;margin-top:8px">
       <input class="input" id="teachtxt" placeholder="${hi ? 'यहाँ लिखकर समझाओ' : 'Or type it here'}" autocomplete="off">

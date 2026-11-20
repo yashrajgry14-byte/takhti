@@ -155,6 +155,10 @@ function jungleMapHTML(){
     <i class="jm-deco sm" style="left:42%;top:34%">🌿</i>
     <i class="jm-deco sm" style="left:10%;top:90%">🌿</i>
     <i class="jm-deco sm" style="left:84%;top:12%">🦋</i>
+    <i class="jm-deco" style="left:6%;top:20%">🌳</i>
+    <i class="jm-deco sm" style="left:56%;top:52%">🌼</i>
+    <i class="jm-deco sm" style="left:20%;top:70%">🍄</i>
+    <i class="jm-deco sm" style="left:66%;top:96%">🌺</i>
     <i class="jm-bird">ᵛ</i>
 
     ${places.map((p,i) => {

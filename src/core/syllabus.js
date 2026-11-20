@@ -54,14 +54,43 @@ const SYL_CLASSES = [
   { id:'c2', band:'developing', g:2, en:'Class 2',      hi:'कक्षा 2' },
   { id:'c3', band:'developing', g:3, en:'Class 3',      hi:'कक्षा 3' },
   { id:'c4', band:'fluent',     g:4, en:'Class 4',      hi:'कक्षा 4' },
-  { id:'c5', band:'fluent',     g:5, en:'Class 5',      hi:'कक्षा 5' }
+  { id:'c5', band:'fluent',     g:5, en:'Class 5',      hi:'कक्षा 5' },
+  // Classes 6–10: the top band's look-ups, their own numbers and grade (content/ages.js UPPER_CLASS)
+  { id:'c6', band:'fluent',     g:6, en:'Class 6',      hi:'कक्षा 6' },
+  { id:'c7', band:'fluent',     g:7, en:'Class 7',      hi:'कक्षा 7' },
+  { id:'c8', band:'fluent',     g:8, en:'Class 8',      hi:'कक्षा 8' },
+  { id:'c9', band:'fluent',     g:9, en:'Class 9',      hi:'कक्षा 9' },
+  { id:'c10', band:'fluent',    g:10, en:'Class 10',    hi:'कक्षा 10' }
 ];
 const SYL_CHECKED = new Map();   // lesson JSON -> checked lesson | null, this session only
 
 const sylClass = id => SYL_CLASSES.find(c => c.id === id) || SYL_CLASSES[2];
-function sylRules(bandId){
+function sylRules(bandId, clsId){
   const b = AGE_BANDS[bandId] || AGE_BANDS.developing;
-  return { band: b.id, ages: b.ages, maxNumber: b.maxNumber, sayWords: SYL_WORDS[b.id] || 18, read: b.read };
+  // a class's own ceiling where it has one (Classes 6–10); the server sets it from the class too
+  const k = typeof classById === 'function' && classById(clsId);
+  return { band: b.id, ages: b.ages, maxNumber: k ? bandFor({ cls: clsId }).maxNumber : b.maxNumber, sayWords: SYL_WORDS[b.id] || 18, read: b.read };
+}
+
+/* What a lesson for a class must never do — the same patterns the server's
+   class profile names in every prompt (api/class-profile.mjs; the test keeps
+   them equal): no tracing above Class 1, no baby talk from Class 3. Read from
+   everything the child sees or hears. 'kg' is the teacher's Nursery/KG. */
+const SYL_TRACE_RE = /\btrac(?:e|ing)\s+(?:the|over|along|it|this|these|each|a|an|letters?|lines?|shapes?)\b|\btracing\b|ट्रेस/i;
+const SYL_BABY_RE = /\b(?:little one|sweetie|cutie|kiddo|baby|tiny tot)\b|नन्हे|छोटू|बेटू/i;
+function sylClassErrors(les, clsId){
+  const g = clsId === 'kg' ? 0 : (typeof classById === 'function' && classById(clsId) ? classById(clsId).g : null);
+  if(g == null) return [];
+  const texts = [];
+  const add = o => { if(o && typeof o === 'object'){ if(o.en) texts.push(o.en); if(o.hi) texts.push(o.hi); } else if(typeof o === 'string') texts.push(o); };
+  add(les.title); add(les.sub);
+  for(const b of les.beats || []){ add(b.say); add(b.q); add(b.p); add(b.text); add(b.word); (b.opts || []).forEach(add); (b.hiOpts || []).forEach(add); }
+  for(const a of les.aims || []){ add(a.point); add(a.forget); (a.hints || []).forEach(add); }
+  const label = typeof classById === 'function' && classById(clsId) ? classById(clsId).en : 'this class';
+  const errs = [], hit = re => texts.map(t => (t.match(re) || [])[0]).find(Boolean);
+  if(g >= 2){ const w = hit(SYL_TRACE_RE); if(w) errs.push(`asks ${label} to trace ("${w}") — tracing is for Nursery to Class 1: have the child write it on paper or answer instead`); }
+  if(g >= 3){ const w = hit(SYL_BABY_RE); if(w) errs.push(`talks down to ${label} ("${w}") — speak to them at their own age, warmly but without baby talk`); }
+  return errs;
 }
 /* the skills a lesson for this class may name: its own grade first, then
    the grades around it — a Class 3 shapes chapter practises flat shapes
@@ -543,6 +572,11 @@ function sylClean(raw, opts){
   // using the app in Hindi (ui/lesson-player.js). Inside the id when set.
   const lang = ['en', 'hi'].includes(opts.lang) ? opts.lang : ['en', 'hi'].includes(raw.lang) ? raw.lang : undefined;
   if(lang) les.lang = lang;
+  // the class it was written for: kept on the lesson (and inside its id) only from Class 6,
+  // whose numbers go past the band's (content/ages.js UPPER_CLASS) — every lesson for
+  // Classes 1–5, the library's included, keeps the id it always had
+  const clsId = typeof classById === 'function' && classById(raw.cls) ? raw.cls : opts.cls;
+  if(typeof classById === 'function' && classById(clsId) && classById(clsId).g >= 6) les.cls = clsId;
   // an aim that fails its check is dropped and named (aimErrors); a lesson with none fails
   // mendHints: the repaired draft's last chance — a hint that still gives it away becomes a general nudge (teachCleanAims)
   const ta = typeof teachCleanAims === 'function' ? teachCleanAims(raw.aims, 'sch-tmp', { mendHints: !!(opts && opts.mendHints) }) : { aims: [], errors: ['the aim checker is not loaded'], fixes: [] };
@@ -740,7 +774,7 @@ function sylClean(raw, opts){
   const id = 'sch-' + sylHash({ t: les.title, s: les.sub, k: les.skillId, a: les.aims.map(a => ({ ...a, id: undefined })), b: les.beats.map(b => ({ ...b, correct: undefined, hiOpts: undefined,
     opts: b.opts && b.opts.slice().sort(), right: b.opts ? b.opts[b.correct] : undefined, hiRight: b.hiOpts ? b.hiOpts[b.correct] : undefined })),
     // only when set, so a lesson without one (every maths lesson) keeps the id it always had
-    ...(les.lang ? { l: les.lang } : {}) });
+    ...(les.lang ? { l: les.lang } : {}), ...(les.cls ? { c: les.cls } : {}) });
   les.aims.forEach((a, k) => { a.id = ('s' + id.replace(/^sch-/, '') + '.' + k).slice(0, 32); });
   // Each question's slot comes from the id, whatever order it arrived in (so checking a
   // stored lesson again gives the same order); with two or more, the right answers are
@@ -752,6 +786,7 @@ function sylClean(raw, opts){
   if(slots.length >= 2 && slots.every(s => s === slots[0])) slots[slots.length - 1] = 1 - slots[0];
   two.forEach(([b], k) => { if(slots[k] !== b.correct) flip(b); });
   les.id = id;
+  errs.push(...sylClassErrors(les, clsId));          // what a lesson for this class must never do (api/class-profile.mjs says it to Gemini)
   const v = validateLesson(les);
   const errors = errs.concat(v.errors);
   return { lesson: les, ok: errors.length === 0, errors, checks, aimErrors: ta.errors, aimFixes: ta.fixes || [] };
@@ -766,24 +801,24 @@ function sylRepairReasons(x){
 
 /* Ask the server for drafts, check them, send the failures back once. */
 async function sylDraft(input){
-  const cls = sylClass(input.cls), rules = sylRules(cls.band), skills = sylSkills(cls);
+  const cls = sylClass(input.cls), rules = sylRules(cls.band, cls.id), skills = sylSkills(cls);
   const post = async body => {
     const res = await fetch(SYL_URL, { method:'POST', headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ ...body, rules, schoolKey: S.ctx.sylKey || undefined }) });
+      body: JSON.stringify({ ...body, rules, cls: cls.id, schoolKey: S.ctx.sylKey || undefined }) });   // the class: the server's own profile of it goes in the prompt
     const d = await res.json().catch(() => ({}));
     if(!res.ok) throw Object.assign(new Error(d.error || ('HTTP ' + res.status)), { status: res.status, maxMb: d.maxMb });
     return d;
   };
   const d = await post({ mode:'draft', chapter: input.chapter, count: input.count, skills, note: input.note });
   const raws = Array.isArray(d.lessons) ? d.lessons : [];
-  let drafts = raws.map(raw => ({ raw, ...sylClean(raw, { band: cls.band, skills }) }));
+  let drafts = raws.map(raw => ({ raw, ...sylClean(raw, { band: cls.band, skills, cls: cls.id }) }));
   const failed = drafts.filter(x => !x.ok);
   log(2, `Syllabus · Gemini (${d.model || '?'}) drafted ${raws.length} lesson(s) from "${d.chapter || 'the chapter'}" · ${drafts.length - failed.length} passed Takhti's checker`);
   if(failed.length){
     try{
       const r = await post({ mode:'repair', repair: failed.map(x => ({ lesson: x.raw, errors: sylRepairReasons(x) })) });
       (r.lessons || []).forEach((raw, k) => {
-        const again = sylClean(raw, { band: cls.band, skills, mendHints: true }), at = drafts.indexOf(failed[k]);
+        const again = sylClean(raw, { band: cls.band, skills, cls: cls.id, mendHints: true }), at = drafts.indexOf(failed[k]);
         if(at < 0) return;
         // a "fix" that came back exactly as sent is said so, not counted as a second try
         const same = JSON.stringify(sylTidy(raw.beats || [])) === JSON.stringify(sylTidy(failed[k].raw.beats || []));

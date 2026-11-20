@@ -38,6 +38,12 @@ function mindMathWays(skill){
    on (a low school mark, a changed plan) — otherwise the usual level. */
 function mindPracticeProblem(){
   const nx = mindNext();
+  // Classes 6–10 (content/upper.js): levels 7–10 are their own problems
+  if(S.levels.math >= 7 && typeof upperProblem === 'function'){
+    if(nx && upperHasProblem(nx.skill) && mindRand() < 0.5){ const up = upperProblemFor(nx.skill, Math.floor(mindRand() * 1e9)); if(up) return { ...up, focus: nx.skill }; }
+    const up = upperProblem(S.levels.math, Math.floor(mindRand() * 1e9));
+    if(up) return up;
+  }
   if(nx && mindDomain(nx.skill) === 'math' && skillHasProblem(nx.skill) && mindRand() < 0.5){
     const sp = skillProblem(nx.skill, Math.floor(mindRand() * 1e9));
     if(sp && sp.c == null) return { a: sp.a, b: sp.b, op: sp.op, ans: sp.ans, opts: sp.opts.map(Number), focus: nx.skill };
@@ -47,6 +53,7 @@ function mindPracticeProblem(){
 
 /* A missed sum: teach it this child's way. */
 function mindTeachMath(p){
+  if(p && p.kind === 'upper') return;   // a Class 6–10 problem shows its own worked steps (upperMathHTML)
   const skill = skillOfProblem(p);
   // a mistake this child keeps making decides the explanation: straight at it (core/twin.js)
   if(S.ctx.tip && S.ctx.tip.habit && skill && typeof askTeach === 'function'){
@@ -280,4 +287,56 @@ function twinParentHTML(){
     <div style="font-size:12px;opacity:.7">${hi ? 'अगली बार मुन्नी ठीक इसी ग़लती पर मदद करेगी।' : 'Next time, Munni helps with exactly this mistake.'}</div>` : ''}
   ${found.length ? `<div style="font-size:12.5px;margin-top:6px"><b>${hi ? 'मुन्नी ने एक नई ग़लती पहचानी:' : 'A mistake Munni worked out herself:'}</b> ${found.slice(0, 2).map(label).join('; ')}</div>` : ''}
   ${empty ? `<div class="muted" style="font-size:12.5px">${hi ? `${n} जितना अभ्यास करेंगे, यह तस्वीर उतनी साफ़ होगी।` : `The more ${n} practises, the clearer this picture gets.`}</div>` : ''}`;
+}
+
+/* ---------- Classes 6–10 in Counting Stones (content/upper.js) ----------
+   A question with text answers. Before the answer: the question and four
+   choices, Ask Munni's steps if asked (never the answer). After a miss:
+   which slip it was, and the steps to work it through — this child's
+   "steps" way, labelled for the mind. Right or not is the twin's guess
+   (no column sum underneath to name a mistake from). */
+function upperMathHTML(p){
+  const hi = S.lang === 'hi';
+  const key = 'upper:' + p.id;
+  if(S.ctx.picked == null && !S.ctx.helped) twinExpect(key, p.skill, null, 1 / p.opts.length);
+  const done = S.ctx.picked != null, sk = skillById(p.skill);
+  return `
+  <button class="back" onclick="go('map')">← ${t('back')}</button>
+  <div class="muted">${t('level')} ${S.levels.math} · ${t('count')} · ${competencyName('math', S.levels.math)}${sk ? ` · ${hi ? sk.hi : sk.en}` : ''}</div>
+  <div class="problem upperq" style="font-size:${p.q.en.length > 40 ? 20 : 30}px;line-height:1.35">${attr(hi ? p.q.hi : p.q.en)}</div>
+  <div class="opts" style="margin-top:12px">
+    ${p.opts.map((o, i) => `<button class="opt ${done && o === p.ans ? 'right' : ''} ${S.ctx.picked === o && o !== p.ans ? 'wrong' : ''}" onclick="answerUpper(${i})">${attr(o)}</button>`).join('')}
+  </div>
+  ${S.ctx.msg ? `<div class="feedback" style="text-align:center;margin-top:14px">${S.ctx.msg}</div>` : ''}
+  ${done && S.ctx.picked !== p.ans ? `
+    ${upperMistakeTip(p, S.ctx.picked, S.lang) ? `<div class="twintip" data-say="${attr(upperMistakeTip(p, S.ctx.picked, S.lang))}" onclick="sayEl(this)">💡 ${attr(upperMistakeTip(p, S.ctx.picked, S.lang))}</div>` : ''}
+    <div class="card" style="margin-top:10px;padding:10px">
+      <div class="kicker2">${hi ? 'ऐसे हल करो' : 'WORK IT THROUGH'}</div>
+      ${p.steps.map((x, i) => `<div style="margin-top:4px">${i + 1}. ${attr(hi ? x.hi : x.en)}</div>`).join('')}
+      <div style="margin-top:6px;opacity:.8">${hi ? 'उदाहरण' : 'Like this'}: ${attr(hi ? p.ex.hi : p.ex.en)}</div>
+    </div>` : ''}
+  ${mindIdeaHTML()}
+  ${done ? `<button class="btn" style="margin-top:12px" onclick="nextProblem()">${t('next')} →</button>` : ''}`;
+}
+function answerUpper(i){
+  const p = S.ctx.p;
+  if(!p || p.kind !== 'upper' || S.ctx.picked != null) return;
+  const o = p.opts[i];
+  if(o == null) return;
+  if(typeof sfxPop === 'function') sfxPop();
+  S.ctx.picked = o;
+  const ok = o === p.ans;
+  S.ctx.msg = ok ? (S.lang === 'hi' ? 'सही! ⭐' : 'Correct! ⭐')
+                 : (S.lang === 'hi' ? `जवाब है ${p.ans}` : `The answer is ${p.ans}`);
+  twinCheck('upper:' + p.id, o, ok, S.ctx.helped);
+  if(!S.ctx.helped){
+    record('math', ok);                       // after Ask Munni's steps, the answer isn't counted as the child's own
+    mindAttempt(p.skill, ok);
+    twinObserve(p.skill, ok, S, 1 / p.opts.length);
+    noteSkillAttempt(p.skill, ok, S);
+    if(!ok) mindTaught(p.skill, 'steps');     // the worked steps shown now are a teaching moment
+  }
+  log(0, `Class ${band().g} maths · ${p.type} · ${ok ? 'right' : 'not yet — ' + (p.why[o] || '?')}`);
+  render();
+  speak(ok ? (S.lang === 'hi' ? 'सही' : 'Correct') : (upperMistakeTip(p, o, S.lang) || S.ctx.msg));
 }

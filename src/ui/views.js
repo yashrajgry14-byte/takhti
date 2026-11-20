@@ -171,7 +171,7 @@ read(){
     : s.split(/\s+/).map(w=>`<span class="w" data-say="${attr(w)}" onclick="sayEl(this)">${w}</span>`).join(' ');
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
-  <div class="muted">${t('level')} ${S.levels.read} · ${t('read')} · ${competencyName('read',S.levels.read)}</div>
+  <div class="muted levelline">${t('level')} ${S.levels.read} · ${t('read')} · ${competencyName('read',S.levels.read)}</div>
   <div class="langpick">
     <button class="${S.lang==='en'?'sel':''}" onclick="setReadLang('en')">English</button>
     <button class="${S.lang==='hi'?'sel':''}" onclick="setReadLang('hi')">हिंदी</button>
@@ -200,7 +200,7 @@ read(){
     <button class="btn ghost" onclick="speak(S.ctx.sentence)">🔊 ${t('hear')}</button>
     <button class="btn" onclick="nextSentence()">${t('next')} →</button>
   </div>
-  <div style="margin-top:10px">
+  <div class="kid-type ${S.ctx.msg && S.ctx.score==null ? 'show' : ''}" style="margin-top:10px">
     <input class="input" id="typed" placeholder="${t('typeInstead')}">
     <button class="btn ghost" style="margin-top:8px" onclick="checkRead($('typed').value)">${t('check')}</button>
   </div>`;
@@ -221,7 +221,7 @@ write(){
   <div class="tabs">
     ${modes.map(m => `<button class="${S.ctx.mode===m?'sel':''}" onclick="setWriteMode('${m}')">${wl[m]}</button>`).join('')}
   </div>`;
-  const levelLine = `<div class="muted">${t('level')} ${S.levels.write} · ${t('write')} · ${competencyName('write',S.levels.write)}</div>`;
+  const levelLine = `<div class="muted levelline">${t('level')} ${S.levels.write} · ${t('write')} · ${competencyName('write',S.levels.write)}</div>`;
 
   /* ---------- PAPER MODE: copy the sentence, photograph it, type it back ---------- */
   if(S.ctx.mode==='paper'){
@@ -331,11 +331,12 @@ math(){
     S.planMore = null;
   }
   const p = S.ctx.p;
+  if(p.kind === 'upper') return upperMathHTML(p);   // Classes 6–10 (content/upper.js)
   const g = gameById(S.game);
   if(S.ctx.picked == null && !S.ctx.helped) twinExpect(twinKeyMath(p), skillOfProblem(p), p, p.opts);   // the twin's guess, before the answer
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
-  <div class="muted">${t('level')} ${S.levels.math} · ${t('count')} · ${competencyName('math',S.levels.math)}</div>
+  <div class="muted levelline">${t('level')} ${S.levels.math} · ${t('count')} · ${competencyName('math',S.levels.math)}</div>
   <div class="problem">${p.a} ${p.op} ${p.b}</div>
   <div class="mathstage" id="mstage">
     <div class="narr" id="mnarr">${S.lang==='hi'?'"दिखाओ" दबाओ और देखो':'Tap "Show me" to watch it happen'}</div>
@@ -365,7 +366,7 @@ games(){
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="display" style="font-size:22px;margin-top:4px">${S.lang==='hi'?'खेलो':'Play'}</div>
-  <div class="muted" style="margin-top:2px">${S.lang==='hi'
+  <div class="muted kid-hide" style="margin-top:2px">${S.lang==='hi'
     ? 'हर खेल एक छोटा दौर है और अपने आप खत्म होता है — जितना खेलना चाहो, उतना ही खेलो, कोई दबाव नहीं।'
     : 'Each game is one short, bounded round that ends on its own — play one or several, there is no pressure to keep going.'}</div>
   <div class="gameshelf">
@@ -410,7 +411,7 @@ ask(){
         ? `<button class="btn" onclick="S.ctx.panel=${i+1};render();speakPanel(${i+1})">${t('next')} →</button>`
         : `<button class="btn leaf" onclick="go('askquiz')">${t('check')} ✓</button>`}
     </div>
-    <div class="muted" style="margin-top:12px">${S.lang==='hi'?'यह फ़ोन में सुरक्षित है। बिना सिग्नल के भी फिर चलेगा।':'Saved to this phone. It will play again with no signal.'}</div>`;
+    <div class="muted kid-hide" style="margin-top:12px">${S.lang==='hi'?'यह फ़ोन में सुरक्षित है। बिना सिग्नल के भी फिर चलेगा।':'Saved to this phone. It will play again with no signal.'}</div>`;
   }
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
@@ -418,8 +419,11 @@ ask(){
   <div class="muted">${t('askSub')}</div>
   ${elephantHTML()}
   ${talkPanelHTML()}
+  <button class="btn kid-mic" id="askmic" style="margin-top:12px;width:100%" onclick="askByVoice()">🎤 ${S.lang==='hi'?'दबाओ और मुन्नी से पूछो':'Tap and ask Munni'}</button>
+  <div class="kid-type">
   <input class="input" id="q" style="margin-top:12px" placeholder="${t('typeQ')}">
   <button class="btn" style="margin-top:10px" onclick="submitQuestion($('q').value)">${t('sendQ')}</button>
+  </div>
   <div style="margin-top:8px" class="row">
     <button class="btn ghost" onclick="submitQuestion('Why is the sky blue?')">Why is the sky blue?</button>
   </div>
