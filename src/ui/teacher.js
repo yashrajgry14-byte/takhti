@@ -42,6 +42,11 @@ function teacherSkillOptions(){
 
 function teacherHTML(){
   const hi = S.lang === 'hi';
+  // The parent PIN is not a teacher credential. Never render local/remote
+  // class records until the school has verified a teacher identity.
+  if(typeof classAuthToken !== 'function' || !classAuthToken() || CLASS_AUTH.role !== 'teacher')
+    return '<button class="back" onclick="go(\'parent\')">← Back</button><h3>Teacher account required</h3>'+
+      (typeof classAuthHTML === 'function' ? classAuthHTML() : '<p>Sign in to access class data.</p>');
   const code = teacherCode();
   const roster = code ? teacherRoster(code) : [];
   const skillId = S.ctx.tskill || '';
