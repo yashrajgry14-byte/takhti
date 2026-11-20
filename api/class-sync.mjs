@@ -99,23 +99,21 @@ function cleanRoster(r){
 const rosterFor = (r, ids) => r ? { cls: r.cls, kids: pick(r.kids || {}, ids), at: r.at } : null;
 
 /* The merge itself, independent of any host — exported for the tests. */
-export async function syncCore(store, body){
+export async function syncCore(store, body, identity){
+  // No legacy class-code/teacher-key authentication on the protected endpoint.
+  if(!identity || identity.ok !== true) return {status:401,json:{error:'verified identity required'}};
+  if(identity.role === 'guardian' && (body.teacherKey || body.homework || body.lessons || body.roster)) return {status:403,json:{error:'teacher actions forbidden'}};
   const code = String(body && body.code || '').toUpperCase();
   if(!CODE.test(code)) return { status:400, json:{ error:'bad class code' } };
   const key = 'class-' + code;
-  const cur = (await store.get(key, { type:'json' })) || { children:{}, homework:null, teacherKeyHash:null };
+  const cur = (await store.get(key, { type:'json' })) || { children:{}, homework:null };
 
-  let teacher = false;
-  if(body.teacherKey){
-    if(typeof body.teacherKey !== 'string' || body.teacherKey.length < 16 || body.teacherKey.length > 128) return { status:400, json:{ error:'bad teacher key' } };
-    const h = await sha256(body.teacherKey);
-    if(!cur.teacherKeyHash) cur.teacherKeyHash = h;               // the first teacher phone claims the class
-    else if(cur.teacherKeyHash !== h) return { status:403, json:{ error:'this class is synced by another teacher phone' } };
-    teacher = true;
-  }
+  let teacher = identity.role === 'teacher';
+  if(teacher && (body.children && Object.keys(body.children).length)) return {status:403,json:{error:'teacher may not overwrite child records'}};
   const sent = [];
 
   for(const [id, c] of Object.entries((body && body.children) || {})){
+    if(teacher || !identity.children?.has(id)) return {status:403,json:{error:'child not authorized'}};
     if(typeof id !== 'string' || !id || id.length > 40 || id.startsWith('_')) continue;
     const clean = cleanChild(c);
     if(!clean) continue;
@@ -135,10 +133,6 @@ export async function syncCore(store, body){
                                      : { children: pick(cur.children, sent), homework: cur.homework, lessons: cur.lessons || null, roster: rosterFor(cur.roster, sent) } };
 }
 const pick = (all, ids) => Object.fromEntries(ids.filter(id => all[id]).map(id => [id, all[id]]));
-async function sha256(text){
-  const { createHash } = await import('node:crypto');
-  return createHash('sha256').update(String(text)).digest('hex');
-}
 
 async function blobStore(){
   try{
@@ -167,10 +161,13 @@ export default async function handler(req, res){
 
   const store = await blobStore();
   if(!store) return reply(503, { error:'sync storage not configured on this server' });
-  try{
+  // Standalone Netlify/Vercel function is intentionally disabled until
+  // deployed with the same verified identity and ACL middleware as Cloud Run.
+  return reply(503, {error:'class sync requires verified Cloud Run authentication'});
+  /*try{
     const out = await syncCore(store, body);
     return reply(out.status, out.json);
   }catch(e){
     return reply(503, { error:'sync storage unavailable' });
-  }
+  }*/
 }
