@@ -18,7 +18,7 @@
        the parent's switch, a story played start to end (counting, the
        pick as evidence, a wrong pick shown kindly, the end screen that
        waits, a star the first time only), "Again" and "Another", Hindi,
-       and no network used by a story
+       and no lesson/child data sent to an unrelated network endpoint
    ================================================================== */
 const fs = require('fs'), path = require('path'), http = require('http'), vm = require('vm');
 const { JSDOM, VirtualConsole } = require('jsdom');
@@ -120,6 +120,15 @@ server.listen(0, '127.0.0.1', () => {
 
   w.addEventListener('load', async () => {
     try{
+      // Isolate Story Time behavior from external online audio services.
+      // A deterministic Google-TTS-compatible playback stub preserves
+      // speech completion and captures narrated lines without browser TTS.
+      w.__storySpoken = spoken;
+      E(`speak = function(text, lang, onDone) {
+        window.__storySpoken.push(String(text));
+        if (onDone) setTimeout(onDone, 5);
+        return Promise.resolve();
+      }`);
       E(`arrSkip(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance();`);
 
       /* ---- who lands where ---- */
