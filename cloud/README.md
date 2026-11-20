@@ -92,3 +92,16 @@ The endpoint is public like the app; it applies a simple per-instance
 IP-based throttle and a 240-character request limit. For production scale,
 use centralized rate limiting, budget alerts and abuse controls. Test
 both Indian locales under your Cloud project and confirm pricing and quotas.
+
+## Secure school accounts (Firebase Auth)
+
+The Cloud Run class-sync endpoint now requires a signed Firebase ID token and
+an active administrator-provisioned ACL for the exact school/class and child.
+An old six-character class code or device PIN is not sufficient. Set both
+`FIREBASE_PROJECT_ID` and `FIREBASE_WEB_API_KEY` in Cloud Shell before
+running `cloud/deploy.sh`; if unset, class sync fails closed. Teacher and
+guardian access setup is documented in `SECURE-SCHOOL-SETUP.md`.
+
+Do not deploy this change to a real-school environment until the new
+authentication and tenant-isolation checks pass, actual school accounts are
+provisioned, and the privacy/security prerequisites in that document are met.
