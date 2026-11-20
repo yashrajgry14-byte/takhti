@@ -21,6 +21,8 @@ export async function ttsCore(body, opts = {}){
 
   const locale = lang === 'hi' ? 'hi-IN' : 'en-IN';
   const voice = `${locale}-Chirp3-HD-Kore`;
+  const pace = Number(body.pace);
+  const speakingRate = Number.isFinite(pace) ? Math.min(1.3,Math.max(0.65,pace)) : 1;
   try{
     const token = await opts.token();
     const controller = new AbortController();
@@ -30,7 +32,7 @@ export async function ttsCore(body, opts = {}){
       response = await (opts.fetchImpl || fetch)('https://texttospeech.googleapis.com/v1/text:synthesize',{
         method:'POST',signal:controller.signal,
         headers:{'Authorization':`Bearer ${token}`,'Content-Type':'application/json'},
-        body:JSON.stringify({input:{text},voice:{languageCode:locale,name:voice},audioConfig:{audioEncoding:'MP3'}})
+        body:JSON.stringify({input:{text},voice:{languageCode:locale,name:voice},audioConfig:{audioEncoding:'MP3',speakingRate}})
       });
     }finally{clearTimeout(timer);}
     if(!response.ok) return {status:502,json:{error:'Google speech unavailable',provider:'google',upstreamStatus:response.status}};
