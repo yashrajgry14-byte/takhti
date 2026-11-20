@@ -5,9 +5,9 @@
     "en": "Wah, My Horse!",
     "hi": "वाह, मेरे घोड़े!"
   },
-  "built": "2026-11-15T12:03:39.467Z",
+  "built": "2026-11-20T09:40:56.720Z",
   "model": "gemini-3.5-flash-lite",
-  "rechecked": "2026-11-15T12:03:39.467Z",
+  "rechecked": "2026-11-20T09:40:56.720Z",
   "lessons": [
     {
       "band": "early",
@@ -15,34 +15,34 @@
       "ic": "🐎",
       "title": {
         "en": "Rhyming words",
-        "hi": "एक जैसी आवाज़ वाले शब्द"
+        "hi": "मिलते-जुलते शब्द"
       },
       "sub": {
-        "en": "Words ending the same way",
-        "hi": "एक जैसी अंतिम आवाज़"
+        "en": "Words ending alike",
+        "hi": "एक जैसी अंत ध्वनि"
       },
-      "skillId": "h1-read",
+      "skillId": "read1",
       "source": "Page 45",
       "aims": [
         {
-          "id": "s1p950m4.0",
+          "id": "syaoyr3.0",
           "kind": "explain",
           "short": {
-            "en": "Find rhyming",
-            "hi": "मिलते-जुल्ते शब्द"
+            "en": "Rhyming words",
+            "hi": "मिलते शब्द"
           },
           "point": {
-            "en": "The child can pick out words that end with the same sound.",
-            "hi": "बच्चा एक जैसी अंतिम आवाज़ वाले शब्दों को पहचान सकता है।"
+            "en": "The child can find words ending alike.",
+            "hi": "बच्चा एक जैसी अंत ध्वनि वाले शब्द पहचान सकता है।"
           },
           "forget": {
-            "en": "I forgot! How do I know if two words match?",
-            "hi": "मैं भूल गया! मुझे कैसे पता चलेगा कि दो शब्द मिलते हैं?"
+            "en": "I forgot! How do I know if two words rhyme?",
+            "hi": "मैं भूल गया! कैसे पता करूँ कि दो शब्द मिलते-जुलते हैं?"
           },
           "hints": [
             {
-              "en": "Say both words out loud. Listen to the back.",
-              "hi": "दोनों शब्दों को बोलकर देखो। पीछे का हिस्सा सुनो।"
+              "en": "Notice how each spoken beat sounds.",
+              "hi": "देखो कि हर बोली गई बीट कैसी लगती है।"
             },
             {
               "en": "Show me with your finger, then tell me what you did.",
@@ -51,15 +51,17 @@
           ],
           "ideas": [
             {
-              "en": "listen to the ending sound of both words",
-              "hi": "दोनों शब्दों की ध्वनि को सुनो",
+              "en": "listen to the last part; matching sounds make rhyming words",
+              "hi": "आखिरी हिस्सा सुनो; मिलती हुई ध्वनियाँ शब्द मिलाती हैं",
               "words": [
-                "ending",
-                "sound",
-                "antim",
-                "dhwani",
-                "आवाज़",
-                "ध्वनि"
+                "last part",
+                "back",
+                "same ending",
+                "आखिरी",
+                "पीछे",
+                "एक जैसी",
+                "aakhiri",
+                "peeche"
               ]
             }
           ]
@@ -69,22 +71,32 @@
         {
           "t": "intro",
           "say": {
-            "en": "Some words end with the very same sound.",
-            "hi": "कुछ शब्दों के आख़िरी हिस्से की आवाज़ एक जैसी होती है।"
+            "en": "Let us read words that sound alike at the end.",
+            "hi": "आओ ऐसे शब्द पढ़ें जिनकी अंत ध्वनि एक जैसी हो।"
           }
         },
         {
-          "t": "passage",
-          "p": {
-            "en": "ताल, चाल, दाल, कमाल",
-            "hi": "ताल, चाल, दाल, कमाल"
+          "t": "word",
+          "say": {
+            "en": "Listen to the word ताल. It ends with 'ल'.",
+            "hi": "ताल शब्द सुनो। यह 'ल' पर खत्म होता है।"
           },
-          "art": "🐴"
+          "w": "ताल",
+          "art": "🎵"
+        },
+        {
+          "t": "word",
+          "say": {
+            "en": "Now listen to चाल. It also ends with 'ल'.",
+            "hi": "अब चाल सुनो। यह भी 'ल' पर खत्म होता है।"
+          },
+          "w": "चाल",
+          "art": "🐎"
         },
         {
           "t": "ask",
           "q": {
-            "en": "Do taal and chaal match?",
+            "en": "Does ताल rhyme with चाल?",
             "hi": "क्या ताल और चाल मिलते हैं?"
           },
           "opts": [
@@ -97,8 +109,8 @@
           ],
           "correct": 0,
           "why": {
-            "en": "Children confuse rhyming words with words that start the same way.",
-            "hi": "बच्चे एक जैसी आवाज़ वाले शब्दों को शुरुआती आवाज़ से मिला देते हैं।"
+            "en": "Children may focus only on the first letter and ignore the ending.",
+            "hi": "बच्चे केवल पहले अक्षर पर ध्यान देते हैं और अंत को भूल जाते हैं।"
           },
           "aim": 1,
           "derived": true
@@ -106,8 +118,8 @@
         {
           "t": "ask",
           "q": {
-            "en": "Does taal rhyme with ghar?",
-            "hi": "क्या ताल की आवाज़ घर से मिलती है?"
+            "en": "Does दाल rhyme with घर?",
+            "hi": "क्या दाल और घर मिलते हैं?"
           },
           "opts": [
             "Yes",
@@ -119,8 +131,8 @@
           ],
           "correct": 1,
           "why": {
-            "en": "Children pick any two words thinking they all rhyme.",
-            "hi": "बच्चे कोई भी दो शब्द चुन लेते हैं यह सोचकर कि सबकी आवाज़ मिलती है।"
+            "en": "Children might say yes just because both are simple words.",
+            "hi": "बच्चे दोनों को सरल शब्द मानकर हाँ कह देते हैं।"
           },
           "aim": 1,
           "derived": true
@@ -128,35 +140,152 @@
         {
           "t": "win",
           "say": {
-            "en": "Words that end the same way sound like magic!",
-            "hi": "जिन शब्दों का अंत एक जैसा हो, उनकी आवाज़ मज़ेदार लगती है!"
+            "en": "Words with the same end sound rhyme together.",
+            "hi": "एक जैसी अंत ध्वनि वाले शब्द मिलते-जुलते हैं।"
           }
         }
       ],
       "subject": "read",
-      "id": "sch-1p950m4"
+      "id": "sch-yaoyr3"
+    },
+    {
+      "band": "early",
+      "school": true,
+      "ic": "✍️",
+      "title": {
+        "en": "Letters त, घ, ड़",
+        "hi": "वर्ण त, घ, ड़"
+      },
+      "sub": {
+        "en": "Recognising new letters",
+        "hi": "नए वर्ण पहचानना"
+      },
+      "skillId": "read2",
+      "source": "Page 45",
+      "aims": [
+        {
+          "id": "sy0mnwh.0",
+          "kind": "explain",
+          "short": {
+            "en": "Letters त घ ड़",
+            "hi": "वर्ण त घ ड़"
+          },
+          "point": {
+            "en": "The child can recognise the letters त, घ, and ड़ in words.",
+            "hi": "बच्चा शब्दों में त, घ, और ड़ वर्ण पहचान सकता है।"
+          },
+          "forget": {
+            "en": "I forgot! How do I spot the letters त, घ, or ड़ in a word?",
+            "hi": "मैं भूल गया! किसी शब्द में त, घ, या ड़ कैसे पहचानूँ?"
+          },
+          "hints": [
+            {
+              "en": "Think back to the lesson. What did you do first?",
+              "hi": "पाठ के बारे में सोचो। तुमने सबसे पहले क्या किया?"
+            },
+            {
+              "en": "Show me with your finger, then tell me what you did.",
+              "hi": "उँगली से दिखाओ, फिर बताओ तुमने क्या किया।"
+            }
+          ],
+          "ideas": [
+            {
+              "en": "look at the letter form and match its sound",
+              "hi": "वर्ण की बनावट देखो और उसकी आवाज़ पहचानो",
+              "words": [
+                "form",
+                "sound",
+                "वर्ण",
+                "आकार",
+                "आवाज़",
+                "akshar",
+                "aawaz"
+              ]
+            }
+          ]
+        }
+      ],
+      "beats": [
+        {
+          "t": "intro",
+          "say": {
+            "en": "Let us find the letters त, घ, and ड़ in words.",
+            "hi": "आओ शब्दों में त, घ, और ड़ वर्ण ढूँढें।"
+          }
+        },
+        {
+          "t": "word",
+          "say": {
+            "en": "Look at तोता. It starts with the letter त.",
+            "hi": "तोता को देखो। यह त वर्ण से शुरू होता है।"
+          },
+          "w": "तोता",
+          "art": "🦜"
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "Does तोता have the letter त?",
+            "hi": "क्या तोता में त वर्ण है?"
+          },
+          "opts": [
+            "No",
+            "Yes"
+          ],
+          "hiOpts": [
+            "नहीं",
+            "हाँ"
+          ],
+          "correct": 1,
+          "why": {
+            "en": "Children might miss the letter if they do not look at each part.",
+            "hi": "बच्चे ध्यान न दें तो वर्ण छूट सकता है।"
+          },
+          "aim": 1,
+          "derived": true
+        },
+        {
+          "t": "ask",
+          "q": {
+            "en": "Does फल start with घ?",
+            "hi": "क्या फल घ से शुरू होता है?"
+          },
+          "opts": [
+            "No",
+            "Yes"
+          ],
+          "hiOpts": [
+            "नहीं",
+            "हाँ"
+          ],
+          "correct": 0,
+          "why": {
+            "en": "Children may confuse different letters for घ.",
+            "hi": "बच्चे अलग वर्ण को घ समझ सकते हैं।"
+          },
+          "aim": 1,
+          "derived": true
+        },
+        {
+          "t": "win",
+          "say": {
+            "en": "Spot the letters त, घ, and ड़ in words easily.",
+            "hi": "शब्दों में त, घ, और ड़ आसानी से पहचानो।"
+          }
+        }
+      ],
+      "subject": "read",
+      "id": "sch-y0mnwh"
     }
   ],
   "notUsed": [
     {
       "title": {
         "en": "First and last sound",
-        "hi": "पहली और आख़िरी आवाज़"
+        "hi": "पहली और अंतिम ध्वनि"
       },
       "errors": [
-        "beat 2: question decodes at \"fluent\", far above \"early\"",
-        "beat 4: question decodes at \"fluent\", far above \"early\""
-      ]
-    },
-    {
-      "title": {
-        "en": "Letters त, घ and ड़",
-        "hi": "वर्ण त, घ और ड़"
-      },
-      "errors": [
-        "the lesson needs its aims — 1 to 4 things the child will be able to do (aim 1: Munni's question (hi) already gives the explanation (it says \"शुरुआत\"))",
-        "beat 2: question decodes at \"fluent\", far above \"early\"",
-        "beat 4: question decodes at \"fluent\", far above \"early\""
+        "beat 3: the right answer \"ल\" isn't in the passage"
       ]
     }
   ]
