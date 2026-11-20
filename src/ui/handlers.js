@@ -244,13 +244,12 @@ function checkInk(){
 
 /* ================= WRITING: PAPER + CAMERA ================= */
 /* The writing tasks this child's class has, first one opens (content/ages.js):
-   Nursery–UKG trace; Class 1 trace then paper; Class 2 paper, letters kept
-   for practice; Class 3 and up copy on paper or take dictation — no tracing. */
+   Nursery–UKG trace; Class 1 trace then paper; Class 2 and up copy on paper
+   or take dictation — no tracing above Class 1. */
 function writeModes(){
   const w = band().write;
   if(w === 'trace') return ['trace'];
   if(w === 'trace+paper') return ['trace','paper'];
-  if(w === 'paper+trace') return ['paper','trace'];
   return ['paper','dictate'];
 }
 function setWriteMode(m){
@@ -667,6 +666,7 @@ function setParentAge(d){
    levels are pulled back inside the new class's band, and a class that
    starts higher lifts a child sitting below its start. */
 function setParentClass(d){
+  if(S.clsBy === 'school') return;   // the school's roster sets it (core/class-sync.js)
   const i = CLASSES.findIndex(k => k.id === classFor(S).id);
   const k = CLASSES[Math.max(0, Math.min(CLASSES.length - 1, i + d))];
   setChildClass(k.id);
@@ -704,10 +704,12 @@ function setClassCode(v){
   log(0, `Class code linked · ${code} · this child's progress will mirror to their teacher`);
   saveSoon();
   mirrorToClassNow(S);   // don't wait for the next checkpoint — link should feel immediate
+  applySchoolClass(code);   // the school's class, if this phone already knows it
   render();
 }
 function unlinkClassCode(){
   S.classCode = null;
+  if(S.clsBy === 'school') S.clsBy = null;   // the class stays; the parent may change it again
   log(0, 'Class code unlinked · this child no longer mirrors to a teacher');
   saveSoon();
   render();

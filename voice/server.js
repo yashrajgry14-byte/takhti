@@ -337,6 +337,12 @@ function createServer(opts) {
               const r = C.clearClassFocus(b.code, t.name);
               return back(r.ok ? `The class focus is withdrawn. ${r.children} children go back to their own next step.` : 'There was no class focus to withdraw.');
             }
+            if (action === 'grade') {
+              if (!(t.class_codes || []).includes(String(b.code || '').toUpperCase())) return back('Not your class.');
+              const r = C.setClassGrade(b.code, String(b.cls || '') || null, t.name);
+              return back(r.error || (r.cls ? `Class ${String(b.code).toUpperCase()} is set. ${r.children} children's apps will teach this class's work after their next sync.`
+                                             : `The class is cleared. Families can choose the class again.`));
+            }
             if (action === 'focus') {
               if (!(t.class_codes || []).includes(String(b.code || '').toUpperCase())) return back('Not your class.');
               const r = C.setClassFocus(b.code, String(b.skill || ''), b.note, t.name);

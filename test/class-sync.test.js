@@ -46,7 +46,8 @@ function check(name, pass, detail){ checks.push({ name, pass, detail }); if(!pas
     vm.createContext(ctx);
     for(const f of LOAD_LIST) vm.runInContext(fs.readFileSync(f, 'utf8'), ctx, { filename:f });
     vm.runInContext(`globalThis.__ = { S, createProfile, noteSkillAttempt, syncClass, syncDue, syncStatusLine,
-      readClassShared, assignHomework, clearHomework, getAssignedHomework, tDiagnose, mirrorToClassNow, newTeacherKey };`, ctx);
+      readClassShared, assignHomework, clearHomework, getAssignedHomework, tDiagnose, mirrorToClassNow, newTeacherKey,
+      setSchoolClass, schoolClassOf, bandFor, homeworkCode, importHomework, syncProfileOut };`, ctx);
     return { X: ctx.__, ctx };
   }
 
@@ -105,6 +106,47 @@ function check(name, pass, detail){ checks.push({ name, pass, detail }); if(!pas
   await T.syncClass('ABC123');
   await K.syncDue(true);
   check('withdrawing the homework reaches the child\'s phone too (it isn\'t brought back by the older copy)', K.getAssignedHomework(K.S) === null, JSON.stringify(K.readClassShared('ABC123')._homework));
+
+  /* ---- the school's roster sets the class ---- */
+  K.S.cls = 'c2'; K2.S.cls = 'c3';                      // what each family picked at onboarding
+  T.setSchoolClass('ABC123', 'c5');                      // the teacher: this is Class 5
+  T.setSchoolClass('ABC123', 'c4', K2.S.id);             // …and Ravi is in Class 4
+  await T.syncClass('ABC123');
+  await K.syncClass('ABC123'); await K2.syncClass('ABC123');
+  check("the teacher's class reaches a child's phone with the sync: Meera is now Class 5, set by the school",
+    K.S.cls === 'c5' && K.S.clsBy === 'school' && K.bandFor(K.S).id === 'fluent', `${K.S.cls} / ${K.S.clsBy} / ${K.bandFor(K.S).id}`);
+  check("one child's own class from the teacher wins over the class's: Ravi is Class 4", K2.S.cls === 'c4' && K2.S.clsBy === 'school', `${K2.S.cls} / ${K2.S.clsBy}`);
+  const kr = K.readClassShared('ABC123')._roster;
+  check("a child's phone sees the class's grade and its own entry only — never a classmate's",
+    kr && kr.cls === 'c5' && !(kr.kids || {})[K2.S.id], JSON.stringify(kr));
+  check("…while the teacher's phone keeps every child's entry", (T.readClassShared('ABC123')._roster.kids || {})[K2.S.id] === 'c4', JSON.stringify(T.readClassShared('ABC123')._roster));
+  K2.S.syncKeys = {};
+  const fakeRoster = await syncCore(store, { code:'ABC123', roster:{ cls:'c1', kids:{}, at: Date.now() + 1e6 } });
+  check('a phone without the teacher key cannot change the roster', JSON.parse(blobs.get('class-ABC123')).roster.cls === 'c5', JSON.stringify(fakeRoster.json.roster));
+  await new Promise(r => setTimeout(r, 5));
+  const junk = await syncCore(store, { code:'ABC123', teacherKey: T.S.syncKeys.ABC123, roster:{ cls:'class 99', kids:{ x:'<b>', _y:'c3', ok:'c7' }, at: Date.now() } });
+  const stored = JSON.parse(blobs.get('class-ABC123')).roster;
+  check('the server keeps only real class ids in the roster', stored.cls === null && Object.keys(stored.kids).join() === 'ok' && stored.kids.ok === 'c7', JSON.stringify(stored));
+  await new Promise(r => setTimeout(r, 5));
+  T.setSchoolClass('ABC123', 'c5'); T.setSchoolClass('ABC123', 'c4', K2.S.id); await T.syncClass('ABC123');   // put it back
+  await K.syncClass('ABC123');
+  check('a newer roster from the teacher replaces the one the server tidied', K.S.cls === 'c5' && K.S.clsBy === 'school' && JSON.parse(blobs.get('class-ABC123')).roster.cls === 'c5', `${K.S.cls} / ${K.S.clsBy}`);
+
+  /* the homework code carries the class's grade to a phone that never syncs */
+  T.assignHomework('ABC123', ['tables'], 'grade check');
+  const hwc = T.homeworkCode('ABC123');
+  const kid3 = phone(), K3 = kid3.X;
+  K3.createProfile('Asha'); K3.S.cls = 'c2';
+  const imp = K3.importHomework(hwc);
+  check("the homework code links a child with no sync and sets the class's grade from the school", imp.ok && K3.S.cls === 'c5' && K3.S.clsBy === 'school', `${JSON.stringify(imp)} / ${K3.S.cls} / ${K3.S.clsBy}`);
+  check("…the grade only — one child's own class doesn't travel in a code everyone gets", !Object.keys((K3.readClassShared('ABC123')._roster || {}).kids || {}).length, JSON.stringify(K3.readClassShared('ABC123')._roster));
+
+  /* the teacher clears the class: the class stays, the family may change it again */
+  T.setSchoolClass('ABC123', null); T.setSchoolClass('ABC123', null, K2.S.id); await T.syncClass('ABC123');
+  await K.syncClass('ABC123');
+  check('when the teacher clears the class, the child keeps Class 5 and the parent may change it again', K.S.cls === 'c5' && K.S.clsBy === null, `${K.S.cls} / ${K.S.clsBy}`);
+  T.setSchoolClass('ABC123', 'c5'); T.setSchoolClass('ABC123', 'c4', K2.S.id); await T.syncClass('ABC123');
+  await K.syncClass('ABC123'); await K2.syncClass('ABC123');
 
   /* ---- once an hour ---- */
   const before = fetches;

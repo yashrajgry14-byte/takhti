@@ -144,6 +144,9 @@ function classPage(circle, brain, teacher, msg) {
       <td>${esc(r.tutors.join(', ') || '–')}${r.pending_tutors ? ` <span ${small}>(${r.pending_tutors} awaiting parent)</span>` : ''}</td>
       <td>${r.app ? '' : r.family_code ? `<code>${esc(r.family_code)}</code>` : `<form method="post" action="/circle/c/${esc(teacher.token)}/family-code"><input type="hidden" name="child" value="${esc(r.id)}"><button ${btn}>code</button></form>`}</td></tr>`).join('');
     return `<div class="sheet" style="margin-top:14px"><h2 style="margin-top:0">Class ${esc(code)}</h2>
+      ${(() => { const g = circle.classGrade(code); return `<form method="post" action="/circle/c/${esc(teacher.token)}/grade" style="margin-bottom:8px"><input type="hidden" name="code" value="${esc(code)}">
+        <b>This class is</b> <select name="cls"><option value="">— pick —</option>${circle.classList().map(k => `<option value="${esc(k.id)}" ${g && g.cls === k.id ? 'selected' : ''}>${esc(k.en)}</option>`).join('')}</select>
+        <button ${btn}>Save</button> <span ${small}>Every linked child's app teaches this class's work; parents can't change it.</span></form>`; })()}
       <form method="post" action="/circle/c/${esc(teacher.token)}/focus"><input type="hidden" name="code" value="${esc(code)}">
         <select name="skill">${skillOpts}</select><input name="note" placeholder="Note for families (optional)" size="22">
         <button ${btn}>Set this week's class focus</button></form>

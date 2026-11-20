@@ -87,7 +87,7 @@ function createCore(opts) {
   }
   // `const` declarations do not attach to the sandbox; lift what we need.
   vm.runInContext(`globalThis.__T = {
-    S, AGE_BANDS, bandForAge, band, clampLevel, ageSentences, readability, rdBand,
+    S, AGE_BANDS, bandForAge, band, clampLevel, CLASSES, classById, bandFor, readClassShared, classMirrorUpdate, ageSentences, readability, rdBand,
     gradeReading, gradeBest, gradeVerdict, getGradeThresholds, GRADE, genProblem, record,
     skillProblem, skillHasProblem, skillById, noteSkillAttempt, noteSkillFromConcept,
     personalizeContentForHomework, getAssignedHomework, importHomework, classReportCode, SKILLS, diagnose, assignHomework, clearHomework, homeworkCode, prereqChain,

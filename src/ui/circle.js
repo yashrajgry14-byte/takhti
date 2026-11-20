@@ -92,6 +92,20 @@ function circleApply(ok, status, d, sent){
   // S.circleHw remembers which assignment came this way, so that when the
   // teacher withdraws it (no code any more) the app drops exactly that one —
   // never homework a parent pasted from a code the circle didn't send.
+  // the school's class from the class page (the same roster as the teacher view — core/class-sync.js)
+  const sc = d.circle && d.circle.school_class;
+  if(sc && typeof classById === 'function' && classById(sc.cls)){
+    if(S.classCode){
+      classMirrorUpdate(S.classCode, all => {
+        if(!all._roster || (all._roster.at || 0) < (+sc.at || 0)) all._roster = { cls: sc.cls, kids: (all._roster && all._roster.kids) || {}, at: +sc.at || 0 };
+      });
+      applySchoolClass(S.classCode);
+    } else if(S.cls !== sc.cls || S.clsBy !== 'school'){
+      S.cls = sc.cls; S.clsBy = 'school';
+      for(const m of ['read','write','math']) S.levels[m] = clampLevel(m, S.levels[m]);
+      log(2, `Learning circle · the school's class: ${classById(sc.cls).en}`);
+    }
+  }
   if(d.circle && d.circle.homework_code && typeof importHomework === 'function'){
     const hw = getAssignedHomework(S);
     const r = importHomework(d.circle.homework_code, S);

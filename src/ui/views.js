@@ -207,11 +207,11 @@ read(){
 /* ---------- WRITING ---------- */
 write(){
   // the child's class decides which writing tasks exist (content/ages.js CLASSES):
-  // a Class 3+ child is never handed a trace pad
+  // a Class 2+ child is never handed a trace pad
   const modes = writeModes();
   if(!S.ctx.mode || !modes.includes(S.ctx.mode)) S.ctx.mode = modes[0];   // class moved, tab is gone
   const wl = {
-    trace:   band().write === 'paper+trace' ? (S.lang==='hi'?'अक्षर अभ्यास':'Practise letters') : (S.lang==='hi'?'स्क्रीन पर बनाओ':'Trace on screen'),
+    trace:   S.lang==='hi'?'स्क्रीन पर बनाओ':'Trace on screen',
     paper:   S.lang==='hi'?'कागज़ पर लिखो 📷':'Write on paper 📷',
     dictate: S.lang==='hi'?'सुनो और लिखो 🔊':'Listen and write 🔊'
   };
@@ -473,16 +473,19 @@ parent(){
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'कक्षा':'CLASS'}</div>
     <div class="metric">
       <div><b>${S.lang==='hi'?band().clsHi:band().clsEn}</b>
-        <div style="margin-top:3px"><span class="agechip">${S.lang==='hi'?band().stageHi:band().stageEn}</span>${S.cls ? '' : `<span style="font-size:12px;opacity:.6;margin-left:6px">${S.lang==='hi'?'(उम्र से अंदाज़ा)':'(guessed from age)'}</span>`}</div>
+        <div style="margin-top:3px"><span class="agechip">${S.lang==='hi'?band().stageHi:band().stageEn}</span>${
+          S.clsBy === 'school' ? `<span style="font-size:12px;opacity:.7;margin-left:6px">🏫 ${S.lang==='hi'?'स्कूल ने तय की':'set by the school'}</span>`
+          : S.cls ? '' : `<span style="font-size:12px;opacity:.6;margin-left:6px">${S.lang==='hi'?'(उम्र से अंदाज़ा)':'(guessed from age)'}</span>`}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:9px">
+      ${S.clsBy === 'school' ? '' : `<div style="display:flex;align-items:center;gap:9px">
         <button class="stepbtn" onclick="setParentClass(-1)">−</button>
         <button class="stepbtn" onclick="setParentClass(1)">+</button>
-      </div>
+      </div>`}
     </div>
     <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin:4px 0 2px">${S.lang==='hi'
       ? 'कक्षा तय करती है कि क्या सिखाया जाए; उम्र बस यह कि मुन्नी कैसे बोले। तख़्ती उसी कक्षा के भीतर बच्चे के हिसाब से ढल जाती है।'
-      : 'Class decides what is taught; age only how Munni speaks. Takhti adapts to your child within their class.'}</div>
+      : 'Class decides what is taught; age only how Munni speaks. Takhti adapts to your child within their class.'}${S.clsBy === 'school'
+      ? (S.lang==='hi' ? ' कक्षा बदलनी हो तो शिक्षक से कहें।' : ' To change the class, ask the teacher.') : ''}</div>
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'आवाज़':'SOUND'}</div>
     <div class="metric">

@@ -2,7 +2,7 @@
    CLASS SYNC — Tier 2. One small record per class code, so a teacher's
    phone and every consenting child's phone see the same class.
 
-   POST { code, children:{ id:{childName, skillHistory, explained?, paths?, at} }, homework, lessons, teacherKey }
+   POST { code, children:{ id:{childName, skillHistory, explained?, paths?, at} }, homework, lessons, roster, teacherKey }
    → merges what the phone sent into the stored class (newest wins, per
    child and for the homework) and answers with what that phone may see.
 
@@ -85,6 +85,19 @@ function cleanLessons(l){
   return { items, at: int(l.at, 9e15) };
 }
 
+/* The school's roster (src/core/class-sync.js): the class's grade and, for
+   a few children, their own — class ids only, from a fixed list. */
+const CLS = /^(nur|lkg|ukg|c([1-9]|10))$/;
+function cleanRoster(r){
+  if(!r || typeof r !== 'object') return null;
+  const kids = {};
+  for(const [id, k] of Object.entries(r.kids && typeof r.kids === 'object' ? r.kids : {}).slice(0, MAX_CHILDREN))
+    if(typeof id === 'string' && id && id.length <= 40 && !id.startsWith('_') && CLS.test(String(k))) kids[id] = String(k);
+  return { cls: CLS.test(String(r.cls)) ? String(r.cls) : null, kids, at: int(r.at, 9e15) };
+}
+/* A child's phone sees the class's grade and its own children's entries — never a classmate's. */
+const rosterFor = (r, ids) => r ? { cls: r.cls, kids: pick(r.kids || {}, ids), at: r.at } : null;
+
 /* The merge itself, independent of any host — exported for the tests. */
 export async function syncCore(store, body){
   const code = String(body && body.code || '').toUpperCase();
@@ -114,10 +127,12 @@ export async function syncCore(store, body){
   if(hw && (!cur.homework || cur.homework.assignedAt < hw.assignedAt)) cur.homework = hw;
   const ls = teacher ? cleanLessons(body.lessons) : null;      // and the class's own lessons
   if(ls && (!cur.lessons || cur.lessons.at < ls.at)) cur.lessons = ls;
+  const ro = teacher ? cleanRoster(body.roster) : null;        // and which class each child is in
+  if(ro && (!cur.roster || cur.roster.at < ro.at)) cur.roster = ro;
 
   await store.setJSON(key, cur);
-  return { status:200, json: teacher ? { children: cur.children, homework: cur.homework, lessons: cur.lessons || null, teacher: true }
-                                     : { children: pick(cur.children, sent), homework: cur.homework, lessons: cur.lessons || null } };
+  return { status:200, json: teacher ? { children: cur.children, homework: cur.homework, lessons: cur.lessons || null, roster: cur.roster || null, teacher: true }
+                                     : { children: pick(cur.children, sent), homework: cur.homework, lessons: cur.lessons || null, roster: rosterFor(cur.roster, sent) } };
 }
 const pick = (all, ids) => Object.fromEntries(ids.filter(id => all[id]).map(id => [id, all[id]]));
 async function sha256(text){

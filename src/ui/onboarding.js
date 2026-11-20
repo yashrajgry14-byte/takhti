@@ -153,6 +153,7 @@ function obPickAge(n){
   speak(S.lang === 'hi' ? `${n} साल!` : `${n} years old!`);
 }
 function obFinishAge(){
+  if(S.clsBy === 'school') return obFinishClass();   // the school already said which class (core/class-sync.js)
   // next: the class — what is taught follows the class, not the age
   S.ob = { step:'cls', cls: S.cls || clsForAge(S.age) };
   if(typeof saveSoon === 'function') saveSoon();
@@ -190,7 +191,7 @@ function obPickClass(id){
   speak(S.lang === 'hi' ? k.hi : k.en);
 }
 function obFinishClass(){
-  S.cls = (S.ob && S.ob.cls) || clsForAge(S.age);
+  if(S.clsBy !== 'school') S.cls = (S.ob && S.ob.cls) || clsForAge(S.age);
   // seed each module at the right rung for this class
   if(typeof band === 'function'){
     const b = band();

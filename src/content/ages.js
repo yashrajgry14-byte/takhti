@@ -109,8 +109,7 @@ function bandForAge(age){
    stage: NEP 2020's stages (foundational split at Class 1).
    write: 'trace'        trace pad only (Nursery–UKG)
           'trace+paper'  trace first, paper offered (Class 1)
-          'paper+trace'  paper first, trace kept for practising letters (Class 2)
-          'paper'        no tracing at all: copy on paper, or dictation (Class 3+)
+          'paper'        no tracing at all: copy on paper, or dictation (Class 2+)
    start: a higher class starts higher inside its band.
    Classes 6–10 use the fluent band's content today; the stage is set
    now so their look, floor and prompts are right as content arrives.
@@ -120,7 +119,7 @@ const CLASSES = [
   { id:'lkg', g:-2, band:'pre',        stage:'foundA',    write:'trace',       en:'LKG',      hi:'एलकेजी' },
   { id:'ukg', g:-1, band:'early',      stage:'foundA',    write:'trace',       en:'UKG',      hi:'यूकेजी' },
   { id:'c1',  g:1,  band:'early',      stage:'foundB',    write:'trace+paper', en:'Class 1',  hi:'कक्षा 1' },
-  { id:'c2',  g:2,  band:'developing', stage:'foundB',    write:'paper+trace', en:'Class 2',  hi:'कक्षा 2' },
+  { id:'c2',  g:2,  band:'developing', stage:'foundB',    write:'paper',       en:'Class 2',  hi:'कक्षा 2' },
   { id:'c3',  g:3,  band:'developing', stage:'prep',      write:'paper',       en:'Class 3',  hi:'कक्षा 3',  start:{ read:3, write:3, math:4 } },
   { id:'c4',  g:4,  band:'fluent',     stage:'prep',      write:'paper',       en:'Class 4',  hi:'कक्षा 4' },
   { id:'c5',  g:5,  band:'fluent',     stage:'prep',      write:'paper',       en:'Class 5',  hi:'कक्षा 5',  start:{ read:4, write:4, math:5 } },
@@ -191,18 +190,28 @@ function bandFor(child){
    its age (the middle band if there is no age either). */
 function band(){ return bandFor(S); }
 
+/* Tracing is for Nursery to Class 1 only. Above Class 1 no child is
+   handed a trace pad — not on the Write screen, and not as a "gap
+   underneath" either: holding a pencil and tracing lines are never a
+   Class 2+ child's next step. */
+const TRACE_SKILLS = ['n-hold', 'n-trace'];
+const TRACE_MAX_G = 1;
+
 /* May a gap (a prerequisite) be taught to this child as part of their
-   path? Foundational classes: always. Class 3+: not below the floor. */
+   path? Never a tracing skill above Class 1; from Class 3, never below
+   the floor. */
 function gapInReach(skillId, child){
+  const b = bandFor(child);
+  if(b.g > TRACE_MAX_G && TRACE_SKILLS.includes(skillId)) return false;
   const s = typeof skillById === 'function' ? skillById(skillId) : null;
   if(!s || s.g == null) return true;
-  return s.g >= bandFor(child).gFloor;
+  return s.g >= b.gFloor;
 }
 
 /* Clamp a level into the child's age window. Called wherever the
    adaptive engine would otherwise be free to wander. */
-function clampLevel(mod, lvl){
-  const [lo, hi] = band().levels[mod] || [1,6];
+function clampLevel(mod, lvl, child){
+  const [lo, hi] = bandFor(child || S).levels[mod] || [1,6];
   return Math.max(lo, Math.min(hi, lvl));
 }
 

@@ -314,6 +314,18 @@ await test('pages: the parent\'s (their language, done, invite, stop messages), 
     assert.strictEqual(brain.getChild(kid.id).circle.week.skill, 'add2');
     res = await call('POST', `/circle/c/${teacher.token}/focus`, { code: 'OTHER1', skill: 'add2' }, { form: true });
     assert.ok(/Not%20your%20class/.test(res.headers.location));
+    // the school's class: the class page sets it, the app's sync carries it (src/core/class-sync.js)
+    assert.ok(/This class is/.test(page.body), 'the class page asks which class it is');
+    res = await call('POST', `/circle/c/${teacher.token}/grade`, { code: 'CLS3C1', cls: 'c3' }, { form: true });
+    assert.ok(/is%20set/.test(res.headers.location), res.headers.location);
+    assert.strictEqual(brain.circle.classGrade('CLS3C1').cls, 'c3');
+    page = await call('GET', `/circle/c/${teacher.token}`);
+    assert.ok(/<option value="c3" selected>/.test(page.body), 'the saved class is shown selected');
+    res = await call('POST', `/circle/c/${teacher.token}/grade`, { code: 'OTHER1', cls: 'c3' }, { form: true });
+    assert.ok(/Not%20your%20class/.test(res.headers.location));
+    res = await call('POST', `/circle/c/${teacher.token}/grade`, { code: 'CLS3C1', cls: 'class9' }, { form: true });
+    assert.ok(/no%20such%20class/.test(res.headers.location), res.headers.location);
+    assert.strictEqual(brain.circle.classGrade('CLS3C1').cls, 'c3');
     res = await call('POST', `/circle/c/${teacher.token}/family-code`, { child: kid.id }, { form: true });
     assert.ok(/Family%20code/.test(res.headers.location) && brain.getChild(kid.id).circle.link_code);
     assert.strictEqual((await call('GET', '/circle/c/AAAAAAAAAAAAAAAAAAAAAAAA')).status, 404);

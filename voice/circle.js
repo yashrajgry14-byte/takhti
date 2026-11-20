@@ -464,6 +464,27 @@ function createCircle(brain, envIn) {
     }
     return { ok: true, children: n, homework_code: out };
   }
+  /* The school's class for a class code — the same roster the app's own
+     teacher view writes (src/core/class-sync.js): the class page sets it,
+     every sync sends it, and the app teaches that class's work. */
+  function classGrade(code) {
+    const up = String(code || '').toUpperCase();
+    if (!/^[A-Z0-9]{6}$/.test(up)) return null;
+    const r = core.withChild(core.freshProfile('t', 7), {}, TT => TT.readClassShared(up)._roster || null).out;
+    return r && T.classById(r.cls) ? { cls: r.cls, at: r.at || 0 } : null;
+  }
+  function setClassGrade(code, cls, by) {
+    const up = String(code).toUpperCase();
+    if (cls && !T.classById(cls)) return { error: 'no such class' };
+    const at = +now();
+    core.withChild(core.freshProfile('t', 7), {}, TT => TT.classMirrorUpdate(up, all => {
+      const r = all._roster || {};
+      all._roster = { cls: cls || null, kids: r.kids || {}, at, by: String(by || '').slice(0, 40) };
+    }));
+    return { ok: true, children: classRoster(up).length, cls: cls || null };
+  }
+  const classList = () => T.CLASSES.map(k => ({ id: k.id, en: k.en, hi: k.hi }));
+
   /* The class's homework as it stands, and withdrawing it. Withdrawn, every
      child's week built on it is remade from the child's own next step, and
      each synced app drops it on its next sync (homework_code goes null). */
@@ -768,7 +789,7 @@ function createCircle(brain, envIn) {
               home: (w.home || []).map(h => ({ id: h.id, kind: h.kind, text: h.text, topic: h.topic, done: !!h.done_at, ask: !!(ask && ask.id === h.id) })) },
       members: members(child),
       notes: (child.teacher_notes || []).slice(-5).reverse().map(n => ({ by: n.by, skill: n.skill, skill_name: { en: skillName(n.skill, 'en'), hi: skillName(n.skill, 'hi') }, ok: n.ok, at: n.at })),
-      homework_code: hwCode, circleHistory: child.server_evidence || {}, assessments: (child.assessments || []).slice(0, 20), parent_page: `${base()}/circle/p/${ensure(child).parent_token}`,
+      school_class: classGrade(child.profile && child.profile.classCode), homework_code: hwCode, circleHistory: child.server_evidence || {}, assessments: (child.assessments || []).slice(0, 20), parent_page: `${base()}/circle/p/${ensure(child).parent_token}`,
       synced_at: now().toISOString(), lang
     };
   }
@@ -791,7 +812,7 @@ function createCircle(brain, envIn) {
 
   function attachMessages(m) { messages = m; }
 
-  return { active, sync, leave, familyCode, focusFor, setClassFocus, clearClassFocus, classHomework, recordMarks, classRoster, classView, checkResult, readingCheck, checkQuestions, checkDue,
+  return { active, sync, leave, familyCode, focusFor, setClassFocus, clearClassFocus, classHomework, classGrade, setClassGrade, classList, recordMarks, classRoster, classView, checkResult, readingCheck, checkQuestions, checkDue,
            homeDone, homeAsked, homeToAsk, inviteTutor, tutorDecision, tutorChildren, tutorPack, tutorResult, tutorNote, setTutorSchedule,
            members, view, attachMessages, isoWeek, ensure, skillName, HOME, SYNC_NOTICE,
            findByApp, hash, same,

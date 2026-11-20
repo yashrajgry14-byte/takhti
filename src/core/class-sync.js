@@ -52,9 +52,10 @@ async function syncClass(code){
   const teacherKey = S.syncKeys[code];                       // only on the teacher's phone
   const homework = teacherKey ? (readClassShared(code)._homework || null) : null;
   const lessons = teacherKey ? (readClassShared(code)._lessons || null) : null;   // the school's own lessons (core/syllabus.js)
+  const roster = teacherKey ? (readClassShared(code)._roster || null) : null;     // which class each child is in (schoolClassOf())
   try{
     const res = await fetch(SYNC_URL, { method:'POST', headers:{ 'content-type':'application/json' },
-                                        body: JSON.stringify({ code, children, homework, lessons, teacherKey }) });
+                                        body: JSON.stringify({ code, children, homework, lessons, roster, teacherKey }) });
     if(!res.ok) throw new Error(res.status === 503 ? 'noserver' : res.status === 403 ? 'claimed' : 'HTTP ' + res.status);
     const cls = await res.json();
     classMirrorUpdate(code, all => {
@@ -67,7 +68,10 @@ async function syncClass(code){
       // each phone checks these again before a child sees one (schoolLessons())
       const ls = cls.lessons;
       if(ls && Array.isArray(ls.items) && (!all._lessons || (all._lessons.at || 0) < ls.at)) all._lessons = ls;
+      const ro = cls.roster;
+      if(ro && typeof ro === 'object' && (!all._roster || (all._roster.at || 0) < (ro.at || 0))) all._roster = ro;
     });
+    applySchoolClass(code);
     S.syncAt = { ...S.syncAt, [code]: Date.now() };
     SYNC_STATE[code] = {};
     log(2, `Class sync · ${code} · sent ${Object.keys(children).length} child record(s) · class has ${Object.keys(cls.children || {}).length}`);
@@ -78,6 +82,67 @@ async function syncClass(code){
     log(2, `Class sync · ${code} · not reached (${e.message}) — will try again`);
     return false;
   }
+}
+
+/* ==================================================================
+   THE SCHOOL'S ROSTER — which class each child is in.
+
+   The class decides what Takhti teaches (content/ages.js CLASSES), and
+   the school knows a child's class better than anyone. The teacher sets
+   the class's grade once (and, rarely, one child's own), in the teacher
+   view; it is kept in the class mirror as _roster { cls, kids:{id: cls},
+   at } and reaches every phone the way homework does — the class sync
+   (teacher's key only; a child's phone gets the grade and its own entry,
+   never a classmate's), or the homework code by hand (the grade only).
+   A class from the school is marked clsBy:'school', and a parent can't
+   change it on the dashboard; a parent who unlinks the class code gets
+   the choice back, the class kept as it was.
+   ================================================================== */
+function schoolClassOf(code, childId){
+  const r = code ? readClassShared(code)._roster : null;
+  if(!r) return null;
+  const id = (r.kids && childId && r.kids[childId]) || r.cls;
+  return classById(id) ? id : null;
+}
+
+/* Every child on this phone in the class gets the school's class. Levels
+   are pulled inside the new class's band. Returns how many changed. */
+function applySchoolClass(code){
+  if(!code) return 0;
+  syncProfileOut();
+  let changed = 0;
+  for(const p of S.profiles){
+    if(!p || p.classCode !== code) continue;
+    const id = schoolClassOf(code, p.id);
+    if(!id){
+      if(p.clsBy === 'school'){ p.clsBy = null; changed++; }   // the school cleared it: the class stays, a parent may change it again
+      continue;
+    }
+    if(p.cls === id && p.clsBy === 'school') continue;
+    const was = p.cls;
+    p.cls = id; p.clsBy = 'school';
+    if(p.levels) for(const m of ['read','write','math']) if(p.levels[m] != null) p.levels[m] = clampLevel(m, p.levels[m], p);
+    changed++;
+    log(2, `School roster · ${p.name || 'a child'} · class ${was || '(by age)'} → ${id} · band "${bandFor(p).id}"`);
+  }
+  if(changed && S.activeProfile != null){
+    syncProfileIn(S.activeProfile);
+    if(S.screen === 'write') S.ctx = {};        // a writing tab the new class doesn't have must not linger
+  }
+  return changed;
+}
+
+/* The teacher's own phone: set the class's grade, or one child's. */
+function setSchoolClass(code, cls, childId){
+  if(!code || (cls && !classById(cls))) return false;
+  classMirrorUpdate(code, all => {
+    const r = all._roster || { cls: null, kids: {} };
+    const kids = { ...(r.kids || {}) };
+    if(childId){ if(cls) kids[childId] = cls; else delete kids[childId]; }
+    all._roster = { cls: childId ? (r.cls || null) : (cls || null), kids, at: Date.now() };
+  });
+  applySchoolClass(code);
+  return true;
 }
 
 /* Sync every class that's due (an hour since its last success), or all of

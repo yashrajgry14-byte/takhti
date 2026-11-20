@@ -153,6 +153,18 @@ appServer.listen(0, '127.0.0.1', () => voiceServer.listen(0, '127.0.0.1', async 
     check('the class homework arrived with the sync (importHomework)', E('!!getAssignedHomework(S)') && E('S.classCode') === 'CLS1B1', E('S.classCode'));
     check('this week\'s step is the class step, chosen for this child', E('S.circle.week.source') === 'homework' && !!E('S.circle.week.skill'), E('JSON.stringify(S.circle.week).slice(0,200)'));
 
+    /* ---- the school's class, from the class page ---- */
+    E(`setChildClass('c2')`);
+    const g = brain.circle.setClassGrade('CLS1B1', 'c4', 'Sunita');
+    check('the class page sets the class for every child in it', g.ok && brain.circle.classGrade('CLS1B1').cls === 'c4', JSON.stringify(g));
+    await until(() => !E('CIRCLE_BUSY'));
+    E(`circleSync(true)`);
+    await until(() => E(`S.cls === 'c4'`));
+    check("…and the app takes it on its next sync: Class 4, set by the school, the Class 4 band", E('S.cls') === 'c4' && E('S.clsBy') === 'school' && E('band().id') === 'fluent', `${E('S.cls')} / ${E('S.clsBy')}`);
+    E(`go('parent')`);
+    check("the parent dashboard says the school set it", /set by the school/.test(screen()), '');
+    check('a bad class id is refused by the class page', !!brain.circle.setClassGrade('CLS1B1', 'c99', 'Sunita').error, '');
+
     /* ---- this week on the map, and Munni's Friday check ---- */
     E(`S.game = S.game || 'cricket'; go('map')`);
     check('the map shows this week\'s step', /This week you and Munni are learning/.test(screen()), screen().slice(0, 300));

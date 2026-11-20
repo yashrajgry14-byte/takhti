@@ -88,7 +88,10 @@ function importClassReport(text){
 function homeworkCode(classCode){
   const hw = readClassShared(classCode)._homework;
   if(hw && hw.cleared) return null;
-  return hw ? shareEncode('homework', { c: classCode, s: hw.skills, n: hw.note || '', a: hw.assignedAt }) : null;
+  // the class's grade rides along (the school's roster, core/class-sync.js) — not one child's own
+  const r = readClassShared(classCode)._roster;
+  const k = r && classById(r.cls) ? { k: r.cls, ka: r.at || 0 } : {};
+  return hw ? shareEncode('homework', { c: classCode, s: hw.skills, n: hw.note || '', a: hw.assignedAt, ...k }) : null;
 }
 
 /* Parent's side. A child already linked to a different class can't be
@@ -100,7 +103,16 @@ function importHomework(text, child){
   if(!o || !/^[A-Z0-9]{6}$/.test(o.c) || !Array.isArray(o.s) || !o.s.every(id => skillById(id))) return { ok:false, why:'invalid' };
   if(c.classCode && c.classCode !== o.c) return { ok:false, why:'otherclass' };
   c.classCode = o.c;
-  classMirrorUpdate(o.c, all => { all._homework = { skills: o.s, note: String(o.n || '').slice(0, 140), assignedAt: o.a }; });
+  classMirrorUpdate(o.c, all => {
+    all._homework = { skills: o.s, note: String(o.n || '').slice(0, 140), assignedAt: o.a };
+    // the school's class for this class code; never over a newer roster (one from the sync keeps its per-child entries)
+    if(o.k && classById(o.k) && (!all._roster || (all._roster.at || 0) < (+o.ka || 0)))
+      all._roster = { cls: o.k, kids: (all._roster && all._roster.kids) || {}, at: +o.ka || 0 };
+  });
   mirrorToClassNow(c);
+  if(typeof applySchoolClass === 'function'){
+    if(c === S) applySchoolClass(o.c);
+    else { const id = schoolClassOf(o.c, c.id); if(id){ c.cls = id; c.clsBy = 'school'; } }
+  }
   return { ok:true, code:o.c, skills:o.s };
 }

@@ -70,6 +70,7 @@ function teacherHTML(){
     ${code ? `<div style="font-size:12.5px;opacity:.75;margin-top:6px">${roster.length
       ? (hi ? `${roster.length} बच्चे जुड़े: ${roster.map(r=>attr(r.name)).join(', ')}` : `${roster.length} linked: ${roster.map(r=>attr(r.name)).join(', ')}`)
       : (hi ? 'इस कोड से अभी कोई बच्चा नहीं जुड़ा।' : 'No children linked to this code yet.')}</div>` : ''}
+    ${code ? rosterHTML(code, roster) : ''}
 
     ${code ? `
     <div class="metric" style="margin-top:10px">
@@ -155,6 +156,40 @@ function teacherHTML(){
 }
 
 /* ---------- the demo class (core/demo.js) ---------- */
+/* The school's roster: which class this class code is (and, rarely, one
+   child's own). It decides what Takhti teaches every linked child
+   (content/ages.js CLASSES) and reaches their phones with the class sync
+   or the homework code (core/class-sync.js). */
+function rosterHTML(code, roster){
+  const hi = S.lang === 'hi';
+  const r = readClassShared(code)._roster || {};
+  const opt = (sel, none) => `<option value="">${none}</option>` + CLASSES.map(k => `<option value="${k.id}" ${k.id === sel ? 'selected' : ''}>${hi ? k.hi : k.en}</option>`).join('');
+  return `
+    <div class="kicker2" style="margin-top:12px">${hi ? 'यह कक्षा है' : 'THIS CLASS IS'}</div>
+    <select class="input" id="tgrade" onchange="teacherSetGrade(this.value)">${opt(r.cls, hi ? '— कक्षा चुनें —' : '— pick the class —')}</select>
+    <div style="font-size:12.5px;opacity:.75;margin-top:4px">${hi
+      ? 'जुड़े हर बच्चे को तख़्ती इसी कक्षा का काम सिखाती है। माता-पिता इसे नहीं बदल सकते; किसी एक बच्चे के लिए आप नीचे बदल सकते हैं।'
+      : "Takhti teaches every linked child this class's work. Parents can't change it; you can change it for one child below."}</div>
+    ${r.cls && roster.length ? `<details style="margin-top:6px"><summary style="font-size:13px;cursor:pointer">${hi ? 'किसी एक बच्चे की कक्षा अलग है?' : 'One child in a different class?'}</summary>
+      ${roster.map(c => `<div class="metric"><div><b>${attr(c.name)}</b></div>
+        <select class="input" style="width:auto" onchange="teacherSetChildGrade('${attr(c.id)}', this.value)">${opt((r.kids || {})[c.id], hi ? 'कक्षा जैसी' : 'Same as the class')}</select></div>`).join('')}
+    </details>` : ''}`;
+}
+function teacherSetGrade(cls){
+  const code = teacherCode();
+  setSchoolClass(code, cls || null);
+  log(0, `School roster · class ${code} is ${cls ? classById(cls).en : '(not set)'}`);
+  teacherSyncIfOn(code);
+  render();
+}
+function teacherSetChildGrade(childId, cls){
+  const code = teacherCode();
+  setSchoolClass(code, cls || null, childId);
+  log(0, `School roster · class ${code} · one child set to ${cls ? classById(cls).en : 'the class'}`);
+  teacherSyncIfOn(code);
+  render();
+}
+
 function demoHTML(){
   const hi = S.lang === 'hi', have = demoKids(), full = S.profiles.length + DEMO_KIDS.length > MAX_PROFILES;
   return `<div class="paper" style="margin-top:12px">

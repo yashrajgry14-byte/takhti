@@ -11,9 +11,9 @@
      · a child with a class gets that class's band, whatever their age
        (age only sets Munni's speaking pace)
      · the Write screen: Nursery–UKG trace only; Class 1 trace first,
-       paper offered; Class 2 paper first, letters kept for practice;
-       Class 3 and up never see a trace pad — paper or dictation only
-     · "Not now" to the camera sends a Class 3+ child to dictation,
+       paper offered; Class 2 and up never see a trace pad — paper or
+       dictation only
+     · "Not now" to the camera sends a Class 2+ child to dictation,
        never to tracing; dictation grades the typed line
      · the map's Sand Patch says what this class does there
      · a profile made before class existed keeps its old band (the usual
@@ -102,7 +102,7 @@ server.listen(0, '127.0.0.1', () => {
       /* ---- the Write screen, for every class ---- */
       const want = {
         nur:['trace'], lkg:['trace'], ukg:['trace'],
-        c1:['trace','paper'], c2:['paper','trace'],
+        c1:['trace','paper'], c2:['paper','dictate'],
         c3:['paper','dictate'], c4:['paper','dictate'], c5:['paper','dictate'], c6:['paper','dictate'],
         c7:['paper','dictate'], c8:['paper','dictate'], c9:['paper','dictate'], c10:['paper','dictate']
       };
@@ -115,8 +115,8 @@ server.listen(0, '127.0.0.1', () => {
         check(`${cls}: the Write screen offers ${modes.join(' + ')} and opens on ${modes[0]}`,
           JSON.stringify(tabs) === JSON.stringify(modes) && E('S.ctx.mode') === modes[0], JSON.stringify(rows[rows.length - 1]));
       }
-      const late = rows.filter(r => /^c([3-9]|10)$/.test(r.cls));
-      check('Class 3 to Class 10: no trace pad on the Write screen, ever', late.every(r => !r.pad && !r.tabs.includes('trace')), JSON.stringify(late));
+      const late = rows.filter(r => /^c([2-9]|10)$/.test(r.cls));
+      check('Class 2 to Class 10: no trace pad on the Write screen, ever', late.every(r => !r.pad && !r.tabs.includes('trace')), JSON.stringify(late));
 
       /* a tab left over from a younger class must not survive the move */
       E(`setChildClass('c1'); S.ctx = { mode:'trace' }; S.cls = 'c5'; go('write');`);
@@ -138,7 +138,10 @@ server.listen(0, '127.0.0.1', () => {
         `score=${E('S.ctx.score')} attempts ${before}→${E('S.attempts.write')}`);
       E(`setChildClass('c2'); S.camOk = false; S.ctx = { mode:'paper' }; go('write');`);
       tap($$('.permcard .btn').find(b => /Not now/.test(b.textContent)));
-      check('Class 2: "Not now" to the camera goes back to letter practice', E('S.ctx.mode') === 'trace', E('S.ctx.mode'));
+      check('Class 2: "Not now" to the camera opens dictation, not tracing', E('S.ctx.mode') === 'dictate' && !$('#guide'), E('S.ctx.mode'));
+      E(`setChildClass('c1'); S.camOk = false; go('write'); setWriteMode('paper');`);
+      tap($$('.permcard .btn').find(b => /Not now/.test(b.textContent)));
+      check('Class 1: "Not now" to the camera goes back to tracing', E('S.ctx.mode') === 'trace', E('S.ctx.mode'));
 
       /* ---- the map says what the class does ---- */
       const sub = cls => { E(`setChildClass('${cls}'); go('map');`); const p = $$('.jm-place').find(b => b.getAttribute('onclick').includes("'write'")); return p ? p.textContent : ''; };
@@ -151,7 +154,9 @@ server.listen(0, '127.0.0.1', () => {
       check('Class 3+: no pre-primary skill is ever in reach as a gap', E(`['c3','c5','c8','c10'].every(c => SKILLS.filter(s => s.g != null && s.g <= 0).every(s => !gapInReach(s.id, { cls:c })))`) === true, 'a pre-primary skill is in reach');
       check('Class 5: Class 2 two-digit adding stays in reach (re-teaching it is the loop)', E(`gapInReach('add2', { cls:'c5' })`) === true, 'add2 out of reach');
       check('Class 10: Class 2 work is out of reach — that is the teacher\'s call', E(`gapInReach('add2', { cls:'c10' })`) === false, 'add2 in reach');
-      check('Nursery–Class 2: every skill stays in reach', E(`['nur','ukg','c1','c2'].every(c => SKILLS.every(s => gapInReach(s.id, { cls:c })))`) === true, 'something blocked');
+      check('Nursery–Class 1: every skill stays in reach, tracing included', E(`['nur','ukg','c1'].every(c => SKILLS.every(s => gapInReach(s.id, { cls:c })))`) === true, 'something blocked');
+      check('Class 2 and up: tracing and pencil grip are never a gap step', E(`['c2','c3','c6','c10'].every(c => TRACE_SKILLS.every(id => !gapInReach(id, { cls:c })))`) === true, 'a tracing skill in reach');
+      check('Class 2: other pre-primary school skills (letters) stay in reach', E(`gapInReach('l-alpha', { cls:'c2' })`) === true, 'l-alpha blocked');
 
       /* ---- the parent moves the class ---- */
       E(`setChildClass('c8'); S.levels.read = 6; S.levels.write = 6; S.levels.math = 6;`);
@@ -162,6 +167,30 @@ server.listen(0, '127.0.0.1', () => {
       E(`S.cls = 'c10'; setParentClass(1);`);
       check('…and stops at Class 10', E('S.cls') === 'c10', E('S.cls'));
       E(`go('parent')`);
+
+      /* ---- the school's roster, on this phone ---- */
+      E(`setChildClass('c2'); S.classCode = 'ROS123'; mirrorToClassNow(S); S.ctx.tcode = 'ROS123'; go('teacher');`);
+      const grade = $('#tgrade');
+      check('the teacher view asks which class this class code is', !!grade && grade.options.length === 14, grade ? String(grade.options.length) : 'none');
+      grade.value = 'c5'; grade.dispatchEvent(new w.Event('change'));
+      check("picking Class 5 sets every linked child on this phone to Class 5, marked as the school's", E('S.cls') === 'c5' && E('S.clsBy') === 'school' && E(`readClassShared('ROS123')._roster.cls`) === 'c5', `${E('S.cls')} / ${E('S.clsBy')}`);
+      const childSel = $$('details select').find(x => x.getAttribute('onchange').includes('teacherSetChildGrade'));
+      check('…and lists the children, to set one child apart', !!childSel, 'no per-child select');
+      childSel.value = 'c4'; childSel.dispatchEvent(new w.Event('change'));
+      check('one child set to Class 4 by the teacher', E('S.cls') === 'c4' && E(`readClassShared('ROS123')._roster.kids[S.id]`) === 'c4', E('S.cls'));
+      E(`go('parent')`);
+      const parentTxt = w.document.body.textContent;
+      check('the parent dashboard says the class was set by the school, and offers no − / + for it',
+        /set by the school/.test(parentTxt) && !$$('.stepbtn').some(b => /setParentClass/.test(b.getAttribute('onclick'))), 'stepper still there');
+      E(`setParentClass(1)`);
+      check("a parent can't move a class the school set", E('S.cls') === 'c4', E('S.cls'));
+      E(`unlinkClassCode()`);
+      check('unlinking the class code keeps the class and gives the choice back to the parent', E('S.cls') === 'c4' && E('S.clsBy') === null, `${E('S.cls')} / ${E('S.clsBy')}`);
+      E(`setParentClass(1)`);
+      check('…the parent can then move it', E('S.cls') === 'c5', E('S.cls'));
+      E(`S.lang = 'hi'; setClassCode('ROS123'); go('parent');`);
+      check('linking the class code again brings the school\'s class back (Hindi label)', E('S.cls') === 'c4' && /स्कूल ने तय की/.test(w.document.body.textContent), E('S.cls'));
+      E(`S.lang = 'en'; unlinkClassCode();`);
     }catch(e){
       check('the run finished without an exception', false, e.stack);
     }
