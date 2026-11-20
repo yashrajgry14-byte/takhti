@@ -29,6 +29,8 @@ function askTarget(){
   const hi = S.lang === 'hi';
   if(S.screen === 'math' && S.ctx.p && S.ctx.picked == null){
     const p = S.ctx.p;
+    // a Class 6–10 problem (content/upper.js): its own steps, never the answer; no call (a phone can't say "3/4" back reliably)
+    if(p.kind === 'upper') return { key: 'math:' + p.id, skill: p.skill, lines: p.steps.map(x => hi ? x.hi : x.en), call: null };
     return { key: `math:${p.a}${p.op}${p.b}`, skill: skillOfProblem(p), p, x: explainMath(p), call: { kind: 'math', a: p.a, b: p.b, op: p.op } };
   }
   if(S.screen === 'read' && S.ctx.sentence){

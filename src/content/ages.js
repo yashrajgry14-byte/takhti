@@ -111,9 +111,18 @@ function bandForAge(age){
           'trace+paper'  trace first, paper offered (Class 1)
           'paper'        no tracing at all: copy on paper, or dictation (Class 2+)
    start: a higher class starts higher inside its band.
-   Classes 6–10 use the fluent band's content today; the stage is set
-   now so their look, floor and prompts are right as content arrives.
+   Classes 6–10 share the fluent band's look-ups (clocks, calendars,
+   games) but bring their own levels 7–10, number ceiling and pass mark
+   (UPPER_CLASS below).
    ================================================================== */
+/* Classes 6–10: their own reading lines (levels 7–10, content/sentences.js)
+   and maths (levels 7–10, content/upper.js), starting at the class's own
+   level with one below it to fall back on; bigger numbers allowed. */
+function UPPER_CLASS(read, math, maxNumber){
+  const win = l => [Math.max(5, l - 2), Math.min(10, l + 1)];
+  return { start:{ read, write: read, math }, levels:{ read: win(read), write: win(read), math: win(math) }, maxNumber,
+           factNumberCap: maxNumber * 10, chunkWords: 12, passScore: 84 };
+}
 const CLASSES = [
   { id:'nur', g:-3, band:'pre',        stage:'foundA',    write:'trace',       en:'Nursery',  hi:'नर्सरी' },
   { id:'lkg', g:-2, band:'pre',        stage:'foundA',    write:'trace',       en:'LKG',      hi:'एलकेजी' },
@@ -123,11 +132,11 @@ const CLASSES = [
   { id:'c3',  g:3,  band:'developing', stage:'prep',      write:'paper',       en:'Class 3',  hi:'कक्षा 3',  start:{ read:3, write:3, math:4 } },
   { id:'c4',  g:4,  band:'fluent',     stage:'prep',      write:'paper',       en:'Class 4',  hi:'कक्षा 4' },
   { id:'c5',  g:5,  band:'fluent',     stage:'prep',      write:'paper',       en:'Class 5',  hi:'कक्षा 5',  start:{ read:4, write:4, math:5 } },
-  { id:'c6',  g:6,  band:'fluent',     stage:'middle',    write:'paper',       en:'Class 6',  hi:'कक्षा 6',  start:{ read:5, write:5, math:6 } },
-  { id:'c7',  g:7,  band:'fluent',     stage:'middle',    write:'paper',       en:'Class 7',  hi:'कक्षा 7',  start:{ read:5, write:5, math:6 } },
-  { id:'c8',  g:8,  band:'fluent',     stage:'middle',    write:'paper',       en:'Class 8',  hi:'कक्षा 8',  start:{ read:6, write:6, math:6 } },
-  { id:'c9',  g:9,  band:'fluent',     stage:'secondary', write:'paper',       en:'Class 9',  hi:'कक्षा 9',  start:{ read:6, write:6, math:6 } },
-  { id:'c10', g:10, band:'fluent',     stage:'secondary', write:'paper',       en:'Class 10', hi:'कक्षा 10', start:{ read:6, write:6, math:6 } }
+  { id:'c6',  g:6,  band:'fluent',     stage:'middle',    write:'paper',       en:'Class 6',  hi:'कक्षा 6',  ...UPPER_CLASS(7, 7, 100000) },
+  { id:'c7',  g:7,  band:'fluent',     stage:'middle',    write:'paper',       en:'Class 7',  hi:'कक्षा 7',  ...UPPER_CLASS(8, 8, 100000) },
+  { id:'c8',  g:8,  band:'fluent',     stage:'middle',    write:'paper',       en:'Class 8',  hi:'कक्षा 8',  ...UPPER_CLASS(8, 9, 100000) },
+  { id:'c9',  g:9,  band:'fluent',     stage:'secondary', write:'paper',       en:'Class 9',  hi:'कक्षा 9',  ...UPPER_CLASS(9, 10, 10000000) },
+  { id:'c10', g:10, band:'fluent',     stage:'secondary', write:'paper',       en:'Class 10', hi:'कक्षा 10', ...UPPER_CLASS(10, 10, 10000000) }
 ];
 const STAGES = {
   foundA:    { en:'Foundational', hi:'बुनियादी' },
@@ -178,6 +187,11 @@ function bandFor(child){
     trace: k.write !== 'paper',                   // a trace pad is offered at all
     gFloor: k.g >= 3 ? Math.max(1, k.g - GAP_REACH) : -Infinity,
     start: Object.assign({}, base.start, k.start || {}),
+    levels: k.levels ? { ...base.levels, ...k.levels } : base.levels,
+    maxNumber: k.maxNumber || base.maxNumber,
+    factNumberCap: k.factNumberCap || base.factNumberCap,
+    chunkWords: k.chunkWords || base.chunkWords,
+    passScore: k.passScore || base.passScore,
     // delivery follows the child's own age, not the class
     speechRate: age ? (age >= 11 ? 0.95 : bandForAge(age).speechRate) : base.speechRate
   });

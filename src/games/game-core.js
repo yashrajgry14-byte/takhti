@@ -34,7 +34,7 @@ function gameBuildPool(){
       if(!right || !wrong.length) continue;
       pool.push({
         id: les.id + ':' + les.beats.indexOf(b),
-        band: les.band,
+        band: les.band, g: les.g != null ? les.g : null,
         strand: (les.strand || gameStrandOf(les.concept)) || 'num',
         concept: les.concept || les.id,
         skills,
@@ -77,17 +77,21 @@ function gameItems(n, opts){
   // prevent, and it is worse in a game, where other children can see the
   // screen. Easier-than-current is a kindness; nursery work is an insult.
   const floor = Math.max(0, cap - 1);
+  // a class's own items (content/upper.js) only for that class and the two
+  // above it; from Class 6, those first when there are enough
+  const cg = (typeof band === 'function' && band().g) || 0;
   let pool = gamePool().filter(it => {
     const b = order.indexOf(it.band);
-    return b <= cap && b >= floor;
+    return b <= cap && b >= floor && (it.g == null || (it.g <= cg && it.g >= cg - 2));
   });
+  if(cg >= 6){ const own = pool.filter(it => it.g != null); if(own.length >= n * 2) pool = own; }
   if(opts.strand) pool = pool.filter(it => it.strand === opts.strand);
   if(opts.terse)  pool = pool.filter(it => it.terse);
   // an item with no skill tag still plays, but leaves no evidence — so
   // prefer tagged ones and only fall back if the pool would be too thin
   const tagged = pool.filter(it => it.skills.length);
   if(tagged.length >= n * 2) pool = tagged;
-  if(!pool.length) pool = gamePool().filter(it => order.indexOf(it.band) === cap);
+  if(!pool.length) pool = gamePool().filter(it => order.indexOf(it.band) === cap && (it.g == null || it.g <= cg));
   if(!pool.length) return [];
 
   // weight by weakness, using the app's own record

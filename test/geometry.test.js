@@ -31,7 +31,7 @@ const ctx = { console, Math, Date, JSON };
 vm.createContext(ctx);
 for(const f of ['src/state.js','src/core/matcher.js','src/core/readability.js','src/content/sentences.js','src/content/games.js','src/content/facts.js','src/content/ages.js',
   'src/core/daily-engine.js','src/content/skills.js','src/content/curriculum-early.js','src/content/lessons.js','src/core/lesson-gen.js','src/content/literacy.js',
-  'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/content/calendar.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'])
+  'src/content/comprehension.js','src/content/geometry.js','src/content/clock.js','src/content/calendar.js','src/content/upper.js','src/content/themes.js','src/core/diagnose.js','src/games/game-core.js'])
   vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), ctx, { filename: f });
 ctx.log = () => {};
 const X = vm.runInContext(`({ geoExpect, geoAskError, geoErrors, geoSays, geoArt, geoSay, geoHint, geoPicFor, geoClean, validateLesson, generateLessons, gameBuildPool, GEO_CONCEPTS, GEO_TYPES, S, skillById, CONCEPT_SKILLS })`, ctx);

@@ -329,6 +329,7 @@ math(){
     S.planMore = null;
   }
   const p = S.ctx.p;
+  if(p.kind === 'upper') return upperMathHTML(p);   // Classes 6–10 (content/upper.js)
   const g = gameById(S.game);
   if(S.ctx.picked == null && !S.ctx.helped) twinExpect(twinKeyMath(p), skillOfProblem(p), p, p.opts);   // the twin's guess, before the answer
   return `

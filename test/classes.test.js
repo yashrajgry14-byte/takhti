@@ -168,6 +168,28 @@ server.listen(0, '127.0.0.1', () => {
       check('…and stops at Class 10', E('S.cls') === 'c10', E('S.cls'));
       E(`go('parent')`);
 
+      /* ---- Classes 6–10 at Counting Stones (content/upper.js) ---- */
+      E(`setChildClass('c7'); S.age = 12; S.levels.math = 8; S.ctx = {}; go('math');`);
+      const up = E('S.ctx.p');
+      check('a Class 7 child at Counting Stones gets a Class 7 problem: a question and four text choices', up && up.kind === 'upper' && up.level === 8 && !!$('.upperq') && $$('.opt').length === 4,
+        JSON.stringify(up && { k: up.kind, l: up.level }));
+      const at = E('askTarget()');
+      check("Ask Munni's help for it is the steps, never the answer, and no phone call", at && Array.isArray(at.lines) && at.lines.length >= 2 && !at.call && !at.lines.some(l => l.split(/[\s,:;()।?.]+/).includes(up.ans.replace(/^x = /, ''))), JSON.stringify(at && at.lines));
+      const wrongI = up.opts.findIndex(o => o !== up.ans);
+      const triesBefore = E('S.attempts.math');
+      tap($$('.opt')[wrongI]);
+      check('a wrong choice says which slip it was, and shows how to work it through', !!$('.twintip') && /WORK IT THROUGH/.test(w.document.body.textContent) && E('S.attempts.math') === triesBefore + 1,
+        `${!!$('.twintip')} · ${E('S.attempts.math')}`);
+      check("…and counts for the problem's skill, and labels the steps as a teaching moment", (E(`S.skillHistory[${JSON.stringify(up.skill)}]`) || {}).n >= 1, JSON.stringify(E(`S.skillHistory[${JSON.stringify(up.skill)}]`)));
+      tap($$('.btn').find(b => /nextProblem/.test(b.getAttribute('onclick') || '')));
+      const up2 = E('S.ctx.p');
+      tap($$('.opt')[up2.opts.indexOf(up2.ans)]);
+      check('a right choice is marked right', /Correct/.test(w.document.body.textContent) && !!$('.opt.right'), '');
+      E(`S.lang = 'hi'; S.ctx = {}; go('math');`);
+      check('the Class 7 problem in Hindi', /[ऀ-ॿ]/.test(($('.upperq') || {}).textContent || '') || /^[−(\d]/.test(($('.upperq') || {}).textContent || ''), ($('.upperq') || {}).textContent);
+      E(`S.lang = 'en'; setChildClass('c4'); S.age = 9; S.ctx = {}; go('math');`);
+      check('a Class 4 child still gets column sums', E('S.ctx.p').kind == null && /\d+ [+−×÷] \d+/.test(($('.problem') || {}).textContent || ''), ($('.problem') || {}).textContent);
+
       /* ---- the school's roster, on this phone ---- */
       E(`setChildClass('c2'); S.classCode = 'ROS123'; mirrorToClassNow(S); S.ctx.tcode = 'ROS123'; go('teacher');`);
       const grade = $('#tgrade');

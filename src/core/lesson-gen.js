@@ -478,7 +478,8 @@ function generateLessons(opts){
       const les = {
         id: 'gen-' + String(raw).replace(/[^\w\u0900-\u097F-]+/g, '').slice(0, 48),
         band: c.band, ic: c.ic, generated: true, concept: c.id,
-        title: c.title(p), sub: c.sub(p), beats: c.beats(p)
+        title: c.title(p), sub: c.sub(p), beats: c.beats(p),
+        ...(c.g != null ? { g: c.g } : {})           // a class's own lesson (content/upper.js): only for that class and the two below
       };
       const v = validateLesson(les);
       if(v.ok) out.push(les);
@@ -500,7 +501,13 @@ function lessonBank(){
    just done, a stable set per day. */
 function lessonsForChild(n){
   n = n || 8;
-  const mine = lessonBank().filter(l => l.band === band().id);
+  // the band, and a lesson that belongs to a class (content/upper.js) only for
+  // that class and the two above it — a Class 4 child never meets an equation,
+  // and a Class 9 child's list is Class 7–9 work first
+  const cg = band().g || 0;
+  const inBand = lessonBank().filter(l => l.band === band().id && (l.g == null || (l.g <= cg && l.g >= cg - 2)));
+  const own = inBand.filter(l => l.g != null);
+  const mine = cg >= 6 && own.length >= n ? own : inBand;
   const done = S.doneLessons || [];
   const fresh = mine.filter(l => !done.includes(l.id));
   const pool = fresh.length >= n ? fresh : mine;

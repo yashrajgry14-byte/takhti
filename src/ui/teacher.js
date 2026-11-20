@@ -36,7 +36,7 @@ function teacherRoster(code){
 /* The skills a teacher can pick as "what the class got wrong": anything
    the graph knows at the school grades this app reaches. */
 function teacherSkillOptions(){
-  return SKILLS.filter(s => s.g >= 1 && s.g <= 6 && s.strand !== 'lit')
+  return SKILLS.filter(s => s.g >= 1 && s.g <= 10 && s.strand !== 'lit')
     .sort((a,b) => a.g - b.g || a.en.localeCompare(b.en));
 }
 
