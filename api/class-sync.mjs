@@ -1,34 +1,10 @@
-/* ==================================================================
-   CLASS SYNC — Tier 2. One small record per class code, so a teacher's
-   phone and every consenting child's phone see the same class.
-
-   POST { code, children:{ id:{childName, skillHistory, explained?, paths?, at} }, homework, lessons, roster, teacherKey }
-   → merges what the phone sent into the stored class (newest wins, per
-   child and for the homework) and answers with what that phone may see.
-
-   Who sees what — the class code alone is not enough to read a class:
-     · the TEACHER's phone holds a random teacherKey that never leaves it
-       (the server keeps only its SHA-256). The first teacher phone to
-       sync a class claims it. Only that key gets every child in the
-       class back, and only that key can set or withdraw homework.
-     · a CHILD's phone gets back only the homework and its own record —
-       never its classmates'.
-     · a wrong teacherKey for a claimed class is refused (403).
-
-   Only what the teacher's diagnostic needs is accepted — a name and
-   practice counts per skill, plus the homework — everything is
-   type-checked and size-capped, and anything else in the request is
-   dropped. A child's data only arrives here if a parent switched sync on
-   for that child (src/core/class-sync.js). The class code is the only
-   key, so treat it like a shared password: the app never shows a class's
-   data to anyone without it.
-
-   Storage: Netlify Blobs (store "takhti-classes"). Without a blob store
-   (a host other than Netlify, or local dev) it answers 503, and the app
-   keeps working exactly as before — sync is a bonus, never a dependency.
-   Works as a Netlify function (Request → Response) and with the
-   Vercel-style (req, res) signature api/ask.js uses.
-   ================================================================== */
+/* CLASS SYNC: authenticated Cloud Run only.
+   Caller identity and permissions are verified in cloud/server.mjs against
+   Firebase ID tokens and administrator-provisioned private Cloud Storage
+   access records. The client-supplied class code, child ID and legacy
+   teacherKey are NEVER credentials. The standalone serverless handler is
+   intentionally disabled until equivalent authentication is available.
+   The merge only receives a server-authorized identity argument. */
 
 const CODE = /^[A-Z0-9]{6}$/;
 const SKILL = /^[a-z0-9-]{1,24}$/;
@@ -134,40 +110,19 @@ export async function syncCore(store, body, identity){
 }
 const pick = (all, ids) => Object.fromEntries(ids.filter(id => all[id]).map(id => [id, all[id]]));
 
-async function blobStore(){
-  try{
-    const { getStore } = await import('@netlify/blobs');
-    return getStore('takhti-classes');
-  }catch(e){ return null; }
-}
-
-/* Netlify passes (Request, context); Vercel passes (req, res). */
+/* Legacy standalone endpoint is fail-closed. Cloud Run uses syncCore
+   only after checking a signed token and the private ACL document. */
 export default async function handler(req, res){
-  const vercel = res && typeof res.status === 'function';
-  const reply = (status, json) => vercel
-    ? res.status(status).json(json)
-    : new Response(JSON.stringify(json), { status, headers:{ 'content-type':'application/json' } });
-
-  if(req.method !== 'POST') return reply(405, { error:'POST only' });
-  let body;
+  const vercel=res && typeof res.status==='function';
+  const reply=(status,json)=>vercel ? res.status(status).json(json)
+    : new Response(JSON.stringify(json),{status,headers:{'content-type':'application/json'}});
+  if(req.method!=='POST') return reply(405,{error:'POST only'});
   try{
-    if(vercel) body = req.body;
-    else {
-      const text = await req.text();
-      if(text.length > MAX_BODY) return reply(413, { error:'too large' });
-      body = JSON.parse(text);
+    if(!vercel){
+      const raw=await req.text();
+      if(raw.length>MAX_BODY) return reply(413,{error:'too large'});
+      JSON.parse(raw);
     }
-  }catch(e){ return reply(400, { error:'bad JSON' }); }
-
-  const store = await blobStore();
-  if(!store) return reply(503, { error:'sync storage not configured on this server' });
-  // Standalone Netlify/Vercel function is intentionally disabled until
-  // deployed with the same verified identity and ACL middleware as Cloud Run.
-  return reply(503, {error:'class sync requires verified Cloud Run authentication'});
-  /*try{
-    const out = await syncCore(store, body);
-    return reply(out.status, out.json);
-  }catch(e){
-    return reply(503, { error:'sync storage unavailable' });
-  }*/
+  }catch(e){return reply(400,{error:'bad JSON'});}
+  return reply(503,{error:'verified Cloud Run authentication is required for class sync'});
 }
