@@ -8,20 +8,32 @@ function sayEl(el){ speak(el.dataset.say); }
    Sarvam/ElevenLabs and the existing Google-recorded pack as fallbacks.
    There is intentionally NO browser speechSynthesis/Heera fallback. */
 async function speak(text, lang, onDone){
-  if(S.muted){ if(onDone) onDone(); return; }
   text = String(text == null ? '' : text).trim();
-  if(!text){ if(onDone) onDone(); return; }
+  if(S.muted || !text){ if(onDone) onDone(); return; }
   const l = lang || S.lang;
   stopOnlineSpeech();
   const requestId = SPEECH_REQUEST;
   const pace = (typeof band === 'function' ? band().speechRate : 0.95);
-  let played = false;
-  try{ played = await playLive(text,l,onDone,pace,requestId); }catch(e){}
-  if(requestId !== SPEECH_REQUEST) return;
-  if(!played){ try{played = await playBackup(text,l,onDone,pace,requestId);}catch(e){} }
-  if(requestId !== SPEECH_REQUEST) return;
-  if(!played){ try{played = await playRecorded(text,l,onDone);}catch(e){} }
-  if(!played){ log(null,'Speech unavailable from Google and backup providers'); if(onDone) onDone(); }
+  let completed = false;
+  const finish = () => { if(completed || requestId !== SPEECH_REQUEST) return; completed = true; if(onDone) onDone(); };
+  const recorded = async () => {
+    if(requestId !== SPEECH_REQUEST || completed) return;
+    let ok = false;
+    try{ok = await playRecorded(text,l,finish);}catch(e){}
+    if(requestId !== SPEECH_REQUEST || completed) return;
+    if(!ok){ log(null,'Speech unavailable from Google, backup and recorded audio'); finish(); }
+  };
+  const backup = async () => {
+    if(requestId !== SPEECH_REQUEST || completed) return;
+    let ok = false;
+    try{ok = await playBackup(text,l,finish,pace,requestId,() => { void recorded(); });}catch(e){}
+    if(requestId !== SPEECH_REQUEST || completed) return;
+    if(!ok) await recorded();
+  };
+  let google = false;
+  try{google = await playLive(text,l,finish,pace,requestId,() => { void backup(); });}catch(e){}
+  if(requestId !== SPEECH_REQUEST || completed) return;
+  if(!google) await backup();
 }
 /* Never invoke browser-installed voices. For legacy callers, route through
    the same online voice pipeline rather than using device speech. */
