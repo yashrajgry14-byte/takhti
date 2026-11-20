@@ -32,10 +32,10 @@ optional live step (4b).
 
 | # | Do | Say |
 |---|----|-----|
-| 1 | Teacher view → the syllabus card. Pick **Class 3**. Under *From the library*, choose **Maths Mela · NCERT**. | "The school tells us its book once. Every chapter was drafted ahead by Gemini and checked by Takhti — the teacher never waits, and needs no internet." |
+| 1 | Teacher view → the syllabus card. It starts on **Class 3** once the demo children are added (check it says so). Under *From the library*, choose **Maths Mela · NCERT**. | "The school tells us its book once. Every chapter was drafted ahead by Gemini and checked by Takhti — the teacher never waits, and needs no internet." |
 | 2 | Show the term list; tap ↑ ↓ on a chapter. Then tap **This week** on **5. Fun with Shapes**. | "This is the school's term. The teacher moves chapters to match their own calendar." |
 | 3 | Tap **Open this week's lessons**. Open one lesson's *Read the whole lesson*. | "The teacher sees the aims first, in plain points. Every answer was checked against the drawing — Gemini drafts, but it never decides what a child sees." |
-| 4 | Tap **Approve all the checked lessons' aims**. | "One tap. That's the teacher's whole job for the week." |
+| 4 | Tap **Approve all the checked lessons' aims**. Off camera, do 2–4 again for **12. Give and Take** (Kabir's borrowing lesson, *Taking away tens and ones*, is only there), then set **This week** back to chapter 5. Both chapters stay on the children's lists. | "One tap. That's the teacher's whole job for the week." |
 | 4b | *(optional, needs internet and the voice server)* Upload a chapter PDF under *Or draft from a chapter now*. | "A chapter that isn't in the library yet is drafted live, through the same checks." |
 | 5 | Scroll to **How each child is taking this week's lessons**. | "Same aims, but look: Asha gets pictures first, Kabir goes straight into the school's lesson. Munni chose from what has worked for each child before — measured, not a label." |
 | 6 | Back to the map. Switch child to **Asha (demo)** → **The Story Fire**. | "This is Asha's phone. Her path is on screen, with the reason: 'this has worked for you on this topic'." |
@@ -44,6 +44,23 @@ optional live step (4b).
 | 9 | Switch to **Kabir (demo)** → **The Story Fire**. | "Kabir, same lesson — no pictures step. The story works for him." |
 | 10 | *(maths, if a sums chapter is approved)* Kabir → Teach Appu on chapter 12's *Taking away tens and ones* (or chapter 4's *Finding Hidden Seeds*). | "Appu makes Kabir's own mistake — taking the smaller digit from the bigger — and he has to catch it." |
 | 11 | Back to the teacher view → **What the class could explain**. Read the green line at the top, then the ↻ lines under the borrowing points. | "For every point a child couldn't explain the first time, the teacher sees what happened next: Asha couldn't say what a borrowed ten becomes, Munni taught her again her way, and then she could. Kabir has been re-taught and Appu will ask him again. That is the loop — explain back, find the gap, re-teach, explain again — and it's measured, child by child." |
+
+## Recording checklist
+
+- Record from the **Cloud Run link** with the **signal on**. About 830 Hindi
+  and 920 English lines have no recording yet; they only speak through
+  Google's voice when online. With the signal off, Munni is silent on those
+  lines and Gemini doesn't judge Teach Appu.
+- After a redeploy, open `/health` and check `gemini: true`.
+- Type a **name** in onboarding — left blank, the child is named after the
+  animal ("Tiger"), on purpose for children who can't type yet.
+- On the teacher screen, scroll past **What Takhti covers** (it honestly shows
+  EVS at 0 and 73% of skills).
+- On Teach Appu, point at the trace only when it says **judged by Gemini**.
+  If it says *the phone judges*, these pass the phone's own check:
+  Asha on *Square and Rectangle* — "it has four sides"; *Square Corners* —
+  "it is a square corner, a right angle"; Kabir on *Taking away tens and
+  ones* — "take one ten, it becomes ten ones".
 
 ## If something goes off-script
 

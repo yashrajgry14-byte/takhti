@@ -46,7 +46,11 @@ You need a Google Cloud project with **billing on**, and your Gemini API key.
 4. Open `LINK/health` — it should say `"gemini":true,"sync":true` — then the
    link itself on a phone.
 
-To ship a new version: `git pull && bash cloud/deploy.sh`.
+To ship a new version: `git pull && bash cloud/deploy.sh`. A redeploy keeps
+every variable already set on the service (it uses `--update-env-vars`), and
+sets the models: drafting on `gemini-3.5-flash-lite` then `gemini-4-hydrogen`,
+Teach Appu's judge on `gemini-4-hydrogen`. To pick others, export
+`GEMINI_MODEL`, `GEMINI_FALLBACK_MODEL` or `TAKHTI_TEACH_MODEL` before running.
 
 ## If something goes wrong
 

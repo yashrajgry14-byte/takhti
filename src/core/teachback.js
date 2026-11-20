@@ -63,11 +63,34 @@ function teachHit(text, words){
   });
 }
 
+/* Other ways a child says the same idea. A drafted aim lists the words
+   Gemini thought of, and some lists are thin: "Taking away tens and ones"
+   (Maths Mela ch12) only had convert / units / badlo, so "take one ten, it
+   becomes ten ones" got nothing offline; "Square Corners" (ch5) had only
+   Hindi words, so no English explanation could pass. An idea that names one
+   of the `if` words also takes the `add` words — here, when the child is
+   heard, and in teachCheckAim's "never the answer" check, so a hint or
+   Appu's question that says one of them still fails. The lesson itself (and
+   its id) is not changed. */
+const TEACH_ALSO = [
+  { if: ['convert', 'badlo', 'regroup'],
+    add: ['ten ones', '10 ones', 'into ones', 'into units', 'becomes ten', 'becomes 10', 'break the ten', 'break a ten',
+      'break one ten', 'borrow', 'regroup', 'exchange', 'udhar', 'udhaar', 'उधार', 'दस इकाई', 'das ikai', 'tod do'] },
+  { if: ['chaukore kona', 'chaukor kona', 'चौकोर कोना', 'square corner'],
+    add: ['square corner', 'square corners', 'right angle', 'samkon', 'समकोण', 'chaukor kona', 'chokor kona'] }
+];
+function teachWordsFor(words){
+  const ws = Array.isArray(words) ? words : [], have = ws.map(teachNorm);
+  const extra = [];
+  for(const g of TEACH_ALSO) if(g.if.some(w => have.includes(teachNorm(w)))) g.add.forEach(w => { if(!have.includes(teachNorm(w)) && !extra.includes(w)) extra.push(w); });
+  return extra.length ? ws.concat(extra) : ws;
+}
+
 /* The offline judge. */
 function teachRubric(ideas, text){
   const n = teachTokens(text).length;
   if(n < 2) return { verdict: 'unsure', hits: [], n };
-  const hits = (ideas || []).map(i => teachHit(text, i.words));
+  const hits = (ideas || []).map(i => teachHit(text, teachWordsFor(i.words)));
   const got = hits.filter(Boolean).length;
   return { verdict: !hits.length ? 'unsure' : got === hits.length ? 'covered' : got ? 'partly' : 'missing', hits, n };
 }
@@ -120,7 +143,7 @@ function teachCheckAim(a){
   if(e.length) return e;
   // never the answer: nothing Appu says may already pass as the explanation.
   // The reason names the words it said, so Gemini's repair round knows what to change.
-  const said = text => { const w = []; ideas.forEach(i => { const x = (i.words || []).find(v => teachHit(text, [v])); if(x) w.push(x); }); return w.length ? ` (it says "${w.join('", "')}")` : ''; };
+  const said = text => { const w = []; ideas.forEach(i => { const x = teachWordsFor(i.words).find(v => teachHit(text, [v])); if(x) w.push(x); }); return w.length ? ` (it says "${w.join('", "')}")` : ''; };
   for(const lang of ['en', 'hi']){
     if(teachRubric(ideas, a.forget[lang]).verdict === 'covered') e.push(`Appu's question (${lang}) already gives the explanation${said(a.forget[lang])}`);
     a.hints.forEach((h, k) => { if(teachRubric(ideas, h[lang]).verdict === 'covered') e.push(`hint ${k + 1} (${lang}) already gives the explanation${said(h[lang])}`); });

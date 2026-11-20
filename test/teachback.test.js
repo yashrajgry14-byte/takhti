@@ -82,6 +82,20 @@ function box(){
   check('…something else is "missing", one word or nothing is "unsure" (ask again, keep nothing)', R('I like elephants a lot') === 'missing' && R('um') === 'unsure' && R('') === 'unsure', '');
   check('…two ideas, one said, is "partly"; Devanagari digits count as digits',
     E(`teachRubric(TWO, 'just add them up').verdict`) === 'partly' && E(`teachRubric(TWO, 'add them and you get ४३ back').verdict`) === 'covered', E(`teachRubric(TWO, 'add them and you get ४३ back').verdict`));
+  // A drafted aim's thin word list (Maths Mela 3 ch12 and ch5, as built) takes the
+  // other ways a child says the same idea — and its question and hints still don't pass.
+  const OPEN = [{ en: 'convert one rod into ten single units', hi: 'एक छड़ को दस इकाइयों में बदलो', words: ['convert', 'units', 'badlo'] }];
+  const CORNER = [{ en: 'square corner', hi: 'चौकोर कोना', words: ['chaukore kona', 'चौकोर कोना'] }];
+  const V = (ideas, t) => E(`teachRubric(${JSON.stringify(ideas)}, ${JSON.stringify(t)}).verdict`);
+  check('…a thin drafted list still hears "it becomes ten ones" and an English "square corner" / "right angle"; an unrelated sentence still misses',
+    V(OPEN, 'take one ten, it becomes ten ones') === 'covered' && V(OPEN, 'convert the rod into units') === 'covered'
+    && V(CORNER, 'it is a square corner') === 'covered' && V(CORNER, 'it is a right angle') === 'covered'
+    && V(OPEN, 'I just take away the numbers') === 'missing' && V(CORNER, 'it is a pointy corner') === 'missing',
+    [V(OPEN, 'take one ten, it becomes ten ones'), V(CORNER, 'it is a square corner'), V(OPEN, 'I just take away the numbers')]);
+  check('…and those added words count against a giveaway too: a hint saying "break the ten into ones" fails the check',
+    E(`teachCheckAim({ id: 'x.0', kind: 'explain', short: { en: 'Open a ten', hi: 'दहाई खोलो' }, point: { en: 'Open a ten to subtract.', hi: 'घटाने के लिए दहाई खोलो।' },
+      forget: { en: 'I forgot! What do we do when there are not enough ones?', hi: 'मैं भूल गया! जब इकाई कम हों तो क्या करते हैं?' },
+      hints: [{ en: 'Break the ten into ones!', hi: 'दहाई देखो।' }, { en: 'Look at the tens.', hi: 'दहाई देखो।' }], ideas: ${JSON.stringify(OPEN)} }).some(e => /hint 1 \\(en\\)/.test(e))`), '');
 
   // Appu's mistake
   const fixBad = E(`(() => { const out = [];
