@@ -132,6 +132,18 @@ export async function handle(req, res){
   try{
     if(p === '/health' || p === '/healthz') return json(res, 200, { ok: true, gemini: !!process.env.GEMINI_API_KEY, sync: !!(process.env.TAKHTI_SYNC_BUCKET && process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_WEB_API_KEY) });
     if(p === '/api/auth-config' && req.method==='GET') return json(res,200,{enabled:!!(process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_WEB_API_KEY),apiKey:process.env.FIREBASE_WEB_API_KEY || null});
+    if(p === '/api/class-identity' && req.method === 'GET') {
+      if(!process.env.FIREBASE_PROJECT_ID || !process.env.TAKHTI_SYNC_BUCKET) return json(res,503,{error:'verified school access not configured'});
+      const token=bearerToken(req); if(!token) return json(res,401,{error:'sign in first'});
+      try{
+        const user=await verifyIdToken(token,process.env.FIREBASE_PROJECT_ID);
+        if(!user.emailVerified) return json(res,403,{error:'verify your email before accessing school records'});
+        const aclId=createHash('sha256').update(user.uid).digest('hex');
+        const access=await gcsStore(process.env.TAKHTI_SYNC_BUCKET).get('access-'+aclId);
+        if(!access || access.active!==true || !['teacher','guardian'].includes(access.role)) return json(res,403,{error:'school administrator has not granted access'});
+        return json(res,200,{role:access.role,classes:access.role==='teacher'?access.classes:[],email:user.email});
+      }catch(e){return json(res,401,{error:'invalid or expired session'});}
+    }
     if(p.startsWith('/api/')){
       if(req.method !== 'POST') return json(res, 405, { error: 'POST only' });
       const body = await readJSON(req);
@@ -145,6 +157,7 @@ export async function handle(req, res){
         let user;
         try{user=await verifyIdToken(token,process.env.FIREBASE_PROJECT_ID);}
         catch(e){return json(res,401,{error:'invalid or expired identity token'});}
+        if(!user.emailVerified) return json(res,403,{error:'verify email first'});
         try{
           // ACL documents are created only by the school administrator using
           // server-side Cloud Storage access. Clients cannot edit ACLs via HTTP.
