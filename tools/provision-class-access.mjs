@@ -15,17 +15,18 @@ for(let i=2;i<process.argv.length;i+=2){
   if(!key?.startsWith('--') || !value || value.startsWith('--')) fail('Each option must be --name value');
   args[key.slice(2)]=value;
 }
-const bucket=args.bucket,uid=args.uid,role=args.role,code=args.class?.toUpperCase();
+const bucket=args.bucket,uid=args.uid,role=args.role,code=args.class?.toUpperCase(),schoolId=args.school;
 if(!/^[a-z0-9][a-z0-9._-]{5,220}$/i.test(bucket||'')) fail('Specify valid --bucket');
 if(!uid || uid.length>128 || /[\u0000-\u001f]/.test(uid)) fail('Specify a Firebase Authentication UID (--uid)');
 if(!/^[A-Z0-9]{6}$/.test(code||'')) fail('Specify a six-character --class');
+if(!/^[A-Za-z0-9_-]{6,64}$/.test(schoolId||'')) fail('Specify a unique verified --school SCHOOL_ID');
 if(!['teacher','guardian'].includes(role)) fail('--role teacher or guardian required');
 if(role==='guardian' && (!args.child || args.child.length>40 || !args['consent-record']))
   fail('Guardian requires --child CHILD_ID and --consent-record EXISTING_VERIFIED_REFERENCE');
 if(role==='teacher' && (args.child || args['consent-record'])) fail('Teacher cannot specify guardian consent/child');
 const acl=role==='teacher'
-  ? {role:'teacher',active:true,classes:[code]}
-  : {role:'guardian',active:true,children:[{code,id:args.child,consent:true,consentReference:args['consent-record']}]};
+  ? {role:'teacher',active:true,schoolId,classes:[code]}
+  : {role:'guardian',active:true,schoolId,children:[{code,id:args.child,consent:true,consentReference:args['consent-record']}]};
 const hash=createHash('sha256').update(uid).digest('hex');
 const dst=`gs://${bucket}/classes/access-${hash}.json`;
 const dir=mkdtempSync(path.join(tmpdir(),'takhti-acl-'));
