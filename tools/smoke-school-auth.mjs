@@ -61,7 +61,9 @@ try{
   }else{
     const anonymous=await api('/api/class-identity');
     assert('anonymous identity denied',anonymous.status===401);
-    const invalid=await api('/api/class-identity',teacher.token.slice(0,-1)+(teacher.token.endsWith('a')?'b':'a'));
+    const parts=teacher.token.split('.');
+    parts[2]=parts[2].slice(0,20)+(parts[2][20]==='A'?'B':'A')+parts[2].slice(21);
+    const invalid=await api('/api/class-identity',parts.join('.'));
     assert('tampered identity denied',invalid.status===401);
     const t=await api('/api/class-identity',teacher.token);
     const g=await api('/api/class-identity',guardian.token);
