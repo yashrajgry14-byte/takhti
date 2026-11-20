@@ -9,7 +9,7 @@ processes, and production provisioning have been completed.**
 - Cloud Run verifies an **RS256-signed Firebase Authentication ID token**
   against Google's public keys, audience and issuer for `FIREBASE_PROJECT_ID`.
   A verified email address is required for school access.
-- The app signs teachers and guardians in with Firebase Authentication
+- Teachers may open `https://YOUR_APP_URL/?role=teacher` independently of the parent PIN. The teacher screen remains inaccessible until a server-approved teacher login.\n\n- The app signs teachers and guardians in with Firebase Authentication
   email/password through Identity Toolkit. The token remains in page memory;
   refresh or expiry requires signing in again.
 - A successful login is not authorization. Cloud Run reads a **private,
