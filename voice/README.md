@@ -150,7 +150,7 @@ All speech goes through `speech.js`: `checkReading()` and `narrate()`.
 Under the reading terms a parent accepts at onboarding (v3), whenever there
 is a signal, the app sends one line the child read (or one word said after
 Munni) to `POST /reading/asr`. With `gemini`, Gemini (`GEMINI_SPEECH_MODEL`,
-default `gemini-3.8-flash`) hears the clip and writes down what was said —
+default `gemini-4-hydrogen`) hears the clip and writes down what was said —
 not a tidied sentence — word by word against the line, if the line is one of
 the app's own (the server's copy, never the phone's word for it); if Gemini
 fails or is too slow, Sarvam does it (when `SARVAM_API_KEY` is set). With

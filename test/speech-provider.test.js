@@ -105,7 +105,7 @@ const stand = http.createServer((req, res) => {
   const hearCall = G.calls.find(c => c.who === 'gemini');
   check('SPEECH_PROVIDER unset → Gemini hears the reading check (the default since 12 Nov 2026)', r.provider === 'gemini' && !!hearCall && !G.calls.some(c => c.who === 'sarvam-stt'), JSON.stringify(r));
   check('…with gemini-3.8-flash, the key in a header (never the URL), the clip as inline audio with its type, structured output',
-    hearCall.model === 'gemini-3.8-flash' && hearCall.headers['x-goog-api-key'] === 'gk-secret' && !/gk-secret/.test(hearCall.url)
+    hearCall.model === 'gemini-4-hydrogen' && hearCall.headers['x-goog-api-key'] === 'gk-secret' && !/gk-secret/.test(hearCall.url)
       && hearCall.body.contents[0].parts[0].inline_data.mime_type === 'audio/webm' && hearCall.body.contents[0].parts[0].inline_data.data === clip.buf.toString('base64')
       && /responseFormat|responseJsonSchema/.test(JSON.stringify(hearCall.body.generationConfig)), JSON.stringify(hearCall && hearCall.body).slice(0, 300));
   check('…told to write what it hears, a misreading kept as said ("बाई" for "भाई"), never corrected', /never what the child should have said/.test(JSON.stringify(hearCall.body.systemInstruction)) && /बाई/.test(JSON.stringify(hearCall.body.systemInstruction)), '');

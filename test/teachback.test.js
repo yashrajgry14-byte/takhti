@@ -240,7 +240,7 @@ function box(){
   // the judge's models: a short turn for the first, then flash-lite (the live checks found the full Flash models busy or silent)
   const { judgeModels } = await import(pathToFileURL(path.join(root, 'api/teachback.mjs')).href);
   check('the judge\'s models: TAKHTI_TEACH_MODEL (else GEMINI_MODEL, else 3.8-flash), then flash-lite; "none" switches the fallback off',
-    JSON.stringify(judgeModels({})) === JSON.stringify(['gemini-3.8-flash', 'gemini-3.5-flash-lite']) && JSON.stringify(judgeModels({ TAKHTI_TEACH_MODEL: 'gemini-3.5-flash-lite' })) === JSON.stringify(['gemini-3.5-flash-lite'])
+    JSON.stringify(judgeModels({})) === JSON.stringify(['gemini-4-hydrogen', 'gemini-3.5-flash-lite']) && JSON.stringify(judgeModels({ TAKHTI_TEACH_MODEL: 'gemini-3.5-flash-lite' })) === JSON.stringify(['gemini-3.5-flash-lite'])
       && JSON.stringify(judgeModels({ GEMINI_MODEL: 'g', TAKHTI_TEACH_FALLBACK: 'none' })) === JSON.stringify(['g']), JSON.stringify(judgeModels({})));
   const byModel = (behave) => async (url, o) => {
     const m = decodeURIComponent(url.match(/models\/([^:]+):/)[1]); calls.push({ model: m });
@@ -251,16 +251,16 @@ function box(){
   };
   const ok1 = { consent: true, lang: 'en', ask: 'borrow.when', transcript: 'you borrow one ten from the five', aims: [forged] };
   calls.length = 0;
-  const busy = await judgeCore(ok1, { GEMINI_API_KEY: 'k', TAKHTI_TEACH_PER_HOUR: '999' }, '8.8.8.1', byModel({ 'gemini-3.8-flash': 503 }));
+  const busy = await judgeCore(ok1, { GEMINI_API_KEY: 'k', TAKHTI_TEACH_PER_HOUR: '999' }, '8.8.8.1', byModel({ 'gemini-4-hydrogen': 503 }));
   check('…the first model busy (503): flash-lite judges at once, and the answer names the model that judged',
-    busy.json.judge && busy.json.judge.aims[0].verdict === 'covered' && busy.json.model === 'gemini-3.5-flash-lite' && calls[0].model === 'gemini-3.8-flash', JSON.stringify([busy.json, calls]));
+    busy.json.judge && busy.json.judge.aims[0].verdict === 'covered' && busy.json.model === 'gemini-3.5-flash-lite' && calls[0].model === 'gemini-4-hydrogen', JSON.stringify([busy.json, calls]));
   calls.length = 0;
   const t0 = Date.now();
-  const hung = await judgeCore(ok1, { GEMINI_API_KEY: 'k', TAKHTI_TEACH_FIRST_MS: '300', TAKHTI_THINKING: 'off' }, '8.8.8.2', byModel({ 'gemini-3.8-flash': 'hang' }));
+  const hung = await judgeCore(ok1, { GEMINI_API_KEY: 'k', TAKHTI_TEACH_FIRST_MS: '300', TAKHTI_THINKING: 'off' }, '8.8.8.2', byModel({ 'gemini-4-hydrogen': 'hang' }));
   check('…the first model silent: its short turn ends and flash-lite still answers well inside the phone\'s time',
     hung.json.judge && hung.json.model === 'gemini-3.5-flash-lite' && Date.now() - t0 < 2000, JSON.stringify([hung.json, Date.now() - t0]));
   const allDown = await judgeCore(ok1, { GEMINI_API_KEY: 'k', TAKHTI_TEACH_FIRST_MS: '200', TAKHTI_TEACH_TIMEOUT_MS: '1500', TAKHTI_THINKING: 'off' }, '8.8.8.3',
-    byModel({ 'gemini-3.8-flash': 'hang', 'gemini-3.5-flash-lite': 'hang' }));
+    byModel({ 'gemini-4-hydrogen': 'hang', 'gemini-3.5-flash-lite': 'hang' }));
   check('…every model silent: no judge inside the time limit — the phone\'s rubric decides', allDown.status === 200 && allDown.json.judge === null, JSON.stringify(allDown.json));
 
   // the Netlify function, laid out as Netlify ships it: the built-in points found under the function's root

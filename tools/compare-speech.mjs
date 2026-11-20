@@ -70,7 +70,7 @@ const report = [];
 // clip must not win it by not being judged there
 const pair = {}; for(const p of PROVIDERS) pair[p] = { hi: { words: 0, missed: 0, invented: 0 }, en: { words: 0, missed: 0, invented: 0 } };
 
-console.log(`Comparing ${clips.length} recording(s) — Gemini (${env.GEMINI_SPEECH_MODEL || 'gemini-3.8-flash'}) and Sarvam (${env.SARVAM_STT_MODEL || 'saaras:v3'}, verbatim)\n`);
+console.log(`Comparing ${clips.length} recording(s) — Gemini (${env.GEMINI_SPEECH_MODEL || 'gemini-4-hydrogen'}) and Sarvam (${env.SARVAM_STT_MODEL || 'saaras:v3'}, verbatim)\n`);
 for(const f of clips){
   const stem = path.join(dir, path.basename(f, path.extname(f)));
   const read = ext => fs.existsSync(stem + ext) ? fs.readFileSync(stem + ext, 'utf8').trim() : null;

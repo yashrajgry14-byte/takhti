@@ -80,8 +80,8 @@ export function judgeVerdict(c, judge){
 
 function chain(env, flag){
   if(flag) return flag.split(',').map(s => s.trim()).filter(Boolean);
-  const fb = String(env.GEMINI_FALLBACK_MODEL || 'gemini-3.7-flash,gemini-3.5-flash-lite');
-  return [...new Set([env.TAKHTI_TEACH_MODEL || env.GEMINI_MODEL || 'gemini-3.8-flash', env.GEMINI_SPEECH_MODEL || 'gemini-3.8-flash', ...(fb === 'none' ? [] : fb.split(','))].map(s => s.trim()).filter(Boolean))];
+  const fb = String(env.GEMINI_FALLBACK_MODEL || 'gemini-3.8-flash,gemini-3.5-flash-lite');
+  return [...new Set([env.TAKHTI_TEACH_MODEL || env.GEMINI_MODEL || 'gemini-4-hydrogen', env.GEMINI_SPEECH_MODEL || 'gemini-4-hydrogen', ...(fb === 'none' ? [] : fb.split(','))].map(s => s.trim()).filter(Boolean))];
 }
 const ms = t0 => Date.now() - t0;
 
@@ -240,7 +240,7 @@ export function advise(out, env, models){
   const works = m => m.rows.length && m.rows.every(x => x.pass);
   const hear = hearPick(out.hear, true), hearSlow = hearPick(out.hear, false);
   const judge = out.judge.find(m => fits(m, BUDGET.judge)), judgeSlow = out.judge.find(works);
-  const curHear = env.GEMINI_SPEECH_MODEL || 'gemini-3.8-flash', curJudge = env.TAKHTI_TEACH_MODEL || env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const curHear = env.GEMINI_SPEECH_MODEL || 'gemini-4-hydrogen', curJudge = env.TAKHTI_TEACH_MODEL || env.GEMINI_MODEL || 'gemini-4-hydrogen';
   if(!out.tts || !out.tts.ok) a.push(`Munni's voice (${out.tts && out.tts.model}) failed: ${out.tts && out.tts.error}. The offline pack can't be built with Gemini until it works; tools/build-audio.mjs --provider sarvam still can.`);
   const lineNote = h => h.line ? '' : ' and GEMINI_HEAR_LINE=0 (with the line, it wrote the line instead of what was said)';
   if(hear) a.push(hear.model === curHear && hear.line ? `Hearing: ${curHear} works and fits the phone's time. Nothing to change.` : `Hearing: set GEMINI_SPEECH_MODEL=${hear.model}${lineNote(hear)} in voice/.env.`);
