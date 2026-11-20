@@ -9,6 +9,10 @@
      · Munni jumps when she is tapped
      · a heading with a 🔊 is read out loud when tapped — for a child
        who cannot read it yet
+     · it grows up with the child: the phone carries data-band (pre 3–4,
+       early 5–6, developing 7–8, fluent 9–10, from content/ages.js) and
+       theme-play.css turns the play up for the little ones and down for
+       the 9–10s, who don't want a baby app
 
    It only decorates what render() has already drawn and listens for
    taps; it never changes what a screen does or what gets recorded. The
@@ -22,6 +26,8 @@
   const PALETTE = ['#FF8C42', '#3FB4E6', '#7CC242', '#FFC93C', '#FF7FA3', '#A88BEB', '#2EC4B6'];
 
   const childScreen = () => typeof S !== 'undefined' && !GROWN_UP.has(S.screen);
+  const bandId = () => { try { return typeof band === 'function' ? band().id : 'early'; } catch(e){ return 'early'; } };
+  const little = () => { const b = bandId(); return b === 'pre' || b === 'early'; };
   const pop = () => { if(typeof sfxPop === 'function') try { sfxPop(); } catch(e){} };
 
   /* ---------- little particles, drawn above everything ---------- */
@@ -59,7 +65,7 @@
     const b = e.target.closest('#screen button, #screen [onclick], #askfab');
     if(!b || b.closest('.paper') || b.disabled) return;
     replay(b, 'kid-squish');
-    burst(e.clientX, e.clientY, 7, 34, 'dot');
+    if(bandId() !== 'fluent') burst(e.clientX, e.clientY, little() ? 10 : 6, little() ? 44 : 30, 'dot');
     pop();
   }, { passive: true });
 
@@ -134,10 +140,19 @@
   /* ---------- 5. after every screen is drawn ---------- */
   function decorate(){
     const scr = document.querySelector('.screen');
-    if(scr && typeof S !== 'undefined') scr.dataset.kid = GROWN_UP.has(S.screen) ? 'grown' : S.screen;
+    if(scr && typeof S !== 'undefined'){
+      scr.dataset.kid = GROWN_UP.has(S.screen) ? 'grown' : S.screen;
+      scr.dataset.band = bandId();
+    }
     if(!childScreen()) return;
     document.querySelectorAll('#screen > .display, #screen .ob-q, #screen .display.kid-heading').forEach(h => {
       if(!h.closest('.paper') && h.textContent.trim().length < 70) h.classList.add('kid-say');
+      // for the little ones every word of a heading gets its own colour
+      // (split by word, never by letter, so Hindi letters stay joined)
+      if(little() && !h.dataset.rainbow && h.children.length === 0){
+        h.dataset.rainbow = '1';
+        h.innerHTML = h.textContent.trim().split(/\s+/).map(w => `<span class="kw">${w.replace(/[<&]/g, c => c === '<' ? '&lt;' : '&amp;')}</span>`).join(' ');
+      }
     });
     decorateMap();
     partyIfRight();

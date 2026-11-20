@@ -851,3 +851,27 @@ async function flushQueue(){
     render();
   }
 }
+
+/* Ask by voice (20 Nov): a young child says the question instead of typing
+   it. It goes through the same submitQuestion() as a typed one. Held in
+   ACTIVE_LISTEN so leaving the screen (go() → stopListening()) stops it,
+   and a question heard after the child has left is dropped. */
+function askByVoice(){
+  const hi = S.lang === 'hi';
+  const btn = $('askmic');
+  if(ACTIVE_LISTEN){ stopListening(); if(btn){ btn.classList.remove('live'); } return; }
+  if(btn){ btn.classList.add('live'); btn.textContent = '👂 ' + (hi ? 'मुन्नी सुन रही है…' : 'Munni is listening…'); }
+  let heard = '';
+  ACTIVE_LISTEN = listen(alts => { heard = ((alts[0] && alts[0].transcript) || '').trim(); }, err => {
+    ACTIVE_LISTEN = null;
+    if(S.screen !== 'ask') return;
+    if(heard){ submitQuestion(heard); return; }
+    const b = $('askmic');
+    if(b){ b.classList.remove('live'); b.textContent = '🎤 ' + (hi ? 'फिर से बोलो' : 'Tap and try again'); }
+    // the recognizer can't run here: the typing box comes back for a grown-up
+    if(err && err !== 'no-speech' && err !== 'aborted'){
+      const box = document.querySelector('#screen .kid-type');
+      if(box) box.classList.add('show');
+    }
+  });
+}

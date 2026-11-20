@@ -198,7 +198,7 @@ read(){
     <button class="btn ghost" onclick="speak(S.ctx.sentence)">🔊 ${t('hear')}</button>
     <button class="btn" onclick="nextSentence()">${t('next')} →</button>
   </div>
-  <div style="margin-top:10px">
+  <div class="kid-type ${S.ctx.msg && S.ctx.score==null ? 'show' : ''}" style="margin-top:10px">
     <input class="input" id="typed" placeholder="${t('typeInstead')}">
     <button class="btn ghost" style="margin-top:8px" onclick="checkRead($('typed').value)">${t('check')}</button>
   </div>`;
@@ -417,8 +417,11 @@ ask(){
   <div class="muted">${t('askSub')}</div>
   ${elephantHTML()}
   ${talkPanelHTML()}
+  <button class="btn kid-mic" id="askmic" style="margin-top:12px;width:100%" onclick="askByVoice()">🎤 ${S.lang==='hi'?'दबाओ और मुन्नी से पूछो':'Tap and ask Munni'}</button>
+  <div class="kid-type">
   <input class="input" id="q" style="margin-top:12px" placeholder="${t('typeQ')}">
   <button class="btn" style="margin-top:10px" onclick="submitQuestion($('q').value)">${t('sendQ')}</button>
+  </div>
   <div style="margin-top:8px" class="row">
     <button class="btn ghost" onclick="submitQuestion('Why is the sky blue?')">Why is the sky blue?</button>
   </div>

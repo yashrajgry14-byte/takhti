@@ -407,3 +407,94 @@
 .shelfcard .sc-ic{width:70px;height:70px;font-size:40px;margin:4px auto 8px}
 .shelfcard .sc-name{font-size:16px}
 .eleph{width:180px}
+
+/* ==================================================================
+   GROWING UP WITH THE CHILD (20 Nov, night)
+   playful.js puts the age band on the phone (data-band, from
+   content/ages.js). One app, four feels:
+     pre        3–4   can't read, can't be expected to know where to tap:
+                      huge pictures, few choices, a finger that shows them
+     early      5–6   pictures first, a few big words, everything talks
+     developing 7–8   reading now: the small lines come back, less bounce
+     fluent     9–10  not a baby app: calmer, more to choose from,
+                      their level shown as a badge they earned
+   ================================================================== */
+
+/* ---- 3–6: no typing. Ask by voice; the typing box only comes back if
+        the mic can't work on this phone ---- */
+.screen[data-band=pre] .kid-type,.screen[data-band=early] .kid-type{display:none}
+.screen[data-band=pre] .kid-type.show,.screen[data-band=early] .kid-type.show{display:block}
+.kid-mic{background:var(--p-pink);font-size:19px;padding:18px 14px;box-shadow:0 8px 18px rgba(255,127,163,.38)}
+.kid-mic.live{background:var(--p-red);animation:kidListen 1s ease-in-out infinite}
+@keyframes kidListen{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+.screen[data-band=developing] .kid-type .input,.screen[data-band=fluent] .kid-type .input{margin-top:10px}
+
+/* ---- 3–6: a playroom, not a page ---- */
+.screen[data-band=pre],.screen[data-band=early]{
+  background:
+    radial-gradient(circle at 12% 18%,rgba(255,201,60,.18) 0 10px,transparent 11px),
+    radial-gradient(circle at 82% 30%,rgba(63,180,230,.16) 0 14px,transparent 15px),
+    radial-gradient(circle at 30% 72%,rgba(255,127,163,.15) 0 12px,transparent 13px),
+    radial-gradient(circle at 88% 86%,rgba(124,194,66,.16) 0 16px,transparent 17px),
+    linear-gradient(180deg,#E7F5FF 0%,#FFF7E8 55%,#FFEFE2 100%)}
+/* rainbow headings: every word its own colour */
+.kw{display:inline-block}
+.kw:nth-child(5n+1){color:#FF7A2F} .kw:nth-child(5n+2){color:#2A9FD6} .kw:nth-child(5n+3){color:#8A63E0}
+.kw:nth-child(5n+4){color:#2FA84F} .kw:nth-child(5n){color:#E8508A}
+.kid-say[data-rainbow] .kw{animation:kidWord .6s cubic-bezier(.3,1.6,.5,1) both}
+.kid-say[data-rainbow] .kw:nth-child(2){animation-delay:.08s} .kid-say[data-rainbow] .kw:nth-child(3){animation-delay:.16s}
+.kid-say[data-rainbow] .kw:nth-child(4){animation-delay:.24s} .kid-say[data-rainbow] .kw:nth-child(5){animation-delay:.32s}
+.kid-say[data-rainbow] .kw:nth-child(n+6){animation-delay:.4s}
+@keyframes kidWord{0%{opacity:0;transform:translateY(14px) scale(.6)}100%{opacity:1;transform:none}}
+
+/* a finger shows the little ones where to tap: the place Munni suggests,
+   the first story, the first game */
+.screen[data-band=pre] .jm-place.here::after,.screen[data-band=early] .jm-place.here::after,
+.screen[data-band=pre] .leslist .lescard:first-child::after,.screen[data-band=early] .leslist .lescard:first-child::after,
+.screen[data-band=pre] .gameshelf .shelfcard:first-child::after{
+  content:'👆';position:absolute;z-index:4;font-size:34px;pointer-events:none;
+  filter:drop-shadow(0 3px 2px rgba(0,0,0,.25));animation:kidPoint 1.2s ease-in-out infinite}
+.screen[data-band=pre] .jm-place.here::after,.screen[data-band=early] .jm-place.here::after{left:58%;top:44px}
+.leslist .lescard:first-child::after,.gameshelf .shelfcard:first-child::after{left:58%;top:58px}
+@keyframes kidPoint{0%,100%{transform:translate(0,0)}50%{transform:translate(-4px,-10px)}}
+
+/* ---- 3–4: fewer, bigger choices ---- */
+.screen[data-band=pre] #screen > .display{font-size:31px!important}
+.screen[data-band=pre] .jm-ic{width:76px;height:76px;font-size:40px}
+.screen[data-band=pre] .jm-label b{font-size:13px}
+.screen[data-band=pre] .leslist{grid-template-columns:1fr 1fr}
+.screen[data-band=pre] .leslist .lescard:nth-child(n+7){display:none}   /* six to pick from, not sixty */
+.screen[data-band=pre] .leslist .lescard{min-height:176px}
+.screen[data-band=pre] .leslist .lescard .lesic{width:96px;height:96px;font-size:56px;border-radius:30px}
+.screen[data-band=pre] .btn{font-size:20px;min-height:62px}
+.screen[data-band=pre] .opt{font-size:42px;min-height:100px}
+.screen[data-band=pre] .kid-critter{font-size:36px}
+.screen[data-band=pre] .kid-critter.big{font-size:46px}
+
+/* ---- 7–8: readers now. The small line under each story comes back, the
+        finger goes, the headings stop jumping ---- */
+.screen[data-band=developing] .leslist .lescard small{display:block;font-size:11.5px;line-height:1.25;color:var(--p-ink-2)}
+.screen[data-band=developing] .leslist .lescard{min-height:170px}
+.screen[data-band=developing] .shelfcard .sc-aim{display:block;font-size:11.5px;color:var(--p-ink-2)}
+.screen[data-band=developing] .kid-say::after,.screen[data-band=fluent] .kid-say::after{animation:none;width:26px;height:26px;font-size:13px}
+
+/* ---- 9–10: calmer and more grown-up — but still Takhti ---- */
+.screen[data-band=fluent] #screen > .display{font-size:24px!important}
+.screen[data-band=fluent] .jm-label small{display:block}
+.screen[data-band=fluent] .kid-critter:nth-of-type(n+4){display:none}          /* three friends, not six */
+.screen[data-band=fluent] .kid-critter,.screen[data-band=fluent] .jm-deco,
+.screen[data-band=fluent] .jm-ic{animation:none}                                /* they move when poked, not on their own */
+.screen[data-band=fluent] .jm-place.here .jm-ic{animation:none}
+/* stories as a list to scan — they read fast and want to see more */
+.screen[data-band=fluent] .leslist{grid-template-columns:1fr;gap:9px}
+.screen[data-band=fluent] .leslist .lescard{flex-direction:row;text-align:left;min-height:0;padding:11px 12px;gap:12px}
+.screen[data-band=fluent] .leslist .lescard .lesic{width:48px;height:48px;font-size:26px;border-radius:15px;box-shadow:none}
+.screen[data-band=fluent] .leslist .lescard small{display:block;font-size:12px;color:var(--p-ink-2)}
+.screen[data-band=fluent] .leslist .lescard .lesgo{position:static;margin-left:auto}
+.screen[data-band=fluent] .shelfcard .sc-aim{display:block;font-size:11.5px;color:var(--p-ink-2)}
+/* their level is something they earned: shown as a badge */
+.screen[data-band=fluent] .levelline{display:inline-block;margin:2px 0 8px;padding:3px 10px;border-radius:999px;
+  background:#EFE7FF;color:#5B3FB8;font-weight:700;font-size:12px}
+.screen[data-band=fluent] .levelline::before{content:'🏅 '}
+.screen[data-band=fluent] .back{width:auto;height:auto;padding:7px 14px 6px;border-radius:999px;font-size:14px;gap:4px;color:#fff}
+.screen[data-band=fluent] .back::before{display:none}
