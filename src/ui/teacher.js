@@ -45,11 +45,11 @@ function teacherHTML(){
   // The parent PIN is not a teacher credential. Never render local/remote
   // class records until the school has verified a teacher identity.
   if(typeof classAuthToken !== 'function' || !classAuthToken() || CLASS_AUTH.role !== 'teacher')
-    return '<button class="back" onclick="go(\'parent\')">← Back</button><h3>Teacher account required</h3>'+
+    return '<button class="back" onclick="go(\'map\')">← Back</button><h3>Teacher account required</h3>'+
       (typeof classAuthHTML === 'function' ? classAuthHTML() : '<p>Sign in to access class data.</p>');
   const code = teacherCode();
   if(code && !CLASS_AUTH.classes.includes(code))
-    return '<button class="back" onclick="go(\'parent\')">← Back</button>'+
+    return '<button class="back" onclick="go(\'map\')">← Back</button>'+
       '<h3>Choose an assigned class</h3>'+classAuthHTML()+
       CLASS_AUTH.classes.map(c=>'<button class="btn" onclick="teacherSetCode(\''+attr(c)+'\')">'+attr(c)+'</button>').join('');
   const roster = code ? teacherRoster(code) : [];
@@ -65,7 +65,7 @@ function teacherHTML(){
   const cell = c => c ? `${c.done}/${c.n}` : '—';
 
   return `
-  <button class="back" onclick="go('parent')">← ${t('back')}</button>
+  <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="display" style="font-size:22px;margin:4px 0">🧑‍🏫 ${hi?'शिक्षकों के लिए':'For teachers'}</div>
   ${typeof classAuthHTML === 'function' ? classAuthHTML() : ''}
   <div class="muted" style="font-size:12.5px">${hi
