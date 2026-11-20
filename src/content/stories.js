@@ -90,6 +90,42 @@ const STORY_LETTERS = {
         { l:'उ', ic:'🦉', w:'उल्लू' }, { l:'ऊ', ic:'🧶', w:'ऊन' } ]
 };
 
+/* What a letter SAYS, written so a voice says the sound, not the letter's
+   name ("c" read aloud is "see"; the sound a child blends is "kuh"). */
+const STORY_SOUND = { a:'aah', b:'buh', c:'kuh', d:'duh', e:'eh', f:'fff', g:'guh', h:'huh', i:'ih', m:'mmm', n:'nnn', o:'aw', p:'puh', s:'sss', t:'tuh', u:'uh' };
+
+/* UKG: adding and taking away with pictures. How each thing arrives, and
+   in Hindi the verb that agrees with it (चिड़ियाँ आईं, चूज़े आए). */
+const STORY_ADDERS = [
+  { ic:'🐦', en:['bird','birds'],   hi:['चिड़िया','चिड़ियाँ'], come:{ en:'fly in', hi:'उड़कर आईं' }, many:'कितनी' },
+  { ic:'🐟', en:['fish','fish'],    hi:['मछली','मछलियाँ'],   come:{ en:'swim up', hi:'तैरकर आईं' }, many:'कितनी' },
+  { ic:'🐥', en:['chick','chicks'], hi:['चूज़ा','चूज़े'],     come:{ en:'run in', hi:'दौड़कर आए' }, many:'कितने' }
+];
+const STORY_EATS = [
+  { ic:'🍌', en:['banana','bananas'],   hi:['केला','केले'] },
+  { ic:'🍪', en:['biscuit','biscuits'], hi:['बिस्किट','बिस्किट'] },
+  { ic:'🥭', en:['mango','mangoes'],    hi:['आम','आम'] }
+];
+
+/* UKG: blending. A word said in its sounds, and a picture that starts the
+   same way — so the first sound alone can't give the answer away. English
+   words are three sounds (c-a-t); Hindi words are letters without मात्रा
+   (क-म-ल → कमल), as UKG's Hindi book blends them. */
+const STORY_BLENDS = {
+  en: [ { s:['c','a','t'], w:'cat', ic:'🐱', odd:{ w:'cup',  ic:'☕' } },
+        { s:['h','e','n'], w:'hen', ic:'🐔', odd:{ w:'hat',  ic:'🎩' } },
+        { s:['p','i','g'], w:'pig', ic:'🐷', odd:{ w:'pen',  ic:'🖊️' } },
+        { s:['b','u','s'], w:'bus', ic:'🚌', odd:{ w:'bat',  ic:'🦇' } },
+        { s:['s','u','n'], w:'sun', ic:'☀️', odd:{ w:'sock', ic:'🧦' } },
+        { s:['d','o','g'], w:'dog', ic:'🐶', odd:{ w:'duck', ic:'🦆' } },
+        { s:['m','a','p'], w:'map', ic:'🗺️', odd:{ w:'man',  ic:'👨' } } ],
+  hi: [ { s:['क','म','ल'], w:'कमल', ic:'🪷', odd:{ w:'कलम', ic:'🖊️' } },
+        { s:['ब','त','ख'], w:'बतख', ic:'🦆', odd:{ w:'बस',  ic:'🚌' } },
+        { s:['न','ल'],     w:'नल',  ic:'🚰', odd:{ w:'नमक', ic:'🧂' } },
+        { s:['श','ह','द'], w:'शहद', ic:'🍯', odd:{ w:'शरबत', ic:'🥤' } },
+        { s:['क','प'],     w:'कप',  ic:'☕', odd:{ w:'कमल', ic:'🪷' } } ]
+};
+
 /* Little tales for listening (n-listen): who did what. */
 const STORY_TALES = [
   { ic:'🐦', helper:{ ic:'🐘', en:'Munni the elephant', hi:'मुन्नी हाथी' }, other:{ ic:'🦁', en:'the lion', hi:'शेर' },
@@ -398,15 +434,16 @@ const STORY_TPLS = {
       const opts = [{ ic:L.ic, size:84, word:L.w }, { ic:odd.ic, size:84, word:odd.w }];
       if(right) opts.reverse();
       const en = lang === 'en';
+      const snd = en ? (STORY_SOUND[L.l] || L.l) : L.l;   // the sound, not the letter's name
       return {
         bg: 'plain', lang,
         scenes: [
-          { say: en ? both(`This is the letter ${L.l}. It says "${L.l}"… "${L.l}"… like ${L.w}!`, `यह अक्षर ${L.l} है। इसकी आवाज़ है "${L.l}"… जैसे ${L.w}!`)
+          { say: en ? both(`This is the letter ${L.l}. It says "${snd}"… "${snd}"… like ${L.w}!`, `यह अक्षर ${L.l} है। इसकी आवाज़ है "${snd}"… जैसे ${L.w}!`)
                     : both(`This is ${L.l}. ${L.l} for ${L.w}!`, `यह ${L.l} है। ${L.l} से ${L.w}!`),
             stage: { big: L.l, items: [{ id:'w', ic:L.ic, x:74, y:56, size:80, anim:'pop', d:0.8, label:L.w }] } },
           { say: both('Say it with Munni!', 'मुन्नी के साथ बोलो!'),
             stage: { big: L.l, items: [{ id:'w', ic:L.ic, x:74, y:56, size:80, label:L.w }] },
-            join: { t:'say', word: en ? both(`${L.l}… ${L.l}… ${L.w}`, `${L.l}… ${L.l}… ${L.w}`) : both(`${L.l} से ${L.w}`, `${L.l} से ${L.w}`) } },
+            join: { t:'say', word: en ? both(`${snd}… ${snd}… ${L.w}`, `${snd}… ${snd}… ${L.w}`) : both(`${L.l} से ${L.w}`, `${L.l} से ${L.w}`) } },
           { say: en ? both(`Which one starts with "${L.l}"? ${opts[0].word}, or ${opts[1].word}?`, `कौन सा "${L.l}" से शुरू होता है? ${opts[0].word}, या ${opts[1].word}?`)
                     : both(`Which one starts with ${L.l}? ${opts[0].word}, or ${opts[1].word}?`, `कौन सा ${L.l} से शुरू होता है? ${opts[0].word}, या ${opts[1].word}?`),
             join: { t:'pick', opts, right,
@@ -448,6 +485,140 @@ const STORY_TPLS = {
     }
   }
 };
+
+/* ---------- UKG's own stories (21 Nov) ----------
+   UKG is where picture adding, taking away and blending start. The pick
+   here is a number or a picture with the scene still on screen
+   (join.keep), because "with pictures" means the child can look and count
+   while choosing — and the counting together comes after the choice, so
+   the first tap is the child's own. */
+Object.assign(STORY_TPLS, {
+
+  /* Adding with pictures: a few, then a few more arrive. */
+  add: {
+    classes: ['ukg'], ic: '🐦',
+    skill: () => 'u-addpic',
+    title: both('More friends come!', 'और दोस्त आए!'),
+    build(r, o){
+      const k = storyPick(r, STORY_ADDERS);
+      const a = 1 + Math.floor(r() * 4), b = 1 + Math.floor(r() * 4), n = a + b;
+      // the wrong number is a real slip: one too many or one too few when counting all
+      const wrong = n - 1 >= 1 && r() < 0.5 ? n - 1 : n + 1;
+      const right = r() < 0.5 ? 0 : 1, nums = [n, wrong]; if(right) nums.reverse();
+      const first = Array.from({ length: a }, (_, i) => ({ id:'a'+i, ic:k.ic, x:14 + i * 9, y:30, size:34, anim:'bob', d:i*0.1 }));
+      const more  = Array.from({ length: b }, (_, i) => ({ id:'b'+i, ic:k.ic, x:60 + i * 9, y:30, size:34, anim:'fly', d:0.3 + i*0.25 }));
+      const all = first.concat(more).map(it => Object.assign({}, it, { anim: it.anim === 'fly' ? 'bob' : it.anim, d:0 }));
+      const ground = Array.from({ length: n }, (_, i) => ({ x: 50 + (i - (n - 1) / 2) * Math.min(10, 80 / n), y: 80 }));
+      return {
+        bg: k.ic === '🐟' ? 'pond' : 'tree',
+        scenes: [
+          { say: both(`Look, ${o.name}! ${NUMW.en[a][0].toUpperCase() + NUMW.en[a].slice(1)} ${storyN(k, a, 'en')}.`,
+                      `देखो ${o.name}! ${NUMW.hi[a]} ${storyN(k, a, 'hi')}।`),
+            stage: { items: first } },
+          { say: both(`Then ${NUMW.en[b]} more ${storyN(k, b, 'en')} ${k.come.en}!`, `फिर ${NUMW.hi[b]} और ${storyN(k, b, 'hi')} ${k.come.hi}!`),
+            stage: { items: first.concat(more) } },
+          { say: both(`${NUMW.en[a][0].toUpperCase() + NUMW.en[a].slice(1)}, and ${NUMW.en[b]} more. How many ${k.en[1]} now? Tap the number!`,
+                      `${NUMW.hi[a]}, और ${NUMW.hi[b]} और। अब ${k.many} ${k.hi[1]} हैं? संख्या छुओ!`),
+            stage: { items: all },
+            join: { t:'pick', keep: true, opts: nums.map(x => ({ num: x })), right,
+                    praise: both(`Yes! ${NUMW.en[a]} and ${NUMW.en[b]} make ${NUMW.en[n]}!`, `हाँ! ${NUMW.hi[a]} और ${NUMW.hi[b]} मिलकर ${NUMW.hi[n]}!`),
+                    show: both(`It's ${NUMW.en[n]}. Let's count them all to see.`, `${NUMW.hi[n]} हैं। चलो सब गिनकर देखें।`) } },
+          { say: both("Let's count them all together. Tap!", 'चलो सब साथ में गिनें। छुओ!'),
+            stage: { items: all },
+            join: { t:'count', seq: all.map(it => it.id), to: ground, n } },
+          { say: both(`${a} and ${b} make ${n}. ${a} plus ${b} is ${n}!`, `${a} और ${b} मिलकर ${n}। ${a} जमा ${b} बराबर ${n}!`),
+            stage: { big: `${a} + ${b} = ${n}`, items: all.map((it, i) => Object.assign({}, it, ground[i], { anim:'pop', d:0 })) } }
+        ],
+        grownup: both(`Put ${a} spoons on the table, then add ${b} more. Ask: "How many now?" and count them together.`,
+                      `मेज़ पर ${a} चम्मच रखें, फिर ${b} और रखें। पूछें: "अब कितने हैं?" और साथ में गिनें।`),
+        home: both(`At snack time: "You have ${a} grapes. Here are ${b} more — how many now?"`, `नाश्ते के समय: "तुम्हारे पास ${a} अंगूर हैं। ये लो ${b} और — अब कितने?"`)
+      };
+    }
+  },
+
+  /* Taking away with pictures: Munni eats a few — how many are left? */
+  take: {
+    classes: ['ukg'], ic: '🍌',
+    skill: () => 'u-subpic',
+    title: both('Munni is hungry!', 'मुन्नी को भूख लगी!'),
+    build(r, o){
+      const k = storyPick(r, STORY_EATS);
+      const n = 4 + Math.floor(r() * 5), t = 1 + Math.floor(r() * 3), left = n - t;   // 4..8, take 1..3
+      // real slips: forgetting to take away (n), or counting one off
+      const roll = r();
+      const wrong = roll < 0.4 ? n : roll < 0.7 && left > 1 ? left - 1 : left + 1;
+      const right = r() < 0.5 ? 0 : 1, nums = [left, wrong]; if(right) nums.reverse();
+      const row = Array.from({ length: n }, (_, i) => ({ id:'t'+i, ic:k.ic, x: 50 + (i - (n - 1) / 2) * Math.min(10, 84 / n), y:32, size: n > 6 ? 26 : 34, anim:'pop', d:i*0.1 }));
+      const gone = { en: t === 1 ? 'one is gone' : `${NUMW.en[t]} are gone`, hi: t === 1 ? 'गया' : 'गए' };
+      const eaten = row.map((it, i) => Object.assign({}, it, { anim: i < t ? 'gone' : '', d: i < t ? 0.4 + i * 0.5 : 0 }));
+      const after = row.map((it, i) => Object.assign({}, it, { anim: i < t ? 'ghost' : '', d:0 }));
+      const leftIds = row.slice(t).map(it => it.id);
+      const ground = Array.from({ length: left }, (_, i) => ({ x: 50 + (i - (left - 1) / 2) * Math.min(11, 84 / left), y: 80 }));
+      return {
+        bg: 'room',
+        scenes: [
+          { say: both(`Munni has ${NUMW.en[n]} ${k.en[1]}. Count them with your eyes!`, `मुन्नी के पास ${NUMW.hi[n]} ${k.hi[1]} हैं। आँखों से गिनो!`),
+            stage: { items: row.concat([{ id:'m', ic:'🐘', x:14, y:72, size:56, anim:'bob' }]) } },
+          { say: both(`Munni eats ${NUMW.en[t]}. Munch, munch! Gone!`, `मुन्नी ने ${NUMW.hi[t]} खा लिए। चप-चप! ख़त्म!`),
+            stage: { items: eaten.concat([{ id:'m', ic:'🐘', x:14, y:72, size:56, anim:'bob' }]) } },
+          { say: both(`${NUMW.en[n][0].toUpperCase() + NUMW.en[n].slice(1)}, and ${gone.en}. How many are left? Tap the number!`,
+                      `${NUMW.hi[n]} थे, ${NUMW.hi[t]} ${gone.hi}। कितने बचे? संख्या छुओ!`),
+            stage: { items: after },
+            join: { t:'pick', keep: true, opts: nums.map(x => ({ num: x })), right,
+                    praise: both(`Yes! ${NUMW.en[left]} left!`, `हाँ! ${NUMW.hi[left]} बचे!`),
+                    show: both(`${NUMW.en[left][0].toUpperCase() + NUMW.en[left].slice(1)} are left. Let's count them.`, `${NUMW.hi[left]} बचे हैं। चलो गिनें।`) } },
+          { say: both("Let's count what is left. Tap!", 'चलो जो बचे हैं उन्हें गिनें। छुओ!'),
+            stage: { items: after },
+            join: { t:'count', seq: leftIds, to: ground, n: left } },
+          { say: both(`${n} take away ${t} leaves ${left}!`, `${n} में से ${t} ${gone.hi}, ${left} बचे!`),
+            stage: { big: `${n} − ${t} = ${left}`, items: row.slice(t).map((it, i) => Object.assign({}, it, ground[i], { anim:'pop', d:0 })) } }
+        ],
+        grownup: both(`Put ${n} biscuits out. Eat ${t} together and ask: "How many are left?"`,
+                      `${n} बिस्किट रखें। साथ में ${t} खाएँ और पूछें: "कितने बचे?"`),
+        home: both(`Hold up ${n} fingers, fold down ${t}, and ask how many are still standing.`, `${n} उँगलियाँ दिखाएँ, ${t} मोड़ें, और पूछें कितनी खड़ी हैं।`)
+      };
+    }
+  },
+
+  /* Blending: a word in its sounds — push them together, which is it? */
+  blend: {
+    classes: ['ukg'], ic: '🧩',
+    skill: () => 'u-blend',
+    title: both("Munni's word puzzle", 'मुन्नी की शब्द पहेली'),
+    build(r, o){
+      const lang = o.lang === 'hi' ? 'hi' : 'en', en = lang === 'en';
+      const p = storyPick(r, STORY_BLENDS[lang]);
+      const said = en ? p.s.map(x => STORY_SOUND[x]).join('… ') : p.s.join('… ');
+      const right = r() < 0.5 ? 0 : 1;
+      const opts = [{ ic:p.ic, size:88 }, { ic:p.odd.ic, size:88 }];   // pictures only: the child blends, not reads
+      if(right) opts.reverse();
+      const cards = { big: p.s.join(' ') };
+      return {
+        bg: 'plain', lang,
+        scenes: [
+          { say: both(`Munni has a word in little pieces. Listen: ${said}.`, `मुन्नी के पास टुकड़ों में एक शब्द है। सुनो: ${said}।`),
+            stage: cards },
+          { say: both('Say the pieces with Munni, slowly.', 'मुन्नी के साथ टुकड़े धीरे-धीरे बोलो।'),
+            stage: cards,
+            join: { t:'say', word: both(said, said) } },
+          { say: both(`Now say them fast, all together: ${said}! Which picture is it? Tap it!`, `अब जल्दी से सब मिलाकर बोलो: ${said}! कौन सी तस्वीर है? उसे छुओ!`),
+            stage: cards,
+            join: { t:'pick', opts, right,
+                    praise: both(`Yes! ${said}… ${p.w}!`, `हाँ! ${said}… ${p.w}!`),
+                    show: both(`Listen: ${said}… ${p.w}. This one.`, `सुनो: ${said}… ${p.w}। यह वाला।`) } },
+          { say: both(`${p.w[0].toUpperCase() + p.w.slice(1)}! You put the pieces together.`, `${p.w}! तुमने टुकड़े जोड़ दिए।`),
+            stage: { big: p.w, items: [{ id:'w', ic:p.ic, x:76, y:56, size:84, anim:'pop', label:p.w }] } }
+        ],
+        grownup: en ? both(`Say a word in its sounds — ${said} — and let your child put it together: ${p.w}.`,
+                           `एक शब्द को उसकी आवाज़ों में बोलें — ${said} — और बच्चे को जोड़ने दें: ${p.w}।`)
+                    : both(`Say a word letter by letter — ${said} — and let your child put it together: ${p.w}.`,
+                           `एक शब्द को अक्षर-अक्षर बोलें — ${said} — और बच्चे को जोड़ने दें: ${p.w}।`),
+        home: en ? both('Play "robot talk": say "sss… uh… nnn" and see who says "sun" first.', '"रोबोट की बोली" खेलें: "sss… uh… nnn" बोलें और देखें कौन पहले "sun" बोलता है।')
+                 : both('Play "robot talk": say "घ… र" slowly and see who says "घर" first.', '"रोबोट की बोली" खेलें: "घ… र" धीरे बोलें और देखें कौन पहले "घर" बोलता है।')
+      };
+    }
+  }
+});
 
 /* Which templates this class gets. */
 function storyTplsFor(cls){ return Object.keys(STORY_TPLS).filter(id => STORY_TPLS[id].classes.includes(cls)); }

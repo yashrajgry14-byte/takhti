@@ -12,9 +12,10 @@ COPY src ./src
 COPY icons ./icons
 COPY fonts ./fonts
 COPY audio ./audio
+COPY video ./video
 COPY api ./api
 COPY cloud ./cloud
 # the files server.mjs serves are a whitelist (index.html, sw.js, the manifest,
-# src/, icons/, audio/) — api/ and cloud/ are code it runs, never served
+# src/, icons/, audio/, video/) — api/ and cloud/ are code it runs, never served
 USER node
 CMD ["node", "cloud/server.mjs"]

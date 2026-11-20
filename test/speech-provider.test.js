@@ -303,20 +303,19 @@ const stand = http.createServer((req, res) => {
       : p === '/reading/asr' ? [503, { error: 'no speech service answered in time — skipped, nothing kept', skipped: true }] : [200, {}]);
     await wait(150);   // the boot's own manifest fetches settle first
     a.E(`S.muted = false; VOICE_MANIFEST.en = { [lineKey('In the pack', 'en')]: { t: 'In the pack', x: 'wav' } }; VOICE_MANIFEST.hi = {}`);
+    // Since PR #9 (Google speech) the order is: Google TTS (/api/tts — offline in this test) →
+    // the voice server's backup → the recorded pack → silence. Never the phone's own voice.
     a.played.length = 0; a.sent.length = 0;
-    a.E(`speak('In the pack', 'en')`); await wait(40);
-    check('the phone, 1: a line in the offline pack plays from the pack — a .wav pack too — and nothing goes online', a.played.some(s => /audio\/en\/[0-9a-f]{16}\.wav$/.test(s)) && !a.sent.length, JSON.stringify(a.played));
-    a.played.length = 0;
     a.E(`setOnline(true)`);
-    const why = a.E(`JSON.stringify([S.online, TALK_URL, voicePackLoaded('en'), S.muted])`);
+    const why = a.E(`JSON.stringify([S.online, TALK_URL, S.muted])`);
     a.E(`speak('Not in the pack yet', 'en')`); await wait(80);
-    check('…2: a line the pack lacks → the live backup (POST /reading/tts) plays it', a.sent.some(x => x.url === '/reading/tts' && x.body.text === 'Not in the pack yet') && a.played.some(s => /^data:audio\/mpeg;base64,SUQz/.test(s)), JSON.stringify([why, a.sent, a.played]));
-    liveFails = true; a.spoken.length = 0;
-    a.E(`speak('Also not in the pack', 'en')`); await wait(150);
-    check('…3: the backup can\'t → the phone\'s own voice', a.spoken.includes('Also not in the pack'), JSON.stringify(a.spoken));
-    a.spoken.length = 0; a.sent.length = 0;
-    a.E(`speak('Hindi line', 'hi')`); await wait(150);
-    check('…no pack for a language at all → the phone\'s voice, without going online for every line', a.spoken.includes('Hindi line') && !a.sent.length, JSON.stringify(a.sent));
+    check('…the phone, 1: Google can\'t be reached → the live backup (POST /reading/tts) plays the line', a.sent.some(x => x.url === '/reading/tts' && x.body.text === 'Not in the pack yet') && a.played.some(s => /^data:audio\/mpeg;base64,SUQz/.test(s)), JSON.stringify([why, a.sent, a.played]));
+    liveFails = true; a.played.length = 0; a.spoken.length = 0;
+    a.E(`speak('In the pack', 'en')`); await wait(150);
+    check('…2: the backup can\'t either → the line plays from the recorded pack (a .wav pack too)', a.played.some(s => /audio\/en\/[0-9a-f]{16}\.wav$/.test(s)) && !a.spoken.length, JSON.stringify(a.played));
+    a.played.length = 0;
+    a.E(`window.__said = 0; speak('Also not in the pack', 'en', () => { window.__said++; })`); await wait(200);
+    check('…3: nothing can voice it → silence, never the phone\'s own voice, and the screen still moves on (done, once)', !a.spoken.length && !a.played.length && a.E('window.__said') === 1, JSON.stringify([a.spoken, a.E('window.__said')]));
 
     // reading: older terms send nothing; v3 terms → the voice server; skipped → never blocks
     a.E(`S.voiceTerms = { v: 2, at: '2026-11-01', by: 'parent' }; S.lang = 'hi'; go('read')`);

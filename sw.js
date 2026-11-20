@@ -9,7 +9,7 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v95';
+const CACHE = 'takhti-v96';
 // Recorded audio clips are named by a hash of their text (see core/voice.js),
 // so they live in a cache of their own that the version cleanup below never
 // touches: bumping CACHE on a normal deploy must not re-download tens of MB
@@ -18,6 +18,10 @@ const CACHE = 'takhti-v95';
 // AUDIO_CACHE too. v2 (15 Nov 2026): English re-rendered in Gemini's voice,
 // so phones drop the old-voice clips and fetch each again when it next plays.
 const AUDIO_CACHE = 'takhti-audio-v2';
+/* Filmed teaching clips (video/, ui/watch.js): kept the first time one is
+   watched online, so it plays again in airplane mode. Never bumped with the
+   shell — a clip's file name changes when the clip does. */
+const VIDEO_CACHE = 'takhti-video-v1';
 
 const SHELL = [
   './', './index.html', './manifest.webmanifest',
@@ -40,7 +44,7 @@ const SHELL = [
   './src/ui/jungle-map.js', './src/ui/video-player.js', './src/ui/teacher.js',
   './src/games/runner.js', './src/games/pop.js', './src/games/tower.js',
   './src/games/match.js', './src/games/sort.js', './src/games/archer.js',
-  './src/ui/self-listen.js', './src/ui/talk-munni.js', './src/ui/cloud-read.js', './src/ui/say-it.js', './src/ui/circle.js', './src/ui/ask-munni.js', './src/ui/mind-ui.js', './src/ui/teach-munni.js', './src/content/stories.js', './src/ui/story-time.js', './src/ui/handlers.js', './src/app.js', './src/ui/playful.js',
+  './src/ui/self-listen.js', './src/ui/talk-munni.js', './src/ui/cloud-read.js', './src/ui/say-it.js', './src/ui/circle.js', './src/ui/ask-munni.js', './src/ui/mind-ui.js', './src/ui/teach-munni.js', './src/content/stories.js', './src/ui/story-time.js', './src/ui/voice-first.js', './src/content/videos.js', './src/ui/watch.js', './src/ui/handlers.js', './src/app.js', './src/ui/playful.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png',
   './fonts/baloo-2-devanagari-500-normal.woff2', './fonts/baloo-2-devanagari-600-normal.woff2', './fonts/baloo-2-devanagari-700-normal.woff2', './fonts/baloo-2-devanagari-800-normal.woff2', './fonts/baloo-2-latin-500-normal.woff2', './fonts/baloo-2-latin-600-normal.woff2', './fonts/baloo-2-latin-700-normal.woff2', './fonts/baloo-2-latin-800-normal.woff2', './fonts/mukta-devanagari-400-normal.woff2', './fonts/mukta-devanagari-500-normal.woff2', './fonts/mukta-devanagari-600-normal.woff2', './fonts/mukta-devanagari-700-normal.woff2', './fonts/mukta-latin-400-normal.woff2', './fonts/mukta-latin-500-normal.woff2', './fonts/mukta-latin-600-normal.woff2', './fonts/mukta-latin-700-normal.woff2'
 ];
@@ -66,7 +70,7 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== CACHE && k !== AUDIO_CACHE).map(k => caches.delete(k)));
+    await Promise.all(keys.filter(k => k !== CACHE && k !== AUDIO_CACHE && k !== VIDEO_CACHE).map(k => caches.delete(k)));
     self.clients.claim();
   })());
 });
@@ -89,6 +93,22 @@ self.addEventListener('fetch', e => {
       if (hit) return hit;
       const res = await fetch(e.request);
       if (res.ok) cache.put(e.request, res.clone());
+      return res;
+    })());
+    return;
+  }
+
+  // A filmed clip: the whole file, fetched once (a video asks for byte
+  // ranges; a stored partial answer couldn't be played back later), then
+  // served from the phone. video/clips.json goes through the shell's cache below.
+  if (url.pathname.includes('/video/') && /\.(mp4|webm)$/.test(url.pathname)) {
+    e.respondWith((async () => {
+      const cache = await caches.open(VIDEO_CACHE);
+      const key = url.origin + url.pathname;
+      const hit = await cache.match(key);
+      if (hit) return hit;
+      const res = await fetch(key);
+      if (res.ok && res.status === 200) cache.put(key, res.clone());
       return res;
     })());
     return;

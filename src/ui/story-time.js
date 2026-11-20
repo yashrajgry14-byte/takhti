@@ -58,8 +58,10 @@ function storyOrder(){
     const skill = STORY_TPLS[id].skill(o);
     const h = (S.skillHistory || {})[skill] || { n:0, right:0 };
     const share = h.n ? h.right / h.n : 0;
-    return { id, done: rec.day[id] === today, n: h.n, share, tie: seedOf(today + '|' + id + '|' + (S.id || '')) };
-  }).sort((a, b) => (a.done - b.done) || (a.n - b.n) || (a.share - b.share) || (a.tie - b.tie)).map(x => x.id);
+    // between two stories shown as little, this class's own skill comes before a class below's (UKG: u- before l-)
+    const own = skill[0] === ({ nur: 'n', lkg: 'l', ukg: 'u' }[cls] || '') ? 0 : 1;
+    return { id, done: rec.day[id] === today, n: h.n, share, own, tie: seedOf(today + '|' + id + '|' + (S.id || '')) };
+  }).sort((a, b) => (a.done - b.done) || (a.n - b.n) || (a.share - b.share) || (a.own - b.own) || (a.tie - b.tie)).map(x => x.id);
 }
 
 /* The story a template gives this child now: a new one each time the
@@ -90,6 +92,13 @@ function storyCardHTML(id, hero){
   </button>`;
 }
 
+/* Munni's videos for this class (UKG: the मात्रा), as big pictures too. */
+function storyVideosHTML(){
+  const vids = typeof videosFor === 'function' ? videosFor(storyCls()) : [];
+  return vids.length ? `<div class="st-row">${vids.map(v => `<button class="st-card place" onclick="watchStart('${v.id}')" aria-label="${attr(TX(v.title))}">
+      <span class="st-card-ic">🎬</span><span class="st-card-t">${TX(v.title)}</span>${(S.videos && S.videos.day[v.id] === dayKey()) ? '<span class="st-done">⭐</span>' : ''}</button>`).join('')}</div>` : '';
+}
+
 function storyHomeHTML(){
   const order = storyOrder(), guided = storyStage() === 'guided';
   const line = storyHomeLine();
@@ -116,6 +125,7 @@ function storyHomeHTML(){
     ${picks}
     ${storyCardHTML(order[0], true)}
     <div class="st-row">${order.slice(1, 4).map(id => storyCardHTML(id, false)).join('')}${trace}</div>
+    ${storyVideosHTML()}
   </div>
   <div class="jm-foot">
     ${guided ? `<button class="btn ghost" style="width:100%;margin-bottom:8px" onclick="storyFullMap()">🗺️ ${L2('All places', 'सारी जगहें')}</button>` : ''}
@@ -297,7 +307,8 @@ function storyOptHTML(o, k){
   if(o.group){
     const cols = o.n <= 4 ? 2 : 3;
     body = `<span class="st-group" style="grid-template-columns:repeat(${cols},1fr)">${Array.from({ length: o.n }, () => `<i>${o.ic}</i>`).join('')}</span>`;
-  } else body = o.shape ? storyShapeSVG(o.shape, o.color, o.size) : `<span style="font-size:${o.size || 80}px;line-height:1">${o.ic}</span>`;
+  } else if(o.num != null) body = `<b class="st-numcard">${o.num}</b>`;
+  else body = o.shape ? storyShapeSVG(o.shape, o.color, o.size) : `<span style="font-size:${o.size || 80}px;line-height:1">${o.ic}</span>`;
   return `<button class="st-opt" onclick="event.stopPropagation();storyChoose(${k})">${body}${o.word ? `<small class="st-lbl">${o.word}</small>` : ''}</button>`;
 }
 
@@ -321,9 +332,11 @@ function storyPlayerHTML(){
   let stage = sc.stage;
   for(let k = S.ctx.i; !stage && k >= 0; k--) stage = st.scenes[k].stage;
   stage = stage || { items: [] };
+  const drawn = `${stage.big ? `<b class="st-big${String(stage.big).length > 3 ? ' wide' : ''}">${stage.big}</b>` : ''}${(stage.items || []).map(storyItemHTML).join('')}`;
+  // a pick "with pictures" (join.keep) leaves the picture up, answers below it
   const inner = j && j.t === 'pick' && phase === 'pick'
-    ? `<div class="st-opts">${j.opts.map(storyOptHTML).join('')}</div>`
-    : `${stage.big ? `<b class="st-big">${stage.big}</b>` : ''}${(stage.items || []).map(storyItemHTML).join('')}`;
+    ? (j.keep ? `${drawn}<div class="st-opts low">${j.opts.map(storyOptHTML).join('')}</div>` : `<div class="st-opts">${j.opts.map(storyOptHTML).join('')}</div>`)
+    : drawn;
   return `
   <div class="st-top">
     <button class="st-ibtn" onclick="storyHome()" aria-label="${L2('Home', 'घर')}">🏠</button>

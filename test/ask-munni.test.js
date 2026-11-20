@@ -17,6 +17,7 @@
    ================================================================== */
 const fs = require('fs'), os = require('os'), path = require('path'), http = require('http'), vm = require('vm');
 const { JSDOM, VirtualConsole } = require('jsdom');
+const { installVoice } = require('./_helpers/voice-stub');
 const { createBrain } = require('../voice/brain');
 const { createServer } = require('../voice/server');
 
@@ -151,9 +152,7 @@ function boot(port, voiceBase){
     runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true,
     beforeParse(w){
       // speech finishes at once, so the steps play through
-      w.SpeechSynthesisUtterance = function(t){ this.text = t; };
-      w.speechSynthesis = { getVoices: () => [], cancel: () => {}, addEventListener: () => {},
-        speak: u => { spoken.push(u.text); setTimeout(() => u.onend && u.onend(), 0); } };
+      installVoice(w, spoken);   // Google speech stood in: test/_helpers/voice-stub.js
       w.navigator.vibrate = () => {};
       if(voiceBase){
         w.TAKHTI_VOICE = voiceBase;

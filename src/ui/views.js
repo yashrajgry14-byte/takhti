@@ -494,6 +494,7 @@ parent(){
       : 'Class decides what is taught; age only how Munni speaks. Takhti adapts to your child within their class.'}${S.clsBy === 'school'
       ? (S.lang==='hi' ? ' कक्षा बदलनी हो तो शिक्षक से कहें।' : ' To change the class, ask the teacher.') : ''}</div>
     ${typeof simpleHomeParentHTML === 'function' ? simpleHomeParentHTML() : ''}
+    ${typeof readAloudParentHTML === 'function' ? readAloudParentHTML() : ''}
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'आवाज़':'SOUND'}</div>
     <div class="metric">

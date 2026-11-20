@@ -36,6 +36,7 @@ const fs = require('fs'), os = require('os'), path = require('path'), http = req
 // import() needs a file URL: a Windows path (c:\…) is read as a URL scheme and refused
 const { pathToFileURL } = require('url');
 const { JSDOM, VirtualConsole } = require('jsdom');
+const { installVoice } = require('./_helpers/voice-stub');
 
 const root = path.resolve(__dirname, '..');
 let failures = 0, passes = 0;
@@ -342,8 +343,7 @@ function box(){
     vc.on('jsdomError', e => { if(!/Not implemented|Could not load link/.test(e.message)) jsErrors.push(e.message); });
     const dom = new JSDOM(html, { virtualConsole: vc, url: `http://127.0.0.1:${appServer.address().port}/index.html`, runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true,
       beforeParse(win){
-        win.SpeechSynthesisUtterance = function(t){ this.text = t; };
-        win.speechSynthesis = { getVoices: () => [], cancel: () => {}, addEventListener: () => {}, speak: u => { spoken.push(u.text); setTimeout(() => u.onend && u.onend(), 0); } };
+        installVoice(win, spoken);   // Google speech stood in: test/_helpers/voice-stub.js
         win.navigator.vibrate = () => {};
         win.HTMLMediaElement.prototype.play = function(){ setTimeout(() => this.onended && this.onended(), 0); return Promise.resolve(); };
         win.HTMLMediaElement.prototype.pause = function(){};

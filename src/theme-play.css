@@ -216,13 +216,13 @@
 
 /* ---------------- Picture Hut ---------------- */
 .hero-video-card.glass-card{background:linear-gradient(135deg,#FFF1C7,#FFD9E4);border:3px solid #fff;border-radius:24px}
-.series-card.glass-card,.video-card.glass-card{border-radius:22px;border:2px solid rgba(42,33,24,.06);
+.series-card.glass-card,.video-card.glass-card,.watch-card.glass-card{border-radius:22px;border:2px solid rgba(42,33,24,.06);
   border-bottom:5px solid rgba(42,33,24,.1);background:#fff}
-.video-grid .video-card:nth-child(4n+1) .vc-thumb{background:#FFE9D6}
-.video-grid .video-card:nth-child(4n+2) .vc-thumb{background:#E3F4FD}
-.video-grid .video-card:nth-child(4n+3) .vc-thumb{background:#EFE7FF}
-.video-grid .video-card:nth-child(4n)   .vc-thumb{background:#E9F7DD}
-.vc-thumb{border-radius:16px}
+.video-grid .video-card:nth-child(4n+1) .vc-thumb,.video-grid .watch-card:nth-child(4n+1) .wc-thumb{background:#FFE9D6}
+.video-grid .video-card:nth-child(4n+2) .vc-thumb,.video-grid .watch-card:nth-child(4n+2) .wc-thumb{background:#E3F4FD}
+.video-grid .video-card:nth-child(4n+3) .vc-thumb,.video-grid .watch-card:nth-child(4n+3) .wc-thumb{background:#EFE7FF}
+.video-grid .video-card:nth-child(4n)   .vc-thumb,.video-grid .watch-card:nth-child(4n) .wc-thumb{background:#E9F7DD}
+.vc-thumb,.wc-thumb{border-radius:16px}
 .theme-pill{border-radius:999px;font-weight:700}
 
 /* ---------------- the grown-up pages: inputs that look usable ---------------- */
