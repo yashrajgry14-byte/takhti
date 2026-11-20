@@ -46,6 +46,14 @@ function storyRec(){
    else the nearest (a child moved into the simple home from Class 1 gets
    UKG's). */
 function storyCls(){ const c = band().cls; return storyTplsFor(c).length ? c : 'ukg'; }
+/* The stories this child can be offered: their class's own (only those in
+   their language — व्यंजन is a Hindi story), and for Class 1–2 on the
+   simple home UKG's as well, since Class 1–2 have only the read-along. */
+function storyList(){
+  const cls = storyCls(), lang = S.lang === 'hi' ? 'hi' : 'en';
+  const own = storyTplsFor(cls, lang);
+  return (cls === 'c1' || cls === 'c2') ? own.concat(storyTplsFor('ukg', lang).filter(id => !own.includes(id))) : own;
+}
 
 /* Today's stories, best first. Munni's pick is the one whose skill this
    child has shown least (fewest answers, then lowest share right), and a
@@ -54,12 +62,13 @@ function storyCls(){ const c = band().cls; return storyTplsFor(c).length ? c : '
 function storyOrder(){
   const rec = storyRec(), cls = storyCls(), today = dayKey();
   const o = { cls, lang: S.lang === 'hi' ? 'hi' : 'en' };
-  return storyTplsFor(cls).map(id => {
+  const ownRe = { nur:/^n-/, lkg:/^l-/, ukg:/^u-/, c1:/^[eh]1-/, c2:/^[eh]2-/ }[cls];
+  return storyList().map(id => {
     const skill = STORY_TPLS[id].skill(o);
     const h = (S.skillHistory || {})[skill] || { n:0, right:0 };
     const share = h.n ? h.right / h.n : 0;
     // between two stories shown as little, this class's own skill comes before a class below's (UKG: u- before l-)
-    const own = skill[0] === ({ nur: 'n', lkg: 'l', ukg: 'u' }[cls] || '') ? 0 : 1;
+    const own = ownRe && ownRe.test(skill) ? 0 : 1;
     return { id, done: rec.day[id] === today, n: h.n, share, own, tie: seedOf(today + '|' + id + '|' + (S.id || '')) };
   }).sort((a, b) => (a.done - b.done) || (a.n - b.n) || (a.share - b.share) || (a.own - b.own) || (a.tie - b.tie)).map(x => x.id);
 }
@@ -137,7 +146,13 @@ function storyTapMunni(el){ trumpet(1); speak(el.dataset.say); }
 /* The jungle map, for a guided child who wants it (S._fullMap lasts until
    they come back to Munni's home). */
 function storyFullMap(){ S._fullMap = true; go('map'); }
-function storyHome(){ S._fullMap = false; go('stories'); }
+/* Back from a story: Munni's home for a simple-home child, else where the
+   story was opened (the Picture Hut's or the Reading Tree's read-along). */
+let STORY_FROM = null;
+function storyHome(){
+  S._fullMap = false;
+  go(simpleHomeOn() || !STORY_FROM ? 'stories' : STORY_FROM);
+}
 
 function storyHomeArrive(){
   // a three-year-old can't read the bubble: Munni says it, once per arrival
@@ -152,6 +167,7 @@ function storyStart(tplId, seed){
   trumpet(1);
   const st = storyMake(tplId, seed);
   if(!st) return;
+  if(S.screen !== 'story') STORY_FROM = ['stories', 'map'].includes(S.screen) ? null : S.screen;
   go('story');
   S.ctx.st = st; S.ctx.i = 0; S.ctx.run = ++STORY_RUN;
   log(0, `Story "${st.title.en}" (${st.tpl}, seed ${st.seed}) · skill ${st.skill} · ${band().clsEn}`);
@@ -165,6 +181,7 @@ function storyStart(tplId, seed){
    speak() finishes at once, and a scene must not flash past. */
 function storySay(text){
   const words = String(text).split(/\s+/).length;
+  storyTalking(true);
   return Promise.all([
     new Promise(res => {
       let done = false; const fin = () => { if(!done){ done = true; res(); } };
@@ -172,7 +189,14 @@ function storySay(text){
       try{ speak(text, null, fin); }catch(e){ fin(); }
     }),
     storyWait(S.muted ? 1600 + words * 260 : 600)
-  ]);
+  ]).then(() => storyTalking(false));
+}
+/* Munni's mouth moves while she talks (the class is redrawn from S.ctx, so
+   a redraw mid-line keeps it). */
+function storyTalking(on){
+  if(!S.ctx) return;
+  S.ctx.talking = on;
+  const m = document.querySelector('.st-munni-sm'); if(m) m.classList.toggle('talking', !!on);
 }
 const storyWait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -181,19 +205,81 @@ async function storyRun(run){
   while(storyAlive(run) && S.ctx.i < st.scenes.length){
     const sc = st.scenes[S.ctx.i];
     S.ctx.phase = 'say'; S.ctx.counted = 0; S.ctx.picked = null;
-    render();
-    await storySay(TX(sc.say));
+    storyRender();
+    // a read-along line lights up word by word as Munni reads it
+    if(sc.stage && sc.stage.line && sc.stage.line === sc.say) await storyKaraoke(run, TX(sc.say));
+    else await storySay(TX(sc.say));
     if(!storyAlive(run)) return;
     if(sc.join){
-      S.ctx.phase = sc.join.t; render();
+      S.ctx.phase = sc.join.t; storyRender();
       if(sc.join.t === 'count') await storyCount(run, sc.join);
       else if(sc.join.t === 'pick') await storyPickWait(run, sc.join);
       else if(sc.join.t === 'say') await storySayBack(run, sc.join);
+      else if(sc.join.t === 'read') await storyReadAlong(run, sc.join);
       if(!storyAlive(run)) return;
     } else await storyWait(500);
     S.ctx.i++;
   }
   if(storyAlive(run)) storyEnd();
+}
+
+/* One scene into the next, like a cartoon rather than a slideshow: what
+   stays on the stage glides to its new place instead of popping in again
+   (same id from scene to scene), what leaves fades away, and only what is
+   new pops in. With reduced motion asked for, it is a plain redraw. */
+function storyRender(){
+  const before = document.getElementById('ststage'), old = {};
+  if(before) before.querySelectorAll('.st-it[id]').forEach(el => { old[el.id] = { l: el.style.left, t: el.style.top, html: el.outerHTML }; });
+  render();
+  const now = document.getElementById('ststage');
+  const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!before || !now || still) return;
+  now.querySelectorAll('.st-it[id]').forEach(el => {
+    const o = old[el.id]; if(!o) return;
+    delete old[el.id];
+    el.classList.add('st-keep');
+    if(o.l !== el.style.left || o.t !== el.style.top){
+      const l = el.style.left, t = el.style.top;
+      el.style.transition = 'none'; el.style.left = o.l; el.style.top = o.t;
+      void el.offsetWidth;
+      el.style.transition = ''; el.style.left = l; el.style.top = t;
+    }
+  });
+  Object.keys(old).forEach(id => {
+    const tmp = document.createElement('div'); tmp.innerHTML = old[id].html;
+    const g = tmp.firstElementChild; if(!g) return;
+    g.removeAttribute('id'); g.querySelectorAll('[id]').forEach(x => x.removeAttribute('id'));
+    g.classList.add('st-leave'); g.setAttribute('aria-hidden', 'true');
+    now.appendChild(g); setTimeout(() => g.remove(), 700);
+  });
+}
+
+/* The words light up one by one as Munni reads the line, all of them once
+   she has finished — a guide for the eye, not a timing the voice promises. */
+async function storyKaraoke(run, text){
+  const els = [...document.querySelectorAll('#ststage .stw')];
+  const per = Math.round((S.muted ? 520 : 430) / Math.max(0.6, band().speechRate || 1));
+  let k = 0;
+  const show = () => els.forEach((e, i) => { e.classList.toggle('lit', i < k); e.classList.toggle('now', i === k); });
+  show();
+  const timer = setInterval(() => { if(storyAlive(run) && k < els.length - 1){ k++; show(); } }, per);
+  await storySay(text);
+  clearInterval(timer);
+  if(storyAlive(run)) els.forEach(e => { e.classList.add('lit'); e.classList.remove('now'); });
+}
+
+/* The child's turn to read: the words light up at a reading pace, a finger
+   to follow. Nothing is listened to or recorded — it is practice. */
+async function storyReadAlong(run, j){
+  const els = [...document.querySelectorAll('#ststage .stw')];
+  for(let k = 0; k < els.length; k++){
+    if(!storyAlive(run)) return;
+    els.forEach((e, i) => { e.classList.toggle('lit', i < k); e.classList.toggle('now', i === k); });
+    await storyWait(j.pace || 700);
+  }
+  if(!storyAlive(run)) return;
+  els.forEach(e => { e.classList.add('lit'); e.classList.remove('now'); });
+  await storySay(L2('Lovely reading!', 'बहुत अच्छा पढ़ा!'));
 }
 
 /* Tap to count: every tap anywhere on the picture moves the next thing
@@ -282,7 +368,15 @@ function storyEnd(){
 }
 
 function storyAgain(){ const st = S.ctx.st; storyStart(st.tpl, st.seed); }
-function storyNext(){ const st = S.ctx.st, o = storyOrder().filter(id => id !== st.tpl); storyStart(o[0] || st.tpl); }
+function storyNext(){
+  const st = S.ctx.st;
+  // a read-along goes on to the next story of the bank; anything else to Munni's next pick
+  if(st.tpl === 'readalong') return storyStart('readalong', readAlongSeed((st.read + 1) % STORY_READS.length));
+  const o = storyOrder().filter(id => id !== st.tpl); storyStart(o[0] || st.tpl);
+}
+/* A read-along story's seed: which story (its place in the bank), and how
+   many read-alongs were finished, so the right answer moves between plays. */
+function readAlongSeed(i){ return i + STORY_READS.length * (storyRec().n.readalong || 0); }
 function storyRepeat(){ const st = S.ctx.st; if(st && st.scenes[S.ctx.i]) speak(TX(st.scenes[S.ctx.i].say)); }
 
 /* ---------- drawing ---------- */
@@ -300,7 +394,17 @@ function storyShapeSVG(shape, color, size){
 function storyItemHTML(it){
   const body = it.shape ? storyShapeSVG(it.shape, it.color, it.size) : it.ic;
   return `<span class="st-it ${it.anim ? 'a-' + it.anim : ''}" id="sti-${it.id}"
-    style="left:${it.x}%;top:${it.y}%;font-size:${it.size || 44}px;animation-delay:${it.d || 0}s">${body}${it.label ? `<small class="st-lbl">${it.label}</small>` : ''}</span>`;
+    style="left:${it.x}%;top:${it.y}%;font-size:${it.size || 44}px;animation-delay:${it.d || 0}s">${body}${it.num != null ? `<b class="st-tag">${it.num}</b>` : ''}${it.label ? `<small class="st-lbl">${it.label}</small>` : ''}</span>`;
+}
+/* A line (or lines) of words on the stage, each word its own span so it
+   can light up; a sight word's own word is marked. */
+function storyLinesHTML(stage){
+  let n = 0;
+  const strip = w => w.replace(/[।.,!?'"“”‘’]/g, '');
+  const row = (text, hl) => text.split(/\s+/).filter(Boolean).map(w =>
+    `<span class="stw${stage.lit ? ' lit' : ''}${hl && strip(w).toLowerCase() === hl.toLowerCase() ? ' hl' : ''}" id="stw-${n++}">${w}</span>`).join(' ');
+  if(stage.line) return `<div class="st-line">${row(stage.line.text || TX(stage.line), stage.line.hl)}</div>`;
+  return `<div class="st-lines">${stage.lines.map(l => `<div>${row(TX(l))}</div>`).join('')}</div>`;
 }
 function storyOptHTML(o, k){
   let body;
@@ -308,6 +412,7 @@ function storyOptHTML(o, k){
     const cols = o.n <= 4 ? 2 : 3;
     body = `<span class="st-group" style="grid-template-columns:repeat(${cols},1fr)">${Array.from({ length: o.n }, () => `<i>${o.ic}</i>`).join('')}</span>`;
   } else if(o.num != null) body = `<b class="st-numcard">${o.num}</b>`;
+  else if(o.txt != null) body = `<b class="st-wordcard">${o.txt}</b>`;
   else body = o.shape ? storyShapeSVG(o.shape, o.color, o.size) : `<span style="font-size:${o.size || 80}px;line-height:1">${o.ic}</span>`;
   return `<button class="st-opt" onclick="event.stopPropagation();storyChoose(${k})">${body}${o.word ? `<small class="st-lbl">${o.word}</small>` : ''}</button>`;
 }
@@ -332,7 +437,8 @@ function storyPlayerHTML(){
   let stage = sc.stage;
   for(let k = S.ctx.i; !stage && k >= 0; k--) stage = st.scenes[k].stage;
   stage = stage || { items: [] };
-  const drawn = `${stage.big ? `<b class="st-big${String(stage.big).length > 3 ? ' wide' : ''}">${stage.big}</b>` : ''}${(stage.items || []).map(storyItemHTML).join('')}`;
+  const words = stage.line || stage.lines;
+  const drawn = `${stage.big ? `<b class="st-big${String(stage.big).length > 3 ? ' wide' : ''}">${stage.big}</b>` : ''}${words ? storyLinesHTML(stage) : ''}${(stage.items || []).map(storyItemHTML).join('')}`;
   // a pick "with pictures" (join.keep) leaves the picture up, answers below it
   const inner = j && j.t === 'pick' && phase === 'pick'
     ? (j.keep ? `${drawn}<div class="st-opts low">${j.opts.map(storyOptHTML).join('')}</div>` : `<div class="st-opts">${j.opts.map(storyOptHTML).join('')}</div>`)
@@ -343,15 +449,34 @@ function storyPlayerHTML(){
     <span class="st-dots">${st.scenes.map((_, k) => `<i class="${k < S.ctx.i ? 'on' : k === S.ctx.i ? 'now' : ''}"></i>`).join('')}</span>
     <button class="st-ibtn" onclick="storyRepeat()" aria-label="${L2('Hear it again', 'फिर से सुनो')}">🔊</button>
   </div>
-  <div class="st-stage bg-${st.bg || 'plain'} ${phase === 'count' ? 'tappable' : ''}" id="ststage" onclick="storyTap()">
+  <div class="st-stage bg-${st.bg || 'plain'} ${phase === 'count' ? 'tappable' : ''}" id="ststage" onclick="storyTap()" style="--drift:-${((Date.now() / 1000) % 40).toFixed(1)}s">
     ${inner}
     ${phase === 'count' ? `<span class="st-hint">👆 ${L2('Tap!', 'छुओ!')}</span>` : ''}
     ${S.ctx.yourTurn ? `<span class="st-turn">🗣️ ${L2('Your turn!', 'तुम्हारी बारी!')}</span>` : ''}
-    <span class="st-munni-sm">${munniSmall()}</span>
+    <span class="st-munni-sm${S.ctx.talking ? ' talking' : ''}${S.ctx.i === 0 ? ' enter' : ''}">${munniSmall()}</span>
   </div>
-  <div class="st-cap">${TX(sc.say)}</div>
+  <div class="st-cap">${words && !(j && j.t === 'pick' && phase === 'pick') ? '' : TX(sc.say)}</div>
   <div class="st-grown small">👪 ${TX(st.grownup)}</div>`;
 }
+
+/* ---------- Class 1–2: the read-along shelf ---------- */
+/* The Picture Hut's and the Reading Tree's shelf of read-along stories,
+   for the classes that have them (Class 1–2). */
+function readAlongShelfHTML(){
+  if(!storyTplsFor(band().cls).includes('readalong')) return '';
+  return `
+    <div class="theater-h">📖 ${L2('Read along with Munni', 'मुन्नी के साथ पढ़ो')}</div>
+    <div class="video-grid">
+      ${STORY_READS.map((p, i) => `
+        <button class="watch-card glass-card" onclick="storyStart('readalong',${readAlongSeed(i)})">
+          <span class="wc-thumb">${p.ic}</span>
+          <span class="vc-title">${TX(p.title)}</span>
+        </button>`).join('')}
+    </div>`;
+}
+
+/* The Reading Tree's button: the next story in the bank. */
+function readAlongNext(){ storyStart('readalong', readAlongSeed((storyRec().n.readalong || 0) % STORY_READS.length)); }
 
 /* ---------- the parent's switch ---------- */
 function simpleHomeParentHTML(){

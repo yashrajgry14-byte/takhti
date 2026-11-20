@@ -143,6 +143,8 @@ function videoPlayerHTML(){
 
 function videoLibraryHTML(){
   const hi = S.lang === 'hi';
+  if(!pictureHutOpen()) return `<button class="back" onclick="go('map')">← ${t('back')}</button>
+    <div class="muted" style="margin-top:12px">${hi ? 'तस्वीरों की झोपड़ी के कार्टून छोटी कक्षाओं के लिए हैं। तुम्हारे सवाल गिनती के पत्थरों पर हैं।' : "The Picture Hut's cartoons are for younger classes. Your questions are at the Counting Stones."}</div>`;
   const theme = S.ctx.theme || 'all';
   const rec = recommendNextVideo(S);
   const recSkill = rec && skillById(rec.skillId);
@@ -157,6 +159,7 @@ function videoLibraryHTML(){
     <div class="muted">${hi?'छोटे कार्टून — हर एक के अंत में एक सवाल':'Short cartoons — each one ends with a question for you'}</div>
 
     ${typeof watchShelfHTML === 'function' ? watchShelfHTML() : ''}
+    ${typeof readAlongShelfHTML === 'function' ? readAlongShelfHTML() : ''}
 
     ${rec && recSkill ? `
       <div class="hero-video-card glass-card">
