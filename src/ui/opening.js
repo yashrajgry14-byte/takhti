@@ -14,6 +14,7 @@ function chooseGame(id){
   S.game = id;
   const g = gameById(id);
   log(0, `Favourite game: ${g.en} · motion archetype "${g.type}" · same engine, new tokens`);
+  if(typeof simpleHomeOn === 'function' && simpleHomeOn()){ goHub(); return; }
   go('open');
 }
 function skipOpening(){ S.ctx.phase = 2; render(); }
@@ -22,7 +23,11 @@ function skipOpening(){ S.ctx.phase = 2; render(); }
    (greeting → animation → today's card) the first time a child arrives
    on a given day — the pick screen promises "Every day will start with
    it" — and the jungle map every other time. */
-function goHub(){ go(S.game && S.lastOpen !== dayKey() ? 'open' : 'map'); }
+function goHub(){
+  // Nursery–UKG (or a parent's choice): Munni's Story Time home, no map and no daily card to read (ui/story-time.js)
+  if(typeof simpleHomeOn === 'function' && simpleHomeOn()){ S._fullMap = false; go('stories'); return; }
+  go(S.game && S.lastOpen !== dayKey() ? 'open' : 'map');
+}
 
 function runOpening(){
   const phase = S.ctx.phase || 0;

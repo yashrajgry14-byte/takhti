@@ -52,10 +52,14 @@ Along for reading fluency, Takhti for understanding the week's lessons.
 > in a lesson runs on the phone; the cloud prepares next week.
 
 **Teaching today:** ages 3–10 (Nursery to Class 5): reading, writing,
-arithmetic and shapes, in Hindi and English. **Next:** more books, more
-classes, every Indian language.
+arithmetic and shapes, in Hindi and English. **Each age uses it its own way:**
+Nursery–LKG get Story Time (short stories told by Munni, with moments to tap
+and count, pick a picture or say it aloud — no menus to read); UKG adds
+Munni's pick of what to do; Class 1 up gets the full jungle map. A parent can
+switch the simple home on or off; how long a child plays is up to the parent.
+**Next:** more books, more classes, every Indian language.
 
-**Build status:** web prototype on `main` (offline shell `takhti-v93`, 50 test
+**Build status:** web prototype on `main` (offline shell `takhti-v95`, 51 test
 suites). The lesson library was built with live Gemini calls; Gemini's hearing,
 judging and voice have been run live (`tools/live-check.mjs`); the voice server
 has had its first live Bolna call. Nothing has been tried with real children
