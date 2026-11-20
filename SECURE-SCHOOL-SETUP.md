@@ -17,7 +17,7 @@ processes, and production provisioning have been completed.**
   active teacher assigned to the class can read all class records and assign
   homework, approve synced lessons or edit the roster. A guardian can sync
   only child IDs explicitly bound to their verified account with consent.
-- Classes are still labeled with six-character codes, but knowing a code does
+- Every ACL has a unique school/tenant ID, and class records are partitioned by this ID. Classes are still labeled with six-character codes, but knowing a code does
   not grant access. The old first-writer teacher-key mechanism is disabled.
 - Anonymous or unconfigured class sync fails closed. The separate Netlify
   class-sync endpoint is disabled until it supports the same identity checks.
@@ -52,10 +52,10 @@ processes, and production provisioning have been completed.**
    `tools/provision-class-access.mjs` to create the authorization record:
    ```bash
    node tools/provision-class-access.mjs --bucket takhti-514811-takhti-classes \
-     --uid FIREBASE_TEACHER_UID --role teacher --class ABC123
+     --uid FIREBASE_TEACHER_UID --role teacher --school SCHOOL001 --class ABC123
 
    node tools/provision-class-access.mjs --bucket takhti-514811-takhti-classes \
-     --uid FIREBASE_GUARDIAN_UID --role guardian --class ABC123 \
+     --uid FIREBASE_GUARDIAN_UID --role guardian --school SCHOOL001 --class ABC123 \
      --child ALREADY_REGISTERED_CHILD_ID --consent-record VERIFIED_REFERENCE
    ```
    The tool refuses to overwrite existing ACLs. A second class/child for the
