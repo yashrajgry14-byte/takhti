@@ -81,7 +81,7 @@ async function playRecorded(text, lang, onDone){
     let settled = false;
     const finish = () => { if(settled) return; settled = true; if(onDone) onDone(); };
     VOICE_EL.onended = finish;
-    VOICE_EL.onerror = () => { settled = true; speakDevice(text, lang, onDone); };
+    VOICE_EL.onerror = () => { log(null, 'Recorded speech playback failed'); finish(); };
 
     await VOICE_EL.play();
     log(0, 'Voice · recorded narration');
