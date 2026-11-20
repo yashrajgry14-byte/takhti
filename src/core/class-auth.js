@@ -38,6 +38,19 @@ async function classAuthSignIn(){
     if(!r.ok || !d.idToken) throw new Error('Could not sign in. Check your account details or ask your school administrator.');
     const roleResponse=await fetch('/api/class-identity',{headers:{Authorization:'Bearer '+d.idToken},cache:'no-store'});
     const role=await roleResponse.json();
+    if(!roleResponse.ok && roleResponse.status === 403 && /verify your email/i.test(String(role.error||''))){
+      // A password login alone does not prove email ownership. Have Firebase
+      // send a verification link to the account, never set emailVerified here.
+      try{
+        const verify = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+encodeURIComponent(key),{
+          method:'POST',headers:{'content-type':'application/json'},
+          body:JSON.stringify({requestType:'VERIFY_EMAIL',idToken:d.idToken})});
+        if(verify.ok) throw new Error('Verification email sent. Open the link in your inbox, then sign in again.');
+      }catch(e){
+        if(/Verification email sent/.test(e.message||'')) throw e;
+      }
+      throw new Error('Verify your email address in Firebase before signing in again. Ask your administrator if the verification email does not arrive.');
+    }
     if(!roleResponse.ok || !['teacher','guardian'].includes(role.role)) throw new Error(role.error||'Your school has not approved this account');
     classAuthClearClassCache();
     CLASS_AUTH.token=d.idToken; CLASS_AUTH.email=d.email||email; CLASS_AUTH.role=role.role; CLASS_AUTH.classes=role.classes||[];
