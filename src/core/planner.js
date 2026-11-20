@@ -81,8 +81,8 @@ const PLAN_MORE_LABEL = {
 };
 function planMoreSkill(skill, up, c){
   if(typeof SKILL_OPS === 'undefined' || !SKILL_OPS[skill] || SKILL_OPS[skill] === 'mix') return null;
-  const gmax = (typeof CARTOON_MAX_GRADE !== 'undefined' && CARTOON_MAX_GRADE[bandForAge((c || S).age || 6).id]) || 1;
-  const ok = id => { const op = SKILL_OPS[id], s = skillById(id); return !!(op && op !== 'mix' && s && (s.g || 0) <= gmax); };
+  const gmax = (typeof CARTOON_MAX_GRADE !== 'undefined' && CARTOON_MAX_GRADE[bandFor(c || S).id]) || 1;
+  const ok = id => { const op = SKILL_OPS[id], s = skillById(id); return !!(op && op !== 'mix' && s && (s.g || 0) <= gmax && (typeof gapInReach !== 'function' || gapInReach(id, c || S))); };
   const cands = up ? SKILLS.filter(s => (s.pre || []).includes(skill)).map(s => s.id)
                    : ((skillById(skill) || {}).pre || []).slice();
   const fit = cands.filter(ok);
@@ -116,6 +116,7 @@ function planFor(les, c){
     // a gap underneath comes first
     const s = typeof skillById === 'function' ? skillById(skill) : null;
     for(const pre of (s && s.pre) || []){
+      if(typeof gapInReach === 'function' && !gapInReach(pre, ch)) continue;   // too far below this child's class: the teacher's call
       const pm = typeof twinMastery === 'function' ? twinMastery(pre, ch) : null, id = pm && pm.n >= PLAN_GAP_N && pm.now < PLAN_GAP ? planBuiltin(pre, ch) : null;
       if(id){
         const ps = skillById(pre);

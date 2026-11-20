@@ -143,9 +143,11 @@ server.listen(0, '127.0.0.1', () => {
         const afterAvatar = { avatar: S.avatar, name: S.name, profileCount: S.profiles.length, activeProfile: S.activeProfile, obStep: S.ob.step };
         obPickAge(7);
         const afterAge = { age: S.age, obAge: S.ob.age };
-        const expected = bandForAge(7).start;
         obFinishAge();
-        return { afterAvatar, afterAge, expectedLevels: expected, actualLevels: { read:S.levels.read, write:S.levels.write, math:S.levels.math }, screenAfter: S.screen };
+        const clsStep = { step: S.ob && S.ob.step, guess: S.ob && S.ob.cls };
+        const expected = bandFor({ cls: 'c2', age: 7 }).start;
+        obFinishClass();
+        return { afterAvatar, afterAge, clsStep, cls: S.cls, expectedLevels: expected, actualLevels: { read:S.levels.read, write:S.levels.write, math:S.levels.math }, screenAfter: S.screen };
       })()
     `);
     console.log(JSON.stringify(ob, null, 2));
@@ -154,7 +156,9 @@ server.listen(0, '127.0.0.1', () => {
     check('picking an avatar on a brand-new device actually creates a real, persisted profile', ob.afterAvatar.profileCount === 1 && ob.afterAvatar.activeProfile === 0, JSON.stringify(ob.afterAvatar));
     check('after the avatar, onboarding moves to the age step', ob.afterAvatar.obStep === 'age', JSON.stringify(ob.afterAvatar));
     check('picking a candle count sets S.age', ob.afterAge.age === 7, JSON.stringify(ob.afterAge));
-    check("finishing onboarding seeds S.levels from the age band's own start values",
+    check('after the age, onboarding asks the class, with the usual class for 7 (Class 2) picked', ob.clsStep.step === 'cls' && ob.clsStep.guess === 'c2', JSON.stringify(ob.clsStep));
+    check('finishing the class step saves S.cls', ob.cls === 'c2', `cls=${ob.cls}`);
+    check("finishing onboarding seeds S.levels from the class's own start values",
       ob.actualLevels.read === ob.expectedLevels.read && ob.actualLevels.write === ob.expectedLevels.write && ob.actualLevels.math === ob.expectedLevels.math,
       JSON.stringify({ expected: ob.expectedLevels, actual: ob.actualLevels }));
     check("onboarding routes onward correctly (no game yet → 'pick')", ob.screenAfter === 'pick', `screenAfter=${ob.screenAfter}`);
@@ -185,7 +189,7 @@ server.listen(0, '127.0.0.1', () => {
     console.log('\n=== a younger band (no "ask" module) shows fewer places — not everything greyed out, actually absent ===');
     const mapPre = window.eval(`
       (function(){
-        S.age = 4;   // 'pre' band: modules = ['read','write','count'], no 'ask'
+        S.age = 4; S.cls = 'lkg';   // 'pre' band: modules = ['read','write','count'], no 'ask'
         go('map');
         const visible = mapVisible();
         return {
@@ -206,7 +210,7 @@ server.listen(0, '127.0.0.1', () => {
     console.log("\n=== Munni stands at mapSuggestion() ===");
     const suggestion = window.eval(`
       (function(){
-        S.age = 7; go('map');   // back to the full six-place board
+        S.age = 7; S.cls = 'c2'; go('map');   // back to the full six-place board
         // make "write" clearly the furthest behind, so mapSuggestion() is unambiguous
         S.targets = { read:5, write:5, math:5, facts:3 };
         S.today   = { read:5, write:0, math:5, facts:3 };
@@ -232,7 +236,7 @@ server.listen(0, '127.0.0.1', () => {
     console.log('\n=== spaced repetition: a due item overrides the daily-target suggestion, invisibly ===');
     const srsOverride = window.eval(`
       (function(){
-        S.age = 7; go('map');
+        S.age = 7; S.cls = 'c2'; go('map');
         // 'write' would normally win (furthest behind daily target), but a
         // genuinely due 'read' item must win instead — see jungle-map.js's
         // mapSuggestion(), option (b): no new map place, spaced repetition

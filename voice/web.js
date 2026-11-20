@@ -60,7 +60,8 @@ function createWeb(brain, envIn) {
     if (!body || body.consent !== true) return { status: 403, body: { error: 'a parent has not turned on Talking Munni' } };
     if (!c || !/^[A-Za-z0-9_-]{4,60}$/.test(String(c.id || ''))) return { status: 400, body: { error: 'child id missing' } };
     const age = Number(c.age), name = String(c.name || '').trim().slice(0, 40);
-    if (!name || !Number.isInteger(age) || age < 3 || age > 10) return { status: 400, body: { error: 'name and an age from 3 to 10 are needed' } };
+    if (!name || !Number.isInteger(age) || age < 3 || age > 16) return { status: 400, body: { error: 'name and an age from 3 to 16 are needed' } };
+    const cls = /^(nur|lkg|ukg|c([1-9]|10))$/.test(String(c.cls || '')) ? String(c.cls) : null;   // the class decides what is taught (src/content/ages.js)
     if (!rateOk(ip || 'unknown')) return { status: 429, body: { error: 'too many talks from here — try later' } };
     if (!env.BOLNA_API_KEY || !(env.BOLNA_WEB_AGENT_ID || env.BOLNA_AGENT_ID)) return { status: 503, body: { error: 'Talking Munni is not set up on this server' } };
 
@@ -91,7 +92,7 @@ function createWeb(brain, envIn) {
     child.name = name.charAt(0).toUpperCase() + name.slice(1);
     child.age = age; child.lang = c.lang === 'en' ? 'en' : 'hi';
     brain.core.withChild(child.profile, { lang: child.lang }, T => {
-      T.S.age = age;
+      T.S.age = age; if (cls) T.S.cls = cls;
       for (const m of ['read', 'write', 'math']) {
         const v = c.levels && Number(c.levels[m]);
         if (v) T.S.levels[m] = T.clampLevel(m, v);

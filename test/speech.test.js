@@ -111,7 +111,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     const win = dom.window;
     await new Promise(r => win.addEventListener('load', r));
     win.eval(`arrSkip(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance();`);
-    [...win.document.querySelectorAll('.ob-av')][0].click(); [...win.document.querySelectorAll('.ob-cakebtn')][5].click(); win.document.querySelector('.ob-go').click();
+    [...win.document.querySelectorAll('.ob-av')][0].click(); [...win.document.querySelectorAll('.ob-cakebtn')][5].click(); win.document.querySelector('.ob-go').click(); win.document.querySelector('.ob-go').click();
     const terms = win.document.querySelector('#screen').textContent;
     if(voice && !opts.skipTerms) win.eval(`voiceTermsAccept()`);
     win.eval(`S.game = S.game || 'cricket'; S.name = 'Jai'; if(typeof circleOnboardDone === 'function' && S.ob && S.ob.step === 'grownup') circleOnboardDone(false); go('map')`);

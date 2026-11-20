@@ -93,9 +93,111 @@ function bandForAge(age){
   return AGE_BANDS.fluent;
 }
 
-/* The single accessor everything else uses. Defaults to the middle band
-   so nothing breaks for a profile created before age existed. */
-function band(){ return bandForAge(S.age || 6); }
+/* ==================================================================
+   CLASSES — the class decides WHAT is taught; age decides HOW.
+
+   The school, its book, its syllabus and its teacher all work by class,
+   so a child's class is what picks the content: which band of sentences
+   and sums, which writing tasks, how far down a gap may reach. Age only
+   tunes the delivery (Munni's speaking pace). Two ten-year-olds in
+   Class 4 and Class 5 get their own class's work; a ten-year-old is
+   never handed a trace pad of single letters because "ten" happened to
+   fall in a band whose writing ladder starts at the alphabet.
+
+   band: the content band (AGE_BANDS key) — same mapping the teacher's
+         SYL_CLASSES uses (core/syllabus.js), so child and teacher agree.
+   stage: NEP 2020's stages (foundational split at Class 1).
+   write: 'trace'        trace pad only (Nursery–UKG)
+          'trace+paper'  trace first, paper offered (Class 1)
+          'paper+trace'  paper first, trace kept for practising letters (Class 2)
+          'paper'        no tracing at all: copy on paper, or dictation (Class 3+)
+   start: a higher class starts higher inside its band.
+   Classes 6–10 use the fluent band's content today; the stage is set
+   now so their look, floor and prompts are right as content arrives.
+   ================================================================== */
+const CLASSES = [
+  { id:'nur', g:-3, band:'pre',        stage:'foundA',    write:'trace',       en:'Nursery',  hi:'नर्सरी' },
+  { id:'lkg', g:-2, band:'pre',        stage:'foundA',    write:'trace',       en:'LKG',      hi:'एलकेजी' },
+  { id:'ukg', g:-1, band:'early',      stage:'foundA',    write:'trace',       en:'UKG',      hi:'यूकेजी' },
+  { id:'c1',  g:1,  band:'early',      stage:'foundB',    write:'trace+paper', en:'Class 1',  hi:'कक्षा 1' },
+  { id:'c2',  g:2,  band:'developing', stage:'foundB',    write:'paper+trace', en:'Class 2',  hi:'कक्षा 2' },
+  { id:'c3',  g:3,  band:'developing', stage:'prep',      write:'paper',       en:'Class 3',  hi:'कक्षा 3',  start:{ read:3, write:3, math:4 } },
+  { id:'c4',  g:4,  band:'fluent',     stage:'prep',      write:'paper',       en:'Class 4',  hi:'कक्षा 4' },
+  { id:'c5',  g:5,  band:'fluent',     stage:'prep',      write:'paper',       en:'Class 5',  hi:'कक्षा 5',  start:{ read:4, write:4, math:5 } },
+  { id:'c6',  g:6,  band:'fluent',     stage:'middle',    write:'paper',       en:'Class 6',  hi:'कक्षा 6',  start:{ read:5, write:5, math:6 } },
+  { id:'c7',  g:7,  band:'fluent',     stage:'middle',    write:'paper',       en:'Class 7',  hi:'कक्षा 7',  start:{ read:5, write:5, math:6 } },
+  { id:'c8',  g:8,  band:'fluent',     stage:'middle',    write:'paper',       en:'Class 8',  hi:'कक्षा 8',  start:{ read:6, write:6, math:6 } },
+  { id:'c9',  g:9,  band:'fluent',     stage:'secondary', write:'paper',       en:'Class 9',  hi:'कक्षा 9',  start:{ read:6, write:6, math:6 } },
+  { id:'c10', g:10, band:'fluent',     stage:'secondary', write:'paper',       en:'Class 10', hi:'कक्षा 10', start:{ read:6, write:6, math:6 } }
+];
+const STAGES = {
+  foundA:    { en:'Foundational', hi:'बुनियादी' },
+  foundB:    { en:'Foundational', hi:'बुनियादी' },
+  prep:      { en:'Preparatory',  hi:'प्रारंभिक' },
+  middle:    { en:'Middle',       hi:'मध्य' },
+  secondary: { en:'Secondary',    hi:'माध्यमिक' }
+};
+const MAX_AGE = 16;
+
+const classById = id => CLASSES.find(k => k.id === id) || null;
+
+/* The usual class for an age in India (Class 1 at six). Only a guess:
+   it is offered pre-selected on the class screen, and it stands in for
+   a profile made before class existed — which keeps those children on
+   exactly the band they had. */
+function clsForAge(age){
+  const a = Math.round(Number(age) || 6);
+  if(a <= 3) return 'nur';
+  if(a === 4) return 'lkg';
+  if(a === 5) return 'ukg';
+  return 'c' + Math.min(10, a - 5);
+}
+function classFor(child){
+  const c = child || S;
+  return classById(c.cls) || classById(clsForAge(c.age || 6));
+}
+
+/* How far down a gap may reach. From Class 3, never into pre-primary
+   work (pencil grip, tracing, counting to five): that is the nursery
+   screen a ten-year-old must never be handed. School skills from Class 1
+   up stay in reach for Classes 3–5, because a Class 5 child still adding
+   like a Class 2 child is common, and re-teaching that IS Takhti's loop.
+   From Class 6, at most four classes down; deeper is the teacher's call. */
+const GAP_REACH = 4;
+
+const _bandCache = new Map();
+function bandFor(child){
+  const c = child || S, k = classFor(c), age = Number(c.age) || 0;
+  const key = k.id + '|' + age;
+  if(_bandCache.has(key)) return _bandCache.get(key);
+  const base = AGE_BANDS[k.band];
+  const b = Object.assign({}, base, {
+    cls: k.id, clsEn: k.en, clsHi: k.hi, g: k.g,
+    stage: k.stage, stageEn: STAGES[k.stage].en, stageHi: STAGES[k.stage].hi,
+    write: k.write,
+    traceOnly: k.write === 'trace',               // never asks them to copy a sentence
+    trace: k.write !== 'paper',                   // a trace pad is offered at all
+    gFloor: k.g >= 3 ? Math.max(1, k.g - GAP_REACH) : -Infinity,
+    start: Object.assign({}, base.start, k.start || {}),
+    // delivery follows the child's own age, not the class
+    speechRate: age ? (age >= 11 ? 0.95 : bandForAge(age).speechRate) : base.speechRate
+  });
+  _bandCache.set(key, b);
+  return b;
+}
+
+/* The single accessor everything else uses. The child's class picks the
+   band; a profile with no class yet falls back to the usual class for
+   its age (the middle band if there is no age either). */
+function band(){ return bandFor(S); }
+
+/* May a gap (a prerequisite) be taught to this child as part of their
+   path? Foundational classes: always. Class 3+: not below the floor. */
+function gapInReach(skillId, child){
+  const s = typeof skillById === 'function' ? skillById(skillId) : null;
+  if(!s || s.g == null) return true;
+  return s.g >= bandFor(child).gFloor;
+}
 
 /* Clamp a level into the child's age window. Called wherever the
    adaptive engine would otherwise be free to wander. */

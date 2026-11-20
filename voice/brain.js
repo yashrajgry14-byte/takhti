@@ -43,7 +43,7 @@ function createBrain(opts) {
     const phone = String(input.parent_phone || '').replace(/[\s-]/g, '');
     const errs = [];
     if (!name || name.length > 40) errs.push('name is required (max 40 characters)');
-    if (!Number.isInteger(age) || age < 3 || age > 10) errs.push('age must be a whole number from 3 to 10');
+    if (!Number.isInteger(age) || age < 3 || age > 16) errs.push('age must be a whole number from 3 to 16');
     if (!lang) errs.push('lang must be "hi" or "en"');
     if (!/^\+\d{10,15}$/.test(phone)) errs.push('parent_phone must be in international format, e.g. +919876543210');
     // a child's data is processed only with a parent's consent (DPDP Act

@@ -1,7 +1,9 @@
 # Takhti — working notes for Claude Code
 
-A foundational literacy and numeracy tutor for Indian children aged 3–10
-(four age bands in `content/ages.js`: 3–4, 5–6, 7–8, 9–10).
+A foundational literacy and numeracy tutor for Indian children, Nursery to
+Class 10. **The child's class decides what is taught; age only how** (Munni's
+pace) — `CLASSES` in `content/ages.js`, see **Class decides what is taught**.
+Content today runs on four bands (3–4, 5–6, 7–8, 9–10 in age terms).
 Started for the iQOO Hackathon 2026 (Smart Education track); now the team's
 entry to the Google Startup Buildathon India 2026. This repo is the web
 prototype; the Android build ports the same logic to Kotlin + Compose.
@@ -50,7 +52,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 
 ```bash
 npm run dev        # the app + its /api endpoints on http://localhost:5173 (cloud/server.mjs --local; key from voice/.env)
-npm test           # all 47 test suites (see Testing)
+npm test           # all 48 test suites (see Testing)
 npm run cloud      # the Cloud Run server locally (cloud/server.mjs), on :8080
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
 ```
@@ -89,7 +91,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v91` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v92` (recorded narration lives in a
 separate `takhti-audio-v2`, bumped only when a line is rendered again in a new
 voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
@@ -107,7 +109,7 @@ src/
     games.js                20 games: opening-animation tokens, quiz, and actor/proj/accent for drawings
     themes.js               6 visual themes for cartoon episodes (sports, anime, cinema, folk tale, sci-fi, fantasy)
     facts.js                60 facts (3 per game)
-    ages.js                 age bands: modules offered, starting levels, number ceiling, pass/gate scores
+    ages.js                 CLASSES (class → band, stage, writing tasks, gap floor) + the four content bands: modules, starting levels, number ceiling, pass/gate scores
     skills.js               the skill graph + skillCoverage()
     curriculum-early.js     Nursery→Class 5 skills; coverageMatrix()/ladderCoverage()/contentQueue()
     lessons.js              hand-authored lessons (lesson-gen.js generates the rest)
@@ -965,6 +967,43 @@ capture → normalize → align → grade → confidence gate → score.
 - **The pass bar moves with age**: `gradeVerdict()` uses the band's own
   `passScore`/`gateScore` (`content/ages.js`). Don't hardcode a threshold
   elsewhere.
+
+## Class decides what is taught — `content/ages.js` (20 Nov)
+
+Found 20 Nov: a ten-year-old was asked to trace the letter "s". The Write
+screen opened in trace mode for every age, and the 9–10 band's writing
+ladder starts at single letters. Fixed by making the **class** the key:
+
+- **`S.cls`** (`'nur'`,`'lkg'`,`'ukg'`,`'c1'`…`'c10'`) is asked in onboarding
+  right after the candles (the usual class for the age pre-picked —
+  `clsForAge()`, Class 1 at six), and a parent steps it on the dashboard
+  (`setParentClass()`). Ages 11–16 can be given too.
+- **`band()` = `bandFor(S)`**: the class's content band (`CLASSES[].band`, the
+  same mapping as the teacher's `SYL_CLASSES`) merged with the class's own
+  fields — `cls`, `stage` (NEP: foundational / preparatory / middle /
+  secondary), `write`, `traceOnly`, `trace`, `gFloor`, `start` — and
+  `speechRate` from the **age**. A profile with no class falls back to the
+  usual class for its age, which is exactly its old band.
+- **Writing by class** (`writeModes()`): Nursery–UKG trace only; Class 1
+  trace then paper; Class 2 paper, letters kept for practice; **Class 3+ no
+  trace pad at all** — copy on paper, or **dictation** (Munni says a line,
+  the child writes it and types it back; `submitDictation()`, graded by
+  the same `gradeWritten()` as paper). "Not now" to the camera goes to
+  dictation for Class 3+, never to tracing. The map's Sand Patch label
+  follows the class (`writeSub()`).
+- **Gap floor** (`gapInReach()`): from Class 3, no pre-primary skill (g ≤ 0:
+  pencil grip, tracing, counting to five) is ever a gap step or an easier
+  step in the planner. Class 1+ school skills stay in reach for Classes
+  3–5 (a Class 5 child still adding like Class 2 is common; re-teaching
+  that is the loop). From Class 6, at most four classes down.
+- The voice server takes ages 3–16 and the class (`voice/web.js`,
+  `voice/circle.js`), so its copy of the child uses the same band.
+- `test/classes.test.js` drives every class through onboarding, the Write
+  screen, the map and the floor.
+
+Not yet: the school's roster setting the class (the teacher's book class
+does not reach the child's phone); Classes 6–10 use the fluent band's
+content until their own lessons exist; a class profile in every Gemini prompt.
 
 ## The skill graph
 
@@ -2129,6 +2168,11 @@ Honest edges of what's built:
    appear under two field names in the docs, and both are read. Phone
    calls (Bolna) use the transcriber set in Bolna's dashboard — unchanged.
    The v3 terms wording is for the lawyer, not final.
+
+19. **Classes 6–10 have a stage but not their own content yet** (20 Nov
+    2026). They run on the fluent band's sentences and sums, starting at its
+    top levels; their writing is paper or dictation. The class is set by the
+    child or parent — the school's roster does not set it yet.
 
 ## Style
 

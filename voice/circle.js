@@ -179,7 +179,8 @@ function createCircle(brain, envIn) {
     if (!body.consent || body.consent.sync !== true) return { status: 403, body: { error: 'a parent has not turned on sync' } };
     if (!rateOk('ip:' + (ip || '?'), Number(env.TAKHTI_SYNC_PER_HOUR || 120)) || !rateOk('c:' + c.id, 60)) return { status: 429, body: { error: 'too many syncs' } };
     const age = Number(c.age), name = String(c.name || '').trim().slice(0, 40);
-    if (!name || !Number.isInteger(age) || age < 3 || age > 10) return { status: 400, body: { error: 'name and an age from 3 to 10 are needed' } };
+    if (!name || !Number.isInteger(age) || age < 3 || age > 16) return { status: 400, body: { error: 'name and an age from 3 to 16 are needed' } };
+    const cls = /^(nur|lkg|ukg|c([1-9]|10))$/.test(String(c.cls || '')) ? String(c.cls) : null;   // the class decides what is taught (src/content/ages.js)
 
     // who is this child on the server?
     let child = findByApp(c.id) || store.get('children', 'app_' + c.id);
@@ -229,7 +230,7 @@ function createCircle(brain, envIn) {
     // levels: the app's, unless a phone lesson moved one since the last sync
     const levelsBack = {};
     core.withChild(child.profile, { lang: child.lang }, TT => {
-      TT.S.age = age;
+      TT.S.age = age; if (cls) TT.S.cls = cls;
       const before = cc.levels_at_sync || {};
       for (const m of ['read', 'write', 'math']) {
         const server = TT.S.levels[m], app = num(p.levels && p.levels[m], 0, 6);

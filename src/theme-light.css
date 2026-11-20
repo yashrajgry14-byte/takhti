@@ -204,7 +204,7 @@ body{
 /* Append to theme-light.css */
 
 /* onboarding + map on paper */
-.ob-av,.ob-cakebtn{background:rgba(255,255,255,.78);border-color:rgba(42,33,24,.14);color:#2A2118}
+.ob-av,.ob-cakebtn,.ob-agechip,.ob-clsbtn:not(.sel){background:rgba(255,255,255,.78);border-color:rgba(42,33,24,.14);color:#2A2118}
 .ob-bubble{background:#16302B;color:#F3EEE0}
 .cake .candles i{background:#6E6355}
 .jm-label small{color:rgba(237,230,210,.8)}

@@ -69,6 +69,7 @@ server.listen(0, '127.0.0.1', () => {
       tap($$('.ob-av').find(b => b.getAttribute('onclick').includes("'tiger'")));
       tap($$('.ob-cakebtn')[4]);                   // 7 candles
       tap($('.ob-go'));
+      tap($('.ob-go'));                            // the class step: the usual class for that age is already picked
       check('onboarding creates a real profile and asks for a game next', E('S.profiles.length') === 1 && E('S.screen') === 'pick', `${E('S.profiles.length')} / ${E('S.screen')}`);
       tap($$('.gcard').find(b => b.getAttribute('onclick').includes("'cricket'")));
       check("picking a game plays today's opening, and records that it played today", E('S.screen') === 'open' && E('S.lastOpen === dayKey()'), `${E('S.screen')} lastOpen=${E('S.lastOpen')}`);
@@ -144,7 +145,7 @@ server.listen(0, '127.0.0.1', () => {
       check("'Add' starts the same tap-an-animal onboarding for a new child", E('S.screen') === 'onboard' && !!$('.ob-av'), E('S.screen'));
       tap($$('.ob-av').find(b => b.getAttribute('onclick').includes("'peacock'")));
       check('picking an animal creates a second profile, leaving the first child untouched', E('S.profiles.length') === 2 && E('S.activeProfile') === 1 && E('S.profiles[0].avatar') === 'tiger', `${E('S.profiles.length')} ${E('S.profiles[0].avatar')}`);
-      tap($$('.ob-cakebtn')[2]); tap($('.ob-go'));
+      tap($$('.ob-cakebtn')[2]); tap($('.ob-go')); tap($('.ob-go'));
       check('the new child picks their own game next', E('S.screen') === 'pick', E('S.screen'));
       E(`switchProfile(0)`);
       check('switching back to the first child (already opened today) lands on the map, not the opening', E('S.screen') === 'map' && E('S.name') === 'Tiger', `${E('S.screen')} ${E('S.name')}`);

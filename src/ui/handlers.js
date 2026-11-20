@@ -243,11 +243,26 @@ function checkInk(){
 }
 
 /* ================= WRITING: PAPER + CAMERA ================= */
-function setWriteMode(m){ S.ctx = { mode:m }; render(); }
-function nextLine(){
+/* The writing tasks this child's class has, first one opens (content/ages.js):
+   Nursery–UKG trace; Class 1 trace then paper; Class 2 paper, letters kept
+   for practice; Class 3 and up copy on paper or take dictation — no tracing. */
+function writeModes(){
+  const w = band().write;
+  if(w === 'trace') return ['trace'];
+  if(w === 'trace+paper') return ['trace','paper'];
+  if(w === 'paper+trace') return ['paper','trace'];
+  return ['paper','dictate'];
+}
+function setWriteMode(m){
+  S.ctx = { mode:m }; render();
+  if(m === 'dictate' && S.ctx.line) speak(S.ctx.line);
+}
+function nextLine(mode){
+  const m = mode === 'dictate' ? 'dictate' : 'paper';
   const pool = ageSentences(S.lang, S.levels.write);
-  S.ctx = { mode:'paper', line: pool[Math.floor(Math.random()*pool.length)] };
+  S.ctx = { mode:m, line: pool[Math.floor(Math.random()*pool.length)] };
   render();
+  if(m === 'dictate') speak(S.ctx.line);
 }
 function grantCamera(){
   S.camOk = true;
@@ -321,8 +336,19 @@ function submitPaper(typed){
     S.ctx.msg = S.lang==='hi'?'पहले अपनी कॉपी की साफ़ तस्वीर लो।':'Take a clear photo of your notebook first.';
     render(); return;
   }
+  const { r, ok } = gradeWritten(typed, 'Paper writing');
+  if(ok){
+    S.photos.unshift({ img:S.ctx.shot, line:S.ctx.line, score:r.score, when:new Date().toLocaleDateString() });
+    log(0,`Saved to the parent's notebook shelf · ${S.photos.length} photo(s) on device`);
+  }
+  record('write', ok);
+  render();
+}
+
+/* The written line, checked word by word like reading — shared by paper and dictation. */
+function gradeWritten(typed, what){
   const r = gradeReading(S.ctx.line, typed, S.lang);
-  log(0,`Paper writing graded · ${r.score}% match against the target line`);
+  log(0,`${what} graded · ${r.score}% match against the target line`);
   S.ctx.tokens = r.tokens; S.ctx.score = r.score;
   const ok = r.score >= 75;
   // spelling: the same word checks as reading (a vowel sign left out, a half letter dropped…)
@@ -332,10 +358,18 @@ function submitPaper(typed){
   S.ctx.msg = ok
     ? (S.lang==='hi'?'बहुत सुंदर लिखा! ⭐':'Beautifully written! ⭐')
     : (S.lang==='hi'?`इन शब्दों को फिर देखो: ${r.misread.slice(0,3).join(', ')}`:`Check these again: ${r.misread.slice(0,3).join(', ')}`);
-  if(ok){
-    S.photos.unshift({ img:S.ctx.shot, line:S.ctx.line, score:r.score, when:new Date().toLocaleDateString() });
-    log(0,`Saved to the parent's notebook shelf · ${S.photos.length} photo(s) on device`);
+  return { r, ok };
+}
+
+/* Dictation (Class 3+): Munni said the line, the child wrote it in their
+   notebook and typed it back. No photo needed — a phone with no camera,
+   or a child who said "not now" to it, still writes. */
+function submitDictation(typed){
+  if(!typed || !typed.trim()){
+    S.ctx.msg = S.lang==='hi'?'जो लिखा वो टाइप करो।':'Type what you wrote.';
+    render(); return;
   }
+  const { ok } = gradeWritten(typed, 'Dictation');
   record('write', ok);
   render();
 }
@@ -618,7 +652,7 @@ function setTarget(k, d){
   render();
 }
 function setParentAge(d){
-  S.age = Math.max(3, Math.min(10, (S.age||6) + d));
+  S.age = Math.max(3, Math.min(MAX_AGE, (S.age||6) + d));
   // the band may have narrowed — pull current levels back inside its window
   S.levels.read  = clampLevel('read',  S.levels.read);
   S.levels.write = clampLevel('write', S.levels.write);
@@ -626,6 +660,25 @@ function setParentAge(d){
   log(0, `Parent set age → ${S.age} · band "${band().id}"`);
   saveSoon();
   render();
+}
+
+/* The class decides what is taught (content/ages.js CLASSES). A parent
+   (or the school, later through the roster) moves it one step at a time;
+   levels are pulled back inside the new class's band, and a class that
+   starts higher lifts a child sitting below its start. */
+function setParentClass(d){
+  const i = CLASSES.findIndex(k => k.id === classFor(S).id);
+  const k = CLASSES[Math.max(0, Math.min(CLASSES.length - 1, i + d))];
+  setChildClass(k.id);
+  log(0, `Parent set class → ${k.en} · band "${band().id}" · stage ${band().stage}`);
+  saveSoon();
+  render();
+}
+function setChildClass(id){
+  if(!classById(id)) return;
+  S.cls = id;
+  for(const m of ['read','write','math']) S.levels[m] = clampLevel(m, S.levels[m]);
+  S.ctx = {};          // a writing tab the new class doesn't have must not linger
 }
 
 /* ---- sound, per child — see core/speech.js's speak() and ui/elephant.js's

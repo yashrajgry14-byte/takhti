@@ -206,12 +206,18 @@ read(){
 
 /* ---------- WRITING ---------- */
 write(){
-  if(!S.ctx.mode) S.ctx.mode = 'trace';
-  if(S.ctx.mode==='paper' && band().traceOnly) S.ctx.mode = 'trace';   // age moved, tab is gone
+  // the child's class decides which writing tasks exist (content/ages.js CLASSES):
+  // a Class 3+ child is never handed a trace pad
+  const modes = writeModes();
+  if(!S.ctx.mode || !modes.includes(S.ctx.mode)) S.ctx.mode = modes[0];   // class moved, tab is gone
+  const wl = {
+    trace:   band().write === 'paper+trace' ? (S.lang==='hi'?'अक्षर अभ्यास':'Practise letters') : (S.lang==='hi'?'स्क्रीन पर बनाओ':'Trace on screen'),
+    paper:   S.lang==='hi'?'कागज़ पर लिखो 📷':'Write on paper 📷',
+    dictate: S.lang==='hi'?'सुनो और लिखो 🔊':'Listen and write 🔊'
+  };
   const tabs = `
   <div class="tabs">
-    <button class="${S.ctx.mode==='trace'?'sel':''}" onclick="setWriteMode('trace')">${S.lang==='hi'?'स्क्रीन पर बनाओ':'Trace on screen'}</button>
-    ${band().traceOnly ? '' : `<button class="${S.ctx.mode==='paper'?'sel':''}" onclick="setWriteMode('paper')">${S.lang==='hi'?'कागज़ पर लिखो 📷':'Write on paper 📷'}</button>`}
+    ${modes.map(m => `<button class="${S.ctx.mode===m?'sel':''}" onclick="setWriteMode('${m}')">${wl[m]}</button>`).join('')}
   </div>`;
   const levelLine = `<div class="muted">${t('level')} ${S.levels.write} · ${t('write')} · ${competencyName('write',S.levels.write)}</div>`;
 
@@ -232,7 +238,7 @@ write(){
           : 'Takhti will look at your notebook to check that you wrote it. The photo stays on this phone and is never sent anywhere.'}</p>
         <p class="muted" style="font-size:12px;margin:8px 0 0">${S.lang==='hi'?'सिर्फ़ माता-पिता ही तस्वीरें देख सकते हैं।':'Only a parent can see the photos.'}</p>
         <button class="btn" style="margin-top:12px" onclick="grantCamera()">${S.lang==='hi'?'ठीक है, चालू करो':'Allow camera'}</button>
-        <button class="btn ghost" style="margin-top:8px" onclick="setWriteMode('trace')">${S.lang==='hi'?'अभी नहीं':'Not now'}</button>
+        <button class="btn ghost" style="margin-top:8px" onclick="setWriteMode(band().trace?'trace':'dictate')">${S.lang==='hi'?'अभी नहीं':'Not now'}</button>
       </div>`;
     }
     const v = S.ctx.verdict;
@@ -262,6 +268,32 @@ write(){
       <div class="feedback">${S.ctx.msg}</div>
       ${twinSlipHTML()}
       <button class="btn" style="margin-top:10px" onclick="nextLine()">${t('next')} →</button>`:''}`;
+  }
+
+  /* ---------- DICTATION: Munni says a line, the child writes it, then types it back ---------- */
+  if(S.ctx.mode==='dictate'){
+    const pool = ageSentences(S.lang, S.levels.write);
+    if(!S.ctx.line) S.ctx.line = pool[Math.floor(Math.random()*pool.length)];
+    return `
+    <button class="back" onclick="go('map')">← ${t('back')}</button>
+    ${tabs}
+    ${levelLine}
+    <div class="muted" style="margin-top:8px">${S.lang==='hi'
+      ? 'मुन्नी एक पंक्ति बोलेगी। उसे अपनी कॉपी में लिखो, फिर जो लिखा वो यहाँ टाइप करो।'
+      : 'Munni will say a line. Write it in your notebook, then type what you wrote.'}</div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" onclick="speak(S.ctx.line)">🔊 ${S.lang==='hi'?'पंक्ति सुनो':'Hear the line'}</button>
+    </div>
+    ${S.ctx.tokens ? `<div class="copyline" style="margin-top:12px">${S.ctx.line}</div>` : `
+    <input class="input" id="typedline" style="margin-top:12px" placeholder="${S.lang==='hi'?'जो लिखा वो टाइप करो':'Type what you wrote'}">
+    <button class="btn leaf" style="margin-top:9px" onclick="submitDictation($('typedline').value)">${t('check')}</button>
+    ${S.ctx.msg ? `<div class="feedback">${S.ctx.msg}</div>` : ''}`}
+    ${S.ctx.tokens? `<div class="sentence" style="font-size:20px;margin-top:14px">${
+        S.ctx.tokens.map(tk=>`<span class="w ${tk.state}">${tk.text}</span>`).join(' ')}</div>
+      <div class="scorebar"><i style="width:${S.ctx.score}%"></i></div>
+      <div class="feedback">${S.ctx.msg}</div>
+      ${twinSlipHTML()}
+      <button class="btn" style="margin-top:10px" onclick="nextLine('dictate')">${t('next')} →</button>`:''}`;
   }
 
   /* ---------- TRACE MODE ---------- */
@@ -430,7 +462,7 @@ parent(){
     <div class="kicker2">${S.lang==='hi'?'उम्र':'AGE'}</div>
     <div class="metric">
       <div><b>${S.age||6} ${S.lang==='hi'?'साल':'yrs'}</b>
-        <div style="margin-top:3px"><span class="agechip">${S.lang==='hi'?band().hi:band().en}</span></div>
+        <div style="font-size:12.5px;opacity:.65">${S.lang==='hi'?'मुन्नी की बोलने की रफ़्तार':"Munni's speaking pace"}</div>
       </div>
       <div style="display:flex;align-items:center;gap:9px">
         <button class="stepbtn" onclick="setParentAge(-1)">−</button>
@@ -438,9 +470,19 @@ parent(){
         <button class="stepbtn" onclick="setParentAge(1)">+</button>
       </div>
     </div>
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'कक्षा':'CLASS'}</div>
+    <div class="metric">
+      <div><b>${S.lang==='hi'?band().clsHi:band().clsEn}</b>
+        <div style="margin-top:3px"><span class="agechip">${S.lang==='hi'?band().stageHi:band().stageEn}</span>${S.cls ? '' : `<span style="font-size:12px;opacity:.6;margin-left:6px">${S.lang==='hi'?'(उम्र से अंदाज़ा)':'(guessed from age)'}</span>`}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <button class="stepbtn" onclick="setParentClass(-1)">−</button>
+        <button class="stepbtn" onclick="setParentClass(1)">+</button>
+      </div>
+    </div>
     <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin:4px 0 2px">${S.lang==='hi'
-      ? 'उम्र सीमा तय करती है; तख़्ती उसी सीमा के भीतर बच्चे के हिसाब से ढल जाती है।'
-      : 'Age sets the range — Takhti adapts to your child within it.'}</div>
+      ? 'कक्षा तय करती है कि क्या सिखाया जाए; उम्र बस यह कि मुन्नी कैसे बोले। तख़्ती उसी कक्षा के भीतर बच्चे के हिसाब से ढल जाती है।'
+      : 'Class decides what is taught; age only how Munni speaks. Takhti adapts to your child within their class.'}</div>
 
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'आवाज़':'SOUND'}</div>
     <div class="metric">

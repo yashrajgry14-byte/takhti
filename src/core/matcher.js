@@ -144,7 +144,7 @@ const GRADE = { pass:78, gateScore:65, gateConf:0.55, topConf:0.40 };
 function getGradeThresholds(child){
   let b = null;
   if(typeof band === 'function') b = band();
-  else if(typeof bandForAge === 'function') b = bandForAge((child && child.age) || 6);
+  else if(typeof bandForAge === 'function') b = typeof bandFor === 'function' ? bandFor(child || {}) : bandForAge((child && child.age) || 6);
 
   if(!b) return GRADE;
   return {

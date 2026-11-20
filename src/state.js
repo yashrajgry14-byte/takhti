@@ -19,6 +19,7 @@ function newProfile(name){
     id: genChildId(),   // stable identity; see core/diagnose.js's class-code bridge
     name: name || null,
     age: null,       // set on the age screen; null = not asked yet, see content/ages.js
+    cls: null,       // the child's class ('nur'…'c10') — decides what is taught; null = the usual class for their age, see content/ages.js CLASSES
     game: null,
     visits: 0,
     day: 0,          // demo offset on top of the real weekday — only nextDay() ("Tomorrow →") moves it, see core/daily-engine.js's dayIndex()

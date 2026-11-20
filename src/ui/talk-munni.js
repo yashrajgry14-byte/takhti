@@ -145,7 +145,7 @@ async function talkMint(){
     body: JSON.stringify({ consent: true, key: S.talkKey || undefined, circle_key: S.circleKey || undefined,
       help: TALK && TALK.help || undefined,
       profile: twinProfile(),          // how this child learns, ids only: the talk teaches the app's way (core/twin.js)
-      child: { id: S.id, name: S.name, age: S.age || 6, lang: S.lang, levels: S.levels } })
+      child: { id: S.id, name: S.name, age: S.age || 6, cls: S.cls || null, lang: S.lang, levels: S.levels } })
   });
   const d = await res.json().catch(() => ({}));
   if(!res.ok){ if(TALK) TALK.mintErr = d.limit ? 'limit' : d.help === false ? 'no_help' : 'mint_failed'; throw new Error(d.error || 'mint'); }

@@ -41,7 +41,7 @@ function circleSync(force){
   const childId = S.id;
   const srs = (typeof srsStats === 'function') ? srsStats(S) : null;
   const body = {
-    child: { id: S.id, name: S.name, age: S.age || 6, lang: S.lang },
+    child: { id: S.id, name: S.name, age: S.age || 6, cls: S.cls || null, lang: S.lang },
     key: S.circleKey || undefined,
     consent: { sync: true, at: S.circleSyncAt || null },
     link: S.circleCode || undefined,

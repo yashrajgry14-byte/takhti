@@ -129,6 +129,10 @@ function obAgeHTML(){
             ${obCake(n)}
             <span class="ob-num">${n}</span>
           </button>`).join('')}
+      </div>
+      <div class="ob-older">
+        <span class="ob-sub" style="margin:0">${hi ? 'और बड़े?' : 'Older?'}</span>
+        ${[11,12,13,14,15,16].map(n => `<button class="ob-agechip" onclick="obPickAge(${n})">${n}</button>`).join('')}
       </div>`}
   </div>`;
 }
@@ -136,7 +140,7 @@ function obAgeHTML(){
    the first thing we teach, happening before they are even inside. */
 function obCake(n){
   return `<span class="cake">
-    <span class="candles">${[...Array(n)].map((_,i)=>
+    <span class="candles">${[...Array(Math.min(n, 10))].map((_,i)=>
       `<i style="animation-delay:${(i%5)*0.18}s"></i>`).join('')}</span>
     <span class="cake-top"></span><span class="cake-body"></span>
   </span>`;
@@ -149,14 +153,52 @@ function obPickAge(n){
   speak(S.lang === 'hi' ? `${n} साल!` : `${n} years old!`);
 }
 function obFinishAge(){
-  // seed each module at the right rung for this age
+  // next: the class — what is taught follows the class, not the age
+  S.ob = { step:'cls', cls: S.cls || clsForAge(S.age) };
+  if(typeof saveSoon === 'function') saveSoon();
+  render();
+  speak(S.lang === 'hi' ? 'तुम किस कक्षा में हो?' : 'Which class are you in?');
+}
+
+/* ---------------- step 3: which class ----------------
+   The class decides what Takhti teaches (content/ages.js CLASSES), so it
+   matches the child's school book. The usual class for their age is
+   already picked; a child (or the grown-up beside them) changes it with
+   one tap. A parent or the school can change it later too. */
+function obClassHTML(){
+  const hi = S.lang === 'hi';
+  const sel = (S.ob && S.ob.cls) || clsForAge(S.age);
+  const k = classById(sel);
+  return `
+  <div class="ob">
+    <div class="ob-munni bob">${typeof munniSmall === 'function' ? munniSmall() : '🐘'}</div>
+    <div class="ob-bubble">${hi ? `तुम किस कक्षा में हो? <b>${k.hi}</b>?` : `Which class are you in? <b>${k.en}</b>?`}</div>
+    <div class="ob-classes">
+      ${CLASSES.map((c,i) => `
+        <button class="ob-clsbtn ${c.id === sel ? 'sel' : ''}" style="animation-delay:${i*0.04}s" onclick="obPickClass('${c.id}')">${hi ? c.hi : c.en}</button>`).join('')}
+    </div>
+    <div class="ob-sub">${hi ? 'पक्का न हो तो किसी बड़े से पूछो' : 'Not sure? Ask a grown-up'}</div>
+    <button class="btn ob-go" onclick="obFinishClass()">${hi ? 'चलो! →' : 'Let us go! →'}</button>
+  </div>`;
+}
+function obPickClass(id){
+  if(!classById(id)) return;
+  S.ob = { step:'cls', cls:id };
+  if(typeof trumpet === 'function') trumpet(1);
+  render();
+  const k = classById(id);
+  speak(S.lang === 'hi' ? k.hi : k.en);
+}
+function obFinishClass(){
+  S.cls = (S.ob && S.ob.cls) || clsForAge(S.age);
+  // seed each module at the right rung for this class
   if(typeof band === 'function'){
     const b = band();
     for(const m of ['read','write','math'])
       if(b.start && b.start[m]) S.levels[m] = b.start[m];
   }
   S.ob = null;
-  log(0, `Age ${S.age} · levels seeded from the ${band ? band().id : 'default'} band`);
+  log(0, `Age ${S.age} · ${classById(S.cls).en} · levels seeded from the ${band ? band().id : 'default'} band (${band().stage})`);
   // the grown-ups' steps (only in a build with a voice server): the reading terms, then the learning circle
   if(typeof voiceTermsWanted === 'function' && voiceTermsWanted()){ S.ob = { step:'terms' }; if(typeof saveSoon === 'function') saveSoon(); return render(); }
   if(typeof circleOnboardWanted === 'function' && circleOnboardWanted()){ S.ob = { step:'grownup' }; if(typeof saveSoon === 'function') saveSoon(); return render(); }
@@ -169,6 +211,7 @@ function onboardHTML(){
   const st = S.ob || (S.ob = { step: S.avatar && !S._addingChild ? 'age' : 'who' });
   if(st.step === 'terms' && typeof voiceTermsHTML === 'function') return voiceTermsHTML();
   if(st.step === 'grownup' && typeof circleOnboardHTML === 'function') return circleOnboardHTML();
+  if(st.step === 'cls') return obClassHTML();
   return st.step === 'age' ? obAgeHTML() : obWhoHTML();
 }
 

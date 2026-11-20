@@ -27,6 +27,13 @@
 
 /* gate: the AGE_BANDS module a place needs to appear (null = always).
    mod:  the daily-target module a place counts toward (null = none). */
+/* The Sand Patch says what this child's class actually does there. */
+function writeSub(hi){
+  const w = typeof band === 'function' ? band().write : 'trace';
+  if(w === 'trace') return hi ? 'अक्षर बनाओ' : 'Trace letters';
+  if(w === 'paper') return hi ? 'कॉपी में लिखो' : 'Write in your notebook';
+  return hi ? 'लिखो और बनाओ' : 'Trace and write';
+}
 const MAP_PLACES = [
   { id:'read',    screen:'read',    ic:'🌳', x:22, y:26, gate:'read',  mod:'read',
     en:'The Reading Tree',  hi:'पढ़ने का पेड़',  sub:{ en:'Read out loud', hi:'बोलकर पढ़ो' } },
@@ -153,6 +160,7 @@ function jungleMapHTML(){
       const full = p.mod && (S.today[p.mod]||0) >= (S.targets[p.mod]||5);
       const sub = p.id === 'ask' && S.queue.length
         ? (hi ? `${S.queue.length} सवाल सिग्नल का इंतज़ार कर रहे` : `${S.queue.length} waiting for signal`)
+        : p.id === 'write' ? writeSub(hi)
         : (hi ? p.sub.hi : p.sub.en);
       return `
       <button class="jm-place ${spot && spot.id === p.id ? 'here' : ''} ${full ? 'full' : ''}"

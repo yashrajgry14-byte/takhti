@@ -109,6 +109,7 @@ server.listen(0, '127.0.0.1', () => {
       tap($$('.ob-av').find(b => b.getAttribute('onclick').includes("'tiger'")));
       tap($$('.ob-cakebtn')[4]);
       tap($('.ob-go'));
+      tap($('.ob-go'));                            // the class step
       // a build with a voice server has the grown-ups' steps: the reading terms (test/speech.test.js covers
       // them), then the learning circle, skipped here (test/circle.test.js covers it)
       tap($$('button').find(b => (b.getAttribute('onclick') || '') === 'voiceTermsAccept()'));
@@ -224,7 +225,7 @@ server.listen(0, '127.0.0.1', () => {
       B.w.eval(`arrSkip(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance();`);
       const bq = sel => [...B.w.document.querySelectorAll(sel)];
       bq('.ob-av').find(b => b.getAttribute('onclick').includes("'tiger'")).click();
-      bq('.ob-cakebtn')[4].click(); B.w.document.querySelector('.ob-go').click();
+      bq('.ob-cakebtn')[4].click(); B.w.document.querySelector('.ob-go').click(); B.w.document.querySelector('.ob-go').click();
       B.w.eval(`S.talkMunni = true; setOnline(true); go('parent')`);
       check('with no voice server configured, the dashboard shows no Talking Munni switch', !/TALKING MUNNI/.test(B.w.document.querySelector('#screen').textContent), '');
       B.w.eval(`go('ask')`);

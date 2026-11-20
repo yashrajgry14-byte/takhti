@@ -100,7 +100,7 @@ appServer.listen(0, '127.0.0.1', () => voiceServer.listen(0, '127.0.0.1', async 
     await new Promise(r => B.w.addEventListener('load', r));
     const E = c => B.w.eval(c), $$ = s => [...B.w.document.querySelectorAll(s)];
     E(`arrSkip(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance();`);
-    $$('.ob-av')[0].click(); $$('.ob-cakebtn')[4].click(); B.w.document.querySelector('.ob-go').click();
+    $$('.ob-av')[0].click(); $$('.ob-cakebtn')[4].click(); B.w.document.querySelector('.ob-go').click(); B.w.document.querySelector('.ob-go').click();
     check('no circle server: onboarding goes straight on to the game pick', E('S.screen') === 'pick', E('S.screen'));
     E(`go('parent')`);
     check('…and the parent dashboard has no learning circle', !/LEARNING CIRCLE|सीखने का घेरा/.test(B.w.document.getElementById('screen').textContent), '');
@@ -118,6 +118,7 @@ appServer.listen(0, '127.0.0.1', () => voiceServer.listen(0, '127.0.0.1', async 
     $$('.ob-av').find(b => b.getAttribute('onclick').includes("'tiger'")).click();
     $$('.ob-cakebtn')[4].click();
     $('.ob-go').click();
+    $('.ob-go').click();                          // the class step
     // the reading terms come first (test/speech.test.js covers them)
     $$('button').find(b => (b.getAttribute('onclick') || '') === 'voiceTermsAccept()').click();
 
