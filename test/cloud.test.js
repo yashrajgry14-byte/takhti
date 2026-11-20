@@ -35,7 +35,7 @@ function req(port, method, p, body){
     s.end(JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify({ lessons: [] }) }] } }] }));
   }); });
 
-  for(const k of ['GEMINI_API_KEY', 'TAKHTI_SYNC_BUCKET', 'ANTHROPIC_API_KEY']) delete process.env[k];
+  for(const k of ['GEMINI_API_KEY', 'TAKHTI_SYNC_BUCKET', 'ANTHROPIC_API_KEY', 'FIREBASE_PROJECT_ID', 'FIREBASE_WEB_API_KEY']) delete process.env[k];
   const mod = await import(pathToFileURL(path.join(__dirname, '..', 'cloud', 'server.mjs')).href);
   const srv = await listen(mod.handle);
   const port = srv.address().port;
