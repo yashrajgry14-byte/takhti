@@ -1347,8 +1347,8 @@ protégé effect, and the one place a child gets to *say* what they learnt.
   down by the speech adapter (`voice/speech.js`: Gemini, Sarvam as backup), then judged
   by Gemini (`api/teachback.mjs`, `judgeCore()`). **Its models**
   (`judgeModels()`): `TAKHTI_TEACH_MODEL`, else `GEMINI_MODEL`, else
-  `gemini-4-hydrogen`, which gets a short turn (`TAKHTI_TEACH_FIRST_MS`,
-  3.5 s; a 503/429/404 moves on at once), then `TAKHTI_TEACH_FALLBACK`
+  `gemini-4-hydrogen`, which gets the first 6 s (`TAKHTI_TEACH_FIRST_MS`;
+  the 20 Nov live check timed it at 3.0–4.5 s; a 503/429/404 moves on at once), then `TAKHTI_TEACH_FALLBACK`
   (default `gemini-3.5-flash-lite`; `none` switches it off) for the rest of
   the 9 s — the live checks found the full Flash models busy or silent while
   flash-lite judged all four test explanations right in under 2 s.
@@ -2024,8 +2024,15 @@ Honest edges of what's built:
 18. **Gemini 4 Hydrogen is the default since 20 Nov 2026** (the Buildathon
    finals, Jaipur): released 12 Nov as the fast model of the Gemini 4 family
    and the successor of 3.8 Flash, it drafts lessons, hears and judges by
-   default; 3.8 Flash and 3.5 Flash-Lite stay as the fallbacks. The tests
-   run against a stand-in; `tools/live-check.mjs` and
+   default; 3.8 Flash and 3.5 Flash-Lite stay as the fallbacks. The first
+   live check (20 Nov, Cloud Shell, paid key): as a judge Hydrogen answered
+   all four in 3.0–4.5 s and got three right (a full English explanation
+   only "partly": Munni gives a hint, never "wrong"), 3.8 Flash three in
+   2–6 s, flash-lite all four but two of them in 11–14 s — so Hydrogen
+   keeps the first 6 s. Hearing: every model wrote the line's "भाई" for the
+   planted "बाई" (Hydrogen with the line took 34 s), as on 14 Nov — readings
+   stay off Gemini. The live link (Cloud Run) has no reading check anyway.
+   The tests run against a stand-in; `tools/live-check.mjs` and
    `tools/try-syllabus.mjs` with the team's key are what show its real speed
    and quality — run them before the demo.
 15. **Gemini as the speech provider is new (12 Nov 2026).** It is tested

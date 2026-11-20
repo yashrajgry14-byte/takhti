@@ -137,8 +137,9 @@ export function withThinking(shapes, env){
 /* The models to ask, in turn. The judge must answer inside the phone's
    9 s, and the live checks (14 Nov 2026) found the full Flash models busy
    (503) or silent while flash-lite judged all four test explanations right
-   in under 2 s. So the first model gets a short turn (TAKHTI_TEACH_FIRST_MS,
-   3.5 s) and a busy/missing answer moves on at once to the next
+   in under 2 s. On 20 Nov gemini-4-hydrogen judged in 3.0–4.5 s and
+   flash-lite now took up to 14 s on two of four, so the first model gets
+   6 s (TAKHTI_TEACH_FIRST_MS) and a busy/missing answer moves on at once to the next
    (TAKHTI_TEACH_FALLBACK, default flash-lite; 'none' switches it off). */
 export function judgeModels(env){
   env = env || {};
@@ -160,7 +161,7 @@ async function callGemini(payload, ages, env, fetchImpl){
     { generationConfig: { temperature: 0, responseMimeType: 'application/json', responseJsonSchema: SCHEMA } }
   ], env);
   const models = judgeModels(env), total = Number(env.TAKHTI_TEACH_TIMEOUT_MS || 9000);
-  const firstMs = Number(env.TAKHTI_TEACH_FIRST_MS || 3500), start = Date.now();
+  const firstMs = Number(env.TAKHTI_TEACH_FIRST_MS || 6000), start = Date.now();
   let last = { error: 'Gemini did not answer in time', status: 504 };
   for(let mi = 0; mi < models.length; mi++){
     const model = models[mi], left = total - (Date.now() - start);
