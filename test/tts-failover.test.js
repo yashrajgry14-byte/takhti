@@ -6,25 +6,6 @@ const path = require('node:path');
 
 const speech = fs.readFileSync(path.join(__dirname, '../src/core/speech.js'), 'utf8');
 
-function harness(implementations){
-  const events = [];
-  let done = 0;
-  const context = vm.createContext({
-    S:{muted:false,lang:'en'},
-    band:()=>({speechRate:0.9}),
-    log:()=>{},
-    setTimeout,
-    clearTimeout,
-    playLive: (...args)=>implementations.google(...args,events),
-    playBackup: (...args)=>implementations.backup(...args,events),
-    playRecorded: (...args)=>implementations.recorded(...args,events),
-  });
-  vm.runInContext('let SPEECH_REQUEST=0; function stopOnlineSpeech(){SPEECH_REQUEST++}',context);
-  vm.runInContext(speech,context);
-  return {events, async speak(){
-    await vm.runInContext('speak("Hello", "en", () => { globalDone() })',vm.createContext({...context,globalDone:()=>done++}));
-  }, get done(){return done;},context};
-}
 // In real app audio errors arrive asynchronously, after Audio.play() succeeds.
 test('Google audio error triggers backup, not premature completion',async()=>{
   const events=[];let done=0;
