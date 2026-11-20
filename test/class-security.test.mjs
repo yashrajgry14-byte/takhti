@@ -7,8 +7,8 @@ import {generateKeyPairSync,createSign} from 'node:crypto';
 import {authorizeClass,verifyIdToken} from '../api/lib/class-auth.mjs';
 import {syncCore} from '../api/class-sync.mjs';
 
-const teacher={active:true,role:'teacher',classes:['SCH001']};
-const guardian={active:true,role:'guardian',children:[{code:'SCH001',id:'alice',consent:true}]};
+const teacher={active:true,role:'teacher',schoolId:'school-one',classes:['SCH001']};
+const guardian={active:true,role:'guardian',schoolId:'school-one',children:[{code:'SCH001',id:'alice',consent:true}]};
 const classData=()=>({code:'SCH001',children:{},homework:null,lessons:null,roster:null});
 const store=()=>{const items=new Map();return {items,get:async k=>items.get(k)?structuredClone(items.get(k)):null,setJSON:async(k,v)=>items.set(k,structuredClone(v))};};
 
@@ -20,8 +20,9 @@ test('student data rejects every anonymous request',async()=>{
 test('verified teacher is scoped to assigned school class',()=>{
   assert.equal(authorizeClass({code:'SCH001',children:{}},teacher).ok,true);
   assert.equal(authorizeClass({code:'SCH002',children:{}},teacher).status,403);
+  assert.equal(authorizeClass({code:'SCH001',children:{}},{...teacher,schoolId:'bad school id!'}).status,403);
   assert.equal(authorizeClass({code:'SCH001',children:{}},{...teacher,active:false}).status,403);
-  assert.equal(authorizeClass({code:'SCH001',children:{}},{role:'teacher',classes:['SCH001']}).status,403);
+  assert.equal(authorizeClass({code:'SCH001',children:{}},{role:'teacher',schoolId:'school-one',classes:['SCH001']}).status,403);
 });
 test('a guardian cannot access another child or class',()=>{
   assert.equal(authorizeClass({code:'SCH001',children:{alice:{}}},guardian).ok,true);
