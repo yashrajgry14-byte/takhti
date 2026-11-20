@@ -49,7 +49,7 @@ data (skill, level, game) by deterministic code — see **The Picture Hut**.
 ## Running it
 
 ```bash
-npm run dev        # serves on http://localhost:5173
+npm run dev        # the app + its /api endpoints on http://localhost:5173 (cloud/server.mjs --local; key from voice/.env)
 npm test           # all 47 test suites (see Testing)
 npm run cloud      # the Cloud Run server locally (cloud/server.mjs), on :8080
 npm run voice:sim -- --auto --mistakes   # a whole Munni phone call, in the terminal
@@ -173,7 +173,7 @@ src/
     teach-munni.js          "Teach Munni" (VIEWS.teach): the child teaches a lesson's aims back; the end-of-lesson button, "Munni forgot again", the parent's "How … explains", the teacher's results per aim
     handlers.js             event handlers
   app.js                    boot: load(), S.screen='arrival', render()
-api/ask.js                  serverless proxy; keeps the API key off the client
+api/ask.js                  the question queue's proxy (Gemini, GEMINI_API_KEY); keeps the key off the client
 api/class-sync.mjs          Tier 2 class sync (Netlify Blobs); syncCore() is the merge
 api/syllabus.mjs            Tier 2: a chapter → Gemini drafts lessons in Takhti's format (draftCore(); also POST /syllabus on the voice server)
 api/teachback.mjs           Tier 2: Teach Munni's judge — which aims an explanation covered, each credit quoted (judgeCore(); POST /teach/judge on the voice server takes audio)

@@ -242,7 +242,7 @@ not kept. No streaks, no reminders to children (India's DPDP Act s.9).
 ## Run it
 
 ```bash
-npm run dev                                   # the app, on http://localhost:5173
+npm run dev                                   # the app + /api, on http://localhost:5173 (key from voice/.env)
 npm test                                      # 44 test suites
 npm run voice:sim -- --auto --mistakes        # a whole Munni phone call, in the terminal
 ```
