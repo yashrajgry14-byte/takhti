@@ -9,7 +9,8 @@ processes, and production provisioning have been completed.**
 - Cloud Run verifies an **RS256-signed Firebase Authentication ID token**
   against Google's public keys, audience and issuer for `FIREBASE_PROJECT_ID`.
   A verified email address is required for school access.
-- Teachers may open `https://YOUR_APP_URL/?role=teacher` independently of the parent PIN. The teacher screen remains inaccessible until a server-approved teacher login.\n\n- The app signs teachers and guardians in with Firebase Authentication
+- Teachers may open `https://YOUR_APP_URL/?role=teacher` independently of the parent PIN. The teacher screen remains inaccessible until a server-approved teacher login.
+- The app signs teachers and guardians in with Firebase Authentication
   email/password through Identity Toolkit. The token remains in page memory;
   refresh or expiry requires signing in again.
 - A successful login is not authorization. Cloud Run reads a **private,
@@ -83,6 +84,87 @@ Verify negative cases using two different schools and two actual Firebase
 accounts, not only mocked signed tokens. Confirm that unsigned requests,
 other-school IDs, other-child IDs, unverified emails, deactivated ACLs, and
 revoked consent are all denied.
+
+## Safe staging validation using your two synthetic Firebase accounts
+
+These instructions are for testing, **not approval to use real children's data**.
+Takhti Cloud Run uses `takhti-514811`, while the existing Firebase test users
+belong to the separate Authentication project `gen-lang-client-0604938251`.
+Do not switch the Firebase project ID back to `takhti-514811` for these accounts.
+
+1. From Google Cloud Shell, fetch the already-reviewed security branch and
+   configure a separate Cloud Run service and **test-only** bucket:
+
+   ```bash
+   cd ~/takhti
+   git fetch origin
+   git switch -C takhti-security-staging origin/security/teacher-guardian-verified-access
+   npm ci
+   npm test
+   npm audit --audit-level=high
+
+   export PROJECT=takhti-514811
+   export FIREBASE_PROJECT_ID=gen-lang-client-0604938251
+   export SERVICE=takhti-auth-staging
+   export BUCKET=takhti-514811-auth-test
+   gcloud config set project "$PROJECT"
+
+   # Only if not already exported in this Cloud Shell session:
+   test -n "${FIREBASE_WEB_API_KEY:-}" || {
+     read -rsp 'Firebase Web API key (Gemini Project 1): ' FIREBASE_WEB_API_KEY; echo
+     export FIREBASE_WEB_API_KEY
+   }
+   ```
+
+2. The test-only permission records should already exist in
+   `gs://takhti-514811-auth-test/classes/`. If they do not, retrieve each
+   account's UID from Firebase Authentication and, after confirming both are
+   your own synthetic test accounts, provision them using
+   `tools/provision-class-access.mjs`. The teacher must have
+   `school=SCHOOL001`, `class=ABC123`; the guardian must have the same
+   school/class with `child=TESTCHILD01` and a clearly marked
+   `TEST-ONLY-SYNTHETIC-NO-REAL-CONSENT` reference. That reference is **not**
+   evidence of real parental consent.
+
+3. Deploy only the isolated **staging** service. Do not deploy `takhti`
+   (production) or set `BUCKET` to the production student-data bucket:
+
+   ```bash
+   bash cloud/deploy.sh
+   STAGING_URL="$(gcloud run services describe takhti-auth-staging --project takhti-514811 --region asia-south1 --format='value(status.url)')"
+   printf 'Staging URL: %s\n' "$STAGING_URL"
+   ```
+
+4. Sign in with the two *owned* Firebase test accounts. On an unverified
+   account, Takhti can request an official Firebase email-verification link.
+   The account owner opens the email link; then sign in again to obtain a
+   fresh ID token. Do **not** mark `emailVerified` administratively without
+   establishing email ownership. To run the automated live test, enter
+   credentials **only in Cloud Shell**, not in a chat or GitHub:
+
+   ```bash
+   read -rp 'Test teacher email: ' TEACHER_EMAIL
+   read -rsp 'Test teacher password: ' TEACHER_PASSWORD; echo
+   read -rp 'Test guardian email: ' GUARDIAN_EMAIL
+   read -rsp 'Test guardian password: ' GUARDIAN_PASSWORD; echo
+   export TEACHER_EMAIL TEACHER_PASSWORD GUARDIAN_EMAIL GUARDIAN_PASSWORD
+
+   node tools/smoke-school-auth.mjs --url "$STAGING_URL"
+   unset TEACHER_PASSWORD GUARDIAN_PASSWORD
+   ```
+
+   The script refuses non-staging URLs; verifies both signed accounts,
+   denies anonymous, tampered, cross-class, cross-child and role-escalation
+   requests, and uses **only synthetic** data to test guardian sync, teacher
+   read and homework sync. If email verification is needed, it requests the
+   Firebase links and stops without creating a student record. Open the links
+   and rerun with new credentials.
+
+5. Before any rollout for actual schools, independently review privacy,
+   guardian onboarding and consent, authorization revocation, class-storage
+   concurrency, deletion and retention, and the remaining legacy share paths.
+   Successful CI and synthetic staging tests are **necessary but not
+   sufficient** proof that processing real students' data is safe.
 
 ## Remaining prerequisites before a real-school rollout
 
