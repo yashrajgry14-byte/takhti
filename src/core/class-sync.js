@@ -47,17 +47,19 @@ async function syncClass(code){
   SYNC_STATE[code] = { busy:true };
   flushClassMirror();
   syncProfileOut();
+  const teacher = typeof CLASS_AUTH !== 'undefined' && CLASS_AUTH.role === 'teacher' && CLASS_AUTH.classes.includes(code);
   const children = {};
-  for(const p of S.profiles)
+  if(!teacher) for(const p of S.profiles)
     if(p.classCode === code && p.syncOn && p.id)
       children[p.id] = { childName: p.name, skillHistory: p.skillHistory || {}, ...teachExplainedOf(p), ...(typeof planPathsOf === 'function' ? planPathsOf(p) : {}), at: Date.now() };
-  const teacherKey = S.syncKeys[code]; // legacy local marker; server ignores it as authentication
-  const homework = teacherKey ? (readClassShared(code)._homework || null) : null;
-  const lessons = teacherKey ? (readClassShared(code)._lessons || null) : null;   // the school's own lessons (core/syllabus.js)
-  const roster = teacherKey ? (readClassShared(code)._roster || null) : null;     // which class each child is in (schoolClassOf())
+  // Server permission checks derive teacher/guardian roles from verified identity
+  // and admin-provisioned ACL, NEVER the old local teacher key.
+  const homework = teacher ? (readClassShared(code)._homework || null) : null;
+  const lessons = teacher ? (readClassShared(code)._lessons || null) : null;
+  const roster = teacher ? (readClassShared(code)._roster || null) : null;
   try{
     const res = await fetch(SYNC_URL, { method:'POST', headers:{ 'content-type':'application/json', 'authorization':'Bearer '+identity },
-                                        body: JSON.stringify({ code, children, homework, lessons, roster, teacherKey }) });
+                                        body: JSON.stringify({ code, children, homework, lessons, roster }) });
     if(!res.ok) throw new Error(res.status === 503 ? 'noserver' : res.status === 403 ? 'claimed' : 'HTTP ' + res.status);
     const cls = await res.json();
     classMirrorUpdate(code, all => {
