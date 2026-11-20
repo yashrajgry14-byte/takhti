@@ -67,3 +67,28 @@ To ship a new version: `git pull && bash cloud/deploy.sh`.
 Cloud Run with no traffic costs nothing (`--min-instances 0`); a demo stays in
 the free tier. Gemini calls are billed to the key's own project. The bucket
 holds one small JSON file per class.
+
+## Online speech (Google first)
+
+Takhti now requests speech from `POST /api/tts` for both Hindi and English.
+Cloud Run authenticates to Cloud Text-to-Speech using its service account
+(no browser key); the deployment script enables `texttospeech.googleapis.com`.
+The selected voices are `hi-IN-Chirp3-HD-Kore` and
+`en-IN-Chirp3-HD-Kore`. Existing Sarvam/ElevenLabs backup logic remains in
+the separate voice service (`POST /reading/tts`) and is tried if Google
+fails **when `window.TAKHTI_VOICE` points at that running service**.
+Otherwise the app tries prerecorded Google narration. Browser TTS (including
+Microsoft Heera) is not used.
+
+Test the server from Cloud Shell after deployment:
+
+```bash
+curl -sS -X POST "$URL/api/tts" -H 'Content-Type: application/json' \
+  -d '{"text":"नमस्ते!","lang":"hi"}' |
+  python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("provider"), d.get("voice"), len(d.get("audio","")), d.get("error",""))'
+```
+
+The endpoint is public like the app; it applies a simple per-instance
+IP-based throttle and a 240-character request limit. For production scale,
+use centralized rate limiting, budget alerts and abuse controls. Test
+both Indian locales under your Cloud project and confirm pricing and quotas.

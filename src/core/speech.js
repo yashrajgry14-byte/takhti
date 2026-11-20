@@ -4,91 +4,28 @@ const attr = s => String(s==null?'':s)
   .replace(/</g,'&lt;').replace(/>/g,'&gt;');
 function sayEl(el){ speak(el.dataset.say); }
 
-let VOICES = [];
-function loadVoices(){
-  if(!('speechSynthesis' in window)) return;
-  VOICES = speechSynthesis.getVoices() || [];
-}
-if('speechSynthesis' in window){
-  loadVoices();
-  speechSynthesis.addEventListener('voiceschanged', ()=>{
-    loadVoices();
-    if(VOICES.length && !S._voiceLogged){
-      S._voiceLogged = true;
-      const hi = VOICES.some(v=>v.lang.toLowerCase().startsWith('hi'));
-      log(0, `${VOICES.length} voices available · Hindi voice ${hi?'found':'NOT installed'}`);
-    }
-  });
-}
-function pickVoice(lang){
-  if(!VOICES.length) loadVoices();
-  const want = lang==='hi' ? 'hi' : 'en';
-  const low = v => v.lang.toLowerCase();
-  return VOICES.find(v=>low(v).startsWith(want+'-in'))
-      || VOICES.find(v=>low(v).startsWith(want))
-      || VOICES.find(v=>low(v).startsWith('en'))
-      || VOICES[0] || null;
-}
-/* The one entry point everything calls: try the recorded voice first (see
-   core/voice.js), fall back to the device's own synthesis on anything —
-   no manifest entry, autoplay blocked before a tap, a thrown promise. */
+/* Every spoken line uses online Google Cloud TTS. If Google fails, keep
+   Sarvam/ElevenLabs and the existing Google-recorded pack as fallbacks.
+   There is intentionally NO browser speechSynthesis/Heera fallback. */
 async function speak(text, lang, onDone){
-  // Muted still has to finish the call the way real speech eventually
-  // would — onDone is how every narrated scene advances (lesson beats,
-  // the reading screen, opening sequences...), and none of them expect
-  // to wait forever for a sound that will never come.
   if(S.muted){ if(onDone) onDone(); return; }
-  const l = lang || S.lang;
-  let played = false;
-  try{ played = await playRecorded(text, l, onDone); }catch(e){ played = false; }
-  // the pack lacks this line: the live backup (Sarvam), then the phone's own voice
-  if(!played && typeof voicePackLoaded === 'function' && voicePackLoaded(l)){ try{ played = await playLive(text, l, onDone); }catch(e){ played = false; } }
-  if(!played) speakDevice(text, l, onDone);
-}
-function speakDevice(text, lang, onDone){
-  text = (text==null? '' : String(text)).trim();
+  text = String(text == null ? '' : text).trim();
   if(!text){ if(onDone) onDone(); return; }
-  if(!('speechSynthesis' in window)){ log(null,'This browser has no speech synthesis'); if(onDone) onDone(); return; }
   const l = lang || S.lang;
-  try{ speechSynthesis.cancel(); }catch(e){}
-  // Chrome drops an utterance queued in the same tick as cancel() — give it a beat.
-  clearTimeout(S._speakTimer);
-  S._speakTimer = setTimeout(()=>{
-    const u = new SpeechSynthesisUtterance(text);
-    const v = pickVoice(l);
-    if(v){ u.voice = v; u.lang = v.lang; }
-    else { u.lang = l==='hi' ? 'hi-IN' : 'en-IN'; }
-    u.rate = band().speechRate; u.pitch = 1.05;
-
-    // some Android voices never fire onend, so onDone has a backstop timer;
-    // both paths funnel through finish() so it only ever runs once.
-    let done = false;
-    const finish = () => { if(done) return; done = true; clearTimeout(safety); if(onDone) onDone(); };
-    const words = text.split(/\s+/).length;
-    const safety = setTimeout(finish, 900 + words*420 + 2500);
-
-    u.onend = finish;
-    u.onerror = e => {
-      const err = e.error || 'unknown';
-      // cancel() fires 'interrupted'/'canceled' on the utterance it just
-      // stopped. That is the previous line being replaced, not a failure —
-      // but whatever is waiting on onDone still needs to hear about it.
-      if(err === 'interrupted' || err === 'canceled'){ finish(); return; }
-      if(err === 'not-allowed'){
-        log(null, 'Audio blocked until the child taps something — browser autoplay rule');
-        finish();
-        return;
-      }
-      log(null, 'TTS error: ' + err);
-      finish();
-    };
-    speechSynthesis.speak(u);
-    if(l==='hi' && v && !v.lang.toLowerCase().startsWith('hi'))
-      log(null, 'No Hindi voice on this device — reading with ' + v.lang);
-    else
-      log(0, `TTS · ${v? v.name : (l==='hi'?'hi-IN':'en-IN')}`);
-  }, 70);
+  stopOnlineSpeech();
+  const requestId = SPEECH_REQUEST;
+  const pace = (typeof band === 'function' ? band().speechRate : 0.95);
+  let played = false;
+  try{ played = await playLive(text,l,onDone,pace,requestId); }catch(e){}
+  if(requestId !== SPEECH_REQUEST) return;
+  if(!played){ try{played = await playBackup(text,l,onDone,pace,requestId);}catch(e){} }
+  if(requestId !== SPEECH_REQUEST) return;
+  if(!played){ try{played = await playRecorded(text,l,onDone);}catch(e){} }
+  if(!played){ log(null,'Speech unavailable from Google and backup providers'); if(onDone) onDone(); }
 }
+/* Never invoke browser-installed voices. For legacy callers, route through
+   the same online voice pipeline rather than using device speech. */
+function speakDevice(text,lang,onDone){return speak(text,lang,onDone);}
 /* ==================================================================
    LISTENING — WebSpeech, on-device whenever the phone can.
 

@@ -36,6 +36,7 @@ const { draftCore } = await import('../api/syllabus.mjs');
 const { judgeCore } = await import('../api/teachback.mjs');
 const { syncCore } = await import('../api/class-sync.mjs');
 const { askCore } = await import('../api/ask.js');
+const { ttsCore } = await import('./tts.mjs');
 
 /* ---------- the app's files: a whitelist, never the whole repo ---------- */
 const FILES = new Set(['/index.html', '/sw.js', '/manifest.webmanifest']);
@@ -139,6 +140,7 @@ export async function handle(req, res){
         catch(e){ return json(res, 503, { error: 'sync storage unavailable' }); }
       }
       if(p === '/api/ask'){ const out = await askCore(body, process.env, clientIp(req)); return json(res, out.status, out.json); }
+      if(p === '/api/tts'){ const out = await ttsCore(body, { token: gcsToken, ip: clientIp(req) }); return json(res, out.status, out.json); }
       return json(res, 404, { error: 'not found' });
     }
     if((req.method === 'GET' || req.method === 'HEAD') && await serveFile(req, res, p)) return;
