@@ -257,13 +257,16 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     const ch7raw = JSON.parse(fs.readFileSync(path.join(root, 'library/ncert-sarangi-1/ch7.raw.json'), 'utf8'));
     const c1 = ph.cls('c1'), sk1 = ph.skills('c1', 'hindi');
     const RHYME = ch7raw.drafts.find(d => d.repairRaw && /Rhyming/.test(d.repairRaw.title.en)).repairRaw;
-    const LETTERS = ch7raw.drafts.find(d => d.repairRaw && /Letters/.test(d.repairRaw.title.en)).repairRaw;
+    // the repaired letters draft as Gemini wrote it: its first question is put back to the तोता one
+    // (ch7.raw.json now holds the hand-edited तारा question — see the report's "Edited by hand")
+    const LETTERS = JSON.parse(JSON.stringify(ch7raw.drafts.find(d => d.repairRaw && /Letters/.test(d.repairRaw.title.en)).repairRaw));
+    LETTERS.beats.find(b => b.t === 'ask').q = { en: 'Does तोता have the letter त?', hi: 'क्या तोता में त वर्ण है?' };
     const lettersQs = LETTERS.beats.filter(b => b.t === 'ask').map(b => b.q.hi), lettersLine = LETTERS.beats.find(b => b.t === 'word' && /तोता/.test(b.say && b.say.hi));
     const backLib = ph.clean(LETTERS, c1.band, sk1, true, 2, true, true, null, true), backUp = ph.clean(LETTERS, c1.band, sk1, true, 0, false, false, null, false);
     const rhymeLib = ph.clean(RHYME, c1.band, sk1, true, 2, true, true, null, true);
     // the same lesson with its तोता question moved to a new example: only "क्या फल घ से शुरू होता है?" is left beside it
     const LETTERS2 = JSON.parse(JSON.stringify(LETTERS));
-    const q0 = LETTERS2.beats.find(b => b.t === 'ask' && /तोता/.test(b.q.hi));
+    const q0 = LETTERS2.beats.find(b => b.t === 'ask');
     q0.q = { en: 'Does तारा start with त?', hi: 'क्या तारा त से शुरू होता है?' };
     const fal = ph.clean(LETTERS2, c1.band, sk1, true, 2, true, true, null, true);
     check('the library rejects a yes/no question that says a teaching line back ("तोता … त वर्ण से शुरू होता है" → "क्या तोता में त वर्ण है?"), naming the line, with why',

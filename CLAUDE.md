@@ -89,7 +89,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v89` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v90` (recorded narration lives in a
 separate `takhti-audio-v2`, bumped only when a line is rendered again in a new
 voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
@@ -604,8 +604,8 @@ network and no waiting in the week.
   repair. All three rules are the builder's only — a teacher's own upload,
   and a lesson already on a phone, keep the warning (`sylLessonWarnings()`).
   On 20 Nov the said-back rule caught one kept lesson in the whole library,
-  Sarangi 1 ch7's letters lesson; ch7 stays at 2 lessons until a
-  re-check is approved (it would keep 1).
+  Sarangi 1 ch7's letters lesson, whose question was then changed by hand
+  (ch7 keeps both lessons).
 - **A reader never copies its textbook** (`tools/book-words.mjs`, builder
   only): once per chapter Gemini copies out the chapter's printed lines
   (flash-lite, `TAKHTI_BOOKWORDS_MODEL`); only a hash of every five-word run
@@ -706,8 +706,8 @@ network and no waiting in the week.
   with the PDF) can replace them.
 - **Hindi, Class 1** (rebuilt 20 Nov): NCERT *Sarangi* 1, chapter 7 "वाह,
   मेरे घोड़े!" — 2 lessons, each with two questions: rhyming words (ताल / चाल:
-  yes; दाल / घर: no; `read1`) and the letters त, घ, ड़ (तोता has त: yes; फल
-  starts with घ: no; `read2`). `gemini-4-hydrogen` and `gemini-3.8-flash`
+  yes; दाल / घर: no; `read1`) and the letters त, घ, ड़ (तारा starts with त:
+  yes; फल starts with घ: no; `read2`). `gemini-4-hydrogen` and `gemini-3.8-flash`
   both hung, so flash-lite drafted; the repair round fixed two of three, and
   "first and last sound" wasn't used (its answers "दा", "ल" weren't in what
   the child read). Gemini tagged both kept lessons `h1-read` (reading a
@@ -716,10 +716,15 @@ network and no waiting in the week.
   पता चलूँ" → "कैसे पता करूँ", then `--recheck`. The book-words index
   (`ch7.book.json`) was made this time. The earlier build's one lesson
   (rhyming, `h1-read`) is replaced — its id is gone, so a class that
-  approved it approves again. Weak spot for the teacher's reading: the
-  letters lesson's first question asks what its teaching line just said
-  (the library's said-back rule now rejects it on a re-check — not run on
-  the chapter yet), and nothing asks about ड़.
+  approved it approves again. The letters lesson's first question was
+  "क्या तोता में त वर्ण है?" — its teaching line said back, which the
+  library's said-back rule rejects; it was changed by hand to "क्या तारा त
+  से शुरू होता है?" (the English names तारा in Devanagari, as "Does फल start
+  with घ?" does: "Does tara start with त?" reads to the checker as a
+  first-sound question whose answer must be "t"), and the chapter keeps both
+  lessons under the rule. Every hand edit is listed in the report's **Edited
+  by hand** (`handEdits` in `ch7.raw.json`). Still for the teacher's
+  reading: nothing asks about ड़.
 
 ## This child's path — `core/planner.js`
 

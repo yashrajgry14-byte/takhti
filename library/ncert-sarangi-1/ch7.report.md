@@ -8,13 +8,14 @@ Draft took 154 s · repair took 8 s (gemini-3.5-flash-lite)
 Models for the draft: gemini-4-hydrogen hung (60 s) → gemini-3.8-flash hung (60 s) → gemini-3.5-flash-lite ok (34 s, 7720 in / 3000 out tokens)  
 Models for the repair: gemini-3.5-flash-lite ok (8 s, 7898 in / 2951 out tokens)  
 Tokens used: gemini-3.5-flash-lite 15618 in / 5951 out  
-_Checked again on 2026-11-20T09:40:56.720Z by today's checker (the same drafts, no new call to Gemini)._  
+_Checked again on 2026-11-20T09:59:18.676Z by today's checker (the same drafts, no new call to Gemini)._  
 
 ## Edited by hand
 
 - Skills: Gemini tagged both kept lessons `h1-read` (reading a sentence); retagged in the drafts (`skill` and `skillId`, draft and repair) — rhyming words → `read1`, letters त, घ, ड़ → `read2` — then `--recheck` (20 Nov).
 - Appu's lines: "मैं भूल गई" → "मैं भूल गया" (Teach Appu: Appu is a boy).
 - "कैसे पता चलूँ" → "कैसे पता करूँ" (on the checker's SYL_HI_WATCH list).
+- Letters त, घ, ड़: the first question "क्या तोता में त वर्ण है?" said its teaching line back (the library's said-back rule) — changed to "क्या तारा त से शुरू होता है?" / "Does तारा start with त?" (answer हाँ / Yes), in the draft and the repair, then `--recheck` (20 Nov).
 
 ## What the checker caught first time
 - 2× the lesson needs its aims — N to N things the child will be able to do (aim N: hint N (en)
@@ -128,7 +129,7 @@ skill: read2 · source: Page 45
 **The lesson:**
 1. intro — "Let us find the letters त, घ, and ड़ in words.  ·  आओ शब्दों में त, घ, और ड़ वर्ण ढूँढें।"
 2. word — "Look at तोता. It starts with the letter त.  ·  तोता को देखो। यह त वर्ण से शुरू होता है।"
-3. **Q:** Does तोता have the letter त?  ·  क्या तोता में त वर्ण है?  
+3. **Q:** Does तारा start with त?  ·  क्या तारा त से शुरू होता है?  
   options: **Yes ✓** / No  ·  हाँ / नहीं  
   _teacher note:_ Children might miss the letter if they do not look at each part.  ·  बच्चे ध्यान न दें तो वर्ण छूट सकता है।
 4. **Q:** Does घर start with घ?  ·  क्या घर घ से शुरू होता है?  
@@ -148,10 +149,10 @@ skill: read2 · source: Page 45
 **The lesson:**
 1. intro — "Let us find the letters त, घ, and ड़ in words.  ·  आओ शब्दों में त, घ, और ड़ वर्ण ढूँढें।"
 2. word — "Look at तोता. It starts with the letter त.  ·  तोता को देखो। यह त वर्ण से शुरू होता है।"
-3. **Q:** Does तोता have the letter त?  ·  क्या तोता में त वर्ण है?  
-  options: No / **Yes ✓**  ·  नहीं / हाँ  
+3. **Q:** Does तारा start with त?  ·  क्या तारा त से शुरू होता है?  
+  options: **Yes ✓** / No  ·  हाँ / नहीं  
   _teacher note:_ Children might miss the letter if they do not look at each part.  ·  बच्चे ध्यान न दें तो वर्ण छूट सकता है।
 4. **Q:** Does फल start with घ?  ·  क्या फल घ से शुरू होता है?  
-  options: **No ✓** / Yes  ·  नहीं / हाँ  
+  options: Yes / **No ✓**  ·  हाँ / नहीं  
   _teacher note:_ Children may confuse different letters for घ.  ·  बच्चे अलग वर्ण को घ समझ सकते हैं।
 5. win — "Spot the letters त, घ, and ड़ in words easily.  ·  शब्दों में त, घ, और ड़ आसानी से पहचानो।"
