@@ -23,7 +23,7 @@ const {createHash}=require('node:crypto');
   });
   test('guardian consent and server-owned child binding permit only their child',async()=>{
     const store=memory();
-    const g={role:'guardian',active:true,children:[{code:'ABC123',id:'meera',consent:true}]};
+    const g={role:'guardian',active:true,schoolId:'school-one',children:[{code:'ABC123',id:'meera',consent:true}]};
     const data={code:'ABC123',children:{meera:{childName:'Meera',skillHistory:{tables:{n:10,right:3}},at:1}}};
     const ctx=authorizeClass(data,g);assert.equal(ctx.ok,true);
     const ok=await syncCore(store,data,ctx);assert.equal(ok.status,200);
@@ -35,7 +35,7 @@ const {createHash}=require('node:crypto');
     const store=memory();
     const g=authorizeClass({code:'ABC123',children:{meera:{}}},{role:'guardian',active:true,children:[{code:'ABC123',id:'meera',consent:true}]});
     await syncCore(store,{code:'ABC123',children:{meera:{childName:'Meera',at:1}}},g);
-    const t=authorizeClass({code:'ABC123',children:{}},{role:'teacher',active:true,classes:['ABC123']});
+    const t=authorizeClass({code:'ABC123',children:{}},{role:'teacher',active:true,schoolId:'school-one',classes:['ABC123']});
     const homework={skills:['tables'],note:'Practice tables',assignedAt:5};
     const result=await syncCore(store,{code:'ABC123',homework,children:{}},t);
     assert.equal(result.status,200);assert.equal(result.json.homework.note,'Practice tables');
