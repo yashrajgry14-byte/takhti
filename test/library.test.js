@@ -259,6 +259,37 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     check('…the builder sets it on every draft, repair and re-check, live and batch; the prompt and the repair round say why',
       /const LIB_MIX_ANSWERS = true/.test(libSrc) && (libSrc.match(/mixRight: LIB_MIX_ANSWERS/g) || []).length === 3 && (libSrc.match(/minAllOf\(book\), LIB_MIX_ANSWERS[,)]/g) || []).length === 2
       && /MIX THE RIGHT ANSWERS/.test(promptSrc) && /every question's right answer is …/.test(promptSrc), '');
+    // a yes/no question that is a teaching line said back (Sarangi 1 ch7's rebuild, 20 Nov 2026):
+    // "तोता … त वर्ण से शुरू होता है" then "क्या तोता में त वर्ण है?" — the child answers from what they heard
+    const ch7raw = JSON.parse(fs.readFileSync(path.join(root, 'library/ncert-sarangi-1/ch7.raw.json'), 'utf8'));
+    const c1 = ph.cls('c1'), sk1 = ph.skills('c1', 'hindi');
+    const RHYME = ch7raw.drafts.find(d => d.repairRaw && /Rhyming/.test(d.repairRaw.title.en)).repairRaw;
+    // the repaired letters draft as Gemini wrote it: its first question is put back to the तोता one
+    // (ch7.raw.json now holds the hand-edited तारा question — see the report's "Edited by hand")
+    const LETTERS = JSON.parse(JSON.stringify(ch7raw.drafts.find(d => d.repairRaw && /Letters/.test(d.repairRaw.title.en)).repairRaw));
+    LETTERS.beats.find(b => b.t === 'ask').q = { en: 'Does तोता have the letter त?', hi: 'क्या तोता में त वर्ण है?' };
+    const lettersQs = LETTERS.beats.filter(b => b.t === 'ask').map(b => b.q.hi), lettersLine = LETTERS.beats.find(b => b.t === 'word' && /तोता/.test(b.say && b.say.hi));
+    const backLib = ph.clean(LETTERS, c1.band, sk1, true, 2, true, true, null, true), backUp = ph.clean(LETTERS, c1.band, sk1, true, 0, false, false, null, false);
+    const rhymeLib = ph.clean(RHYME, c1.band, sk1, true, 2, true, true, null, true);
+    // the same lesson with its तोता question moved to a new example: only "क्या फल घ से शुरू होता है?" is left beside it
+    const LETTERS2 = JSON.parse(JSON.stringify(LETTERS));
+    const q0 = LETTERS2.beats.find(b => b.t === 'ask');
+    q0.q = { en: 'Does तारा start with त?', hi: 'क्या तारा त से शुरू होता है?' };
+    const fal = ph.clean(LETTERS2, c1.band, sk1, true, 2, true, true, null, true);
+    check('the library rejects a yes/no question that says a teaching line back ("तोता … त वर्ण से शुरू होता है" → "क्या तोता में त वर्ण है?"), naming the line, with why',
+      /तोता को देखो। यह त वर्ण से शुरू होता है।/.test(lettersLine && lettersLine.say.hi) && lettersQs.includes('क्या तोता में त वर्ण है?')
+      && !backLib.ok && backLib.errors.some(e => /yes\/no question "क्या तोता में त वर्ण है\?" only says back beat \d+'s words/.test(e)), JSON.stringify([lettersQs, backLib.errors]));
+    check('…"ताल … ल पर खत्म" then "क्या ताल और चाल मिलते हैं?" passes — putting two lines together is the child\'s own step',
+      RHYME.beats.some(b => /ताल शब्द सुनो। यह 'ल' पर खत्म होता है।/.test(b.say && b.say.hi)) && RHYME.beats.some(b => b.t === 'ask' && b.q.hi === 'क्या ताल और चाल मिलते हैं?')
+      && rhymeLib.ok, JSON.stringify(rhymeLib.errors));
+    check('…"क्या फल घ से शुरू होता है?" passes — फल is a new example the lines didn\'t name',
+      LETTERS2.beats.some(b => b.t === 'ask' && b.q.hi === 'क्या फल घ से शुरू होता है?') && fal.ok, JSON.stringify(fal.errors));
+    const backWarn = backUp.ok ? ph.warnings(backUp.lesson) : [];
+    check('…a teacher\'s own upload keeps the lesson, with the warning (EN/HI)',
+      backUp.ok && backWarn.some(w => /"क्या तोता में त वर्ण है\?" asks back what the line just before it said/.test(w.en) && /ठीक पहले की पंक्ति/.test(w.hi)), JSON.stringify([backUp.errors, backWarn]));
+    check('…the builder sets it on every draft, repair and re-check, live and batch; the prompt and the repair round say why',
+      /const LIB_SAID_BACK = true/.test(libSrc) && (libSrc.match(/saidBack: LIB_SAID_BACK/g) || []).length === 3 && (libSrc.match(/langOf\(book\), LIB_SAID_BACK\)/g) || []).length === 2
+      && /A YES\/NO QUESTION MUST NOT SAY A TEACHING LINE BACK/.test(promptSrc) && /rulesText\(rules\)[\s\S]*rulesText\(rules\)/.test(promptSrc), '');
     // a reader's lesson never copies its textbook (tools/book-words.mjs): the first live Mridang
     // build kept two lessons whose passages were page 7's own sentences, word for word
     const bw = await import(pathToFileURL(path.join(root, 'tools/book-words.mjs')).href);

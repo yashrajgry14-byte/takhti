@@ -69,6 +69,11 @@ const minAllOf = book => !!book.subject && book.subject !== 'maths';
    such lessons). Builder-only, like the two above: a teacher's own upload, and
    a lesson already on a phone, keep the warning instead. */
 const LIB_MIX_ANSWERS = true;
+/* …and no yes/no question is a teaching line said back ("तोता starts with त"
+   → "does तोता have त?"): every content word of the question in one line
+   Munni just said, so the child answers from what they heard (Sarangi 1 ch7's
+   rebuild kept one). Builder-only too — a teacher's upload gets the warning. */
+const LIB_SAID_BACK = true;
 /* an English book's lessons are English lessons: drafted as English (the
    prompt's englishText), checked with lang 'en' (inside the id), read in
    English whatever the app's language (ui/lesson-player.js) */
@@ -158,13 +163,13 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
       if(meta.id !== opts.import.ch) continue;
       const r = readJSON(opts.import.file);
       if(r.cls && r.cls !== book.cls) throw new Error(`that run was for ${r.cls}, the book is ${book.cls}`);
-      const ch = saveChapter(dir, meta, recheck({ ...r, cls: book.cls, band: r.band }, { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, subject: book.subject, lang: langOf(book), vet: vetOf(readIndex(dir, meta.id)) }));
+      const ch = saveChapter(dir, meta, recheck({ ...r, cls: book.cls, band: r.band }, { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, saidBack: LIB_SAID_BACK, subject: book.subject, lang: langOf(book), vet: vetOf(readIndex(dir, meta.id)) }));
       say(`${meta.id}: imported — ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
       out.push(ch); continue;
     }
     if(opts.recheck){
       if(!fs.existsSync(raw)){ say(`${meta.id}: not built yet — skipped`); continue; }
-      const ch = saveChapter(dir, meta, recheck(readJSON(raw), { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, subject: book.subject, lang: langOf(book), vet: vetOf(readIndex(dir, meta.id)) }));
+      const ch = saveChapter(dir, meta, recheck(readJSON(raw), { minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, saidBack: LIB_SAID_BACK, subject: book.subject, lang: langOf(book), vet: vetOf(readIndex(dir, meta.id)) }));
       say(`${meta.id}: checked again — ${ch.lessons.length} lesson(s) kept, ${ch.notUsed.length} not used`);
       out.push(ch); continue;
     }
@@ -180,7 +185,7 @@ export async function buildBook(dirArg, opts = {}, fetchImpl){
     // it up because it has no <ch>.json yet — the rest carry on
     try{
       const idx = await bookWordsFor(dir, book, meta, file, opts.env, fetchImpl, say);
-      const r = await run({ vet: vetOf(idx), file, cls: book.cls, count: meta.count || 4, note: meta.note || '', minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, subject: book.subject, lang: langOf(book), env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
+      const r = await run({ vet: vetOf(idx), file, cls: book.cls, count: meta.count || 4, note: meta.note || '', minQuestions: LIB_MIN_QUESTIONS, minAll: minAllOf(book), mixRight: LIB_MIX_ANSWERS, saidBack: LIB_SAID_BACK, subject: book.subject, lang: langOf(book), env: opts.env, retryMs: opts.retryMs, say: s => say(`  ${s}`) }, fetchImpl);
       const ch = saveChapter(dir, meta, r, { guard: true, replace: opts.replace });
       say(`${meta.id}: ${keptSay(ch)}`);
       out.push(ch);
@@ -355,7 +360,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
       if(!o){ st.checked[c.id] = { error: (x && x.error && x.error.message) || 'no answer in the lesson format' }; continue; }
       const q = draftReq(c), got = lessonsFrom(o, q, { model: st.model });
       st.checked[c.id] = { chapter: got.chapter, tokens: tokensOf(d),
-        drafts: got.lessons.map(raw => ({ raw, first: vetted(ph.clean(raw, cls.band, skills, false, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS, langOf(book)), vetOf(idxs[c.id])) })) };
+        drafts: got.lessons.map(raw => ({ raw, first: vetted(ph.clean(raw, cls.band, skills, false, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS, langOf(book), LIB_SAID_BACK), vetOf(idxs[c.id])) })) };
     }
     save();
     const n = Object.values(st.checked).reduce((a, c) => a + (c.drafts ? c.drafts.length : 0), 0), ok = Object.values(st.checked).reduce((a, c) => a + (c.drafts ? c.drafts.filter(x => x.first.ok).length : 0), 0);
@@ -374,7 +379,7 @@ export async function batchBook(dirArg, opts = {}, fetchImpl){
     if(k.error){ say(`${c.id}: not built — ${k.error}`); failed.push({ id: c.id, why: k.error }); continue; }
     const rx = repairs[c.id], rd = rx && rx.response, ro = rd && answerJSON(rd);
     const fixes = toFix(c.id);
-    if(ro){ const got = lessonsFrom(ro, { mode: 'repair', count: fixes.length }); got.lessons.forEach((raw, j) => { const f = fixes[j]; if(f){ f.x.repairRaw = raw; f.x.second = vetted(ph.clean(raw, cls.band, skills, true, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS, langOf(book)), vetOf(idxs[c.id])); } }); }
+    if(ro){ const got = lessonsFrom(ro, { mode: 'repair', count: fixes.length }); got.lessons.forEach((raw, j) => { const f = fixes[j]; if(f){ f.x.repairRaw = raw; f.x.second = vetted(ph.clean(raw, cls.band, skills, true, LIB_MIN_QUESTIONS, minAllOf(book), LIB_MIX_ANSWERS, langOf(book), LIB_SAID_BACK), vetOf(idxs[c.id])); } }); }
     const r = {
       at: new Date().toISOString(), cls: cls.id, band: cls.band, rules, note: meta.note || '', ...(langOf(book) ? { lang: langOf(book) } : {}), source: c.file, model: st.model, chapter: k.chapter,
       draftMs: 0, batch: { drafts: st.drafts && st.drafts.job, repairs: st.repairs && st.repairs.job || null },

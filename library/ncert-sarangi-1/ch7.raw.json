@@ -1148,8 +1148,8 @@
           {
             "t": "ask",
             "q": {
-              "en": "Does तोता have the letter त?",
-              "hi": "क्या तोता में त वर्ण है?"
+              "en": "Does तारा start with त?",
+              "hi": "क्या तारा त से शुरू होता है?"
             },
             "opts": [
               "Yes",
@@ -1232,18 +1232,18 @@
             {
               "t": "ask",
               "q": {
-                "en": "Does तोता have the letter त?",
-                "hi": "क्या तोता में त वर्ण है?"
+                "en": "Does तारा start with त?",
+                "hi": "क्या तारा त से शुरू होता है?"
               },
               "opts": [
-                "No",
-                "Yes"
+                "Yes",
+                "No"
               ],
               "hiOpts": [
-                "नहीं",
-                "हाँ"
+                "हाँ",
+                "नहीं"
               ],
-              "correct": 1,
+              "correct": 0,
               "why": {
                 "en": "Children might miss the letter if they do not look at each part.",
                 "hi": "बच्चे ध्यान न दें तो वर्ण छूट सकता है।"
@@ -1257,14 +1257,14 @@
                 "hi": "क्या घर घ से शुरू होता है?"
               },
               "opts": [
-                "Yes",
-                "No"
+                "No",
+                "Yes"
               ],
               "hiOpts": [
-                "हाँ",
-                "नहीं"
+                "नहीं",
+                "हाँ"
               ],
-              "correct": 0,
+              "correct": 1,
               "why": {
                 "en": "Children may confuse similar-looking Hindi consonants.",
                 "hi": "बच्चे मिलते-जुलते व्यंजनों में भ्रमित हो सकते हैं।"
@@ -1280,7 +1280,7 @@
             }
           ],
           "subject": "read",
-          "id": "sch-1qed754"
+          "id": "sch-1qta1x"
         },
         "ok": false,
         "errors": [
@@ -1370,8 +1370,8 @@
           {
             "t": "ask",
             "q": {
-              "en": "Does तोता have the letter त?",
-              "hi": "क्या तोता में त वर्ण है?"
+              "en": "Does तारा start with त?",
+              "hi": "क्या तारा त से शुरू होता है?"
             },
             "opts": [
               "Yes",
@@ -1435,7 +1435,7 @@
           "source": "Page 45",
           "aims": [
             {
-              "id": "sy0mnwh.0",
+              "id": "srczvdi.0",
               "kind": "explain",
               "short": {
                 "en": "Letters त घ ड़",
@@ -1496,18 +1496,18 @@
             {
               "t": "ask",
               "q": {
-                "en": "Does तोता have the letter त?",
-                "hi": "क्या तोता में त वर्ण है?"
+                "en": "Does तारा start with त?",
+                "hi": "क्या तारा त से शुरू होता है?"
               },
               "opts": [
-                "No",
-                "Yes"
+                "Yes",
+                "No"
               ],
               "hiOpts": [
-                "नहीं",
-                "हाँ"
+                "हाँ",
+                "नहीं"
               ],
-              "correct": 1,
+              "correct": 0,
               "why": {
                 "en": "Children might miss the letter if they do not look at each part.",
                 "hi": "बच्चे ध्यान न दें तो वर्ण छूट सकता है।"
@@ -1522,14 +1522,14 @@
                 "hi": "क्या फल घ से शुरू होता है?"
               },
               "opts": [
-                "No",
-                "Yes"
+                "Yes",
+                "No"
               ],
               "hiOpts": [
-                "नहीं",
-                "हाँ"
+                "हाँ",
+                "नहीं"
               ],
-              "correct": 0,
+              "correct": 1,
               "why": {
                 "en": "Children may confuse different letters for घ.",
                 "hi": "बच्चे अलग वर्ण को घ समझ सकते हैं।"
@@ -1546,7 +1546,7 @@
             }
           ],
           "subject": "read",
-          "id": "sch-y0mnwh"
+          "id": "sch-rczvdi"
         },
         "ok": true,
         "errors": [],
@@ -1562,10 +1562,11 @@
       "verdict": "repaired"
     }
   ],
-  "rechecked": "2026-11-20T09:46:54.239Z",
+  "rechecked": "2026-11-20T09:59:18.676Z",
   "handEdits": [
     "Skills: Gemini tagged both kept lessons `h1-read` (reading a sentence); retagged in the drafts (`skill` and `skillId`, draft and repair) — rhyming words → `read1`, letters त, घ, ड़ → `read2` — then `--recheck` (20 Nov).",
     "Appu's lines: \"मैं भूल गई\" → \"मैं भूल गया\" (Teach Appu: Appu is a boy).",
-    "\"कैसे पता चलूँ\" → \"कैसे पता करूँ\" (on the checker's SYL_HI_WATCH list)."
+    "\"कैसे पता चलूँ\" → \"कैसे पता करूँ\" (on the checker's SYL_HI_WATCH list).",
+    "Letters त, घ, ड़: the first question \"क्या तोता में त वर्ण है?\" said its teaching line back (the library's said-back rule) — changed to \"क्या तारा त से शुरू होता है?\" / \"Does तारा start with त?\" (answer हाँ / Yes), in the draft and the repair, then `--recheck` (20 Nov)."
   ]
 }

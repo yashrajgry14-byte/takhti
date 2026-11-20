@@ -8,7 +8,7 @@ Draft took 0 s · repair took 0 s (gemini-3.8-flash)
 Models for the draft: gemini-3.8-flash batch (0 s, 14872 in / 14988 out tokens)  
 Models for the repair: gemini-3.8-flash batch (0 s, 10827 in / 18743 out tokens)  
 Tokens used: gemini-3.8-flash 25699 in / 33731 out  
-_Checked again on 2026-11-20T09:46:53.596Z by today's checker (the same drafts, no new call to Gemini)._  
+_Checked again on 2026-11-20T10:07:53.493Z by today's checker (the same drafts, no new call to Gemini)._  
 
 ## What the checker caught first time
 - 1× the lesson needs its aims — N to N things the child will be able to do (aim N: hint N (en)

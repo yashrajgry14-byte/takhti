@@ -68,7 +68,10 @@ export function phoneChecker(){
     // all: every lesson, not only a picture one (a reader's library — Santoor, Veena)
     // mix: the questions mustn't all share one right answer (the library builder — always-"Yes" isn't kept)
     // lang: an English book's lesson ('en') — read in English whatever the app's language
-    clean: (raw, band, skills, mend, min, all, mix, lang) => call(`sylClean(${JSON.stringify(raw)}, { band: ${JSON.stringify(band)}, skills: ${JSON.stringify(skills)}, mendHints: ${!!mend}, minQuestions: ${Number(min) || 0}, minAll: ${!!all}, mixRight: ${!!mix}, lang: ${JSON.stringify(lang === 'en' ? 'en' : null)} })`)
+    // back: no yes/no question says a teaching line back (the library builder — sylSaidBack())
+    clean: (raw, band, skills, mend, min, all, mix, lang, back) => call(`sylClean(${JSON.stringify(raw)}, { band: ${JSON.stringify(band)}, skills: ${JSON.stringify(skills)}, mendHints: ${!!mend}, minQuestions: ${Number(min) || 0}, minAll: ${!!all}, mixRight: ${!!mix}, saidBack: ${!!back}, lang: ${JSON.stringify(lang === 'en' ? 'en' : null)} })`),
+    // what the teacher's card warns about a kept lesson (sylLessonWarnings())
+    warnings: les => call(`sylLessonWarnings(${JSON.stringify(les)})`),
   };
 }
 
@@ -114,8 +117,8 @@ export async function run(opts, fetchImpl){
   const draftMs = Date.now() - t0;
   if(d.status !== 200) throw new Error(`Gemini's draft failed (${d.status}): ${d.json.error}`);
   const raws = d.json.lessons || [];
-  const min = opts.minQuestions || 0, all = !!opts.minAll, mix = !!opts.mixRight;
-  const drafts = raws.map(raw => ({ raw, first: vetted(ph.clean(raw, cls.band, skills, false, min, all, mix, lang), opts.vet) }));
+  const min = opts.minQuestions || 0, all = !!opts.minAll, mix = !!opts.mixRight, back = !!opts.saidBack;
+  const drafts = raws.map(raw => ({ raw, first: vetted(ph.clean(raw, cls.band, skills, false, min, all, mix, lang, back), opts.vet) }));
   say(`Drafted ${raws.length} in ${(draftMs / 1000).toFixed(0)} s (${d.json.model}) · ${drafts.filter(x => x.first.ok).length} passed the checker first time`);
 
   const failed = drafts.filter(x => !x.first.ok);
@@ -124,7 +127,7 @@ export async function run(opts, fetchImpl){
     const t1 = Date.now();
     const r = await draftCore({ mode:'repair', repair: failed.map(x => ({ lesson: x.raw, errors: x.first.errors.concat(x.first.aimErrors || []).filter((e, i, a) => a.indexOf(e) === i).slice(0, 10) })), rules, lang }, env, 'try-syllabus', fetchImpl);
     repair = { status: r.status, model: r.json.model || '', error: r.json.error || '', ms: Date.now() - t1, tried: r.json.tried || [] };
-    if(r.status === 200) (r.json.lessons || []).forEach((raw, k) => { if(failed[k]){ failed[k].repairRaw = raw; failed[k].second = vetted(ph.clean(raw, cls.band, skills, true, min, all, mix, lang), opts.vet); } });
+    if(r.status === 200) (r.json.lessons || []).forEach((raw, k) => { if(failed[k]){ failed[k].repairRaw = raw; failed[k].second = vetted(ph.clean(raw, cls.band, skills, true, min, all, mix, lang, back), opts.vet); } });
     say(`Sent ${failed.length} back with the checker's reasons · ${failed.filter(x => x.second && x.second.ok).length} fixed`);
   }
   const result = {
@@ -139,12 +142,12 @@ export async function run(opts, fetchImpl){
 /* A saved run checked again by today's checker — no Gemini, no key. After a
    change to the checks, this says what the same drafts would get now. */
 export function recheck(r, opts){
-  const min = (opts && opts.minQuestions) || 0, all = !!(opts && opts.minAll), mix = !!(opts && opts.mixRight);
+  const min = (opts && opts.minQuestions) || 0, all = !!(opts && opts.minAll), mix = !!(opts && opts.mixRight), back = !!(opts && opts.saidBack);
   const lang = (opts && opts.lang) || r.lang || undefined;     // a run keeps its lang; a library recheck says it again
   const ph = phoneChecker(), skills = ph.skills(r.cls, (opts && opts.subject) || r.subject);
   const drafts = r.drafts.map(x => {
     const vet = opts && opts.vet;
-    const first = vetted(ph.clean(x.raw, r.band, skills, false, min, all, mix, lang), vet), second = x.repairRaw ? vetted(ph.clean(x.repairRaw, r.band, skills, true, min, all, mix, lang), vet) : null;
+    const first = vetted(ph.clean(x.raw, r.band, skills, false, min, all, mix, lang, back), vet), second = x.repairRaw ? vetted(ph.clean(x.repairRaw, r.band, skills, true, min, all, mix, lang, back), vet) : null;
     return { ...x, first, second, verdict: first.ok ? 'passed' : second && second.ok ? 'repaired' : 'not used' };
   });
   return { ...r, ...(lang ? { lang } : {}), rechecked: new Date().toISOString(), drafts };
