@@ -15,7 +15,15 @@
    cover — the same years content/curriculum-early.js maps the bands to. */
 const CARTOON_MAX_GRADE = { pre:1, early:1, developing:3, fluent:5 };
 
+/* Classes 6–10 share the fluent band, whose cartoons are Class 2–5 sums
+   (carrying, borrowing) — far below a Class 9 child. Until they have
+   episodes of their own, the Picture Hut is closed to them: no place on
+   the map, no cartoon in the catalog (so the mind and the child's path
+   never pick "the cartoon first" for them either). */
+function pictureHutOpen(){ return !(band().g >= 6); }
+
 function cartoonSkills(){
+  if(!pictureHutOpen()) return [];
   const gmax = CARTOON_MAX_GRADE[band().id] || 1;
   return SKILLS.filter(s => s.g >= 1 && s.g <= gmax && skillHasProblem(s.id));
 }

@@ -201,6 +201,7 @@ read(){
     <button class="btn ghost" onclick="speak(S.ctx.sentence)">🔊 ${t('hear')}</button>
     <button class="btn" onclick="nextSentence()">${t('next')} →</button>
   </div>
+  ${storyTplsFor(band().cls).includes('readalong') ? `<button class="btn leaf" style="width:100%;margin-top:10px" onclick="readAlongNext()">📖 ${S.lang==='hi'?'मुन्नी के साथ एक कहानी पढ़ो':'Read a story with Munni'}</button>` : ''}
   <div class="kid-type ${S.ctx.msg && S.ctx.score==null ? 'show' : ''}" style="margin-top:10px">
     <input class="input" id="typed" placeholder="${t('typeInstead')}">
     <button class="btn ghost" style="margin-top:8px" onclick="checkRead($('typed').value)">${t('check')}</button>

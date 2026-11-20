@@ -54,7 +54,7 @@ const MAP_PATH_LEN = 215;   // MAP_PATH's length in viewBox units, so 100% progr
 const MAP_PATH = 'M22 26 C 44 18, 56 14, 68 20 S 84 34, 78 46 S 60 52, 50 58 S 30 60, 22 68 S 38 84, 52 86 S 76 84, 80 74';
 
 function mapVisible(){
-  return MAP_PLACES.filter(p => !p.gate || moduleAllowed(p.gate));
+  return MAP_PLACES.filter(p => (!p.gate || moduleAllowed(p.gate)) && (p.id !== 'theater' || pictureHutOpen()));
 }
 
 /* Homework a teacher assigned that this child hasn't finished yet. */

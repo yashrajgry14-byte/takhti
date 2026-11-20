@@ -1452,3 +1452,29 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 @keyframes stFloat{0%,100%{translate:0 0}50%{translate:0 -12px}}
 @keyframes stIn{from{scale:0}70%{scale:1.08}to{scale:1}}
 @keyframes stPulse{0%,100%{scale:1}50%{scale:1.08}}
+/* Story Time as a cartoon (ui/story-time.js storyRender): what stays glides, what leaves fades, Munni talks */
+.st-keep.a-pop,.st-keep.a-grow,.st-keep.a-fly{animation:none}
+.st-keep.a-bob{animation:stBob 2.6s ease-in-out infinite}
+.st-keep.a-sway{animation:stSway 3s ease-in-out infinite}
+.st-keep.a-float{animation:stFloat 3s ease-in-out infinite}
+.st-leave{animation:stLeave .6s ease-in forwards!important;pointer-events:none}
+@keyframes stLeave{from{opacity:1;transform:translate(-50%,-50%) scale(1)}to{opacity:0;transform:translate(-50%,-50%) scale(.4)}}
+.st-munni-sm.enter{animation:stWalkIn 1.2s cubic-bezier(.3,.8,.4,1) both}
+.st-munni-sm.talking .hm-munni{animation:stTalk .36s ease-in-out infinite alternate;transform-origin:50% 90%}
+@keyframes stWalkIn{from{transform:translateX(140%)}to{transform:translateX(0)}}
+@keyframes stTalk{from{transform:rotate(-3deg) scaleY(1)}to{transform:rotate(3deg) scaleY(1.05)}}
+.st-stage.bg-sky::before,.st-stage.bg-tree::before,.st-stage.bg-pond::before,.st-stage.bg-sky::after{content:'☁️';position:absolute;top:5%;left:-20%;font-size:40px;opacity:.85;pointer-events:none;animation:stDrift 40s linear infinite;animation-delay:var(--drift,0s)}
+.st-stage.bg-sky::after{top:14%;font-size:28px;animation-duration:58s}
+@keyframes stDrift{from{left:-20%}to{left:110%}}
+.st-stage.bg-night{background:linear-gradient(180deg,#1B2350 0%,#33407A 72%,#2E5A3A 72%,#24492F 100%)}
+.st-tag{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font-size:17px;font-weight:800;background:#fff;color:#2A2118;border-radius:7px;padding:0 5px;line-height:1.3;font-family:'Mukta',system-ui,sans-serif}
+.st-wordcard{font-size:min(14vw,68px);line-height:1.1;color:#2A2118;font-family:'Mukta',system-ui,sans-serif}
+/* read-along: words that light up as Munni reads, and at the child's pace */
+.st-line,.st-lines{position:absolute;left:5%;right:5%;top:6%;background:rgba(255,255,255,.92);color:#2A2118;border-radius:16px;padding:8px 12px;text-align:center;font-family:'Mukta',system-ui,sans-serif;font-weight:700;font-size:min(6.6vw,30px);line-height:1.35;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:stIn .4s both}
+.st-lines{font-size:min(5.6vw,25px);top:8%}
+.st-lines div+div{margin-top:4px}
+.stw{border-radius:6px;padding:0 2px;transition:color .2s,background .2s}
+.stw.lit{color:#C5603A}
+.stw.now{background:#FFE27A;color:#2A2118}
+.stw.hl{color:#E8447C;text-decoration:underline;text-underline-offset:4px}
+@media (prefers-reduced-motion: reduce){.st-munni-sm.enter,.st-munni-sm.talking .hm-munni,.st-stage::before,.st-stage::after{animation:none!important}}

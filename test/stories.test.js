@@ -52,7 +52,7 @@ const root = path.resolve(__dirname, '..');
         if(j.opts.length !== 2 || ![0, 1].includes(j.right)) faults.push(`${id}: a pick needs two pictures and a right one`);
         if(JSON.stringify(j.opts[0]) === JSON.stringify(j.opts[1])) faults.push(`${id}: both pictures the same`);
         j.opts.forEach(o => { if(o.group && (o.n < 1 || o.n > MAXN[cls])) faults.push(`${id}/${cls}: a group of ${o.n}`);
-                              if(o.num != null && (o.num < 0 || o.num > MAXN[cls])) faults.push(`${id}/${cls}: the number ${o.num}`); });
+                              if(o.num != null && (o.num < 0 || o.num > (id === 'order' ? 20 : MAXN[cls]))) faults.push(`${id}/${cls}: the number ${o.num}`); });
         if(j.opts[0].num != null && j.opts[0].num === j.opts[1].num) faults.push(`${id}: both numbers the same`);
         // UKG's own: the right number really is the sum / what is left; the blended word is the right picture
         if(id === 'add'){ const a = st.scenes[0].stage.items.length, ab = st.scenes[1].stage.items.length;
@@ -100,6 +100,63 @@ const root = path.resolve(__dirname, '..');
     ['nur', 'lkg'].every(cls => c.F(cls).every(id => /^(n|l)-/.test(c.T[id].skill({ cls, lang:'en' })) && (cls !== 'nur' || /^n-/.test(c.T[id].skill({ cls, lang:'en' }))))), '');
   check('first sounds follow the language: English letters, Hindi स्वर',
     c.B('letter', 5, { cls:'lkg', lang:'en' }).skill === 'l-sound' && c.B('letter', 5, { cls:'lkg', lang:'hi' }).skill === 'l-swar' && /[अआइउऊ]/.test(c.B('letter', 5, { cls:'lkg', lang:'hi' }).scenes[0].stage.big), '');
+}
+
+/* ---------------- the new stories (21 Nov): number train, sight words, व्यंजन, read-along ---------------- */
+{
+  const c = {}; vm.createContext(c);
+  vm.runInContext(fs.readFileSync(path.join(root, 'src/content/stories.js'), 'utf8') + ';this.B=storyBuild;this.F=storyTplsFor;this.R=STORY_READS;this.SI=STORY_SIGHT;this.V=STORY_VYANJAN;', c);
+  const isHi = s => /[ऀ-ॿ]/.test(s);
+  const pickOf = st => st.scenes.find(x => x.join && x.join.t === 'pick').join;
+  const faults = [], slots = { order: new Set(), sight: new Set(), vyanjan: new Set(), readalong: new Set() }, kinds = new Set();
+  for(let s = 1; s <= 300; s++) for(const lang of ['en', 'hi']){
+    const seed = s * 2654435761 >>> 0;
+    // the number train: the number that fell off really is after / before / between what the question names
+    const o = c.B('order', seed, { cls:'ukg', lang }), j = pickOf(o), q = o.scenes[1].say.en, n = j.opts[j.right].num;
+    const shown = o.scenes[0].stage.items.filter(x => x.num != null).map(x => x.num);
+    const k = shown.indexOf('?'), left = shown[k - 1], rightN = shown[k + 1];
+    let m;
+    if((m = q.match(/just after (\d+)/))) { kinds.add('after'); if(n !== +m[1] + 1 || left !== +m[1]) faults.push(`order: after ${m[1]} isn't ${n}`); }
+    else if((m = q.match(/just before (\d+)/))) { kinds.add('before'); if(n !== +m[1] - 1 || rightN !== +m[1]) faults.push(`order: before ${m[1]} isn't ${n}`); }
+    else if((m = q.match(/between (\d+) and (\d+)/))) { kinds.add('between'); if(n !== +m[1] + 1 || n !== +m[2] - 1) faults.push(`order: between ${m[1]} and ${m[2]} isn't ${n}`); }
+    else faults.push('order: no question ' + q);
+    if(o.scenes[0].say.en.includes(` ${n},`) || o.scenes[0].say.en.includes(` ${n}.`) || j.opts[1 - j.right].num === n || n > 20 || j.opts[1 - j.right].num < 1) faults.push(`order: ${n} said before the pick, or a bad other number`);
+    if(!isHi(o.scenes[1].say.hi)) faults.push('order: question not in Hindi');
+    slots.order.add(j.right);
+    // sight words: the right card is Munni's word, the other its look-alike, in the child's language
+    const si = c.B('sight', seed, { cls:'ukg', lang }), sj = pickOf(si), w = si.scenes[0].stage.big;
+    if(sj.opts[sj.right].txt !== w || sj.opts[1 - sj.right].txt === w || !c.SI[lang].some(p => p.w === w && p.odd === sj.opts[1 - sj.right].txt) || si.skill !== 'u-sight') faults.push(`sight: card ${sj.opts[sj.right].txt} for ${w}`);
+    if(!si.scenes[1].stage.line.text.split(/\s+/).some(x => x.replace(/[।.,!?]/g, '').toLowerCase() === w)) faults.push(`sight: "${w}" not in its sentence`);
+    slots.sight.add(sj.right);
+    // व्यंजन: the right card is the letter, the other the letter it is mixed up with; the word starts with it
+    const v = c.B('vyanjan', seed, { cls:'ukg', lang }), vj = pickOf(v), l = v.scenes[0].stage.big, pic = v.scenes[0].stage.items[0];
+    if(vj.opts[vj.right].txt !== l || !pic.label.startsWith(l) || vj.opts[1 - vj.right].txt === l || v.skill !== 'u-vyanjan') faults.push(`vyanjan: ${l}`);
+    slots.vyanjan.add(vj.right);
+    // the read-along: three lines read with the picture, the child's turn, a question whose answer is in the story
+    for(const cls of ['c1', 'c2']){
+      const ra = c.B('readalong', seed, { cls, lang }), rj = pickOf(ra), story = c.R[ra.read];
+      const lines = ra.scenes.filter(x => x.stage && x.stage.line);
+      if(lines.length !== 3 || lines.some(x => x.say !== x.stage.line || !x.say.en || !isHi(x.say.hi))) faults.push('readalong: three lines, said as written, in both languages');
+      if(!ra.scenes.some(x => x.join && x.join.t === 'read' && x.stage.lines.length === 3)) faults.push("readalong: no child's turn to read");
+      if(rj.opts[rj.right].ic !== story.opts[0] || rj.opts[1 - rj.right].ic !== story.opts[1]) faults.push('readalong: the right picture');
+      // the right answer is drawn in the story; the other picture never is
+      const drawn = [].concat(...story.pics).map(p => Array.isArray(p) ? p[0] : p);
+      if(!drawn.includes(story.opts[0]) || drawn.includes(story.opts[1])) faults.push(`readalong: "${story.ans.en}" not in the story`);
+      const sk = ra.skill;
+      if(sk !== (cls === 'c1' ? (lang === 'hi' ? 'h1-read' : 'e1-read') : (lang === 'hi' ? 'h2-fluent' : 'e2-compre'))) faults.push('readalong: skill ' + sk);
+      if(JSON.stringify(ra).match(/undefined|NaN|null/)) faults.push('readalong: a hole');
+      slots.readalong.add(rj.right);
+    }
+  }
+  check('the number train: the missing number really comes after / before / between what Munni asks about, is never said before the pick, and the other number is a real slip (all three kinds asked)', faults.filter(f => f.startsWith('order')).length === 0 && kinds.size === 3, faults.filter(f => f.startsWith('order')).slice(0, 4).join(' | '));
+  check('sight words: the right card is Munni\'s word, the other the look-alike children mix it up with (see/she, में/मैं), in a sentence that has it — English words in English, Hindi in Hindi', faults.filter(f => f.startsWith('sight')).length === 0, faults.filter(f => f.startsWith('sight')).slice(0, 4).join(' | '));
+  check('व्यंजन: the right card is the letter, the other the letter it is really mistaken for (ब/व, म/भ, ख/रव…), and its word starts with it', faults.filter(f => f.startsWith('vyanjan')).length === 0 && c.V.every(p => p.w.startsWith(p.l) && p.odd !== p.l), faults.filter(f => f.startsWith('vyanjan')).slice(0, 4).join(' | '));
+  check('Class 1–2 read-along: three lines read as written (EN/HI), the child\'s turn to read it all, one question whose answer is in the story, evidence for the class\'s reading skill', faults.filter(f => f.startsWith('readalong')).length === 0 && c.R.length >= 8, faults.filter(f => f.startsWith('readalong')).slice(0, 4).join(' | '));
+  check('the right card or picture is in both slots for every new story', Object.values(slots).every(x => x.size === 2), JSON.stringify(Object.fromEntries(Object.entries(slots).map(([k, v]) => [k, [...v]]))));
+  check('UKG gets the number train, sight words and व्यंजन (व्यंजन only in Hindi); Class 1–2 get the read-along; Nursery/LKG none of them',
+    ['order', 'sight', 'vyanjan'].every(x => c.F('ukg').includes(x)) && c.F('ukg', 'en').includes('sight') && !c.F('ukg', 'en').includes('vyanjan') && c.F('ukg', 'hi').includes('vyanjan')
+    && c.F('c1').join() === 'readalong' && c.F('c2').join() === 'readalong' && !['order', 'sight', 'vyanjan', 'readalong'].some(x => c.F('nur').includes(x) || c.F('lkg').includes(x)), '');
+  check('each read-along story is chosen by its seed (the shelf\'s cards play the story they show)', c.R.every((p, i) => c.B('readalong', i, { cls:'c1', lang:'en' }).read === i && c.B('readalong', i + c.R.length * 3, { cls:'c1', lang:'en' }).read === i), '');
 }
 
 /* ---------------- the app ---------------- */
@@ -234,7 +291,7 @@ server.listen(0, '127.0.0.1', () => {
 
       /* ---- UKG's own: adding with the picture still on screen ---- */
       child('ukg', 5);
-      check('UKG\'s home offers its own stories first (adding, taking away, blending — never shown yet)', ['add', 'take', 'blend'].includes(E('storyOrder()[0]')), E('JSON.stringify(storyOrder())'));
+      check('UKG\'s home offers its own stories first (adding, taking away, blending, the number train, sight words — never shown yet)', ['add', 'take', 'blend', 'order', 'sight'].includes(E('storyOrder()[0]')) && !E('storyOrder()').includes('vyanjan'), E('JSON.stringify(storyOrder())'));
       E(`storyStart('add')`);
       check('"More friends come!" reaches its question', await until(() => E('S.ctx.phase') === 'pick', 30000), E('S.ctx.phase'));
       const ra = E('S.ctx.st.scenes[S.ctx.i].join.right'), sum = E('S.ctx.st.scenes[S.ctx.i].join.opts[S.ctx.st.scenes[S.ctx.i].join.right].num');
@@ -246,6 +303,56 @@ server.listen(0, '127.0.0.1', () => {
       for(let k = 0; k < sum; k++){ $('#ststage').click(); await sleep(450); }
       check('…and the story ends on "a + b = sum"', await until(() => E('S.ctx.phase') === 'end', 20000) && E('S.ctx.st.scenes[S.ctx.st.scenes.length - 1].stage.big').endsWith('= ' + sum), E('S.ctx.phase'));
       E(`storyHome()`);
+
+      /* ---- a scene flows into the next: what stays glides, it doesn't pop in again ---- */
+      E(`storyStart('add', 4242)`);
+      await until(() => E('S.ctx.i') >= 1, 20000);
+      await sleep(60);
+      check('one scene flows into the next like a cartoon: the birds already there are carried over (no second pop), the new ones fly in, Munni talks while she speaks',
+        $$('#ststage .st-it.st-keep').length >= 1 && $$('#ststage .st-it.a-fly:not(.st-keep)').length >= 1 && /talking/.test(($('.st-munni-sm') || {}).className || '') === E('!!S.ctx.talking'),
+        `${$$('#ststage .st-it.st-keep').length} kept, ${$$('#ststage .st-it.a-fly:not(.st-keep)').length} new`);
+      E(`storyHome()`);
+
+      /* ---- UKG in Hindi: व्यंजन, a card for the letter ---- */
+      child('ukg', 5, 'hi');
+      check('UKG in Hindi is offered व्यंजन and the number train too', E('storyOrder()').includes('vyanjan') && E('storyOrder()').includes('order'), E('JSON.stringify(storyOrder())'));
+      E(`storyStart('vyanjan')`);
+      check('"मुन्नी का अक्षर" reaches its question: two letter cards, the picture gone', await until(() => E('S.ctx.phase') === 'pick', 30000) && $$('.st-opt .st-wordcard').length === 2, E('S.ctx.phase'));
+      const rv = E('S.ctx.st.scenes[S.ctx.i].join.right');
+      $$('.st-opt')[rv].click();
+      check('…the first tap is evidence for व्यंजन (u-vyanjan)', E(`JSON.stringify(S.skillHistory['u-vyanjan'])`) === JSON.stringify({ n: 1, right: 1 }), E(`JSON.stringify(S.skillHistory['u-vyanjan'])`));
+      E(`storyHome()`);
+
+      /* ---- Class 1: the read-along, from the Picture Hut ---- */
+      child('c1', 6);
+      E(`go('theater')`);
+      check('Class 1\'s Picture Hut has a "Read along with Munni" shelf, one card per story', $$('.watch-card').filter(b => /storyStart\('readalong'/.test(b.getAttribute('onclick'))).length === E('STORY_READS.length'), $$('.watch-card').length);
+      E(`go('read')`);
+      check('…and the Reading Tree has a button for it', !!$$('button').find(b => /readAlongNext/.test(b.getAttribute('onclick') || '')), '');
+      E(`go('theater')`);
+      $$('.watch-card').find(b => /storyStart\('readalong',2\b/.test(b.getAttribute('onclick'))).click();
+      check('…a card plays the story it shows', E('S.screen') === 'story' && E('S.ctx.st.read') === 2, E('S.ctx.st && S.ctx.st.read'));
+      check('…each line is on the stage, word by word, and the words light up as Munni reads it', await until(() => $$('#ststage .st-line .stw.lit').length >= 1, 20000) && E('S.ctx.st.scenes[S.ctx.i].stage.line.en.split(" ").length') === $$('#ststage .st-line .stw').length, $$('#ststage .stw').length);
+      check('…then the child\'s turn: the whole story on the stage, the words lighting up at a reading pace', await until(() => E('S.ctx.phase') === 'read', 30000) && $$('#ststage .st-lines > div').length === 3 && await until(() => $$('#ststage .stw.now').length === 1, 5000), E('S.ctx.phase'));
+      check('…then a question about the story, two pictures', await until(() => E('S.ctx.phase') === 'pick', 30000) && $$('.st-opt').length === 2, E('S.ctx.phase'));
+      const rr = E('S.ctx.st.scenes[S.ctx.i].join.right');
+      $$('.st-opt')[1 - rr].click();
+      check('…the first tap is evidence for reading a sentence (e1-read), a wrong one shown kindly', E(`JSON.stringify(S.skillHistory['e1-read'])`) === JSON.stringify({ n: 1, right: 0 }) && $$('.st-opt')[rr].classList.contains('st-right'), E(`JSON.stringify(S.skillHistory['e1-read'])`));
+      check('…and it ends on its end screen with every word lit', await until(() => E('S.ctx.phase') === 'end', 30000), E('S.ctx.phase'));
+      E(`storyNext()`);
+      check('"Another story" on a read-along is the next story in the shelf', E('S.ctx.st.tpl') === 'readalong' && E('S.ctx.st.read') === 3, E('S.ctx.st.read'));
+      E(`storyHome()`);
+      check('…and home goes back to the Picture Hut, not to Munni\'s home', E('S.screen') === 'theater', E('S.screen'));
+
+      /* ---- Class 7: no Picture Hut ---- */
+      child('c7', 12);
+      check('Class 6–10 have no Picture Hut: not on the map, no cartoon in the catalog, so no "cartoon first" way either',
+        !E('mapVisible()').some(p => p.id === 'theater') && E('getVideoCatalog(S).length') === 0 && !E(`mindMathWays('carry')`).includes('cartoon'), E('JSON.stringify(mapVisible().map(p => p.id))'));
+      E(`go('theater')`);
+      check('…and opening it anyway says the cartoons are for younger classes', /younger classes/.test($('#screen') ? $('#screen').textContent : w.document.body.textContent), '');
+      child('c5', 10);
+      check('Class 5 still has the Picture Hut', E('mapVisible()').some(p => p.id === 'theater') && E('getVideoCatalog(S).length') > 0, '');
+      child('ukg', 5); E('storyRec()');
 
       /* ---- say it aloud: nothing is recorded ---- */
       const recBefore = E(`typeof S.ctx === 'object'`) && E('JSON.stringify(S.stories.log)');

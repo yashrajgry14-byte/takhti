@@ -620,15 +620,259 @@ Object.assign(STORY_TPLS, {
   }
 });
 
+/* UKG: sight words — the little words a child reads by their look, not by
+   sounding them out. English: see, is, my…; Hindi: the words read most
+   (में, है, और…). Each comes with the look-alike children really mix it
+   up with (see/she, in/on, में/मैं, और/ओर, यह/वह), which is the other card. */
+const STORY_SIGHT = {
+  en: [ { w:'see', odd:'she',  line:'I see a cat.',      ic:'🐱' },
+        { w:'is',  odd:'it',   line:'The sun is hot.',   ic:'☀️' },
+        { w:'my',  odd:'me',   line:'This is my bag.',   ic:'🎒' },
+        { w:'go',  odd:'no',   line:'We go to school.',  ic:'🏫' },
+        { w:'he',  odd:'we',   line:'He has a kite.',    ic:'🪁' },
+        { w:'in',  odd:'on',   line:'The fish is in the pond.', ic:'🐟' } ],
+  hi: [ { w:'में', odd:'मैं', line:'मछली पानी में है।',     ic:'🐟' },
+        { w:'और', odd:'ओर',  line:'राम और सीता खेलते हैं।', ic:'⚽' },
+        { w:'यह', odd:'वह',  line:'यह मेरा घर है।',        ic:'🏠' },
+        { w:'है',  odd:'हैं',  line:'आसमान नीला है।',        ic:'🌤️' },
+        { w:'का', odd:'की',  line:'यह राजा का घोड़ा है।',    ic:'🐴' } ]
+};
+
+/* UKG: व्यंजन, each with the letter it is really mistaken for (ब/व, म/भ,
+   घ/ध, प/फ, थ/य, ख/रव, ट/ठ) and a word it starts, as the Hindi book has it. */
+const STORY_VYANJAN = [
+  { l:'ब', w:'बतख',   ic:'🦆', odd:'व' },
+  { l:'म', w:'मछली',  ic:'🐟', odd:'भ' },
+  { l:'घ', w:'घर',    ic:'🏠', odd:'ध' },
+  { l:'प', w:'पतंग',  ic:'🪁', odd:'फ' },
+  { l:'थ', w:'थैला',  ic:'👜', odd:'य' },
+  { l:'ख', w:'खरगोश', ic:'🐇', odd:'रव' },
+  { l:'ट', w:'टमाटर', ic:'🍅', odd:'ठ' }
+];
+
+/* Class 1–2: read-along stories. Three short lines, a picture for each
+   (the same thing keeps its id, so it moves from scene to scene instead of
+   popping again), one question whose answer is in the story and one that
+   isn't. Written for this app, in both languages. A picture is an emoji,
+   or [emoji, x, y] to place it. */
+const STORY_READS = [
+  { ic:'🔴', bg:'sky', title:both('The red ball', 'लाल गेंद'),
+    en:['Ravi has a red ball.', 'He throws it up, up, up!', 'The ball lands in a tree.'],
+    hi:['रवि के पास लाल गेंद है।', 'वह गेंद ऊपर फेंकता है।', 'गेंद पेड़ पर अटक गई!'],
+    pics:[ [['👦',38,66],['🔴',58,70]], [['👦',38,66],['🔴',58,26]], [['🌳',62,56],['🔴',64,38],['👦',30,70]] ],
+    q:both('Where did the ball land?', 'गेंद कहाँ अटकी?'), opts:['🌳','🏠'],
+    ans:both('The ball landed in a tree.', 'गेंद पेड़ पर अटक गई।') },
+  { ic:'🐟', bg:'room', title:both('The cat and the fish', 'बिल्ली और मछली'),
+    en:['A cat sees a fish.', 'The fish is in a bowl.', 'The cat sits and waits.'],
+    hi:['बिल्ली ने एक मछली देखी।', 'मछली कटोरे में है।', 'बिल्ली बैठकर इंतज़ार करती है।'],
+    pics:[ [['🐱',34,64],['🐟',64,56]], [['🥣',62,70],['🐟',62,58]], [['🐱',30,66],['🥣',62,70],['🐟',62,58]] ],
+    q:both('What did the cat see?', 'बिल्ली ने क्या देखा?'), opts:['🐟','🐭'],
+    ans:both('The cat saw a fish.', 'बिल्ली ने मछली देखी।') },
+  { ic:'☂️', bg:'sky', title:both('Meena in the rain', 'बारिश में मीना'),
+    en:['Dark clouds come.', 'It rains on Meena.', 'She opens her umbrella.'],
+    hi:['काले बादल आए।', 'मीना पर बारिश हुई।', 'मीना ने अपना छाता खोला।'],
+    pics:[ [['☁️',38,34],['🌧️',62,30]], [['🌧️',50,30],['👧',50,70]], [['🌧️',50,24],['☂️',50,50],['👧',50,72]] ],
+    q:both('What did Meena open?', 'मीना ने क्या खोला?'), opts:['☂️','🎒'],
+    ans:both('Meena opened her umbrella.', 'मीना ने अपना छाता खोला।') },
+  { ic:'🐘', bg:'pond', title:both("Munni's bath", 'मुन्नी का स्नान'),
+    en:['Munni goes to the pond.', 'She fills her trunk with water.', 'Splash! Munni has a bath.'],
+    hi:['मुन्नी तालाब पर गई।', 'उसने सूँड़ में पानी भरा।', 'छपाक! मुन्नी नहा ली।'],
+    pics:[ [['🐘',30,62],['🏞️',66,58]], [['🐘',44,62],['💧',62,52]], [['🐘',44,62],['💦',58,40]] ],
+    q:both('Where did Munni go?', 'मुन्नी कहाँ गई?'), opts:['🏞️','🏫'],
+    ans:both('Munni went to the pond.', 'मुन्नी तालाब पर गई।') },
+  { ic:'🌻', bg:'sky', title:both("Asha's seed", 'आशा का बीज'),
+    en:['Asha plants a seed.', 'She waters it every day.', 'Now it is a big sunflower!'],
+    hi:['आशा ने एक बीज बोया।', 'वह रोज़ उसे पानी देती है।', 'अब वह बड़ा सूरजमुखी बन गया!'],
+    pics:[ [['👧',34,64],['🌰',62,74]], [['👧',34,64],['💧',58,52],['🌱',62,72]], [['👧',30,64],['🌻',62,60]] ],
+    q:both('What grew from the seed?', 'बीज से क्या उगा?'), opts:['🌻','🍎'],
+    ans:both('A big sunflower grew.', 'बड़ा सूरजमुखी उगा।') },
+  { ic:'🚌', bg:'sky', title:both('The late bus', 'देर से आई बस'),
+    en:['The school bus is late.', 'The children wait at the gate.', 'Beep beep! Here it comes.'],
+    hi:['स्कूल बस को देर हो गई।', 'बच्चे गेट पर इंतज़ार करते हैं।', 'पीं-पीं! बस आ गई।'],
+    pics:[ [['🚌',86,64]], [['🧒',36,70],['👧',50,70],['🚪',66,64]], [['🚌',58,64],['🧒',22,70],['👧',34,70]] ],
+    q:both('Who waited at the gate?', 'गेट पर कौन इंतज़ार कर रहा था?'), opts:['🧒','🐄'],
+    ans:both('The children waited at the gate.', 'बच्चे गेट पर इंतज़ार कर रहे थे।') },
+  { ic:'🌕', bg:'night', title:both('The big moon', 'बड़ा चाँद'),
+    en:['It is night.', 'Arun looks up at the sky.', 'He sees the big round moon.'],
+    hi:['रात हो गई।', 'अरुण ने आसमान को देखा।', 'उसे बड़ा गोल चाँद दिखा।'],
+    pics:[ [['🏠',50,66],['⭐',28,30]], [['👦',40,70],['⭐',28,30]], [['👦',40,70],['⭐',28,30],['🌕',66,30]] ],
+    q:both('What did Arun see?', 'अरुण को क्या दिखा?'), opts:['🌕','☀️'],
+    ans:both('Arun saw the big round moon.', 'अरुण को बड़ा गोल चाँद दिखा।') },
+  { ic:'🐶', bg:'room', title:both('Moti and the shoe', 'मोती और जूता'),
+    en:['Moti is a little dog.', "He takes Papa's shoe.", 'He hides it under the bed!'],
+    hi:['मोती एक छोटा कुत्ता है।', 'वह पापा का जूता ले गया।', 'उसने जूता पलंग के नीचे छिपा दिया!'],
+    pics:[ [['🐶',50,66]], [['🐶',40,66],['👞',58,72]], [['🛏️',58,62],['👞',60,74],['🐶',28,68]] ],
+    q:both('What did Moti take?', 'मोती क्या ले गया?'), opts:['👞','🧢'],
+    ans:both("Moti took Papa's shoe.", 'मोती पापा का जूता ले गया।') }
+];
+/* One id per emoji, so the same thing glides from scene to scene. */
+const storyPicId = ic => 'p' + [...ic].map(ch => ch.codePointAt(0).toString(36)).join('');
+function storyPics(list){
+  return list.map((p, i) => {
+    const [ic, x, y] = Array.isArray(p) ? p : [p, 50 + (i - (list.length - 1) / 2) * 26, 64];
+    return { id: storyPicId(ic), ic, x, y, size: 60, anim: 'bob', d: i * 0.15 };
+  });
+}
+
+Object.assign(STORY_TPLS, {
+
+  /* Before, after, between: one coach of the number train lost its number. */
+  order: {
+    classes: ['ukg'], ic: '🚂',
+    skill: () => 'u-order',
+    title: both("Munni's number train", 'मुन्नी की नंबर रेल'),
+    build(r, o){
+      const start = 1 + Math.floor(r() * 15), nums = [0, 1, 2, 3, 4].map(i => start + i);   // up to 19 — UKG counts to 20
+      const kind = storyPick(r, ['after', 'before', 'between']);
+      const k = kind === 'after' ? 1 + Math.floor(r() * 4) : kind === 'before' ? Math.floor(r() * 4) : 1 + Math.floor(r() * 3);
+      const n = nums[k];
+      // real slips: the number before for "after" (and the reverse); for "between", the neighbour said again
+      const wrong = kind === 'after' ? (n - 2 >= 1 ? n - 2 : n + 1) : kind === 'before' ? n + 2 : n + 1;
+      const right = r() < 0.5 ? 0 : 1, pair = [n, wrong]; if(right) pair.reverse();
+      const coach = (i, num, anim) => ({ id:'c' + i, ic:'🚃', num, x: 28 + i * 15, y: 56, size: 40, anim, d: i * 0.12 });
+      const engine = { id:'eng', ic:'🚂', x: 12, y: 56, size: 44, anim:'bob' };
+      const lost = nums.map((x, i) => coach(i, i === k ? '?' : x, 'fly')).concat([engine]);
+      const still = lost.map(it => Object.assign({}, it, { anim: it.id === 'eng' ? 'bob' : '', d: 0 }));
+      const fixed = nums.map((x, i) => coach(i, x, i === k ? 'pop' : '')).concat([engine]);
+      const seen = nums.map((x, i) => i === k ? '…' : x).join(', ');
+      const ask = kind === 'after' ? both(`Which number comes just after ${nums[k - 1]}?`, `${nums[k - 1]} के ठीक बाद कौन सी संख्या आती है?`)
+                : kind === 'before' ? both(`Which number comes just before ${nums[k + 1]}?`, `${nums[k + 1]} से ठीक पहले कौन सी संख्या आती है?`)
+                : both(`Which number is between ${nums[k - 1]} and ${nums[k + 1]}?`, `${nums[k - 1]} और ${nums[k + 1]} के बीच में कौन सी संख्या है?`);
+      const said = kind === 'after' ? both(`${n} comes just after ${nums[k - 1]}.`, `${nums[k - 1]} के ठीक बाद ${n} आता है।`)
+                 : kind === 'before' ? both(`${n} comes just before ${nums[k + 1]}.`, `${nums[k + 1]} से ठीक पहले ${n} आता है।`)
+                 : both(`${n} is between ${nums[k - 1]} and ${nums[k + 1]}.`, `${nums[k - 1]} और ${nums[k + 1]} के बीच में ${n} है।`);
+      return {
+        bg: 'sky',
+        scenes: [
+          { say: both(`Choo choo! Munni's number train is here. One coach has lost its number! Look: ${seen}.`,
+                      `छुक-छुक! मुन्नी की नंबर रेल आ गई। एक डिब्बे का नंबर खो गया! देखो: ${seen}।`),
+            stage: { items: lost } },
+          { say: both(`${ask.en} Tap the number!`, `${ask.hi} संख्या छुओ!`),
+            stage: { items: still },
+            join: { t:'pick', keep: true, opts: pair.map(x => ({ num: x })), right,
+                    praise: both(`Yes! ${said.en}`, `हाँ! ${said.hi}`),
+                    show: both(`It's ${n}. ${said.en}`, `${n} है। ${said.hi}`) } },
+          { say: both("The coach has its number back! Say the numbers with Munni.", 'डिब्बे को उसका नंबर वापस मिल गया! मुन्नी के साथ संख्याएँ बोलो।'),
+            stage: { items: fixed },
+            join: { t:'say', word: both(nums.join(', '), nums.join(', ')) } },
+          { say: both(`${said.en} Every number has its place on the train!`, `${said.hi} हर संख्या की रेल में अपनी जगह है!`),
+            stage: { big: kind === 'between' ? `${nums[k - 1]}, ${n}, ${nums[k + 1]}` : kind === 'after' ? `${nums[k - 1]}, ${n}` : `${n}, ${nums[k + 1]}`, items: fixed.map(it => Object.assign({}, it, { anim:'', d:0 })) } }
+        ],
+        grownup: both(`On the stairs, count up and down together, and ask: "What comes after ${nums[2]}? What comes before it?"`,
+                      `सीढ़ियों पर साथ में ऊपर-नीचे गिनें, और पूछें: "${nums[2]} के बाद क्या आता है? उससे पहले क्या आता है?"`),
+        home: both('Number five cups with paper slips, hide one slip, and ask which number is missing.',
+                   'पाँच कपों पर पर्चियों से नंबर लगाएँ, एक पर्ची छिपाएँ, और पूछें कौन सा नंबर गायब है।')
+      };
+    }
+  },
+
+  /* Sight words: Munni's word card, in a sentence, then which card says it? */
+  sight: {
+    classes: ['ukg'], ic: '🃏',
+    skill: () => 'u-sight',
+    title: both("Munni's word card", 'मुन्नी का शब्द-कार्ड'),
+    build(r, o){
+      const lang = o.lang === 'hi' ? 'hi' : 'en';
+      const p = storyPick(r, STORY_SIGHT[lang]);
+      const right = r() < 0.5 ? 0 : 1, opts = [{ txt: p.w }, { txt: p.odd }]; if(right) opts.reverse();
+      const line = { text: p.line, hl: p.w };
+      return {
+        bg: 'plain', lang,
+        scenes: [
+          { say: both(`Munni found a word card. It says "${p.w}". Say it with Munni!`, `मुन्नी को एक शब्द-कार्ड मिला। उस पर लिखा है "${p.w}"। मुन्नी के साथ बोलो!`),
+            stage: { big: p.w },
+            join: { t:'say', word: both(p.w, p.w) } },
+          { say: both(`Here is "${p.w}" in Munni's sentence: ${p.line}`, `मुन्नी के वाक्य में "${p.w}": ${p.line}`),
+            stage: { line, items: [{ id:'pic', ic: p.ic, x: 50, y: 64, size: 72, anim:'bob' }] } },
+          { say: both(`Which card says "${p.w}"? Tap it!`, `कौन सा कार्ड "${p.w}" कहता है? उसे छुओ!`),
+            join: { t:'pick', opts, right,
+                    praise: both(`Yes! That card says "${p.w}".`, `हाँ! यह कार्ड "${p.w}" कहता है।`),
+                    show: both(`This one says "${p.w}". "${p.odd}" looks a little like it — look again.`, `यह "${p.w}" कहता है। "${p.odd}" थोड़ा इसके जैसा दिखता है — फिर से देखो।`) } },
+          { say: both(`Now you can read "${p.w}"! Look for it in your books.`, `अब तुम "${p.w}" पढ़ सकते हो! इसे अपनी किताबों में ढूँढो।`),
+            stage: { line, items: [{ id:'pic', ic: p.ic, x: 50, y: 64, size: 72, anim:'pop' }] } }
+        ],
+        grownup: both(`Write "${p.w}" and "${p.odd}" on two slips. Say "${p.w}" and let your child pick the right slip.`,
+                      `दो पर्चियों पर "${p.w}" और "${p.odd}" लिखें। "${p.w}" बोलें और बच्चे को सही पर्ची चुनने दें।`),
+        home: both(`When you read together, ask your child to find every "${p.w}" on the page.`, `साथ में पढ़ते समय बच्चे से पन्ने पर हर "${p.w}" ढूँढने को कहें।`)
+      };
+    }
+  },
+
+  /* व्यंजन: Munni's letter, its word, then which card is it — the other
+     card the letter it is really mixed up with. Hindi only (langs). */
+  vyanjan: {
+    classes: ['ukg'], langs: ['hi'], ic: '🔤',
+    skill: () => 'u-vyanjan',
+    title: both("Munni's Hindi letter", 'मुन्नी का अक्षर'),
+    build(r, o){
+      const p = storyPick(r, STORY_VYANJAN);
+      const right = r() < 0.5 ? 0 : 1, opts = [{ txt: p.l }, { txt: p.odd }]; if(right) opts.reverse();
+      const pic = anim => ({ id:'pic', ic: p.ic, x: 76, y: 58, size: 80, anim, label: p.w });
+      return {
+        bg: 'plain', lang: 'hi',
+        scenes: [
+          { say: both(`Munni has a Hindi letter today: ${p.l}. ${p.l} for ${p.w}!`, `आज मुन्नी एक अक्षर लाई है: ${p.l}। ${p.l} से ${p.w}!`),
+            stage: { big: p.l, items: [pic('pop')] } },
+          { say: both('Say it with Munni.', 'मुन्नी के साथ बोलो।'),
+            stage: { big: p.l, items: [pic('bob')] },
+            join: { t:'say', word: both(`${p.l}… ${p.w}`, `${p.l}… ${p.w}`) } },
+          { say: both(`Now find ${p.l}. Which card is ${p.l}? Tap it!`, `अब ${p.l} ढूँढो। ${p.l} कौन सा है? छुओ!`),
+            join: { t:'pick', opts, right,
+                    praise: both(`Yes! That is ${p.l}, as in ${p.w}.`, `हाँ! यह ${p.l} है — ${p.w} वाला।`),
+                    show: both(`This one is ${p.l}. ${p.odd} looks a little like it — look again.`, `यह ${p.l} है। ${p.odd} थोड़ा इसके जैसा दिखता है — फिर से देखो।`) } },
+          { say: both(`${p.l} for ${p.w}! Find ${p.l} in your Hindi book.`, `${p.l} से ${p.w}! अपनी हिंदी की किताब में ${p.l} ढूँढो।`),
+            stage: { big: p.l, items: [pic('pop')] } }
+        ],
+        grownup: both(`Write ${p.l} and ${p.odd} with chalk and ask: "Which one is ${p.l}?"`, `चॉक से ${p.l} और ${p.odd} लिखें और पूछें: "${p.l} कौन सा है?"`),
+        home: both(`Look for things at home that start with ${p.l}, like ${p.w}.`, `घर में ${p.l} से शुरू होने वाली चीज़ें ढूँढें — ${p.w} जैसी।`)
+      };
+    }
+  },
+
+  /* Class 1–2: a short story read aloud with each word lighting up as Munni
+     reads it, the child reading it all with a finger, then one question. */
+  readalong: {
+    classes: ['c1', 'c2'], ic: '📖',
+    skill: o => o.cls === 'c2' ? (o.lang === 'hi' ? 'h2-fluent' : 'e2-compre') : (o.lang === 'hi' ? 'h1-read' : 'e1-read'),
+    title: both('Read along with Munni', 'मुन्नी के साथ पढ़ो'),
+    build(r, o){
+      const p = o.seed != null ? STORY_READS[(o.seed >>> 0) % STORY_READS.length] : storyPick(r, STORY_READS);
+      const lines = p.en.map((en, i) => ({ en, hi: p.hi[i] }));
+      const right = r() < 0.5 ? 0 : 1, opts = p.opts.map(ic => ({ ic, size: 88 })); if(right) opts.reverse();
+      return {
+        bg: p.bg, read: STORY_READS.indexOf(p), storyTitle: p.title,
+        scenes: [
+          { say: both(`${p.title.en}. Listen to Munni, and follow the words.`, `${p.title.hi}। मुन्नी को सुनो, और शब्दों के साथ चलो।`),
+            stage: { items: [{ id: storyPicId(p.ic), ic: p.ic, x: 50, y: 52, size: 96, anim:'pop' }] } },
+          ...lines.map((l, i) => ({ say: l, stage: { line: l, items: storyPics(p.pics[i]) } })),
+          { say: both('Your turn! Read the whole story out loud, with your finger on each word.', 'अब तुम्हारी बारी! हर शब्द पर उँगली रखकर पूरी कहानी ज़ोर से पढ़ो।'),
+            stage: { lines },
+            join: { t:'read', pace: o.cls === 'c2' ? 620 : 780 } },
+          { say: p.q,
+            join: { t:'pick', opts, right,
+                    praise: both(`Yes! ${p.ans.en}`, `हाँ! ${p.ans.hi}`),
+                    show: both(`Let's look again: ${p.ans.en}`, `चलो फिर से देखें: ${p.ans.hi}`) } },
+          { say: both('You read a whole story!', 'तुमने पूरी कहानी पढ़ ली!'),
+            stage: { lines, lit: true, items: [{ id: storyPicId(p.ic), ic: p.ic, x: 84, y: 82, size: 52, anim:'pop' }] } }
+        ],
+        grownup: both(`Read it again together, pointing to each word. Then ask: "${p.q.en}"`, `साथ में फिर से पढ़ें, हर शब्द पर उँगली रखकर। फिर पूछें: "${p.q.hi}"`),
+        home: both('Ask your child to tell the story in their own words — what happened first, and then?', 'बच्चे से अपने शब्दों में कहानी सुनाने को कहें — पहले क्या हुआ, फिर क्या?')
+      };
+    }
+  }
+});
+
 /* Which templates this class gets. */
-function storyTplsFor(cls){ return Object.keys(STORY_TPLS).filter(id => STORY_TPLS[id].classes.includes(cls)); }
+function storyTplsFor(cls, lang){
+  return Object.keys(STORY_TPLS).filter(id => STORY_TPLS[id].classes.includes(cls) && (!lang || !STORY_TPLS[id].langs || STORY_TPLS[id].langs.includes(lang)));
+}
 
 /* One story: template + a seed. The id names the template, the class,
    the language and the seed, so the same story plays the same way again
    ("Again!") and a new seed makes a new one. */
 function storyBuild(tplId, seed, o){
   const T = STORY_TPLS[tplId]; if(!T) return null;
-  o = Object.assign({ cls:'nur', lang:'en', name:'' }, o || {});
+  o = Object.assign({ cls:'nur', lang:'en', name:'' }, o || {}, { seed: seed >>> 0 });
   const body = T.build(storyRand(seed), o);
   return Object.assign({ id: `st-${tplId}-${o.cls}-${o.lang}-${seed >>> 0}`, tpl: tplId, ic: T.ic, title: T.title, skill: T.skill(o), seed: seed >>> 0 }, body);
 }

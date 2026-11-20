@@ -92,7 +92,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js, ui/playful.js
 ```
 
-`sw.js` caches the app shell as `takhti-v96` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v97` (recorded narration lives in a
 separate `takhti-audio-v2`, filmed clips in `takhti-video-v1` (kept the first time
 each plays), bumped only when a line is rendered again in a new
 voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship
@@ -322,8 +322,51 @@ child's own. UKG gets them first: between two stories shown as little,
 the class's own skill wins (`storyOrder()`). UKG's home also offers
 Munni's video for it (the मात्रा, `storyVideosHTML()`).
 
-Not yet: stories for `u-order` (before, after, between), `u-sight`,
-`u-vyanjan`.
+**UKG's last three** (21 Nov): *Munni's number train* (`u-order`: one
+coach lost its number — which comes just after / before / between? numbers
+to 19, never said before the pick; the other number the real slip — the
+one before for "after", the neighbour again for "between"), *Munni's word
+card* (`u-sight`: the word, in a sentence with it marked, then which card
+says it — the other card the look-alike children mix it with: see/she,
+in/on, is/it; in Hindi में/मैं, और/ओर, यह/वह, है/हैं), *Munni's Hindi
+letter* (`u-vyanjan`, Hindi only — `langs`, filtered by `storyTplsFor(cls,
+lang)`: the letter and its word, then which card is it — ब/व, म/भ, घ/ध,
+प/फ, थ/य, ख/रव, ट/ठ). Option cards can be words (`txt`), and an item can
+carry a number tag (`num`, the train's coaches).
+
+**Like a cartoon, not a slideshow** (`storyRender()`): between scenes,
+what stays on the stage (the same item id) glides to its new place instead
+of popping in again (`.st-keep`), what leaves fades out (`.st-leave`), only
+what is new pops in; Munni walks in on the first scene and her head moves
+while she talks (`storyTalking()`); clouds drift over sky, tree and pond
+scenes, carried across redraws (`--drift`). Reduced motion → a plain
+redraw. The pictures are still emoji and drawn shapes, not drawn
+characters.
+
+**Class 1–2: read along with Munni** (`readalong`, `STORY_READS`): eight
+short stories written for the app, three lines each in English and Hindi.
+Each line is on the stage word by word and lights up as Munni reads it
+(`storyKaraoke()` — paced from the voice's rate, all lit when she ends);
+the same picture glides from line to line; then **your turn** — the whole
+story, the words lighting at a reading pace (780 ms a word in Class 1, 620
+in Class 2; `storyReadAlong()`, nothing listened to or recorded); then one
+question with two pictures — the answer drawn in the story, the other
+never — whose first tap is evidence (`e1-read`/`h1-read` in Class 1,
+`e2-compre`/`h2-fluent` in Class 2). Found in the Picture Hut (*Read
+along with Munni*, one card per story, `readAlongShelfHTML()`) and the
+Reading Tree (`readAlongNext()`); a story's seed picks it
+(`readAlongSeed()`), *Another story* is the next one, and 🏠 goes back to
+where it was opened (`STORY_FROM`). A Class 1–2 child on the simple home
+gets it with UKG's stories (`storyList()`).
+
+**No Picture Hut for Classes 6–10** (`pictureHutOpen()`,
+`core/video-library-catalog.js`): their band's cartoons are Class 2–5 sums,
+so the place is off their map, the catalog is empty (the mind and the
+child's path never choose "the cartoon first" for them), and opening it
+anyway says the cartoons are for younger classes.
+
+Not yet: drawn characters instead of emoji; Class 1–2 read-alongs beyond
+the eight; animated content of their own for Classes 3–10.
 
 ## Voice-first — Nursery to Class 2 (`ui/voice-first.js`, 21 Nov)
 
@@ -2034,7 +2077,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `mute` | jsdom | muted `speak()` still finishes scenes; mute is per child |
 | `jungle` | jsdom | arrival → onboarding → map; band-gated places; SRS routing and first sentence; map and dashboard with and without SRS history |
 | `classes` | jsdom | the class decides what is taught: onboarding asks the class after the age (the usual class pre-picked, one tap to change, 11–16 offered), every class's Write screen (Nursery–UKG trace, Class 1 trace then paper, Class 2–10 paper or dictation and never a trace pad), "Not now" to the camera → dictation from Class 2, the roster on one phone (teacher picks, parent's stepper gone, unlink hands it back), Class 7 at Counting Stones (a Class 7 problem, Ask Munni's steps without the answer, the slip and worked steps after a miss), dictation graded and recorded, the Sand Patch label, an old profile keeping its band, child and teacher classes agreeing, the planner's floor (no pre-primary skill from Class 3; add2 in reach at Class 5, out at Class 10), the parent's class stepper |
-| `stories` | vm + jsdom | Story Time for Nursery–UKG: every template for every class it serves in both languages over many seeds (bilingual lines, two different pictures with the right one really right, numbers in the class's range, the right picture in both slots, same seed = same story, each pick evidence for a real pre-primary skill, first sounds by language); in the app: Nursery/LKG/UKG land on Story Time and Class 1/3 on the map, an old profile by its age, the Nursery home (no map, Munni speaks), `go('map')` → Story Time, UKG's Munni's pick and *All places* → map and back, the parent's switch both ways, a whole Hindi story through real taps (counting with numbers said, the first pick as evidence and a second ignored, praise, the end screen that waits, a star once, the grown-up card, no network), Again / Another, a finished story to the back, a wrong pick shown kindly (never "wrong"), say-it recording nothing, leaving half way stops it |
+| `stories` | vm + jsdom | Story Time for Nursery–UKG: every template for every class it serves in both languages over many seeds (bilingual lines, two different pictures with the right one really right, numbers in the class's range, the right picture in both slots, same seed = same story, each pick evidence for a real pre-primary skill, first sounds by language); in the app: Nursery/LKG/UKG land on Story Time and Class 1/3 on the map, an old profile by its age, the Nursery home (no map, Munni speaks), `go('map')` → Story Time, UKG's Munni's pick and *All places* → map and back, the parent's switch both ways, a whole Hindi story through real taps (counting with numbers said, the first pick as evidence and a second ignored, praise, the end screen that waits, a star once, the grown-up card, no network), Again / Another, a finished story to the back, a wrong pick shown kindly (never "wrong"), say-it recording nothing, leaving half way stops it; the number train (the missing number really after/before/between, never said first), sight words and व्यंजन (the other card the real look-alike; व्यंजन only in Hindi), Class 1–2 read-alongs (three lines as written, the child's turn, the answer drawn in the story, the class's reading skill); a scene carried over (no second pop, the new ones fly in, Munni talking); Class 1's Picture Hut shelf and Reading Tree button, a whole read-along through real taps (words lighting up, the turn, the pick as evidence, the next story, home back to the Picture Hut); Class 7 with no Picture Hut and no cartoon way, Class 5 with it |
 | `voice-first` | jsdom | Nursery–Class 2 read to: the map's suggestion said unprompted; Class 1 at Counting Stones hears where they are, the sum in words, each answer with "or", each button lit while said; a redraw not read again; 🔊 says it all again; a wrong answer's help read, the sum not asked again; a lesson's question said by the lesson, then the answers after it, never over it; the Play Clearing's games; the Sand Patch's trace line; Hindi (गिनती के पत्थर, जमा, कितना, या); Class 3 not read to, no 🔊; the parent's switch both ways; sound off and a live Talking Munni call quiet; Story Time left alone; only Munni's own voice online |
 | `watch` | vm + jsdom | Munni's videos: five, every line bilingual, two pauses each with two different answers and the right one really right (the sum, the difference, the tens, the clock's hour, the मात्रा), never "wrong", the classes, the scripts carrying each pause's answers, clips.json valid and empty; in the app: nothing fetched at boot, Class 2's shelf, the animated form start to end (the column sum drawn, the pause waits, the answers read aloud after the question, the first tap evidence and a second ignored, a wrong tap shown kindly, the end screen waiting, a star once, what is kept), UKG's home card in Hindi and back to Munni's home, the filmed form (runs to the listed second, stops with the same <video>, the tap as evidence, carries on, ends), a clip failing half way carrying on animated from the next question, a badly listed clip ignored, nothing else fetched |
 | `upper` | vm | Classes 6–10: every kind's answer worked out again from the question's words (8,100 problems), four different choices, every wrong one a named mistake with help EN/HI, steps never saying the answer, same seed same problem; the 108 lessons pass the checker and make 24 skills teachable; a Class 4 child never meets them, a Class 9 child meets Class 7–9 work; Classes 6–10's own levels, starts and ceilings; reading lines at levels 7–10 EN/HI; genProblem keeps calls to column sums |
