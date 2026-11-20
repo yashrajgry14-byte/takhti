@@ -177,11 +177,14 @@ check('…with nothing in it a child said, read or wrote (only the keys w, k, g,
   {
     const { syncCore } = await import(require('url').pathToFileURL(path.join(root, 'api/class-sync.mjs')).href);
     const blobs = new Map(), store = { get: async k => blobs.has(k) ? JSON.parse(blobs.get(k)) : null, setJSON: async (k, v) => { blobs.set(k, JSON.stringify(v)); } };
-    await syncCore(store, { code:'PTH001', teacherKey:'t'.repeat(32), children:{} });
+    const { authorizeClass } = await import(require('url').pathToFileURL(path.join(root, 'api/lib/class-auth.mjs')).href);
+    const verifiedTeacher = authorizeClass({code:'PTH001'}, {active:true,role:'teacher',schoolId:'school-one',classes:['PTH001']});
+    const verifiedGuardian = authorizeClass({code:'PTH001',children:{kid1:{}}}, {active:true,role:'guardian',schoolId:'school-one',children:[{code:'PTH001',id:'kid1',consent:true}]});
+    await syncCore(store, { code:'PTH001', children:{} }, verifiedTeacher);
     await syncCore(store, { code:'PTH001', children:{ kid1:{ childName:'Asha', skillHistory:{}, at: 5, paths:{
       'sch-abc123': { w:'show', d:1, n:3 }, 'sch-def456': { w:'cartoon', k:1, g:'add2', d:9, n:4, said:'hello' },
-      'sch-bad': { w:'whatever', d:0, n:2 }, 'not-a-lesson': { w:'story', d:0, n:2 }, 'sch-ghi789': { w:'story', g:'<b>', d:0, n:2 } } } } });
-    const back = (await syncCore(store, { code:'PTH001', teacherKey:'t'.repeat(32), children:{} } )).json;
+      'sch-bad': { w:'whatever', d:0, n:2 }, 'not-a-lesson': { w:'story', d:0, n:2 }, 'sch-ghi789': { w:'story', g:'<b>', d:0, n:2 } } } } }, verifiedGuardian);
+    const back = (await syncCore(store, { code:'PTH001', children:{} }, verifiedTeacher)).json;
     const p = back && back.children && back.children.kid1 && back.children.kid1.paths;
     check('the class sync server keeps a well-formed path and drops the rest — a non-lesson id, a bad skill, any other field; an unknown way becomes none, steps over the total are capped',
       !!p && JSON.stringify(p['sch-abc123']) === '{"w":"show","d":1,"n":3}' && !p['not-a-lesson'] && p['sch-bad'].w === '' && !p['sch-ghi789'].g
@@ -295,7 +298,10 @@ check('…with nothing in it a child said, read or wrote (only the keys w, k, g,
         all.kabir1 = { childName: 'Kabir', skillHistory: {}, paths: { [id]: { w: 'story', d: 1, n: 2 } }, at: Date.now() };
         all.meena1 = { childName: 'Meena', skillHistory: {}, paths: { [id]: { w: '', g: 'add2', d: 0, n: 3 } }, at: Date.now() };
         all.ravi1 = { childName: 'Ravi', skillHistory: {}, paths: { [id]: { w: '', k: 1, d: 0, n: 2 } }, at: Date.now() };
-        localStorage.setItem(classMirrorKey('CLS001'), JSON.stringify(all)); })(); S.ctx.tcode = 'CLS001'; go('teacher')`);
+        localStorage.setItem(classMirrorKey('CLS001'), JSON.stringify(all)); })();
+        CLASS_AUTH.token='test-approved-session'; CLASS_AUTH.expires=Date.now()+600000;
+        CLASS_AUTH.role='teacher'; CLASS_AUTH.classes=['CLS001']; CLASS_AUTH.email='teacher@example.test';
+        S.ctx.tcode = 'CLS001'; go('teacher')`);
     await wait(20);
     const rows = [...win.document.querySelectorAll('.planrow')].map(x => x.textContent.trim());
     check('the teacher view groups the class by path for this week\'s lesson: pictures first (Asha), straight into the school\'s lesson (Kabir), something underneath first (Meena), already knew it (Ravi)',

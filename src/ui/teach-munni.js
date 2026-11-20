@@ -96,14 +96,124 @@ function teachCloudReady(){
   return teachTermsOk() && S.online && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && typeof MediaRecorder !== 'undefined';
 }
 
+/* ---------- Appu's clip: a cartoon of his mistake (video/appu-clips.json) ----------
+   { clips: { <mistake id>: [ { src, lang, a, b, op?, pause, child? } ] } }.
+   When Appu's mistake has a clip, his sum becomes the clip's sum and the clip
+   acts it out: it stops at `pause` (his "is that right?"), the child taps an
+   answer as always (the same evidence), it carries on with the fix and ends
+   on the question the mic answers. A clip naming a `child` was made for that
+   child (it says their name) and plays only for them, in whatever language
+   it was made; any other clip plays in its own language. Loaded when Teach
+   Appu opens, never at boot; a clip that is slow to list, or can't play,
+   leaves the slate and Appu's voice exactly as they were. */
+let APPU_CLIPS = null, APPU_CLIPS_P = null, APPU_EL = null;
+function appuLoadClips(ms){
+  if(APPU_CLIPS) return Promise.resolve(APPU_CLIPS);
+  if(!APPU_CLIPS_P){
+    let f; try{ f = fetch('video/appu-clips.json'); }catch(e){ f = Promise.reject(e); }
+    APPU_CLIPS_P = f.then(r => r.ok ? r.json() : {}).catch(() => ({})).then(d => (APPU_CLIPS = (d && d.clips) || {}));
+  }
+  return Promise.race([APPU_CLIPS_P, new Promise(r => setTimeout(() => r(null), ms || 1500))]);
+}
+function appuClipOk(c){
+  return !!c && typeof c.src === 'string' && /^video\/[\w.-]+\.(mp4|webm)$/.test(c.src) && c.pause > 0
+    && Number.isInteger(c.a) && Number.isInteger(c.b) && (c.lang === 'en' || c.lang === 'hi');
+}
+/* the clip for one of Appu's mistakes, for this child, or null */
+function appuClipFor(id){
+  const list = id && APPU_CLIPS && APPU_CLIPS[id];
+  if(!Array.isArray(list)) return null;
+  const first = String(S.name || '').trim().split(/[\s(]/)[0].toLowerCase();
+  const ok = list.filter(c => appuClipOk(c) && (!c.child || String(c.child).toLowerCase() === first));
+  return ok.find(c => c.child) || ok.find(c => c.lang === S.lang) || null;
+}
+/* Every Appu's-sum point with a clip gets the clip's sum; null if none did.
+   A child's own habit stays his mistake (a clip only if it has one); otherwise
+   any mistake Appu makes on this skill will do, and one with a clip wins —
+   which of them he makes is otherwise down to the day's sum. */
+function teachClipBind(s){
+  let any = null;
+  s.items.forEach((it, k) => {
+    if(!it.fix || it.state !== 'todo' || it.phase !== 'pick' || !it.first) return;
+    const ids = it.fix.habit ? [it.fix.mistake] : [it.fix.mistake].concat(TEACH_FIX_DEFAULT[it.fix.skill] || []);
+    const id = ids.find(x => appuClipFor(x)), c = id && appuClipFor(id);
+    const f = c && teachFixAt(it.fix.skill, c.a, c.b, id, c.op);
+    if(!f) return;
+    it.fix = f; it.clip = c; any = any || c;
+    if(k === s.i) s.line = tJoin(s.again ? TEACH_LINES.again : TEACH_LINES.intro, teachPrompt(it));
+  });
+  return any;
+}
+/* the clip of the point Appu is on, while it still has something to show */
+function teachClipNow(){
+  const it = TEACH && teachItem(TEACH.s);
+  return it && it.clip && TEACH.clip && TEACH.clip.it === it && TEACH.clip.state !== 'off' ? TEACH.clip : null;
+}
+function teachClipPlay(){
+  const it = teachItem(TEACH.s), c = it && it.clip;
+  if(!c) return false;
+  const run = TEACH, el = APPU_EL = document.createElement('video');
+  TEACH.clip = { it, state: 'play' };
+  el.id = 'appuclip'; el.src = c.src; el.preload = 'auto'; el.playsInline = true; el.setAttribute('playsinline', '');
+  const alive = () => TEACH === run && APPU_EL === el && S.screen === 'teach';
+  const off = why => {
+    if(TEACH === run && TEACH.clip && TEACH.clip.it === it){
+      const was = TEACH.clip.state; TEACH.clip.state = 'off';
+      if(why) log(null, `Teach Appu · Appu's clip ${c.src} ${why} — the slate and Appu's voice carry on`);
+      render();
+      if(was === 'play' && it.phase === 'pick') teachSay();
+    }
+    if(APPU_EL === el){ el.onerror = el.ontimeupdate = el.onended = null; APPU_EL = null; }
+  };
+  el.onerror = () => off('could not play');
+  el.ontimeupdate = () => {
+    if(!alive() || TEACH.clip.state !== 'play' || el.currentTime < c.pause) return;
+    el.pause(); TEACH.clip.state = 'ask'; render();
+  };
+  el.onended = () => { if(alive() && TEACH.clip.state === 'fix'){ TEACH.clip.state = 'end'; render(); } };
+  log(0, `Teach Appu · Appu's clip ${c.src} · his sum ${it.fix.text} = ${it.fix.wrong}, acted on video${c.child ? ' (made for ' + c.child + ')' : ''}`);
+  render();
+  el.play().catch(() => { if(alive()){ TEACH.clip.tap = true; render(); } });   // a phone that wants a tap first
+  return true;
+}
+/* Appu has reached a point whose clip hasn't played yet: play it (instead of saying his working) */
+function teachClipMaybe(){
+  const it = TEACH && teachItem(TEACH.s);
+  if(!it || !it.clip || it.phase !== 'pick' || !it.first || (TEACH.clip && TEACH.clip.it === it)) return false;
+  return teachClipPlay();
+}
+function teachClipTap(){
+  if(!TEACH || !TEACH.clip || !APPU_EL) return;
+  TEACH.clip.tap = false;
+  APPU_EL.play().catch(() => {});
+  render();
+}
+function teachClipStop(){
+  if(APPU_EL){ try{ APPU_EL.pause(); }catch(e){} APPU_EL.onerror = APPU_EL.ontimeupdate = APPU_EL.onended = null; APPU_EL = null; }
+}
+/* the clip's <video> lives outside render(): each redraw moves the same one into the new slot */
+function teachClipSlot(){
+  const slot = document.getElementById('appuslot');
+  if(slot && APPU_EL) slot.insertBefore(APPU_EL, slot.firstChild);
+}
+
 /* ---------- starting ---------- */
 function teachStart(unit, again){
   const s = unit && teachBegin(unit, { again: !!again });
   if(!s){ log(0, 'Teach Appu · nothing to teach in this unit for this child today'); return; }
-  TEACH = { s, sum: null, busy: null, msg: '', typing: false };
-  log(0, `Teach Appu · "${unit.title.en}" · ${s.items.length} point(s)${again ? ' (again — only the ones still to teach)' : ''}: ${s.items.map(x => x.aim.id + (x.fix ? ` [Appu's ${x.fix.mistake} on ${x.fix.text}${x.fix.habit ? ', this child’s habit' : ''}]` : '')).join(', ')}`);
+  const run = TEACH = { s, sum: null, busy: null, msg: '', typing: false, clip: null };
+  teachClipStop();
   go('teach');
-  teachSay();
+  // Appu's clip, if his mistake has one: listed before he says a word, so his sum is the clip's from the start
+  const begin = () => {
+    if(TEACH !== run) return;
+    const c = s.items.some(x => x.fix) && APPU_CLIPS ? teachClipBind(s) : null;
+    log(0, `Teach Appu · "${unit.title.en}" · ${s.items.length} point(s)${again ? ' (again — only the ones still to teach)' : ''}: ${s.items.map(x => x.aim.id + (x.fix ? ` [Appu's ${x.fix.mistake} on ${x.fix.text}${x.fix.habit ? ', this child’s habit' : ''}${x.clip ? ', on video' : ''}]` : '')).join(', ')}`);
+    render();
+    if(!(c && teachClipMaybe())) teachSay();
+  };
+  if(!s.items.some(x => x.fix)) return begin();
+  appuLoadClips(1500).then(begin, begin);
 }
 /* the lesson just finished → its unit */
 function teachFromLesson(){
@@ -124,6 +234,8 @@ function teachAgain(id){
 /* ---------- Appu speaks ---------- */
 function teachSay(){
   if(!TEACH) return;
+  const c = teachClipNow();
+  if(c && (c.state === 'play' || c.state === 'fix')) return;    // the clip is talking
   speak(TMR(TEACH.s.line));
 }
 
@@ -135,6 +247,14 @@ function teachChoose(k){
   if(!out) return;
   log(0, `Teach Appu · Appu's sum ${it.fix.text}: the child picked ${it.fix.opts[k]} — ${out === 'caught' ? 'caught his mistake' : out === 'again' ? "agreed with Appu's answer; a nudge" : 'still not caught — later'}`);
   if(out === 'caught' && typeof sfxChime === 'function') sfxChime();
+  const c = TEACH.clip && TEACH.clip.it === it && TEACH.clip.state === 'ask' ? TEACH.clip : null;
+  if(c && out === 'caught' && APPU_EL){
+    // the clip carries on with the fix and ends on the question the mic answers
+    c.state = 'fix'; TEACH.msg = ''; render();
+    APPU_EL.play().catch(() => { c.state = 'end'; render(); teachSay(); });
+    return;
+  }
+  if(c && out === 'gap'){ c.state = 'off'; teachClipStop(); }
   teachAfter();
 }
 
@@ -142,6 +262,8 @@ function teachMic(){
   if(!TEACH || TEACH.busy || TEACH.sum) return;
   const it = teachItem(TEACH.s);
   if(!it || (it.fix && it.phase !== 'why')) return;
+  const c = teachClipNow();
+  if(c && c.state === 'fix') return;                              // the clip is still asking
   TEACH.busy = 'listen'; TEACH.msg = '';
   render();
   if(teachCloudReady()){
@@ -224,6 +346,7 @@ function teachAfter(){
   }
   TEACH.msg = '';
   render();
+  if(!TEACH.sum && teachClipMaybe()) return;
   teachSay();
 }
 
@@ -233,6 +356,7 @@ function teachRemedy(){
   if(!TEACH || !TEACH.sum) return;
   const s = TEACH.s, gap = s.items.find(x => x.state !== 'covered');
   teachMarkRetaught(s);
+  teachClipStop();
   const skill = gap && (gap.aim.skill || s.unit.skill), dom = skill && mindDomain(skill);
   TEACH = null;
   const say = (from, to) => { if(typeof log === 'function') log(0, `Teach Appu · teaching ${skill} again a different way: ${from || '—'} → ${to}`); };
@@ -252,6 +376,7 @@ function teachRemedy(){
   go('lessons');
 }
 function teachLeave(){
+  teachClipStop();
   if(TEACH && !TEACH.sum && TEACH.s.items.some(x => x.state !== 'todo')) TEACH.sum = teachFinish(TEACH.s);
   TEACH = null;
   go('lessons');
@@ -259,6 +384,7 @@ function teachLeave(){
 /* leaving the screen any other way: what was taught still counts */
 function teachFollow(screen){
   if(screen === 'teach' || !TEACH) return;
+  teachClipStop();
   if(!TEACH.sum && TEACH.s.items.some(x => x.state !== 'todo')) teachFinish(TEACH.s);
   TEACH = null;
 }
@@ -271,20 +397,27 @@ function teachHTML(){
   if(!TEACH) return `<button class="back" onclick="go('lessons')">← ${t('back')}</button>`;
   const hi = S.lang === 'hi', s = TEACH.s, it = teachItem(s), sum = TEACH.sum;
   const listening = TEACH.busy === 'listen', judging = TEACH.busy === 'judge';
-  const pick = it && it.fix && it.phase === 'pick';
+  const clip = !sum ? teachClipNow() : null;
+  const watching = clip && (clip.state === 'play' || clip.state === 'fix');
+  const pick = it && it.fix && it.phase === 'pick' && !(clip && clip.state === 'play');
   const slate = it && it.fix ? `<div class="teachslate"><span>${attr(it.fix.text)} = <b>${it.fix.wrong}</b></span>${it.phase === 'pick' ? ' ?' : ' ✗'}</div>` : '';
+  const stage = clip ? `<div class="teachclip" id="appuslot">${clip.tap ? `<button class="watch-play" onclick="teachClipTap()" aria-label="${hi ? 'चलाओ' : 'Play'}">▶</button>` : ''}</div>
+    ${clip.state === 'play' ? '' : slate}` : `
+    <div class="teachmunni${sum ? '' : ' is-puzzled'}">${appuSmall()}<span class="teachq">${sum ? '★' : '?'}</span></div>
+    <div class="teachbubble">${TMW(s.line)}</div>
+    ${slate}`;
   return `
   <button class="back" onclick="teachLeave()">← ${t('back')}</button>
   <div class="display" style="font-size:21px;margin:4px 0">🐘 ${hi ? 'अप्पू को सिखाओ' : 'Teach Appu'}</div>
   <div class="muted">${TMW(s.unit.title)}</div>
   ${teachChipsHTML(s.items, it)}
   ${teachWordsAsk() ? teachWordsCardHTML() : ''}
-  <div class="teachstage">
-    <div class="teachmunni${sum ? '' : ' is-puzzled'}">${appuSmall()}<span class="teachq">${sum ? '★' : '?'}</span></div>
-    <div class="teachbubble">${TMW(s.line)}</div>
-    ${slate}
+  <div class="teachstage${clip ? ' has-clip' : ''}">${stage}
   </div>
-  ${sum ? teachSummaryHTML(sum) : pick ? `
+  ${clip && clip.state === 'ask' ? `<div class="teachbubble teachclipq">${TMW(TEACH.s.hint ? TEACH.s.line : TEACH_LINES.fixIntro)}</div>`
+    : clip && clip.state === 'end' ? `<div class="teachbubble teachclipq">${TMW(TEACH.s.line)}</div>` : ''}
+  ${sum ? teachSummaryHTML(sum) : watching ? `
+    <div class="muted teachclipnote" style="font-size:12.5px;margin-top:10px">${clip.state === 'play' ? (hi ? '🎬 देखो, अप्पू ख़ुद सवाल कर रहा है…' : '🎬 Watch Appu try it himself…') : (hi ? '🎬 देखो, फिर बताओ…' : '🎬 Watch, then tell him…')}</div>` : pick ? `
     <div class="opts teachopts" style="margin-top:12px">${it.fix.opts.map((o, k) => `<button class="opt" onclick="teachChoose(${k})">${o}</button>`).join('')}</div>
     <div class="muted" style="font-size:12.5px;margin-top:6px">${hi ? 'सही जवाब छुओ।' : 'Tap the right answer.'}</div>` : `
     <button class="btn teachmic${listening ? ' live' : ''}" onclick="teachMic()" ${TEACH.busy ? 'disabled' : ''}>${listening
@@ -415,3 +548,4 @@ function teachTeacherHTML(code){
 }
 
 if(typeof VIEWS !== 'undefined') VIEWS.teach = teachHTML;
+if(typeof AFTER !== 'undefined') AFTER.teach = teachClipSlot;

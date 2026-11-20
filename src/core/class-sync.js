@@ -42,20 +42,24 @@ function syncCodes(){
 async function syncClass(code){
   if(!code || (SYNC_STATE[code] && SYNC_STATE[code].busy)) return false;
   if(!navigator.onLine){ SYNC_STATE[code] = { error:'offline' }; return false; }
+  const identity = typeof classAuthToken==='function' ? classAuthToken() : null;
+  if(!identity){ SYNC_STATE[code] = { error:'sign-in-required' }; return false; }
   SYNC_STATE[code] = { busy:true };
   flushClassMirror();
   syncProfileOut();
+  const teacher = typeof CLASS_AUTH !== 'undefined' && CLASS_AUTH.role === 'teacher' && CLASS_AUTH.classes.includes(code);
   const children = {};
-  for(const p of S.profiles)
+  if(!teacher) for(const p of S.profiles)
     if(p.classCode === code && p.syncOn && p.id)
       children[p.id] = { childName: p.name, skillHistory: p.skillHistory || {}, ...teachExplainedOf(p), ...(typeof planPathsOf === 'function' ? planPathsOf(p) : {}), at: Date.now() };
-  const teacherKey = S.syncKeys[code];                       // only on the teacher's phone
-  const homework = teacherKey ? (readClassShared(code)._homework || null) : null;
-  const lessons = teacherKey ? (readClassShared(code)._lessons || null) : null;   // the school's own lessons (core/syllabus.js)
-  const roster = teacherKey ? (readClassShared(code)._roster || null) : null;     // which class each child is in (schoolClassOf())
+  // Server permission checks derive teacher/guardian roles from verified identity
+  // and admin-provisioned ACL, NEVER the old local teacher key.
+  const homework = teacher ? (readClassShared(code)._homework || null) : null;
+  const lessons = teacher ? (readClassShared(code)._lessons || null) : null;
+  const roster = teacher ? (readClassShared(code)._roster || null) : null;
   try{
-    const res = await fetch(SYNC_URL, { method:'POST', headers:{ 'content-type':'application/json' },
-                                        body: JSON.stringify({ code, children, homework, lessons, roster, teacherKey }) });
+    const res = await fetch(SYNC_URL, { method:'POST', headers:{ 'content-type':'application/json', 'authorization':'Bearer '+identity },
+                                        body: JSON.stringify({ code, children, homework, lessons, roster }) });
     if(!res.ok) throw new Error(res.status === 503 ? 'noserver' : res.status === 403 ? 'claimed' : 'HTTP ' + res.status);
     const cls = await res.json();
     classMirrorUpdate(code, all => {
@@ -175,6 +179,7 @@ function newTeacherKey(){
 function syncStatusLine(code){
   const hi = S.lang === 'hi', st = SYNC_STATE[code] || {}, at = S.syncAt[code];
   if(st.busy) return hi ? 'सिंक हो रहा है…' : 'Syncing…';
+  if(st.error === 'sign-in-required') return hi ? 'सिंक के लिए स्कूल खाते से साइन इन करें।' : 'Sign in with a school account to sync.';
   if(st.error === 'offline') return hi ? 'इंटरनेट नहीं — जुड़ते ही सिंक होगा।' : 'No connection — it will sync as soon as there is one.';
   if(st.error === 'noserver') return hi ? 'इस सर्वर पर सिंक अभी चालू नहीं है।' : "Sync isn't set up on this server yet.";
   if(st.error === 'claimed') return hi ? 'यह कक्षा पहले से किसी और शिक्षक के फ़ोन से सिंक होती है।' : "This class is already synced from another teacher's phone.";

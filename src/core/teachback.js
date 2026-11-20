@@ -276,24 +276,42 @@ function teachFixFor(skill, seed, c){
   for(let t = 0; t < 8; t++){
     const sp = skillProblem(skill, (seed >>> 0) + t * 7919);
     if(!sp) return null;
-    const p = { a: sp.a, b: sp.b, op: sp.op === 'mix' ? '+' : sp.op, c: sp.c };
-    const cands = mistakeAnswers(p);
     for(const id of order){
-      const m = cands.find(x => x.id === id && x.v !== sp.ans && x.v >= 0);
-      if(!m) continue;
-      const act = { en: TEACH_ACTS[id](p, m.v, false), hi: TEACH_ACTS[id](p, m.v, true) };
-      // his working never says the right answer
-      if([act.en, act.hi].some(s => (s.match(/\d+/g) || []).includes(String(sp.ans)))) continue;
-      const third = (cands.find(x => x.v !== sp.ans && x.v !== m.v && x.v >= 0) || { v: sp.ans + 10 }).v;
-      const opts = [sp.ans, m.v, third];
-      const r = rng(seedOf('fix' + seed + t));
-      for(let i = opts.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
-      const tip = { en: mistakeTip(id, p, 'en') || '', hi: mistakeTip(id, p, 'hi') || '' };
-      return { skill, p, text: sp.text, ans: sp.ans, wrong: m.v, mistake: id, habit: !!(habit && habit.id === id),
-               opts, correct: opts.indexOf(sp.ans), act, tip, ideas: TEACH_FIX_IDEAS[id] };
+      const f = teachFixMake(skill, sp, id, habit, 'fix' + seed + t);
+      if(f) return f;
     }
   }
   return null;
+}
+/* Appu's mistake `id` on one sum, or null when that sum can't carry it: the
+   mistake must give a real wrong answer, and his working must never say the
+   right one. `key` seeds the order of the three answers. */
+function teachFixMake(skill, sp, id, habit, key){
+  if(!TEACH_ACTS[id] || !TEACH_FIX_IDEAS[id]) return null;
+  const p = { a: sp.a, b: sp.b, op: sp.op === 'mix' ? '+' : sp.op, c: sp.c };
+  const cands = mistakeAnswers(p);
+  const m = cands.find(x => x.id === id && x.v !== sp.ans && x.v >= 0);
+  if(!m) return null;
+  const act = { en: TEACH_ACTS[id](p, m.v, false), hi: TEACH_ACTS[id](p, m.v, true) };
+  // his working never says the right answer
+  if([act.en, act.hi].some(s => (s.match(/\d+/g) || []).includes(String(sp.ans)))) return null;
+  const third = (cands.find(x => x.v !== sp.ans && x.v !== m.v && x.v >= 0) || { v: sp.ans + 10 }).v;
+  const opts = [sp.ans, m.v, third];
+  const r = rng(seedOf(key));
+  for(let i = opts.length - 1; i > 0; i--){ const j = Math.floor(r() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
+  const tip = { en: mistakeTip(id, p, 'en') || '', hi: mistakeTip(id, p, 'hi') || '' };
+  return { skill, p, text: sp.text, ans: sp.ans, wrong: m.v, mistake: id, habit: !!(habit && habit.id === id),
+           opts, correct: opts.indexOf(sp.ans), act, tip, ideas: TEACH_FIX_IDEAS[id] };
+}
+/* The same mistake on a sum chosen in advance: a cartoon of Appu making it
+   (video/appu-clips.json, ui/teach-munni.js) shows one particular sum, so his
+   sum on the slate has to be that one. Two-digit taking away or adding only. */
+function teachFixAt(skill, a, b, id, op, c){
+  op = op === '+' ? '+' : '−';
+  if(!Number.isInteger(a) || !Number.isInteger(b) || a < 10 || b < 10 || a > 99 || b > 99 || (op === '−' && a <= b)) return null;
+  const ans = op === '+' ? a + b : a - b;
+  const habit = typeof twinHabit === 'function' ? twinHabit(skill, c) : null;
+  return teachFixMake(skill, { a, b, op, c: null, ans, text: `${a} ${op} ${b}` }, id, habit, 'fixat' + a + op + b + id);
 }
 
 /* ---------- which unit goes with a lesson ---------- */

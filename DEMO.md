@@ -42,7 +42,7 @@ optional live step (4b).
 | 7 | Tap the lesson. It opens a **picture lesson** first. Play it, then the school's lesson. | "Pictures first, then the school's own lesson as the check." |
 | 8 | At the end tap **🐘 Teach Appu**. Agree to the grown-up's card once (step 7). Type or say an explanation. Point at the trace beside the phone: the T2 line says *judged by Gemini … each credit checked*, and Tier 2 lights up. | "Now Appu, Munni's little friend, 'forgets', and the child teaches him back. Gemini judges which points the explanation covered — but only by quoting the child's own words, and the phone checks the quote again. What the child can't explain becomes next week's gap — never a 'wrong'." |
 | 9 | Switch to **Kabir (demo)** → **The Story Fire**. | "Kabir, same lesson — no pictures step. The story works for him." |
-| 10 | *(maths, if a sums chapter is approved)* Kabir → Teach Appu on chapter 12's *Taking away tens and ones* (or chapter 4's *Finding Hidden Seeds*). | "Appu makes Kabir's own mistake — taking the smaller digit from the bigger — and he has to catch it." |
+| 10 | *(maths, if a sums chapter is approved)* Kabir → Teach Appu on chapter 12's *Taking away tens and ones* (or chapter 4's *Finding Hidden Seeds*). When Appu reaches his sum, **Kabir's clip plays** (52 − 27, in Hindi) and stops on *क्या ये सही है, कबीर?* — tap 25, it carries on and ends on *हमने एक बंडल क्यों खोला?*; then tap the mic. Asha's (61 − 24, English) plays on a *borrowing* lesson's Teach Appu (her chapter-12 sum is a different mistake, so no clip there). | "Appu makes Kabir's own mistake — taking the smaller digit from the bigger — on video, and stops for Kabir to catch it. Then Kabir has to say why." |
 | 11 | Back to the teacher view → **What the class could explain**. Read the green line at the top, then the ↻ lines under the borrowing points. | "For every point a child couldn't explain the first time, the teacher sees what happened next: Asha couldn't say what a borrowed ten becomes, Munni taught her again her way, and then she could. Kabir has been re-taught and Appu will ask him again. That is the loop — explain back, find the gap, re-teach, explain again — and it's measured, child by child." |
 
 ## Recording checklist
@@ -77,6 +77,7 @@ optional live step (4b).
   checked by Gemini*), or the site has no `GEMINI_API_KEY`. `npm run dev` reads
   the key from `voice/.env` and serves `/api` (Ask me, the syllabus, Teach
   Munni's judge on words) on the same origin, like Cloud Run.
+- **Appu's clip doesn't play (the slate shows instead):** the phone has never had the clip and has no signal, or the clip's list didn't load in time. The slate and Appu's voice carry on the same — or open Teach Appu once online first, and the phone keeps the clip.
 - **Start clean:** teacher view → **Remove the demo children**, then add them
   again.
 

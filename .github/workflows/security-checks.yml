@@ -1,0 +1,31 @@
+name: Takhti security and regression checks
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Check staging smoke and administrator provisioning syntax
+        run: |
+          node --check tools/smoke-school-auth.mjs
+          node --check tools/provision-class-access.mjs
+          bash -n cloud/deploy-auth-staging.sh
+      - name: Signed identity, tenant isolation, and guardian authorization tests
+        run: node --test test/class-security.test.mjs
+      - name: Full Takhti regression suite
+        run: node tools/run-regression-tests.mjs
+      - name: Full dependency audit (including development tools)
+        if: always()
+        run: npm audit --audit-level=high

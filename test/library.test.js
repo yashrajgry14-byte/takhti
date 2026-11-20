@@ -401,6 +401,11 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     E(`LIBRARY.books[0].chapters = LIBRARY.books[0].chapters.filter(c => c.id === 'ch5')`);
     fetches = 0;
     E(`S.ctx.tcode = 'CLS003'; S.ctx.sylCls = 'c2'; go('teacher')`);
+    check('library teacher UI is inaccessible before verified sign-in',
+      /Teacher account required/.test(screen()) && !/FROM THE LIBRARY/.test(screen()), screen().slice(0,150));
+    E(`CLASS_AUTH.token='test-approved-session'; CLASS_AUTH.expires=Date.now()+600000;
+      CLASS_AUTH.role='teacher'; CLASS_AUTH.classes=['CLS003','CLS001']; CLASS_AUTH.email='teacher@example.test';
+      render()`);
     await wait(20);
     check('the teacher view says when the library has no book for the class yet (Class 2), and offers drafting from a chapter',
       /No book for Class 2 in Takhti's library yet/.test(screen()) && /DRAFT FROM A CHAPTER/.test(screen()), screen().slice(0, 300));
