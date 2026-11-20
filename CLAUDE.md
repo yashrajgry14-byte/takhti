@@ -89,7 +89,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js
 ```
 
-`sw.js` caches the app shell as `takhti-v87` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v89` (recorded narration lives in a
 separate `takhti-audio-v2`, bumped only when a line is rendered again in a new
 voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship
 changes.** Its `SHELL` list must be exactly `index.html`'s stylesheets +
@@ -593,8 +593,19 @@ network and no waiting in the week.
   maths): a passage with one two-answer question is a coin toss too. And
   its questions don't all share one right answer (`sylClean(…, { mixRight })`,
   `LIB_MIX_ANSWERS`, every draft, repair and re-check): every answer "Yes" is
-  passed by a child who always says Yes. Both rules are the builder's only —
-  a teacher's own upload, and a lesson already on a phone, keep the warning.
+  passed by a child who always says Yes. And no yes/no question says a
+  teaching line back (`sylClean(…, { saidBack })`, `LIB_SAID_BACK`,
+  `sylSaidBack()`): every content word of the question — leaving out क्या,
+  है, में, से, का/की/के, होता, does, is, the… — in **one** line said since
+  the last question ("तोता … त वर्ण से शुरू होता है" → "क्या तोता में त वर्ण
+  है?") is rejected, naming the line; two lines put together ("ताल … ल पर
+  खत्म", "चाल … ल पर खत्म" → "क्या ताल और चाल मिलते हैं?") is the child's own
+  step and passes. The prompt's rule 6f says why, for the draft and the
+  repair. All three rules are the builder's only — a teacher's own upload,
+  and a lesson already on a phone, keep the warning (`sylLessonWarnings()`).
+  On 20 Nov the said-back rule caught one kept lesson in the whole library,
+  Sarangi 1 ch7's letters lesson; ch7 stays at 2 lessons until a
+  re-check is approved (it would keep 1).
 - **A reader never copies its textbook** (`tools/book-words.mjs`, builder
   only): once per chapter Gemini copies out the chapter's printed lines
   (flash-lite, `TAKHTI_BOOKWORDS_MODEL`); only a hash of every five-word run
@@ -707,8 +718,8 @@ network and no waiting in the week.
   (rhyming, `h1-read`) is replaced — its id is gone, so a class that
   approved it approves again. Weak spot for the teacher's reading: the
   letters lesson's first question asks what its teaching line just said
-  (yes/no answers aren't caught by the "said it" check), and nothing asks
-  about ड़.
+  (the library's said-back rule now rejects it on a re-check — not run on
+  the chapter yet), and nothing asks about ड़.
 
 ## This child's path — `core/planner.js`
 

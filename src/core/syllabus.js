@@ -389,6 +389,34 @@ function sylAimGaps(les){
    rejection): one question with two answers is a coin toss, and "are all
    its sides equal?" asked only where the answer is Yes is passed by a child
    who always says Yes (the eighth live run's square lesson). */
+// A yes/no question that is a teaching line said back: every content word of
+// the question is in ONE line Munni said since the last question ("तोता … त
+// वर्ण से शुरू होता है" → "क्या तोता में त वर्ण है?"). The child answers from
+// what they just heard, not from looking or thinking — Sarangi 1 ch7's
+// rebuild kept one (20 Nov 2026). One line, not all of them together: "ताल
+// ends in ल", "चाल ends in ल" → "do ताल and चाल rhyme?" is the child's own step.
+const SYL_BACK_STOP = new Set(['क्या', 'है', 'हैं', 'में', 'से', 'का', 'की', 'के', 'होता', 'होती', 'does', 'do', 'is', 'are', 'the', 'a', 'an']);
+const sylBackWords = s => (String(s || '').toLowerCase().match(/[\p{L}\p{M}\p{N}]+/gu) || []);
+function sylSaidBack(beats){
+  const out = [];
+  let lead = [];
+  (beats || []).forEach((b, i) => {
+    if(!b) return;
+    if(b.t === 'ask'){
+      if(Array.isArray(b.opts) && b.opts.length && b.opts.every(o => /^(yes|no)$/i.test(String(o).trim()))){
+        for(const lang of ['hi', 'en']){
+          const want = sylBackWords(b.q && b.q[lang]).filter(w => !SYL_BACK_STOP.has(w));
+          if(!want.length) continue;
+          const line = lead.find(s => { const has = new Set(sylBackWords(s[lang])); return want.every(w => has.has(w)); });
+          if(line){ out.push({ i, at: line.at, q: b.q[lang] }); break; }
+        }
+      }
+      lead = [];
+    } else if(b.say && b.t !== 'win') lead.push({ ...b.say, at: b.t === 'intro' ? 'intro' : i });
+  });
+  return out;
+}
+
 function sylLessonWarnings(les){
   const beats = (les && les.beats) || [], out = [];
   const asks = beats.filter(b => b && b.t === 'ask').length;
@@ -417,6 +445,9 @@ function sylLessonWarnings(les){
   const rights = beats.filter(b => b && b.t === 'ask' && Array.isArray(b.opts)).map(b => String(b.opts[b.correct]).trim().toLowerCase());
   if(rights.length >= 2 && new Set(rights).size === 1) out.push({ en:`Every question's right answer is "${rights[0]}" — a child who learnt that one answer passes them all.`,
     hi:`हर प्रश्न का सही उत्तर "${rights[0]}" है — एक ही उत्तर याद रखने वाला बच्चा सब में पास हो जाएगा।` });
+  // a yes/no question that only says a teaching line back (the library rejects it — opts.saidBack)
+  for(const s of sylSaidBack(beats)) out.push({ en:`"${s.q}" asks back what ${s.at === 'intro' ? 'the intro' : 'the line just before it'} said — the child can answer Yes from what they heard. Ask about a new example.`,
+    hi:`"${s.q}" वही पूछता है जो ${s.at === 'intro' ? 'शुरुआत में' : 'ठीक पहले की पंक्ति में'} कहा गया — बच्चा सुनी हुई बात से हाँ कह सकता है। किसी नए उदाहरण के बारे में पूछो।` });
   // what each kind of picture knows a lesson can't tell (a clock: every time on the hour)
   for(const k of picKindsIn(beats)) if(k.warnings) out.push(...k.warnings(beats));
   // Hindi words drafts get wrong in this setting (a short list from the live runs, for the teacher to look at — never changed by Takhti)
@@ -698,6 +729,9 @@ function sylClean(raw, opts){
   const rightsN = les.beats.filter(b => b.t === 'ask' && Array.isArray(b.opts) && Number.isInteger(b.correct)).map(b => String(b.opts[b.correct]).trim().toLowerCase());
   if(opts.mixRight && rightsN.length >= 2 && new Set(rightsN).size === 1)
     errs.push(`every question's right answer is "${rightsN[0]}" — a child who always gives that answer passes them all: make at least one question's right answer different (a No / नहीं, or another word or number)`);
+  // …and no yes/no question says a teaching line back (opts.saidBack, the builder sets it; a teacher's upload gets the warning)
+  if(opts.saidBack) for(const s of sylSaidBack(les.beats))
+    errs.push(`beat ${s.i}: the yes/no question "${s.q}" only says back ${s.at === 'intro' ? 'the intro' : `beat ${s.at}'s words`} — the child answers from what they just heard: ask it about a NEW example the lines didn't name`);
   if(les.beats.length && les.beats[les.beats.length - 1].t !== 'win')
     les.beats.push({ t:'win', say:{ en:'Well done. You learnt it today.', hi:'शाबाश! आज तुमने यह सीख लिया।' } });
   les.subject = les.beats.some(b => SYL_MATH.includes(b.t) || picIs(b.t)) ? 'math' : 'read';
