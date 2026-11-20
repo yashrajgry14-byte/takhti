@@ -125,11 +125,14 @@ server.listen(0, '127.0.0.1', () => {
       /* camera "Not now" → dictation, never tracing */
       E(`setChildClass('c5'); S.camOk = false; S.ctx = { mode:'paper' }; go('write');`);
       const notNow = $$('.permcard .btn').find(b => /Not now/.test(b.textContent));
+      // Test the call into the app's central speech function, not the
+      // browser speechSynthesis engine removed in the Google TTS migration.
+      E(`window.__dictationSpeech=[]; speak=function(t,l,done){window.__dictationSpeech.push(t);if(done)done();return Promise.resolve();}`);
       tap(notNow);
       check('Class 5: "Not now" to the camera opens dictation, not tracing', E('S.ctx.mode') === 'dictate' && !$('#guide'), E('S.ctx.mode'));
-      await new Promise(r => setTimeout(r, 400));   // speech is queued a beat after cancel() (core/speech.js)
-      check('dictation: Munni says the line, and the line is hidden until checked',
-        spoken.includes(E('S.ctx.line')) && !w.document.querySelector('.copyline'), `spoken=${spoken.slice(-1)} copyline=${!!$('.copyline')}`);
+      check('dictation requests Munni narration, and the line stays hidden until checked',
+        E('window.__dictationSpeech.includes(S.ctx.line)') && !w.document.querySelector('.copyline') && spoken.length===0,
+        `Google speech calls=${E('window.__dictationSpeech.length')} browser speech=${spoken.length} copyline=${!!$('.copyline')}`);
       const line = E('S.ctx.line');
       const before = E('S.attempts.write');
       $('#typedline').value = line;
@@ -192,6 +195,10 @@ server.listen(0, '127.0.0.1', () => {
       check('a Class 4 child still gets column sums', E('S.ctx.p').kind == null && /\d+ [+−×÷] \d+/.test(($('.problem') || {}).textContent || ''), ($('.problem') || {}).textContent);
 
       /* ---- the school's roster, on this phone ---- */
+      // Explicitly simulate a signed-in, server-approved teacher for this
+      // existing roster UI test. Unauthenticated denial is covered by the
+      // class-security suite and separate teacher access assertions.
+      E(`CLASS_AUTH.token='test-signed-identity'; CLASS_AUTH.expires=Date.now()+60000; CLASS_AUTH.role='teacher'; CLASS_AUTH.classes=['ROS123'];`);
       E(`setChildClass('c2'); S.classCode = 'ROS123'; mirrorToClassNow(S); S.ctx.tcode = 'ROS123'; go('teacher');`);
       const grade = $('#tgrade');
       check('the teacher view asks which class this class code is', !!grade && grade.options.length === 14, grade ? String(grade.options.length) : 'none');
