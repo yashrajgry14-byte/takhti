@@ -7,7 +7,7 @@ and the Gemini endpoints the app already calls on its own origin:
 |------|------|--------------|
 | `/` and the app's files | the app (works offline after the first visit) | Cloud Run |
 | `POST /api/syllabus` | a chapter → Gemini drafts the week's lessons; the phone checks them | Gemini API, key in Secret Manager |
-| `POST /api/teachback` | Teach Munni's judge, on words only | Gemini API |
+| `POST /api/teachback` | Teach Appu's judge, on words only | Gemini API |
 | `POST /api/class-sync` | the class between phones | a private Cloud Storage bucket, reached with Cloud Run's own identity (no key file) |
 | `GET /health` | `{ gemini, sync }` (Cloud Run reserves `/healthz` for itself) — is each set up? | |
 
@@ -17,7 +17,7 @@ Only a whitelist is ever served (`index.html`, `sw.js`, the manifest,
 
 The voice server (`voice/`: Bolna calls, the reading check, Talking Munni)
 is not part of this service — it keeps state in files and needs its own
-secrets. This deploy is the app, lesson drafting, Teach Munni's judge and
+secrets. This deploy is the app, lesson drafting, Teach Appu's judge and
 class sync.
 
 ## Deploy (about 10 minutes, from a browser)

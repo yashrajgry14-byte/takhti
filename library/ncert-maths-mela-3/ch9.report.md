@@ -45,7 +45,7 @@ skill: place2 · source: Page 118
 
 **Aims kept (what the teacher approves):**
 - The child can show hundreds and tens using tiles.  ·  बच्चा टाइलों से सैकड़े और दहाई दिखा सकता है।  
-  Munni forgets: "I forgot! How do I show numbers with tiles?  ·  मैं भूल गई! टाइलों से संख्याएँ कैसे दिखाते हैं?"
+  Munni forgets: "I forgot! How do I show numbers with tiles?  ·  मैं भूल गया! टाइलों से संख्याएँ कैसे दिखाते हैं?"
 
 **The lesson:**
 1. intro — "Let us show numbers with tiles.  ·  आओ टाइलों से संख्याएँ दिखाएँ।"
@@ -89,7 +89,7 @@ skill: skip · source: Page 119
 
 **Aims kept (what the teacher approves):**
 - The child can count steps on a number line.  ·  बच्चा संख्या रेखा पर कदम गिन सकता है।  
-  Munni forgets: "I forgot! How do we count steps on the line?  ·  मैं भूल गई! संख्या रेखा पर कदम कैसे गिनते हैं?"
+  Munni forgets: "I forgot! How do we count steps on the line?  ·  मैं भूल गया! संख्या रेखा पर कदम कैसे गिनते हैं?"
 
 **The lesson:**
 1. intro — "Let us help the crane reach food with jumps.  ·  आओ छलांग लगाकर सारस को खाना पहुँचाने में मदद करें।"
@@ -127,7 +127,7 @@ skill: place3 · source: Page 125
 
 **Aims kept (what the teacher approves):**
 - The child can make numbers using slips.  ·  बच्चा पर्चियों से संख्याएँ बना सकता है।  
-  Munni forgets: "I forgot! How do we use slips to make a number?  ·  मैं भूल गई! संख्या बनाने के लिए पर्चियों का उपयोग कैसे करते हैं?"
+  Munni forgets: "I forgot! How do we use slips to make a number?  ·  मैं भूल गया! संख्या बनाने के लिए पर्चियों का उपयोग कैसे करते हैं?"
 
 **The lesson:**
 1. intro — "Let us make numbers using paper slips.  ·  आओ कागज की पर्चियों से संख्याएँ बनाएँ।"
@@ -163,7 +163,7 @@ skill: e3-compre · source: Page 127
 
 **Aims kept (what the teacher approves):**
 - The child can read numbers represented by words.  ·  बच्चा शब्दों द्वारा दर्शायी गई संख्याओं को पढ़ सकता है।  
-  Munni forgets: "I forgot! How do we read numbers from words?  ·  मैं भूल गई! शब्दों से संख्याएँ कैसे पढ़ते हैं?"
+  Munni forgets: "I forgot! How do we read numbers from words?  ·  मैं भूल गया! शब्दों से संख्याएँ कैसे पढ़ते हैं?"
 
 **The lesson:**
 1. intro — "Let us learn numbers using words.  ·  आओ शब्दों से संख्याएँ सीखें।"

@@ -311,7 +311,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
       books.length >= 16 && ok && fs.existsSync(path.join(root, 'library/BOOKS.md')) && /--batch/.test(fs.readFileSync(path.join(root, 'library/BOOKS.md'), 'utf8')), books.join());
     /* the first book beyond maths and language: Our Wondrous World (EVS, Class 5), chapter 3 —
        every lesson a passage read for comprehension (its right answers are in the passage),
-       with at least two questions and the science in its Teach Munni aims; its drafts were
+       with at least two questions and the science in its Teach Appu aims; its drafts were
        written by Claude, not Gemini, and the report says so */
     const evs = JSON.parse(fs.readFileSync(path.join(root, 'library/ncert-our-wondrous-world-5/ch3.json'), 'utf8'));
     const evsRaw = JSON.parse(fs.readFileSync(path.join(root, 'library/ncert-our-wondrous-world-5/ch3.raw.json'), 'utf8'));

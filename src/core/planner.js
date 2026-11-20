@@ -7,7 +7,7 @@
    them — nothing new is measured here, nothing leaves the phone:
 
      · already knows it (the twin's mastery, core/twin.js) → show it in
-       the school's lesson, then teach Munni;
+       the school's lesson, then teach Appu;
      · a gap underneath (a prerequisite the twin has seen go wrong) →
        that first, with a built-in lesson;
      · the way to teach it (the mind, core/mind.js — measured, topic by
@@ -25,7 +25,7 @@
        (the next skill up) when every answer was right first time, an
        easier one (the skill underneath) when one was missed — arithmetic
        skills only, where skillProblem() can make a real question;
-     · Teach Munni on the aims the teacher approved.
+     · Teach Appu on the aims the teacher approved.
 
    Two children in one class, the same approved aims, two different
    paths: that is the point. A step's status is read from what is
@@ -155,8 +155,8 @@ function planFor(les, c){
   const unit = typeof teachUnitFor === 'function' ? teachUnitFor(les, ch) : null;
   if(unit){
     const taught = Object.values((typeof teachOf === 'function' ? teachOf(ch) : { units: {} }).units).some(u => u.lessonId === les.id);
-    steps.push({ k: 'teach', lesson: les.id, done: taught, label: { en: 'Teach Munni', hi: 'मुन्नी को सिखाओ' },
-      why: { en: 'Munni forgets — you explain it back', hi: 'मुन्नी भूल जाती है — तुम उसे समझाओ' } });
+    steps.push({ k: 'teach', lesson: les.id, done: taught, label: { en: 'Teach Appu', hi: 'अप्पू को सिखाओ' },
+      why: { en: 'Appu forgets — you explain it back', hi: 'अप्पू भूल जाता है — तुम उसे समझाओ' } });
   }
   // the next step comes after the last one done: a step skipped on the way
   // (the child opened the school's lesson straight away) doesn't come back
@@ -166,7 +166,7 @@ function planFor(les, c){
 
 /* What the teacher sees of this child's path, per school lesson — ids and
    short codes only, under the parent's sync consent (S.syncOn), with the
-   Teach Munni points: the way (pictures, the story, the cartoon, a reading
+   Teach Appu points: the way (pictures, the story, the cartoon, a reading
    way), "already knew it", the skill underneath taken first, and steps done
    of the whole (a harder/easier step counts as a step, nothing more). Never what was said or read, never the mind itself. */
 function planPathOf(les, c){

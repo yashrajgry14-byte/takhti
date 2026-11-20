@@ -582,19 +582,19 @@ function createCircle(brain, envIn) {
     const aim = homeAim(child, w.skill);
     const teach = aim
       ? { id: `${w.key}-teach`, kind: 'teach', day: 3, group: g, aim: aim.id, topic: H.topic,
-          text: { en: fillName(`Munni forgot something! Ask {name}: "${aim.forget.en}" A full answer says: ${aim.ideas.map(i => i.en).join('; ')}. If {name} gets stuck, give a clue: "${aim.hints[0].en}"`, v),
-                  hi: fillName(`मुन्नी कुछ भूल गई! {name} से पूछें: "${aim.forget.hi}" पूरा जवाब यह बताता है: ${aim.ideas.map(i => i.hi).join('; ')}। अगर {name} अटके, तो इशारा दें: "${aim.hints[0].hi}"`, v) } }
+          text: { en: fillName(`Appu forgot something! Ask {name}: "${aim.forget.en}" A full answer says: ${aim.ideas.map(i => i.en).join('; ')}. If {name} gets stuck, give a clue: "${aim.hints[0].en}"`, v),
+                  hi: fillName(`अप्पू कुछ भूल गया! {name} से पूछें: "${aim.forget.hi}" पूरा जवाब यह बताता है: ${aim.ideas.map(i => i.hi).join('; ')}। अगर {name} अटके, तो इशारा दें: "${aim.hints[0].hi}"`, v) } }
       : { id: `${w.key}-teach`, kind: 'teach', day: 3, group: g, text: { en: fillName(H.teach.en, v), hi: fillName(H.teach.hi, v) }, topic: H.topic };
     return [
       { id: `${w.key}-do`, kind: 'do', day: 1, group: g, text: { en: fillName(H.do.en, v), hi: fillName(H.do.hi, v) }, topic: H.topic },
       teach
     ];
   }
-  /* The Wednesday "teach" activity uses Teach Munni's own aims (content/
-     teach.js) when the week's step has them — the same question Munni asks
+  /* The Wednesday "teach" activity uses Teach Appu's own aims (content/
+     teach.js) when the week's step has them — the same question Appu asks
      in the app and on calls, the same clue, and what a full answer says,
-     so a parent can listen like Munni does. A point the child couldn't yet
-     explain to Munni comes first (the record calls keep, profile.teach). */
+     so a parent can listen like Appu does. A point the child couldn't yet
+     explain to Appu comes first (the record calls keep, profile.teach). */
   function homeAim(child, skill) {
     const u = T.TEACH_UNITS && T.TEACH_UNITS[skill];
     if (!u) return null;

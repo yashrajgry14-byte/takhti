@@ -25,7 +25,7 @@
       "source": "Page 76",
       "aims": [
         {
-          "id": "szctptz.0",
+          "id": "s1hc4kfu.0",
           "kind": "explain",
           "short": {
             "en": "Count bundles",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! How do we count 10s bundles?",
-            "hi": "मैं भूल गई! 10 के बंडल कैसे गिने जाते हैं?"
+            "hi": "मैं भूल गया! 10 के बंडल कैसे गिने जाते हैं?"
           },
           "hints": [
             {
@@ -86,14 +86,14 @@
             "hi": "2 दहाई और 5 इकाई से कौन सी संख्या बनती है?"
           },
           "opts": [
-            "52",
-            "25"
+            "25",
+            "52"
           ],
           "hiOpts": [
-            "52",
-            "25"
+            "25",
+            "52"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children may reverse tens and ones digits.",
             "hi": "बच्चे दहाई और इकाई के अंकों को उलट सकते हैं।"
@@ -108,7 +108,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-zctptz"
+      "id": "sch-1hc4kfu"
     }
   ],
   "notUsed": [

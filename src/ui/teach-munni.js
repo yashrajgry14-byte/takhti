@@ -1,11 +1,11 @@
 /* ==================================================================
-   TEACH MUNNI — the screen (VIEWS.teach), and where it shows elsewhere
+   TEACH APPU — the screen (VIEWS.teach), and where it shows elsewhere
 
-   Elephants never forget. Munni does, on purpose: after a lesson she
+   Elephants never forget. Appu does, on purpose: after a lesson he
    forgets its aims and the child teaches them back, out loud. The engine
    is core/teachback.js; this draws it and listens.
 
-   How Munni hears an explanation:
+   How Appu hears an explanation:
    · Online, under the terms a grown-up accepted (v3 — ui/cloud-read.js):
      the recording goes to the voice server, is written down by the same
      speech provider as the reading check (voice/speech.js: Gemini, Sarvam
@@ -24,9 +24,9 @@
    The aim chips turning green is the point of the screen: the child sees
    each idea land. Never "wrong" — a point that won't come after two
    hints is "we'll figure it out together later", and comes back in the
-   Story Fire as "Munni forgot again".
+   Story Fire as "Appu forgot again".
 
-   Also here: the button at the end of a lesson, the "Munni forgot again"
+   Also here: the button at the end of a lesson, the "Appu forgot again"
    card, the parent's "How … explains" and the teacher's results per aim.
    ================================================================== */
 let TEACH = null;   // { s: session, sum: summary once finished, busy, msg, typing }
@@ -39,12 +39,12 @@ function teachTermsOk(){ return !!(TALK_URL && S.voiceTerms && S.voiceTerms.v >=
 /* No voice server: words only, to the host's judge, under their own terms.
    Only the words go — no recording, no name — so these are separate from
    the reading terms, and asked where they are needed: the first time a
-   child teaches Munni with a signal, or on the parent page. The wording is
+   child teaches Appu with a signal, or on the parent page. The wording is
    for the lawyer, like the reading terms. */
 const TEACH_WORDS_V = 1;
 const TEACH_WORDS_TERMS = {
-  en: n => `When ${n} teaches Munni back what a lesson was about (Teach Munni) and this phone has a signal, the words ${n} types — or the words this phone's own speech recognition writes down — go over the internet to Takhti's server and to Google's Gemini, which checks which of the lesson's points ${n} explained. Gemini must quote ${n}'s own words for every point it counts, and Takhti checks that quote again on this phone. Only the words go: Takhti sends no recording and no name. We use Google's paid service, so Google does not train its models on them. Nothing is kept on our server — not the words, not the result. Which points ${n} explained stays on this phone (and with the class, if you switch on class sync). Without a signal, or without this, the phone checks it by itself. You can withdraw this any time on the parent page.`,
-  hi: n => `जब ${n} मुन्नी को किसी पाठ की बातें वापस सिखाते हैं (मुन्नी को सिखाओ) और फ़ोन में सिग्नल हो, तो ${n} जो शब्द लिखते हैं — या जो शब्द इस फ़ोन की अपनी बोली पहचान लिखती है — वे इंटरनेट से तख़्ती के सर्वर और Google के Gemini तक जाते हैं, जो जाँचता है कि ${n} ने पाठ की कौन-सी बातें समझाईं। हर गिनी गई बात के लिए Gemini को ${n} के अपने शब्द दिखाने होते हैं, और तख़्ती उन्हें इसी फ़ोन पर फिर जाँचती है। सिर्फ़ शब्द जाते हैं: तख़्ती न रिकॉर्डिंग भेजती है, न नाम। हम Google की पेड सेवा इस्तेमाल करते हैं, इसलिए Google इनसे अपने मॉडल नहीं सिखाता। हमारे सर्वर पर कुछ नहीं रखा जाता — न शब्द, न नतीजा। ${n} ने कौन-सी बातें समझाईं, वह इसी फ़ोन पर रहता है (और क्लास के साथ, अगर आप क्लास सिंक चालू करते हैं)। सिग्नल न हो, या इसके बिना, फ़ोन ख़ुद जाँचता है। माता-पिता वाले पेज पर इसे कभी भी वापस ले सकते हैं।`
+  en: n => `When ${n} teaches Appu back what a lesson was about (Teach Appu) and this phone has a signal, the words ${n} types — or the words this phone's own speech recognition writes down — go over the internet to Takhti's server and to Google's Gemini, which checks which of the lesson's points ${n} explained. Gemini must quote ${n}'s own words for every point it counts, and Takhti checks that quote again on this phone. Only the words go: Takhti sends no recording and no name. We use Google's paid service, so Google does not train its models on them. Nothing is kept on our server — not the words, not the result. Which points ${n} explained stays on this phone (and with the class, if you switch on class sync). Without a signal, or without this, the phone checks it by itself. You can withdraw this any time on the parent page.`,
+  hi: n => `जब ${n} अप्पू को किसी पाठ की बातें वापस सिखाते हैं (अप्पू को सिखाओ) और फ़ोन में सिग्नल हो, तो ${n} जो शब्द लिखते हैं — या जो शब्द इस फ़ोन की अपनी बोली पहचान लिखती है — वे इंटरनेट से तख़्ती के सर्वर और Google के Gemini तक जाते हैं, जो जाँचता है कि ${n} ने पाठ की कौन-सी बातें समझाईं। हर गिनी गई बात के लिए Gemini को ${n} के अपने शब्द दिखाने होते हैं, और तख़्ती उन्हें इसी फ़ोन पर फिर जाँचती है। सिर्फ़ शब्द जाते हैं: तख़्ती न रिकॉर्डिंग भेजती है, न नाम। हम Google की पेड सेवा इस्तेमाल करते हैं, इसलिए Google इनसे अपने मॉडल नहीं सिखाता। हमारे सर्वर पर कुछ नहीं रखा जाता — न शब्द, न नतीजा। ${n} ने कौन-सी बातें समझाईं, वह इसी फ़ोन पर रहता है (और क्लास के साथ, अगर आप क्लास सिंक चालू करते हैं)। सिग्नल न हो, या इसके बिना, फ़ोन ख़ुद जाँचता है। माता-पिता वाले पेज पर इसे कभी भी वापस ले सकते हैं।`
 };
 function teachWordsOk(){ return !TALK_URL && !!(S.teachWords && S.teachWords.v >= TEACH_WORDS_V); }
 /* Where the words go to be judged right now, or '' for the phone's own rubric. */
@@ -56,13 +56,13 @@ function teachJudgeUrl(){
 }
 function teachWordsAsk(){ return !TALK_URL && S.online && !teachWordsOk() && TEACH && !TEACH.wordsLater && !TEACH.sum; }
 function teachWordsAccept(where){
-  S.teachWords = { v: TEACH_WORDS_V, at: new Date().toISOString(), by: 'parent (' + (where || 'Teach Munni') + ')' };
-  log(null, `Teach Munni words terms (v${TEACH_WORDS_V}) accepted by a grown-up for ${S.name || 'this child'} — with a signal, the words go to Gemini to be judged; no recording, nothing kept`);
+  S.teachWords = { v: TEACH_WORDS_V, at: new Date().toISOString(), by: 'parent (' + (where || 'Teach Appu') + ')' };
+  log(null, `Teach Appu words terms (v${TEACH_WORDS_V}) accepted by a grown-up for ${S.name || 'this child'} — with a signal, the words go to Gemini to be judged; no recording, nothing kept`);
   saveSoon(); render();
 }
 function teachWordsWithdraw(){
   S.teachWords = null; S.ctx.wordsAsk = false;
-  log(null, 'Teach Munni words terms withdrawn by a parent — explanations are judged on this phone only');
+  log(null, 'Teach Appu words terms withdrawn by a parent — explanations are judged on this phone only');
   saveSoon(); render();
 }
 function teachWordsCardHTML(){
@@ -81,7 +81,7 @@ function teachWordsParentHTML(){
   if(TALK_URL) return '';
   const hi = S.lang === 'hi', n = attr(S.name || ''), t = S.teachWords;
   return `<div class="metric" style="display:block">
-    <b>${hi ? 'मुन्नी को सिखाओ: Gemini की जाँच' : 'Teach Munni: checked by Gemini'}</b>
+    <b>${hi ? 'अप्पू को सिखाओ: Gemini की जाँच' : 'Teach Appu: checked by Gemini'}</b>
     <div style="font-size:12.5px;opacity:.75;line-height:1.5;margin-top:4px">${hi ? TEACH_WORDS_TERMS.hi(n) : TEACH_WORDS_TERMS.en(n)}</div>
     <div style="font-size:12.5px;margin-top:6px">${t
       ? (hi ? `सहमति दी: ${String(t.at).slice(0, 10)} (शर्तें v${t.v})` : `Agreed on ${String(t.at).slice(0, 10)} (terms v${t.v})`)
@@ -99,9 +99,9 @@ function teachCloudReady(){
 /* ---------- starting ---------- */
 function teachStart(unit, again){
   const s = unit && teachBegin(unit, { again: !!again });
-  if(!s){ log(0, 'Teach Munni · nothing to teach in this unit for this child today'); return; }
+  if(!s){ log(0, 'Teach Appu · nothing to teach in this unit for this child today'); return; }
   TEACH = { s, sum: null, busy: null, msg: '', typing: false };
-  log(0, `Teach Munni · "${unit.title.en}" · ${s.items.length} point(s)${again ? ' (again — only the ones still to teach)' : ''}: ${s.items.map(x => x.aim.id + (x.fix ? ` [Munni's ${x.fix.mistake} on ${x.fix.text}${x.fix.habit ? ', this child’s habit' : ''}]` : '')).join(', ')}`);
+  log(0, `Teach Appu · "${unit.title.en}" · ${s.items.length} point(s)${again ? ' (again — only the ones still to teach)' : ''}: ${s.items.map(x => x.aim.id + (x.fix ? ` [Appu's ${x.fix.mistake} on ${x.fix.text}${x.fix.habit ? ', this child’s habit' : ''}]` : '')).join(', ')}`);
   go('teach');
   teachSay();
 }
@@ -114,14 +114,14 @@ function teachFromLesson(){
   S.lesson = null;
   teachStart(unit);
 }
-/* "Munni forgot again": the points still to teach, for one unit */
+/* "Appu forgot again": the points still to teach, for one unit */
 function teachAgain(id){
   const builtin = teachUnitBuiltin(id);
   const les = !builtin && schoolLessons().find(l => l.id === id);
   teachStart(builtin || (les && teachUnitFor(les)), true);
 }
 
-/* ---------- Munni speaks ---------- */
+/* ---------- Appu speaks ---------- */
 function teachSay(){
   if(!TEACH) return;
   speak(TMR(TEACH.s.line));
@@ -133,7 +133,7 @@ function teachChoose(k){
   const it = teachItem(TEACH.s);
   const out = teachPick(TEACH.s, k);
   if(!out) return;
-  log(0, `Teach Munni · Munni's sum ${it.fix.text}: the child picked ${it.fix.opts[k]} — ${out === 'caught' ? 'caught her mistake' : out === 'again' ? "agreed with Munni's answer; a nudge" : 'still not caught — later'}`);
+  log(0, `Teach Appu · Appu's sum ${it.fix.text}: the child picked ${it.fix.opts[k]} — ${out === 'caught' ? 'caught his mistake' : out === 'again' ? "agreed with Appu's answer; a nudge" : 'still not caught — later'}`);
   if(out === 'caught' && typeof sfxChime === 'function') sfxChime();
   teachAfter();
 }
@@ -209,7 +209,7 @@ function teachJudged(d){
   const verdicts = d.judge ? teachApplyJudge(d.judge, text, s.items) : null;
   const how = verdicts ? `Gemini${d.model ? ' (' + d.model + ')' : ''}, each credit checked against the child's own words` : "Takhti's own rubric, on the phone";
   const out = teachHeard(s, text, verdicts, verdicts ? 'gemini' : 'rubric');
-  log(verdicts ? 2 : 0, `Teach Munni · "${it.aim.short.en}" · heard by ${d.provider || 'the phone'} · judged by ${how} → ${out}${!verdicts && !TALK_URL ? (!S.online ? ' (no signal: the phone judges; with a signal and the words terms, Gemini does)' : !teachWordsOk() ? ' (the words terms not agreed: the phone judges)' : ' (the judge did not answer in time)') : ''}`);
+  log(verdicts ? 2 : 0, `Teach Appu · "${it.aim.short.en}" · heard by ${d.provider || 'the phone'} · judged by ${how} → ${out}${!verdicts && !TALK_URL ? (!S.online ? ' (no signal: the phone judges; with a signal and the words terms, Gemini does)' : !teachWordsOk() ? ' (the words terms not agreed: the phone judges)' : ' (the judge did not answer in time)') : ''}`);
   if(out === 'unsure' && it.unsure >= 2) TEACH.typing = true;
   if(out === 'covered' && typeof sfxChime === 'function') sfxChime();
   teachAfter();
@@ -219,7 +219,7 @@ function teachAfter(){
   const s = TEACH.s;
   if(s.done && !TEACH.sum){
     TEACH.sum = teachFinish(s);
-    log(0, `Teach Munni · finished · ${TEACH.sum.covered}/${TEACH.sum.m} taught (${TEACH.sum.unaided} without a hint)${TEACH.sum.gaps.length ? ` · Munni will forget again: ${TEACH.sum.gaps.join(', ')}` : ''}`);
+    log(0, `Teach Appu · finished · ${TEACH.sum.covered}/${TEACH.sum.m} taught (${TEACH.sum.unaided} without a hint)${TEACH.sum.gaps.length ? ` · Appu will forget again: ${TEACH.sum.gaps.join(', ')}` : ''}`);
     if(TEACH.sum.covered === TEACH.sum.m && typeof triggerConfetti === 'function') triggerConfetti(1600);
   }
   TEACH.msg = '';
@@ -228,14 +228,14 @@ function teachAfter(){
 }
 
 /* A gap → taught again, this child's way but not the way just used (the
-   mind's second choice, core/mind.js mindChooseOther()), then Munni forgets again. */
+   mind's second choice, core/mind.js mindChooseOther()), then Appu forgets again. */
 function teachRemedy(){
   if(!TEACH || !TEACH.sum) return;
   const s = TEACH.s, gap = s.items.find(x => x.state !== 'covered');
   teachMarkRetaught(s);
   const skill = gap && (gap.aim.skill || s.unit.skill), dom = skill && mindDomain(skill);
   TEACH = null;
-  const say = (from, to) => { if(typeof log === 'function') log(0, `Teach Munni · teaching ${skill} again a different way: ${from || '—'} → ${to}`); };
+  const say = (from, to) => { if(typeof log === 'function') log(0, `Teach Appu · teaching ${skill} again a different way: ${from || '—'} → ${to}`); };
   const was = skill && typeof mindOf === 'function' ? ((mindOf().plan[skill] || {}).way || (mindOf().pending[skill] || {}).way) : null;
   if(dom === 'math'){ const w = mindChooseOther(skill, mindMathWays(skill)); say(was, w); mindGoWay(skill, w); return; }
   if(dom === 'shape'){ const w = mindChooseOther(skill, typeof planBuiltin === 'function' && planBuiltin(skill) ? ['show', 'story'] : ['story']); say(was, w); mindGoWay(skill, w); return; }
@@ -275,12 +275,12 @@ function teachHTML(){
   const slate = it && it.fix ? `<div class="teachslate"><span>${attr(it.fix.text)} = <b>${it.fix.wrong}</b></span>${it.phase === 'pick' ? ' ?' : ' ✗'}</div>` : '';
   return `
   <button class="back" onclick="teachLeave()">← ${t('back')}</button>
-  <div class="display" style="font-size:21px;margin:4px 0">🐘 ${hi ? 'मुन्नी को सिखाओ' : 'Teach Munni'}</div>
+  <div class="display" style="font-size:21px;margin:4px 0">🐘 ${hi ? 'अप्पू को सिखाओ' : 'Teach Appu'}</div>
   <div class="muted">${TMW(s.unit.title)}</div>
   ${teachChipsHTML(s.items, it)}
   ${teachWordsAsk() ? teachWordsCardHTML() : ''}
   <div class="teachstage">
-    <div class="teachmunni${sum ? '' : ' is-puzzled'}">${munniSmall()}<span class="teachq">${sum ? '★' : '?'}</span></div>
+    <div class="teachmunni${sum ? '' : ' is-puzzled'}">${appuSmall()}<span class="teachq">${sum ? '★' : '?'}</span></div>
     <div class="teachbubble">${TMW(s.line)}</div>
     ${slate}
   </div>
@@ -292,7 +292,7 @@ function teachHTML(){
       : judging ? (hi ? '🤔 सोच रही हूँ…' : '🤔 Thinking…')
       : (hi ? '🎤 छुओ और समझाओ' : '🎤 Tap and explain')}</button>
     ${TEACH.msg ? `<div class="retry" style="font-size:12.5px;margin-top:6px">${attr(TEACH.msg)}</div>` : ''}
-    ${!TALK_URL && !S.online ? `<div class="muted" style="font-size:12px;margin-top:6px">${hi ? 'सिग्नल नहीं: मुन्नी इसी फ़ोन पर जाँचती है। सिग्नल हो तो Gemini जाँचता है।' : 'No signal: Munni checks it on this phone. With a signal, Gemini checks it.'}</div>`
+    ${!TALK_URL && !S.online ? `<div class="muted" style="font-size:12px;margin-top:6px">${hi ? 'सिग्नल नहीं: यही फ़ोन जाँचता है। सिग्नल हो तो Gemini जाँचता है।' : 'No signal: this phone checks it. With a signal, Gemini checks it.'}</div>`
       : teachWordsOk() && S.online ? `<div class="muted" style="font-size:12px;margin-top:6px">${hi ? 'Gemini जाँचता है कि कौन-सी बात समझाई — तुम्हारे अपने शब्दों से।' : 'Gemini checks which points you explained — from your own words.'}</div>` : ''}
     ${TEACH.typing ? `<div class="row" style="gap:6px;margin-top:8px">
       <input class="input" id="teachtxt" placeholder="${hi ? 'यहाँ लिखकर समझाओ' : 'Or type it here'}" autocomplete="off">
@@ -304,7 +304,7 @@ function teachSummaryHTML(sum){
   const hi = S.lang === 'hi', gaps = TEACH.s.items.filter(x => x.state !== 'covered');
   return `<div class="card" style="margin-top:12px;padding:12px">
     <b>${hi ? `तुमने ${sum.m} में से ${sum.covered} बातें सिखाईं` : `You taught ${sum.covered} of ${sum.m}`}</b>${sum.unaided ? ` <span class="muted" style="font-size:12.5px">· ${hi ? `${sum.unaided} बिना किसी इशारे के` : `${sum.unaided} without a hint`}</span>` : ''}
-    ${gaps.length ? `<div style="font-size:13px;margin-top:6px">${hi ? 'मुन्नी बाद में फिर पूछेगी' : 'Munni will ask again later'}: ${gaps.map(x => TMW(x.aim.short)).join(', ')}</div>
+    ${gaps.length ? `<div style="font-size:13px;margin-top:6px">${hi ? 'अप्पू बाद में फिर पूछेगा' : 'Appu will ask again later'}: ${gaps.map(x => TMW(x.aim.short)).join(', ')}</div>
       <button class="btn leaf" style="margin-top:10px" onclick="teachRemedy()">✨ ${hi ? 'चलो इसे फिर से सीखें' : "Let's learn it again"}</button>` : ''}
     <button class="btn ${gaps.length ? 'ghost' : 'leaf'}" style="margin-top:8px" onclick="teachLeave()">${hi ? 'हो गया ⭐' : 'Done ⭐'}</button>
   </div>`;
@@ -314,18 +314,18 @@ function teachSummaryHTML(sum){
 /* at the end of a lesson: the button */
 function teachLessonButtonHTML(les){
   if(!teachUnitFor(les)) return '';
-  return `<button class="btn leaf" onclick="teachFromLesson()">🐘 ${S.lang === 'hi' ? 'मुन्नी को सिखाओ' : 'Teach Munni'}</button>`;
+  return `<button class="btn leaf" onclick="teachFromLesson()">🐘 ${S.lang === 'hi' ? 'अप्पू को सिखाओ' : 'Teach Appu'}</button>`;
 }
-/* the Story Fire: what Munni has forgotten again */
+/* the Story Fire: what Appu has forgotten again */
 function teachAgainHTML(){
   if(band().id === 'pre') return '';
   const list = teachAgainList().filter(u => teachUnitBuiltin(u.id) || schoolLessons().some(l => l.id === u.id)).slice(0, 3);
   if(!list.length) return '';
   const hi = S.lang === 'hi';
   return `<div class="card teachagain" style="margin:10px 0;padding:12px">
-    <div class="kicker2">🐘 ${hi ? 'मुन्नी फिर भूल गई!' : 'MUNNI FORGOT AGAIN!'}</div>
+    <div class="kicker2">🐘 ${hi ? 'अप्पू फिर भूल गया!' : 'APPU FORGOT AGAIN!'}</div>
     ${list.map(u => `<button class="lescard" style="margin-top:8px" onclick="teachAgain('${attr(u.id)}')">
-      <span class="lesic">🐘</span><span><b>${TMW(u.title)}</b><small>${hi ? `${u.gaps.length} बात फिर से सिखाओ` : `teach her ${u.gaps.length} more`}</small></span><span class="lesgo">▶</span></button>`).join('')}
+      <span class="lesic">🐘</span><span><b>${TMW(u.title)}</b><small>${hi ? `${u.gaps.length} बात फिर से सिखाओ` : `teach him ${u.gaps.length} more`}</small></span><span class="lesgo">▶</span></button>`).join('')}
   </div>`;
 }
 
@@ -334,20 +334,20 @@ function teachParentHTML(){
   const hi = S.lang === 'hi', n = attr(S.name || ''), t = teachOf(), log5 = t.log.slice(-5).reverse();
   const pct = x => x == null ? '—' : Math.round(x * 100) + '%';
   if(!t.log.length) return `<div class="metric" style="display:block"><b>${hi ? `${n} कैसे समझाते हैं` : `How ${n} explains`}</b>
-    <div style="font-size:12.5px;opacity:.75;margin-top:4px">${hi ? `अभी कुछ नहीं — किसी पाठ के बाद ${n} मुन्नी को सिखा सकते हैं ("मुन्नी को सिखाओ")।` : `Nothing yet — after a lesson, ${n} can teach Munni ("Teach Munni").`}</div></div>`;
+    <div style="font-size:12.5px;opacity:.75;margin-top:4px">${hi ? `अभी कुछ नहीं — किसी पाठ के बाद ${n} अप्पू को सिखा सकते हैं ("अप्पू को सिखाओ")।` : `Nothing yet — after a lesson, ${n} can teach Appu ("Teach Appu").`}</div></div>`;
   const all = t.log, sum = k => all.reduce((a, x) => a + (x[k] || 0), 0);
   const own = all.filter(x => x.own != null), key = all.filter(x => x.key != null);
   const avg = (xs, k) => xs.length ? xs.reduce((a, x) => a + x[k], 0) / xs.length : null;
   const later = teachAgainList();
   return `<div class="metric" style="display:block"><b>${hi ? `${n} कैसे समझाते हैं` : `How ${n} explains`}</b>
     <div style="font-size:12.5px;margin-top:4px">${hi
-      ? `${all.length} बार मुन्नी को सिखाया · ${sum('m')} में से ${sum('covered')} बातें समझाईं, ${sum('unaided')} बिना इशारे के`
-      : `Taught Munni ${all.length} time${all.length === 1 ? '' : 's'} · explained ${sum('covered')} of ${sum('m')} points, ${sum('unaided')} without a hint`}</div>
+      ? `${all.length} बार अप्पू को सिखाया · ${sum('m')} में से ${sum('covered')} बातें समझाईं, ${sum('unaided')} बिना इशारे के`
+      : `Taught Appu ${all.length} time${all.length === 1 ? '' : 's'} · explained ${sum('covered')} of ${sum('m')} points, ${sum('unaided')} without a hint`}</div>
     <div style="font-size:12.5px;margin-top:2px">${hi
       ? `अपने शब्दों में: ${pct(avg(own, 'own'))} · गणित के शब्द इस्तेमाल किए: ${pct(avg(key, 'key'))}`
       : `In their own words: ${pct(avg(own, 'own'))} · used the lesson's words (borrow, carry, tens…): ${pct(avg(key, 'key'))}`}</div>
     ${log5.map(x => `<div style="font-size:12px;opacity:.8;margin-top:3px">${String(x.at).slice(0, 10)} · ${TMW(x.title)} — ${x.covered}/${x.m}${x.again ? (hi ? ' (दोबारा)' : ' (again)') : ''}</div>`).join('')}
-    ${later.length ? `<div style="font-size:12.5px;margin-top:6px">${hi ? 'मुन्नी फिर पूछेगी' : 'Munni will ask again'}: ${later.map(u => TMW(u.title)).join(', ')}</div>` : ''}
+    ${later.length ? `<div style="font-size:12.5px;margin-top:6px">${hi ? 'अप्पू फिर पूछेगा' : 'Appu will ask again'}: ${later.map(u => TMW(u.title)).join(', ')}</div>` : ''}
     <div style="font-size:11.5px;opacity:.6;margin-top:6px">${hi ? 'यह सिर्फ़ इसी बच्चे की अपनी तरक़्क़ी है — किसी और से तुलना नहीं।' : "This is your child's own progress only — never compared with anyone."}</div></div>`;
 }
 
@@ -372,7 +372,7 @@ function teachTeacherHTML(code){
   const tot = teachLoopCounts(Object.values(loops).flat().map(x => x.v));
   const retaught = tot.after + tot.working;
   const head = tot.gap ? `<div class="teachloop-sum">${hi
-      ? `जिन बातों को बच्चे पहली बार नहीं समझा पाए (${tot.gap}): ${tot.after} मुन्नी के फिर सिखाने के बाद समझा पाए${tot.alone ? `, ${tot.alone} अपने आप बाद में` : ''}${tot.waiting ? `, ${tot.waiting} फिर सीख चुके हैं, मुन्नी अभी पूछेगी` : ''}${tot.working ? `, ${tot.working} पर अभी काम चल रहा है` : ''}${tot.notyet ? `, ${tot.notyet} अभी फिर नहीं सिखाई गईं` : ''}।`
+      ? `जिन बातों को बच्चे पहली बार नहीं समझा पाए (${tot.gap}): ${tot.after} मुन्नी के फिर सिखाने के बाद समझा पाए${tot.alone ? `, ${tot.alone} अपने आप बाद में` : ''}${tot.waiting ? `, ${tot.waiting} फिर सीख चुके हैं, अप्पू अभी पूछेगा` : ''}${tot.working ? `, ${tot.working} पर अभी काम चल रहा है` : ''}${tot.notyet ? `, ${tot.notyet} अभी फिर नहीं सिखाई गईं` : ''}।`
       : `Points children couldn't explain the first time (${tot.gap}): ${tot.after} explained after Munni taught them again${retaught ? ` (${tot.after} of ${retaught} re-taught and asked again)` : ''}${tot.alone ? `, ${tot.alone} on their own later` : ''}${tot.waiting ? `, ${tot.waiting} re-taught and still to be asked` : ''}${tot.working ? `, ${tot.working} still working on it` : ''}${tot.notyet ? `, ${tot.notyet} not re-taught yet` : ''}.`}</div>` : '';
   const loopLine = aim => {
     const xs = loops[aim] || [], k = teachLoopCounts(xs.map(x => x.v));
@@ -404,8 +404,8 @@ function teachTeacherHTML(code){
     return parts.length ? `<div class="teachdid">✎ ${parts.join(' · ')}</div>` : '';
   };
   return `<div class="paper" style="margin-top:12px">
-    <div class="kicker2">🐘 ${hi ? 'बच्चे क्या समझा पाए ("मुन्नी को सिखाओ")' : 'WHAT THE CLASS COULD EXPLAIN (TEACH MUNNI)'}</div>
-    <div style="font-size:12.5px;opacity:.75;margin-bottom:6px">${hi ? 'हर बात के लिए: कितने बच्चों ने अपने शब्दों में समझाई, कितनों ने थोड़ी, कितनों के लिए मुन्नी फिर पूछेगी — और जो पहली बार नहीं समझा पाए, उनका आगे क्या हुआ।' : 'For each point: how many children explained it in their own words, partly, or still to come — and, for those who couldn\'t at first, what happened next.'}</div>
+    <div class="kicker2">🐘 ${hi ? 'बच्चे क्या समझा पाए ("अप्पू को सिखाओ")' : 'WHAT THE CLASS COULD EXPLAIN (TEACH APPU)'}</div>
+    <div style="font-size:12.5px;opacity:.75;margin-bottom:6px">${hi ? 'हर बात के लिए: कितने बच्चों ने अपने शब्दों में समझाई, कितनों ने थोड़ी, कितनों के लिए अप्पू फिर पूछेगा — और जो पहली बार नहीं समझा पाए, उनका आगे क्या हुआ।' : 'For each point: how many children explained it in their own words, partly, or still to come — and, for those who couldn\'t at first, what happened next.'}</div>
     ${head}
     ${list.map(([aim, r]) => { const n = r.c + r.p + r.g; return `<div class="teachrow">
       <div style="font-size:13px">${TMW(teachAimLabel(aim, code))}</div>

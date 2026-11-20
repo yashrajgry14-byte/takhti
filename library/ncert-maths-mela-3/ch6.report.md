@@ -52,7 +52,7 @@ skill: place3 · source: Page 65
 
 **Aims kept (what the teacher approves):**
 - The child can count up to 300 by adding ones.  ·  बच्चा एक-एक जोड़कर 300 तक गिन सकता है।  
-  Munni forgets: "I forgot! How do we get 300 after 299?  ·  मैं भूल गई! 299 के बाद 300 कैसे मिलता है?"
+  Munni forgets: "I forgot! How do we get 300 after 299?  ·  मैं भूल गया! 299 के बाद 300 कैसे मिलता है?"
 
 **The lesson:**
 1. intro — "Let us count up to three hundred.  ·  आओ तीन सौ तक गिनें।"
@@ -98,7 +98,7 @@ skill: compare1 · source: Page 79
 
 **Aims kept (what the teacher approves):**
 - The child can compare numbers using their place value.  ·  बच्चा स्थानीय मान देखकर संख्याओं की तुलना कर सकता है।  
-  Munni forgets: "I forgot! How do we know which number is bigger?  ·  मैं भूल गई! कैसे पता करें कि कौन सी संख्या बड़ी है?"
+  Munni forgets: "I forgot! How do we know which number is bigger?  ·  मैं भूल गया! कैसे पता करें कि कौन सी संख्या बड़ी है?"
 
 **The lesson:**
 1. intro — "Let us compare numbers to see which is greater.  ·  आओ देखें कौन सी संख्या बड़ी है।"
@@ -139,7 +139,7 @@ skill: place3 · source: Page 76
 
 **Aims kept (what the teacher approves):**
 - The child can read numbers from ten bundles.  ·  बच्चा तीलियों के बंडल से संख्या पढ़ सकता है।  
-  Munni forgets: "I forgot! How do we count 10s bundles?  ·  मैं भूल गई! 10 के बंडल कैसे गिने जाते हैं?"
+  Munni forgets: "I forgot! How do we count 10s bundles?  ·  मैं भूल गया! 10 के बंडल कैसे गिने जाते हैं?"
 
 **The lesson:**
 1. intro — "Let us count items packed in groups.  ·  आओ समूहों में रखी वस्तुएँ गिनें।"

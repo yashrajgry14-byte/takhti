@@ -1,5 +1,5 @@
 /* ==================================================================
-   TEACH MUNNI — the child teaches back what a lesson was about
+   TEACH APPU — the child teaches back what a lesson was about
 
    1. The engine, in a vm (core/teachback.js + content/teach.js):
       · every built-in point passes its own check; the checker rejects a
@@ -7,15 +7,15 @@
         without Hindi, one with markup;
       · the offline judge: covered / partly / missing / unsure, in English,
         Hindi, romanised Hindi and Devanagari digits;
-      · Munni's mistake: for every skill and many sums, her working never
+      · Appu's mistake: for every skill and many sums, his working never
         says the right answer, her answer is a real mistake, the options
         hold the right one; this child's own habit wins;
       · a whole session: hints, never "wrong", "later" after two hints,
         one explanation teaching two points, an unsure turn costs nothing,
-        the first tap on Munni's sum is evidence (an agreed mistake reaches
+        the first tap on Appu's sum is evidence (an agreed mistake reaches
         the twin) and a nudged one isn't, what is kept, "forgot again"
         asks only the gaps;
-      · the judge's credit needs a real quote of the child (not of Munni);
+      · the judge's credit needs a real quote of the child (not of Appu);
       · a school lesson's points from Gemini: cleaned, the bad one dropped
         with a reason, inside the lesson's id, idempotent.
    2. The judge (api/teachback.mjs) against a stand-in Gemini, and through
@@ -25,8 +25,8 @@
       mistake's id, an ungrounded credit downgraded, no key → no judge
       (the phone's rubric), audio only on the voice server.
    3. The app, through the real index.html: the button at the end of a
-      lesson, the chips turning green, Munni's sum, the summary, "let's
-      learn it again", "Munni forgot again" at the Story Fire, the parent's
+      lesson, the chips turning green, Appu's sum, the summary, "let's
+      learn it again", "Appu forgot again" at the Story Fire, the parent's
       "How … explains" (EN/HI), the teacher's results per point, the class
       sync carrying the points; with a voice server: nothing sent before
       the v2 terms, then the recording and the typed words judged, a credit
@@ -65,7 +65,7 @@ function box(){
   const c = box(), E = c.E;
 
   const bad = E(`Object.values(TEACH_UNITS).flatMap(u => u.aims.map(a => [a.id, teachCheckAim(a)])).filter(x => x[1].length)`);
-  check('every built-in point passes its own check: Munni\'s question and both hints never already give the explanation, both languages, plain text', bad.length === 0, JSON.stringify(bad));
+  check('every built-in point passes its own check: Appu\'s question and both hints never already give the explanation, both languages, plain text', bad.length === 0, JSON.stringify(bad));
   E(`var A0 = JSON.parse(JSON.stringify(TEACH_UNITS.borrow.aims[0]))`);
   check('the checker rejects a point whose question already gives the explanation',
     E(`teachCheckAim({ ...A0, forget: { en: 'Do I borrow a ten from the tens?', hi: A0.forget.hi } }).some(e => /question \\(en\\) already gives/.test(e))`), '');
@@ -82,7 +82,7 @@ function box(){
   check('…two ideas, one said, is "partly"; Devanagari digits count as digits',
     E(`teachRubric(TWO, 'just add them up').verdict`) === 'partly' && E(`teachRubric(TWO, 'add them and you get ४३ back').verdict`) === 'covered', E(`teachRubric(TWO, 'add them and you get ४३ back').verdict`));
 
-  // Munni's mistake
+  // Appu's mistake
   const fixBad = E(`(() => { const out = [];
     for(const sk of Object.keys(TEACH_FIX_DEFAULT)) for(const age of [6, 8, 10]){ S.age = age; for(let seed = 1; seed < 400; seed += 7){
       const f = teachFixFor(sk, seed); if(!f) continue;
@@ -93,17 +93,17 @@ function box(){
       if(!mistakeAnswers(f.p).some(m => m.id === f.mistake && m.v === f.wrong)) out.push(['not a real mistake', sk, f.text, f.mistake, f.wrong]);
       if(!/[ऀ-ॿ]/.test(f.act.hi) || !f.tip.en || !f.tip.hi) out.push(['languages', sk, f.text]);
     } } S.age = 8; return out; })()`);
-  check('Munni\'s sum, for every skill, three ages and many sums: her working never says the right answer, her answer is a real named mistake, the options hold the right answer, both languages', fixBad.length === 0, JSON.stringify(fixBad.slice(0, 4)));
+  check('Appu\'s sum, for every skill, three ages and many sums: his working never says the right answer, his answer is a real named mistake, the options hold the right answer, both languages', fixBad.length === 0, JSON.stringify(fixBad.slice(0, 4)));
   E(`var tw0 = teachFixFor('borrow', 99)`);
   E(`for(const [a, b] of [[52, 27], [63, 18], [41, 26]]) twinAnswer('borrow', { a, b, op: '−' }, (Math.floor(a/10) - Math.floor(b/10)) * 10 + Math.abs(a % 10 - b % 10))`);
-  check('this child\'s own habit wins: after taking the smaller digit from the bigger twice, Munni acts out exactly that',
+  check('this child\'s own habit wins: after taking the smaller digit from the bigger twice, Appu acts out exactly that',
     E(`(() => { const f = teachFixFor('borrow', 99); return f.mistake === 'smallbig' && f.habit === true; })()`), E(`JSON.stringify([twinHabit('borrow'), teachFixFor('borrow', 99).mistake])`));
 
   // a whole session
   E(`S.twin = null; S.skillHistory = {}; S.teach = null; var U = teachUnitBuiltin('borrow'); var s = teachBegin(U)`);
   check('a session starts with "Elephants never forget…" and the first point\'s question, in both languages',
     E(`/Elephants never forget/.test(s.line.en) && /हाथी कभी नहीं भूलते/.test(s.line.hi) && s.items.length === 4 && s.items[2].fix !== null`), E(`s.line.en`));
-  check('an explanation that covers it: the point is taught and Munni praises, then asks the next',
+  check('an explanation that covers it: the point is taught and Appu praises, then asks the next',
     E(`teachHeard(s, 'you borrow a ten from the five')`) === 'covered' && E(`s.items[0].state === 'covered' && s.i === 1 && /what happens to my 2/.test(s.line.en)`), E(`s.line.en`));
   check('an unsure turn ("um") costs nothing: no hint used, the same question again',
     E(`teachHeard(s, 'um')`) === 'unsure' && E(`s.items[1].hints === 0 && s.i === 1`), '');
@@ -112,7 +112,7 @@ function box(){
   check('after two hints: "we\'ll figure it out together later" — a gap, never "wrong"',
     E(`teachHeard(s, 'no idea really')`) === 'gap' && E(`s.items[1].state === 'gap' && /figure it out together later/.test(s.line.en)`), E(`s.line.en`));
   E(`var f = teachItem(s).fix`);
-  check('Munni\'s sum: the child agrees with her answer → a nudge (the help for that mistake), and that first tap is evidence: the mistake reaches the twin',
+  check('Appu\'s sum: the child agrees with his answer → a nudge (the help for that mistake), and that first tap is evidence: the mistake reaches the twin',
     E(`teachPick(s, f.opts.indexOf(f.wrong))`) === 'again' && E(`S.skillHistory.borrow && S.skillHistory.borrow.n === 1 && S.skillHistory.borrow.right === 0`) && E(`Object.keys(twinOf().bugs.borrow || {}).includes(f.mistake)`), E(`JSON.stringify([S.skillHistory, twinOf().bugs])`));
   check('…then the right answer: "Where did I slip? Teach me!" — and a nudged tap is not evidence',
     E(`teachPick(s, f.correct)`) === 'caught' && E(`/Where did I slip/.test(s.line.en) && S.skillHistory.borrow.n === 1`), E(`JSON.stringify(S.skillHistory)`));
@@ -120,16 +120,16 @@ function box(){
   check('…the child explains her slip, judged against what that mistake needs', E(`teachHeard(s, ${JSON.stringify(fixWords)})`) === 'covered', E(`s.line.en`));
   check('one explanation can teach the next point too: both chips turn', E(`teachHeard(s, 'add 25 and 18 and you get 43 back so it is right')`) === 'covered' && E(`s.done && s.items[3].state === 'covered'`), E(`s.items.map(x => x.state)`));
   const lines = E(`JSON.stringify([TEACH_LINES, Object.values(TEACH_UNITS).map(u => u.aims), s.items.map(x => x.fix && x.fix.act)])`);
-  check('nothing Munni says ever calls the child wrong', !/\bwrong\b|गलत/i.test(lines), (lines.match(/.{30}(wrong|गलत).{30}/i) || [''])[0]);
+  check('nothing Appu says ever calls the child wrong', !/\bwrong\b|गलत/i.test(lines), (lines.match(/.{30}(wrong|गलत).{30}/i) || [''])[0]);
   const sum = E(`teachFinish(s)`);
   check('what is kept: 3 of 4 taught, 2 without a hint, the gap named; per point in S.teach, and for the class only ids and c/p/g',
     sum.covered === 3 && sum.unaided === 2 && sum.gaps.join() === 'borrow.ten' && E(`S.teach.units.borrow.gaps.join() === 'borrow.ten' && S.teach.explained['borrow.ten'] === 'g' && S.teach.explained['borrow.when'] === 'c'`)
       && E(`Object.values(S.teach.explained).every(v => ['c','p','g'].includes(v))`), JSON.stringify(sum));
-  check('the parent\'s numbers: words, own words (not repeating Munni), the lesson\'s words used', sum.words > 3 && sum.own > 0.3 && sum.key > 0.5, JSON.stringify(sum));
+  check('the parent\'s numbers: words, own words (not repeating Appu), the lesson\'s words used', sum.words > 3 && sum.own > 0.3 && sum.key > 0.5, JSON.stringify(sum));
   E(`var s2 = teachBegin(U, { again: true })`);
-  check('"Munni forgot again": the next time she asks only the point still to teach', E(`s2.items.length === 1 && s2.items[0].aim.id === 'borrow.ten' && /forgot again/.test(s2.line.en)`), E(`s2.items.map(x => x.aim.id)`));
+  check('"Appu forgot again": the next time he asks only the point still to teach', E(`s2.items.length === 1 && s2.items[0].aim.id === 'borrow.ten' && /forgot again/.test(s2.line.en)`), E(`s2.items.map(x => x.aim.id)`));
   E(`teachHeard(s2, 'it becomes twelve'); teachFinish(s2)`);
-  check('…taught this time: nothing left for Munni to forget', E(`teachAgainList().length === 0 && S.teach.explained['borrow.ten'] === 'c'`), E(`JSON.stringify(teachAgainList())`));
+  check('…taught this time: nothing left for Appu to forget', E(`teachAgainList().length === 0 && S.teach.explained['borrow.ten'] === 'c'`), E(`JSON.stringify(teachAgainList())`));
   check('the loop per point: explained the first time stays "c"; a gap asked again without re-teaching and explained is "gc"',
     E(`S.teach.loop['borrow.when'] === 'c' && S.teach.loop['borrow.ten'] === 'gc'`), E(`JSON.stringify(S.teach.loop)`));
   check('the loop\'s steps: a gap, re-taught, asked again (explained / still working); re-taught twice keeps one r; junk ignored',
@@ -137,14 +137,14 @@ function box(){
        && teachLoopRetaught('grp') === 'gr' && teachLoopNext('c', 'g') === 'c' && teachLoopRetaught('c') === 'c' && teachLoopNext('xx', 'p') === 'p'`), '');
   check('the class\'s loops counted: first time, after re-teaching, on their own, re-taught and waiting, still working, not re-taught yet',
     E(`JSON.stringify(teachLoopCounts(['c', 'grc', 'prc', 'gc', 'gr', 'grg', 'g', 'pp', 'bad']))`) === JSON.stringify({ first: 1, after: 2, alone: 1, waiting: 1, working: 1, notyet: 2, gap: 7 }), E(`JSON.stringify(teachLoopCounts(['c', 'grc', 'prc', 'gc', 'gr', 'grg', 'g', 'pp', 'bad']))`));
-  check('a skill with no written points still gets Munni\'s sum; a 3–4 year old gets no Teach Munni at all',
+  check('a skill with no written points still gets Appu\'s sum; a 3–4 year old gets no Teach Appu at all',
     E(`teachUnitBuiltin('mult2x1').aims.length === 1 && teachUnitBuiltin('mult2x1').aims[0].kind === 'fix'`) && E(`(() => { S.age = 4; const u = teachUnitFor({ skillId: 'add10' }); S.age = 8; return u === null; })()`), '');
 
   // the online judge's credit needs the child's own words
   E(`var s3 = teachBegin(U)`);
   check('the judge\'s "covered" stands when it quotes what the child said',
     E(`teachApplyJudge({ aims: [{ id: 'borrow.when', verdict: 'covered', quote: 'take one ten from next door' }] }, 'you have to take one ten from next door', s3.items)['borrow.when']`) === 'covered', '');
-  check('…becomes "partly" when the quote isn\'t in the child\'s words, and when it only repeats Munni',
+  check('…becomes "partly" when the quote isn\'t in the child\'s words, and when it only repeats Appu',
     E(`teachApplyJudge({ aims: [{ id: 'borrow.when', verdict: 'covered', quote: 'borrow a ten from the tens' }] }, 'you take from next door', s3.items)['borrow.when']`) === 'partly'
     && E(`teachApplyJudge({ aims: [{ id: 'borrow.when', verdict: 'covered', quote: '2 is so small' }] }, 'but 2 is so small', s3.items)['borrow.when']`) === 'partly', '');
   check('…an unknown point or verdict from the judge is ignored', JSON.stringify(E(`teachApplyJudge({ aims: [{ id: 'nope', verdict: 'covered', quote: 'x y' }, { id: 'borrow.when', verdict: 'great', quote: '' }] }, 'x y', s3.items)`)) === '{}', '');
@@ -158,13 +158,13 @@ function box(){
   E(`var CA = teachCleanAims(${JSON.stringify([GOOD, LEAK])}, 'sch-abc123')`);
   check('a school lesson\'s points from Gemini: the good one kept (id from the lesson), the one whose question gives the answer dropped with the reason',
     E(`CA.aims.length === 1 && CA.aims[0].id === 'sabc123.0' && CA.errors.length === 1 && /already gives/.test(CA.errors[0])`), E(`JSON.stringify(CA)`));
-  // the first live run (13 Nov 2026): Munni's question names the topic, which Gemini also listed as an explanation word
+  // the first live run (13 Nov 2026): Appu's question names the topic, which Gemini also listed as an explanation word
   const TOPIC = { short: { en: 'Find the centre', hi: 'केंद्र खोजो' }, point: { en: 'The child can find the centre of a circle by folding.', hi: 'बच्चा मोड़कर वृत्त का केंद्र खोज सकता है।' },
     forget: { en: 'How do we find the centre of a circle?', hi: 'वृत्त का केंद्र कैसे मिलता है?' },
     hints: [{ en: 'What could you do to a paper circle?', hi: 'कागज़ के वृत्त के साथ तुम क्या कर सकते हो?' }, { en: 'Do it twice. What do you see?', hi: 'दो बार करो। क्या दिखता है?' }],
     ideas: [{ en: 'fold it in half twice; the folds cross at the centre', hi: 'दो बार आधा मोड़ो; मोड़ जहाँ मिलें वह केंद्र', words: ['centre', 'केंद्र', 'fold', 'half', 'cross', 'मोड़', 'आधा', 'मिल'] }] };
   E(`var TP = teachCleanAims(${JSON.stringify([TOPIC])}, 'sch-t1')`);
-  check('a topic word Munni\'s question and the point both say (centre) is no explanation word: taken out, the aim kept — the method\'s words stay',
+  check('a topic word Appu\'s question and the point both say (centre) is no explanation word: taken out, the aim kept — the method\'s words stay',
     E(`TP.aims.length === 1 && !TP.aims[0].ideas[0].words.includes('centre') && !TP.aims[0].ideas[0].words.includes('केंद्र') && TP.aims[0].ideas[0].words.includes('half')`), E(`JSON.stringify(TP)`));
   const TELLS = { ...TOPIC, short: { en: 'Fold', hi: 'मोड़ो' }, hints: [{ en: 'Fold the paper circle in half.', hi: 'कागज़ का वृत्त आधा मोड़ो।' }, TOPIC.hints[1]] };
   E(`var TL = teachCleanAims(${JSON.stringify([TELLS])}, 'sch-t2'); var TM = teachCleanAims(${JSON.stringify([TELLS])}, 'sch-t2', { mendHints: true })`);
@@ -274,7 +274,7 @@ function box(){
   const nreq = new Request('http://x/api/teachback', { method: 'POST', headers: { 'content-type': 'application/json', 'x-nf-client-connection-ip': '9.9.9.9' },
     body: JSON.stringify({ consent: true, lang: 'en', ask: 'borrow.fix', transcript: 'the tens should go one less', aims: [{ id: 'borrow.fix', kind: 'fix', mistake: 'noborrowback' }] }) });
   const nres = await nl.default(nreq), nj = await nres.json();
-  check('the Netlify function: the built-in points are found where netlify.toml ships them (included_files), so Munni\'s-sum points can be judged there; no key → no judge, the phone decides',
+  check('the Netlify function: the built-in points are found where netlify.toml ships them (included_files), so Appu\'s-sum points can be judged there; no key → no judge, the phone decides',
     !!nl.knownAims() && nres.status === 200 && nj.transcript === 'the tens should go one less' && nj.judge === null
       && /included_files\s*=\s*\["src\/content\/teach\.js"\]/.test(fs.readFileSync(path.join(root, 'netlify.toml'), 'utf8')), JSON.stringify([nres.status, nj]));
   const nrec = await nl.default(new Request('http://x/api/teachback', { method: 'POST', body: JSON.stringify({ consent: true, ask: 'borrow.when', audio: 'A'.repeat(400), aims: [forged] }) }));
@@ -366,18 +366,18 @@ function box(){
     app.E(`go('lessons'); startLesson(${JSON.stringify(lid)})`);
     await wait(60);
     app.E(`S.lesson.i = S.lesson.data.beats.length - 1; render()`);
-    check('the end of a borrowing lesson offers "🐘 Teach Munni"', !!button(app, /Teach Munni/), app.screen().slice(0, 300));
-    button(app, /Teach Munni/).click();
+    check('the end of a borrowing lesson offers "🐘 Teach Appu"', !!button(app, /Teach Appu/), app.screen().slice(0, 300));
+    button(app, /Teach Appu/).click();
     for(let i = 0; i < 40 && !app.spoken.some(t => /Elephants never forget/.test(t)); i++) await wait(20);
-    check('…which opens the screen: the points as chips, Munni puzzled, "Elephants never forget…" said aloud',
+    check('…which opens the screen: the points as chips, Appu puzzled, "Elephants never forget…" said aloud',
       app.E(`S.screen`) === 'teach' && app.$$('.teachchip').length === 4 && !!app.$('.teachmunni.is-puzzled') && app.spoken.some(t => /Elephants never forget/.test(t)) && app.E(`S.doneLessons.includes(${JSON.stringify(lid)})`),
       JSON.stringify([app.E(`S.screen`), app.$$('.teachchip').length, !!app.$('.teachmunni.is-puzzled'), app.spoken.slice(-3), app.E(`S.doneLessons`)]));
     await tell(app, 'you have to borrow a ten from the five');
-    check('…an explanation (typed here; offline, no voice server): the first chip turns green, Munni says thank you and asks the next',
+    check('…an explanation (typed here; offline, no voice server): the first chip turns green, Appu says thank you and asks the next',
       app.$$('.teachchip.is-covered').length === 1 && /What happens to my 2|what happens to my 2/i.test(app.$('.teachbubble').textContent), app.$('.teachbubble').textContent);
     await tell(app, 'it stays the same'); await tell(app, 'hmm I do not know'); await tell(app, 'no idea really');
     check('…two hints, then "later" for that point — the chip waits, never "wrong" on screen', app.$$('.teachchip.is-gap').length === 1 && !/\bwrong\b/i.test(app.screen()), app.screen().slice(0, 300));
-    check('…Munni\'s sum on the slate with three answers to tap', !!app.$('.teachslate') && app.$$('.opts .opt').length === 3, app.screen().slice(0, 300));
+    check('…Appu\'s sum on the slate with three answers to tap', !!app.$('.teachslate') && app.$$('.opts .opt').length === 3, app.screen().slice(0, 300));
     const fx = app.E(`JSON.stringify(teachItem(TEACH.s).fix)`), F = JSON.parse(fx);
     app.$$('.opts .opt')[F.correct].click();
     await wait(20);
@@ -389,19 +389,19 @@ function box(){
     await wait(30);
     check('…"let\'s learn it again" teaches it this child\'s way (a story, a cartoon, steps or objects)', ['lessons', 'theater', 'math'].includes(app.E(`S.screen`)), app.E(`S.screen`));
     app.E(`S.lesson = null; go('lessons')`);
-    check('the Story Fire: "Munni forgot again!" with the unit', /MUNNI FORGOT AGAIN/.test(app.screen()) && /teach her 1 more/.test(app.screen()), app.screen().slice(0, 500));
-    button(app, /teach her 1 more/).click();
+    check('the Story Fire: "Appu forgot again!" with the unit', /APPU FORGOT AGAIN/.test(app.screen()) && /teach him 1 more/.test(app.screen()), app.screen().slice(0, 500));
+    button(app, /teach him 1 more/).click();
     await wait(20);
     check('…which asks only the point still to teach', app.$$('.teachchip').length === 1 && /forgot again/.test(app.$('.teachbubble').textContent), app.screen().slice(0, 300));
     await tell(app, 'it becomes twelve');
     check('…taught: "You taught me everything!"', /taught me everything/.test(app.$('.teachbubble').textContent), app.$('.teachbubble').textContent);
     button(app, /Done/).click();
-    check('…and nothing left for Munni to forget', !/MUNNI FORGOT AGAIN/.test(app.screen()), '');
+    check('…and nothing left for Appu to forget', !/APPU FORGOT AGAIN/.test(app.screen()), '');
 
     app.E(`S.parentPin = null; go('parent')`);
     const parent = app.screen();
     check('the parent dashboard: "How Jai explains" — taught twice, points explained, own words, the lesson\'s words, and "never compared"',
-      /How Jai explains/.test(parent) && /Taught Munni 2 times/.test(parent) && /own words/.test(parent) && /never compared/.test(parent), parent.slice(parent.indexOf('How Jai explains'), parent.indexOf('How Jai explains') + 400));
+      /How Jai explains/.test(parent) && /Taught Appu 2 times/.test(parent) && /own words/.test(parent) && /never compared/.test(parent), parent.slice(parent.indexOf('How Jai explains'), parent.indexOf('How Jai explains') + 400));
     app.E(`S.lang = 'hi'; render()`);
     check('…in Hindi too', /Jai कैसे समझाते हैं/.test(app.screen()) && /किसी और से तुलना नहीं/.test(app.screen()), '');
     app.E(`S.lang = 'en'`);
@@ -425,7 +425,7 @@ function box(){
     check('doing it next to explaining it, per point and by name: Asha gets it right but can\'t explain it yet; Jai explains it but his answers aren\'t right yet',
       /gets it right, can't explain it yet: Asha/.test(tv) && /explains it, answers not right yet: Jai/.test(tv) && !!app.$('.teachdid'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 900));
     app.E(`S.lang = 'hi'; render()`);
-    check('…in Hindi too', /मुन्नी के फिर सिखाने के बाद समझा पाए/.test(app.screen()) && /फिर सिखाने के बाद समझाई: Jai/.test(app.screen()) && /सही करते हैं, पर अभी समझा नहीं पाते: Asha/.test(app.screen()), app.screen().slice(app.screen().indexOf('मुन्नी को सिखाओ'), app.screen().indexOf('मुन्नी को सिखाओ') + 500));
+    check('…in Hindi too', /मुन्नी के फिर सिखाने के बाद समझा पाए/.test(app.screen()) && /फिर सिखाने के बाद समझाई: Jai/.test(app.screen()) && /सही करते हैं, पर अभी समझा नहीं पाते: Asha/.test(app.screen()), app.screen().slice(app.screen().indexOf('अप्पू को सिखाओ'), app.screen().indexOf('अप्पू को सिखाओ') + 500));
     app.E(`S.lang = 'en'; render()`);
     check('the teacher view: what the class could explain, point by point (the hardest first)',
       /WHAT THE CLASS COULD EXPLAIN/.test(tv) && /Knows to borrow when the top ones digit is smaller/.test(tv) && /1 explained · 0 partly · 2 still to come/.test(tv) && !!app.$('.teachbar'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 400));
@@ -439,7 +439,7 @@ function box(){
     check('the class sync keeps only well-formed point ids and c/p/g — nothing the child said', JSON.stringify(sy.json.children['c-1'].explained) === '{"borrow.when":"c"}' && !sy.json.children['c-1'].said, JSON.stringify(sy.json));
 
     app.E(`S.age = 4; S.lesson = { id: 'x', data: { id: 'x', band: 'pre', skillId: 'add10', title: { en: 'Add', hi: 'जोड़' }, beats: [{ t: 'win', say: { en: 'Yes', hi: 'हाँ' } }] }, i: 0, right: 0, asked: 0, picked: null, counted: true }; go('lessons'); S.lesson = { id: 'x', data: { id: 'x', band: 'pre', skillId: 'add10', title: { en: 'Add', hi: 'जोड़' }, beats: [{ t: 'win', say: { en: 'Yes', hi: 'हाँ' } }] }, i: 0, right: 0, asked: 0, picked: null, counted: true }; render()`);
-    check('a 3–4 year old sees no Teach Munni button', !button(app, /Teach Munni/), '');
+    check('a 3–4 year old sees no Teach Appu button', !button(app, /Teach Appu/), '');
     check('no uncaught script errors (offline app)', app.jsErrors.length === 0, app.jsErrors.join(' | '));
 
     // with a voice server: the terms decide what goes
@@ -473,7 +473,7 @@ function box(){
     await tell(nt, 'take a ten from the tens');
     check('…the phone\'s rubric judges it, and nothing leaves the phone', nt.sent.length === 0 && nt.$$('.teachchip.is-covered').length === 1, JSON.stringify(nt.sent));
     nt.E(`S.online = true; teachStart(teachUnitBuiltin('borrow'))`);
-    check('with a signal: the grown-up\'s terms card shows on Teach Munni — words only, no recording, no name, Gemini, nothing kept, withdraw',
+    check('with a signal: the grown-up\'s terms card shows on Teach Appu — words only, no recording, no name, Gemini, nothing kept, withdraw',
       !!nt.$('.teachterms') && /FOR A GROWN-UP/.test(nt.screen()) && /no recording and no name/.test(nt.screen()) && /Google's Gemini/.test(nt.screen()) && /Nothing is kept/.test(nt.screen()) && /withdraw/i.test(nt.screen()), nt.screen().slice(0, 600));
     await tell(nt, 'take a ten from the tens');
     check('…before a grown-up agrees, typing still works and nothing is sent', nt.sent.length === 0 && nt.$$('.teachchip.is-covered').length === 1, JSON.stringify(nt.sent));
@@ -496,7 +496,7 @@ function box(){
     check('…words the phone\'s own recognizer wrote down go the same way', nt.sent.some(x => x.body.transcript === 'when the top is smaller you borrow'), JSON.stringify(nt.sent));
     for(let i = 0; i < 50 && nt.E(`!!(TEACH && TEACH.busy)`); i++) await wait(20);
     nt.E(`S.parentPin = null; go('parent')`);
-    check('the parent page: "Teach Munni: checked by Gemini", agreed on a date, and withdraw', /Teach Munni: checked by Gemini/.test(nt.screen()) && /Agreed on/.test(nt.screen()) && !!button(nt, /Withdraw consent/), '');
+    check('the parent page: "Teach Appu: checked by Gemini", agreed on a date, and withdraw', /Teach Appu: checked by Gemini/.test(nt.screen()) && /Agreed on/.test(nt.screen()) && !!button(nt, /Withdraw consent/), '');
     button(nt, /Withdraw consent/).click(); button(nt, /Yes, withdraw/).click();
     nt.sent.length = 0;
     nt.E(`teachStart(teachUnitBuiltin('borrow'))`);

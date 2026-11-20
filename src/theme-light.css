@@ -234,7 +234,7 @@ body{
 .geo{color:#2A2118}
 .geo.clock .num{stroke:#FAECD4}
 
-/* Teach Munni (ui/teach-munni.js): her speech is a bubble like the others */
+/* Teach Appu (ui/teach-munni.js): his speech is a bubble like the others */
 .teachbubble{background:#16302B;color:#F3EEE0;border-color:transparent}
 .teachchip{border-color:rgba(42,33,24,.35)}
 .teachchip.is-partly,.teachchip.is-gap{background:rgba(224,138,0,.12)}

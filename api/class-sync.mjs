@@ -44,7 +44,7 @@ function cleanChild(c){
     const n = int(h.n, 1e6);
     skillHistory[id] = { n, right: Math.min(n, int(h.right, 1e6)) };
   }
-  // Teach Munni: which lesson points the child explained (c/p/g), ids only
+  // Teach Appu: which lesson points the child explained (c/p/g), ids only
   const explained = {};
   for(const [id, v] of Object.entries(c.explained && typeof c.explained === 'object' ? c.explained : {}).slice(0, 60))
     if(/^[a-z0-9.-]{1,32}$/.test(id) && ['c', 'p', 'g'].includes(v)) explained[id] = v;

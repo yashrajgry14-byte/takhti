@@ -24,7 +24,7 @@
       "source": "Page 171",
       "aims": [
         {
-          "id": "smspgau.0",
+          "id": "sjji64h.0",
           "kind": "explain",
           "short": {
             "en": "Read o'clock",
@@ -36,7 +36,7 @@
           },
           "forget": {
             "en": "I forgot! How do I know what hour it is on the clock?",
-            "hi": "मैं भूल गई! घड़ी में कैसे पता करूँ कि कितने बजे हैं?"
+            "hi": "मैं भूल गया! घड़ी में कैसे पता करूँ कि कितने बजे हैं?"
           },
           "hints": [
             {
@@ -145,7 +145,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-mspgau"
+      "id": "sch-jji64h"
     },
     {
       "band": "developing",
@@ -163,7 +163,7 @@
       "source": "Page 175",
       "aims": [
         {
-          "id": "s55nv4r.0",
+          "id": "s19wh0sc.0",
           "kind": "explain",
           "short": {
             "en": "Count minutes",
@@ -175,7 +175,7 @@
           },
           "forget": {
             "en": "I forgot! How do I count the minutes when the long hand moves?",
-            "hi": "मैं भूल गई! जब बड़ी सुई हिलती है तो मिनट कैसे गिनूँ?"
+            "hi": "मैं भूल गया! जब बड़ी सुई हिलती है तो मिनट कैसे गिनूँ?"
           },
           "hints": [
             {
@@ -246,14 +246,14 @@
             "hi": "कितने मिनट बीते?"
           },
           "opts": [
-            "4",
-            "20"
+            "20",
+            "4"
           ],
           "hiOpts": [
-            "4",
-            "20"
+            "20",
+            "4"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children count the number the hand points to instead of multiplying by five.",
             "hi": "बच्चे सुई के अंक को ही मिनट मान लेते हैं, पाँच से गुणा नहीं करते।"
@@ -278,14 +278,14 @@
             "hi": "अब कितने मिनट बीते?"
           },
           "opts": [
-            "2",
-            "10"
+            "10",
+            "2"
           ],
           "hiOpts": [
-            "2",
-            "10"
+            "10",
+            "2"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children read the number 2 on the clock face instead of counting by fives.",
             "hi": "बच्चे पाँच-पाँच गिनने के बजाय घड़ी पर 2 अंक पढ़ लेते हैं।"
@@ -300,7 +300,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-55nv4r"
+      "id": "sch-19wh0sc"
     },
     {
       "band": "developing",
@@ -318,7 +318,7 @@
       "source": "Page 169",
       "aims": [
         {
-          "id": "s1yvj21r.0",
+          "id": "s1m0vfgq.0",
           "kind": "explain",
           "short": {
             "en": "Find the month",
@@ -330,7 +330,7 @@
           },
           "forget": {
             "en": "I forgot! Which part of the date tells us the month?",
-            "hi": "मैं भूल गई! तारीख का कौन सा हिस्सा हमें महीना बताता है?"
+            "hi": "मैं भूल गया! तारीख का कौन सा हिस्सा हमें महीना बताता है?"
           },
           "hints": [
             {
@@ -401,14 +401,14 @@
             "hi": "इस तारीख 12/03/2018 में कौन सा महीना है?"
           },
           "opts": [
-            "December",
-            "March"
+            "March",
+            "December"
           ],
           "hiOpts": [
-            "दिसंबर",
-            "मार्च"
+            "मार्च",
+            "दिसंबर"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children pick the first number or confuse month with day.",
             "hi": "बच्चे पहली संख्या चुन लेते हैं या दिन और महीने में भ्रमित हो जाते हैं।"
@@ -431,14 +431,14 @@
             "hi": "तारीख 20/09/2019 में कौन सा महीना है?"
           },
           "opts": [
-            "January",
-            "September"
+            "September",
+            "January"
           ],
           "hiOpts": [
-            "जनवरी",
-            "सितंबर"
+            "सितंबर",
+            "जनवरी"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children read the first number as the month instead of the middle one.",
             "hi": "बच्चे बीच वाले नंबर के बजाय पहले नंबर को महीना पढ़ लेते हैं।"
@@ -453,7 +453,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-1yvj21r"
+      "id": "sch-1m0vfgq"
     }
   ],
   "notUsed": [

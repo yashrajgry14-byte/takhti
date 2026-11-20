@@ -1,10 +1,10 @@
 /* ==================================================================
-   TEACH MUNNI — the engine (no screen here; ui/teach-munni.js draws it)
+   TEACH APPU — the engine (no screen here; ui/teach-munni.js draws it)
 
-   After a lesson Munni "forgets" its aims, and the child teaches them
+   After a lesson Appu "forgets" its aims, and the child teaches them
    back. This file holds everything that decides what happens:
 
-   · teachCheckAim()  an aim is usable only if Munni's question and both
+   · teachCheckAim()  an aim is usable only if Appu's question and both
                       hints would NOT already pass as the explanation —
                       "never the answer", checked rather than promised.
    · teachRubric()    the offline judge: an explanation covers an aim when
@@ -14,15 +14,15 @@
    · teachGround()    the online judge (Gemini, api/teachback.mjs) must
                       QUOTE the child's words for every point it credits;
                       a quote that isn't in what the child said, or only
-                      repeats Munni, is downgraded. Checked on the server
+                      repeats Appu, is downgraded. Checked on the server
                       and again here.
-   · teachFixFor()    a 'fix' aim: Munni works a sum and makes a real
+   · teachFixFor()    a 'fix' aim: Appu works a sum and makes a real
                       mistake — this child's habit when the twin has one —
                       and the child catches it, then explains it.
    · teachBegin() / teachHeard() / teachPick() / teachFinish()
                       the session: one aim at a time, two hints at most,
                       then "we'll figure it out together later" — never
-                      "wrong". Gaps are kept for "Munni forgot again".
+                      "wrong". Gaps are kept for "Appu forgot again".
 
    Evidence: the fix aim's first tap is a real answer to a sum
    (noteSkillAttempt + twinAnswer — the same as any 3-choice question).
@@ -72,7 +72,7 @@ function teachRubric(ideas, text){
   return { verdict: !hits.length ? 'unsure' : got === hits.length ? 'covered' : got ? 'partly' : 'missing', hits, n };
 }
 
-/* A credited point needs a real quote of the child, not of Munni. */
+/* A credited point needs a real quote of the child, not of Appu. */
 function teachGround(quote, transcript, said){
   const q = teachNorm(quote), t = ' ' + teachNorm(transcript) + ' ';
   if(q.split(' ').filter(Boolean).length < 2 || !t.includes(' ' + q + ' ')) return false;
@@ -108,7 +108,7 @@ function teachCheckAim(a){
   if(!teachBi(a.point, 140)) e.push('the point needs English and Hindi, at most 140 letters');
   if(a.kind === 'fix') return e;
   if(a.kind !== 'explain') e.push('kind must be explain or fix');
-  if(!teachBi(a.forget, 240)) e.push("Munni's question needs English and Hindi, at most 240 letters");
+  if(!teachBi(a.forget, 240)) e.push("Appu's question needs English and Hindi, at most 240 letters");
   if(!Array.isArray(a.hints) || a.hints.length !== 2 || !a.hints.every(h => teachBi(h, 180))) e.push('two hints, each in English and Hindi');
   const ideas = Array.isArray(a.ideas) ? a.ideas : [];
   if(ideas.length < 1 || ideas.length > 3) e.push('one to three ideas');
@@ -118,11 +118,11 @@ function teachCheckAim(a){
       e.push('each idea needs 2–40 short words that show it');
   }
   if(e.length) return e;
-  // never the answer: nothing Munni says may already pass as the explanation.
+  // never the answer: nothing Appu says may already pass as the explanation.
   // The reason names the words it said, so Gemini's repair round knows what to change.
   const said = text => { const w = []; ideas.forEach(i => { const x = (i.words || []).find(v => teachHit(text, [v])); if(x) w.push(x); }); return w.length ? ` (it says "${w.join('", "')}")` : ''; };
   for(const lang of ['en', 'hi']){
-    if(teachRubric(ideas, a.forget[lang]).verdict === 'covered') e.push(`Munni's question (${lang}) already gives the explanation${said(a.forget[lang])}`);
+    if(teachRubric(ideas, a.forget[lang]).verdict === 'covered') e.push(`Appu's question (${lang}) already gives the explanation${said(a.forget[lang])}`);
     a.hints.forEach((h, k) => { if(teachRubric(ideas, h[lang]).verdict === 'covered') e.push(`hint ${k + 1} (${lang}) already gives the explanation${said(h[lang])}`); });
   }
   return e;
@@ -151,7 +151,7 @@ function teachCleanAims(raw, lessonId, opts){
         en: String(i.en || '').trim(), hi: String(i.hi || '').trim(),
         words: (Array.isArray(i.words) ? i.words : []).slice(0, 40).map(w => String(w || '').trim()).filter(Boolean) } : null).filter(Boolean)
     };
-    // A word that both Munni's question and the aim's own point say is the
+    // A word that both Appu's question and the aim's own point say is the
     // TOPIC ("find the centre of a circle"), not the explanation, so it can't
     // show the child understood. Gemini listed such words as explanation words
     // in every aim of the first live run, and every aim was dropped for it.
@@ -181,7 +181,7 @@ function teachCleanAims(raw, lessonId, opts){
   return { aims, errors, fixes, kept };   // kept: each usable aim's place in what was drafted (a question's `aim` follows it)
 }
 
-/* ---------- 'fix': Munni's mistake ---------- */
+/* ---------- 'fix': Appu's mistake ---------- */
 function teachFixFor(skill, seed, c){
   if(typeof skillProblem !== 'function' || !skillHasProblem(skill)) return null;
   const habit = typeof twinHabit === 'function' ? twinHabit(skill, c) : null;
@@ -196,7 +196,7 @@ function teachFixFor(skill, seed, c){
       const m = cands.find(x => x.id === id && x.v !== sp.ans && x.v >= 0);
       if(!m) continue;
       const act = { en: TEACH_ACTS[id](p, m.v, false), hi: TEACH_ACTS[id](p, m.v, true) };
-      // her working never says the right answer
+      // his working never says the right answer
       if([act.en, act.hi].some(s => (s.match(/\d+/g) || []).includes(String(sp.ans)))) continue;
       const third = (cands.find(x => x.v !== sp.ans && x.v !== m.v && x.v >= 0) || { v: sp.ans + 10 }).v;
       const opts = [sp.ans, m.v, third];
@@ -218,7 +218,7 @@ function teachUnitBuiltin(skill){
     const s = skillById(skill);
     return { id: skill, skill, title: s ? { en: s.en, hi: s.hi } : { en: skill, hi: skill }, aims: [{
       id: skill + '.fix', kind: 'fix', skill,
-      short: { en: 'Fix Munni’s sum', hi: 'मुन्नी का सवाल ठीक करो' },
+      short: { en: 'Fix Appu’s sum', hi: 'अप्पू का सवाल ठीक करो' },
       point: { en: 'Can find and explain a mistake in a sum', hi: 'सवाल में गड़बड़ ढूँढकर समझा सकते हैं' } }] };
   }
   return null;
@@ -227,9 +227,9 @@ function teachUnitFor(les){
   if(!les || typeof band !== 'function' || band().id === 'pre') return null;
   if(les.school && Array.isArray(les.aims) && les.aims.length){
     const aims = les.aims.slice();
-    // Munni's sum is aimed at THIS child's habit. A habit is kept on the skill it was
+    // Appu's sum is aimed at THIS child's habit. A habit is kept on the skill it was
     // seen in, which is often the next one up (borrowing builds on two-digit taking
-    // away, and a sub2 sum never borrows), so a habit there moves her sum up a step.
+    // away, and a sub2 sum never borrows), so a habit there moves his sum up a step.
     const up = les.skillId && typeof twinHabit === 'function' && typeof SKILLS !== 'undefined'
       ? SKILLS.filter(s => (s.pre || []).includes(les.skillId)).map(s => s.id)
           .find(id => twinHabit(id) && skillHasProblem(id) && TEACH_ACTS[twinHabit(id).id]) : null;
@@ -239,7 +239,7 @@ function teachUnitFor(les){
     return { id: les.id, skill: les.skillId || null, title: les.title, aims, lessonId: les.id };
   }
   const skills = [les.skillId].concat(typeof CONCEPT_SKILLS !== 'undefined' ? (CONCEPT_SKILLS[les.concept] || []) : []).filter(Boolean);
-  // a topic with written points first (a bar-model take-away is also borrowing), then Munni's sum alone
+  // a topic with written points first (a bar-model take-away is also borrowing), then Appu's sum alone
   for(const sk of skills) if(TEACH_UNITS[sk]) return teachUnitBuiltin(sk);
   for(const sk of skills){ const u = teachUnitBuiltin(sk); if(u) return u; }
   return null;
@@ -251,7 +251,7 @@ function teachPrompt(it){
     : { en: `${TEACH_LINES.fixIntro.en} ${it.fix.act.en}`, hi: `${TEACH_LINES.fixIntro.hi} ${it.fix.act.hi}` };
   return it.aim.forget;
 }
-/* everything Munni has said about this aim — a quote of it isn't the child's */
+/* everything Appu has said about this aim — a quote of it isn't the child's */
 function teachSaid(it, lang){
   return [tL(teachPrompt(it), lang), it.fix ? tL(it.fix.act, lang) + ' ' + tL(it.fix.tip, lang) : '',
           ...(it.aim.hints || []).map(h => tL(h, lang))].join(' ');
@@ -329,7 +329,7 @@ function teachHeard(s, text, verdicts, how){
   return it.state;
 }
 
-/* The child tapped an answer to Munni's sum. */
+/* The child tapped an answer to Appu's sum. */
 function teachPick(s, k){
   const it = teachItem(s);
   if(!it || !it.fix || it.phase !== 'pick') return null;
@@ -390,12 +390,12 @@ function teachFinish(s, c){
 }
 
 /* ---------- the loop, per point: where the child started, whether Munni
-   taught it again, where they are now ----------
+   (the tutor) taught it again, where they are now ----------
    'c'   explained the first time
    'g'/'p'          not yet / partly, not taught again yet
    'gr'/'pr'        taught again ("Let's learn it again"), not asked since
    'grc', 'grp'…    taught again, then asked: explained / partly / not yet
-   'gc', 'pg'…      asked again without being taught again ("Munni forgot again")
+   'gc', 'pg'…      asked again without being taught again ("Appu forgot again")
    Letters only, like `explained` — never what was said. */
 const TEACH_LOOP_RE = /^(?:[cpg]|[pg]r|[pg]r?[cpg])$/;
 function teachLoopNext(prev, L){
@@ -463,7 +463,7 @@ function teachLoopCounts(loops){
   return k;
 }
 
-/* Units with points still to teach Munni again. */
+/* Units with points still to teach Appu again. */
 function teachAgainList(c){
   const t = teachOf(c);
   return Object.entries(t.units).filter(([, u]) => u.gaps && u.gaps.length).map(([id, u]) => ({ id, ...u }))

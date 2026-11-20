@@ -25,7 +25,7 @@
       "source": "Page 9",
       "aims": [
         {
-          "id": "syhssum.0",
+          "id": "s1sg5a1b.0",
           "kind": "explain",
           "short": {
             "en": "Count sides",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! How do I find out how many sides a shape has?",
-            "hi": "मैं भूल गई! किसी आकृति की कितनी भुजाएँ हैं, यह कैसे पता करूँ?"
+            "hi": "मैं भूल गया! किसी आकृति की कितनी भुजाएँ हैं, यह कैसे पता करूँ?"
           },
           "hints": [
             {
@@ -98,14 +98,14 @@
             "hi": "इस आकृति की कितनी भुजाएँ हैं?"
           },
           "opts": [
-            "3",
-            "4"
+            "4",
+            "3"
           ],
           "hiOpts": [
-            "3",
-            "4"
+            "4",
+            "3"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Children who just saw the square expect every shape to have 4 sides.",
             "hi": "वर्ग देखने के बाद बच्चे हर आकृति की 4 भुजाएँ मान लेते हैं।"
@@ -120,7 +120,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-yhssum"
+      "id": "sch-1sg5a1b"
     },
     {
       "band": "developing",
@@ -138,7 +138,7 @@
       "source": "Page 9",
       "aims": [
         {
-          "id": "s1xj5wpf.0",
+          "id": "su3sgua.0",
           "kind": "explain",
           "short": {
             "en": "Count faces",
@@ -150,7 +150,7 @@
           },
           "forget": {
             "en": "I forgot! How do I know if it is a cube or a cuboid?",
-            "hi": "मैं भूल गई! कैसे पता करूँ कि यह घन है या घनाभ?"
+            "hi": "मैं भूल गया! कैसे पता करूँ कि यह घन है या घनाभ?"
           },
           "hints": [
             {
@@ -207,14 +207,14 @@
             "hi": "इस समतल सतह की कितनी भुजाएँ हैं?"
           },
           "opts": [
-            "4",
-            "3"
+            "3",
+            "4"
           ],
           "hiOpts": [
-            "4",
-            "3"
+            "3",
+            "4"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Children might miscount or confuse sides with corners.",
             "hi": "बच्चे गिनती में गलती कर सकते हैं या भुजाओं को कोनों से मिला सकते हैं।"
@@ -229,7 +229,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-1xj5wpf"
+      "id": "sch-u3sgua"
     },
     {
       "band": "developing",
@@ -247,7 +247,7 @@
       "source": "Page 10",
       "aims": [
         {
-          "id": "s1ccgogn.0",
+          "id": "sm3tlpc.0",
           "kind": "explain",
           "short": {
             "en": "Find cylinders",
@@ -259,7 +259,7 @@
           },
           "forget": {
             "en": "I forgot! How do I spot a cylinder?",
-            "hi": "मैं भूल गई! बेलन को कैसे पहचानूँ?"
+            "hi": "मैं भूल गया! बेलन को कैसे पहचानूँ?"
           },
           "hints": [
             {
@@ -335,14 +335,14 @@
             "hi": "गोल आकृति कौन से नंबर पर है?"
           },
           "opts": [
-            "1",
-            "3"
+            "3",
+            "1"
           ],
           "hiOpts": [
-            "1",
-            "3"
+            "3",
+            "1"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children might pick the first rectangle by mistake.",
             "hi": "बच्चे गलती से पहला आयत चुन सकते हैं।"
@@ -357,7 +357,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-1ccgogn"
+      "id": "sch-m3tlpc"
     },
     {
       "band": "developing",
@@ -375,7 +375,7 @@
       "source": "Page 11",
       "aims": [
         {
-          "id": "scmm6cb.0",
+          "id": "s1v6ogqq.0",
           "kind": "explain",
           "short": {
             "en": "Describe order",
@@ -387,7 +387,7 @@
           },
           "forget": {
             "en": "I forgot! How do I tell which shape is placed higher?",
-            "hi": "मैं भूल गई! कैसे बताऊँ कि कौन सी आकृति ऊपर है?"
+            "hi": "मैं भूल गया! कैसे बताऊँ कि कौन सी आकृति ऊपर है?"
           },
           "hints": [
             {
@@ -445,14 +445,14 @@
             "hi": "क्या इस आकृति की सभी भुजाएँ बराबर हैं?"
           },
           "opts": [
-            "No",
-            "Yes"
+            "Yes",
+            "No"
           ],
           "hiOpts": [
-            "नहीं",
-            "हाँ"
+            "हाँ",
+            "नहीं"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children might guess without checking all sides.",
             "hi": "बच्चे बिना सारी भुजाएँ देखे अंदाज़ा लगा सकते हैं।"
@@ -467,7 +467,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-cmm6cb"
+      "id": "sch-1v6ogqq"
     }
   ],
   "notUsed": []

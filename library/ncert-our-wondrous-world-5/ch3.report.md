@@ -14,7 +14,7 @@ skill: v5-health · source: Pages 40–42
 
 **Aims kept (what the teacher approves):**
 - The child can explain that food spoils because microbes grow on it.  ·  बच्चा समझा सकता है कि खाना इसलिए खराब होता है क्योंकि उस पर सूक्ष्मजीव पनपते हैं।  
-  Munni forgets: "I forgot! Why did Disha's uttapam get those coloured patches?  ·  मैं भूल गई! दिशा के उत्तपम पर रंगीन धब्बे क्यों आ गए?"
+  Munni forgets: "I forgot! Why did Disha's uttapam get those coloured patches?  ·  मैं भूल गया! दिशा के उत्तपम पर रंगीन धब्बे क्यों आ गए?"
 
 **The lesson:**
 1. intro — "Detective Disha has a mystery to solve. Let us read.  ·  जासूस दिशा के पास एक रहस्य है। आओ पढ़ें।"
@@ -34,7 +34,7 @@ skill: v5-health · source: Pages 43–44
 
 **Aims kept (what the teacher approves):**
 - The child can explain that microbes need moisture, air and warmth, so taking one away keeps food good.  ·  बच्चा समझा सकता है कि सूक्ष्मजीवों को नमी, हवा और गर्मी चाहिए, इसलिए इनमें से एक हटाने पर खाना अच्छा रहता है।  
-  Munni forgets: "I forgot! Why does bread spoil in two days, but a pickle lasts for months?  ·  मैं भूल गई! ब्रेड दो दिन में खराब हो जाती है, पर अचार महीनों तक कैसे चलता है?"
+  Munni forgets: "I forgot! Why does bread spoil in two days, but a pickle lasts for months?  ·  मैं भूल गया! ब्रेड दो दिन में खराब हो जाती है, पर अचार महीनों तक कैसे चलता है?"
 
 **The lesson:**
 1. intro — "Some food spoils fast, and some lasts for months. Let us find out why.  ·  कुछ खाना जल्दी खराब होता है, कुछ महीनों चलता है। आओ पता करें क्यों।"
@@ -54,9 +54,9 @@ skill: v5-health · source: Pages 44–47
 
 **Aims kept (what the teacher approves):**
 - The child can explain that drying food in the Sun stops microbes by taking away moisture.  ·  बच्चा समझा सकता है कि धूप में सुखाने से नमी निकल जाती है और सूक्ष्मजीव रुक जाते हैं।  
-  Munni forgets: "I forgot! Why do Amma and Appa put chillies in the Sun before making chilli powder?  ·  मैं भूल गई! अम्मा और अप्पा मिर्च पाउडर बनाने से पहले मिर्चें धूप में क्यों रखते हैं?"
+  Munni forgets: "I forgot! Why do Amma and Appa put chillies in the Sun before making chilli powder?  ·  मैं भूल गया! अम्मा और अप्पा मिर्च पाउडर बनाने से पहले मिर्चें धूप में क्यों रखते हैं?"
 - The child can explain that oil in a pickle keeps air out, so microbes cannot grow.  ·  बच्चा समझा सकता है कि अचार का तेल हवा को अंदर नहीं जाने देता, इसलिए सूक्ष्मजीव नहीं बढ़ पाते।  
-  Munni forgets: "I forgot! Why does Paati pour oil into the pickle jar?  ·  मैं भूल गई! पाटी अचार के डिब्बे में तेल क्यों डालती है?"
+  Munni forgets: "I forgot! Why does Paati pour oil into the pickle jar?  ·  मैं भूल गया! पाटी अचार के डिब्बे में तेल क्यों डालती है?"
 
 **The lesson:**
 1. intro — "Disha looks for ways her family keeps food from spoiling.  ·  दिशा देखती है कि उसका परिवार खाने को खराब होने से कैसे बचाता है।"
@@ -76,7 +76,7 @@ skill: v5-health · source: Pages 47–48
 
 **Aims kept (what the teacher approves):**
 - The child can give an example of microbes that help us.  ·  बच्चा मदद करने वाले सूक्ष्मजीवों का एक उदाहरण दे सकता है।  
-  Munni forgets: "I forgot! Are all microbes bad for us?  ·  मैं भूल गई! क्या सारे सूक्ष्मजीव हमारे लिए बुरे होते हैं?"
+  Munni forgets: "I forgot! Are all microbes bad for us?  ·  मैं भूल गया! क्या सारे सूक्ष्मजीव हमारे लिए बुरे होते हैं?"
 
 **The lesson:**
 1. intro — "Are all microbes bad? Let us read and find out.  ·  क्या सारे सूक्ष्मजीव बुरे होते हैं? आओ पढ़कर पता करें।"
@@ -96,7 +96,7 @@ skill: v5-health · source: Pages 50–52
 
 **Aims kept (what the teacher approves):**
 - The child can explain why we should chew food properly before swallowing.  ·  बच्चा समझा सकता है कि निगलने से पहले खाना ठीक से क्यों चबाना चाहिए।  
-  Munni forgets: "I forgot! Why should I chew my food slowly instead of gulping it down?  ·  मैं भूल गई! खाना जल्दी-जल्दी निगलने की जगह धीरे-धीरे क्यों चबाना चाहिए?"
+  Munni forgets: "I forgot! Why should I chew my food slowly instead of gulping it down?  ·  मैं भूल गया! खाना जल्दी-जल्दी निगलने की जगह धीरे-धीरे क्यों चबाना चाहिए?"
 
 **The lesson:**
 1. intro — "What happens to food inside your mouth? Let us read.  ·  मुँह के अंदर खाने का क्या होता है? आओ पढ़ें।"

@@ -173,7 +173,7 @@ function lessonBlock(les, check, label){
   if(check.aimErrors && check.aimErrors.length) out.push('', '**Aims dropped:**', ...check.aimErrors.map(e => `- ${e}`));
   if(check.aimFixes && check.aimFixes.length) out.push('', '**Hints replaced:**', ...check.aimFixes.map(e => `- ${e}`));
   const aims = (check.lesson && check.lesson.aims) || [];
-  if(aims.length) out.push('', '**Aims kept (what the teacher approves):**', ...aims.map(a => `- ${t(a.point)}  \n  Munni forgets: "${t(a.forget)}"`));
+  if(aims.length) out.push('', '**Aims kept (what the teacher approves):**', ...aims.map(a => `- ${t(a.point)}  \n  Appu forgets: "${t(a.forget)}"`));
   const beats = (check.ok ? check.lesson.beats : les.beats) || [];
   out.push('', '**The lesson:**', ...beats.map((b, i) => `${i + 1}. ${beatLine(b)}`));
   return out.join('\n');

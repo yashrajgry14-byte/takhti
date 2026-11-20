@@ -25,7 +25,7 @@
       "source": "Page 128",
       "aims": [
         {
-          "id": "slu62iy.0",
+          "id": "sqbfb7n.0",
           "kind": "explain",
           "short": {
             "en": "Use hand span",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! How do we use our hand span to measure length?",
-            "hi": "मैं भूल गई! लंबाई नापने के लिए बालिश्त का उपयोग कैसे करते हैं?"
+            "hi": "मैं भूल गया! लंबाई नापने के लिए बालिश्त का उपयोग कैसे करते हैं?"
           },
           "hints": [
             {
@@ -86,14 +86,14 @@
             "hi": "क्या लीना और आदि को अपने बालिश्त से एक जैसी माप मिलती है?"
           },
           "opts": [
-            "Yes",
-            "No"
+            "No",
+            "Yes"
           ],
           "hiOpts": [
-            "हाँ",
-            "नहीं"
+            "नहीं",
+            "हाँ"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children think all hand spans are of the exact same length.",
             "hi": "बच्चों को लगता है कि सभी के हाथ बिल्कुल एक लंबाई के होते हैं।"
@@ -109,7 +109,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-lu62iy"
+      "id": "sch-qbfb7n"
     },
     {
       "band": "developing",
@@ -127,7 +127,7 @@
       "source": "Page 138",
       "aims": [
         {
-          "id": "s21ar5a.0",
+          "id": "slev1df.0",
           "kind": "explain",
           "short": {
             "en": "Cuts and pieces",
@@ -139,7 +139,7 @@
           },
           "forget": {
             "en": "I forgot! How many cuts do we make to divide a rope into 4 equal pieces?",
-            "hi": "मैं भूल गई! किसी रस्सी को 4 बराबर टुकड़ों में बाँटने के लिए कितने कट लगाते हैं?"
+            "hi": "मैं भूल गया! किसी रस्सी को 4 बराबर टुकड़ों में बाँटने के लिए कितने कट लगाते हैं?"
           },
           "hints": [
             {
@@ -212,7 +212,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-21ar5a"
+      "id": "sch-lev1df"
     }
   ],
   "notUsed": [

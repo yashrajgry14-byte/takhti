@@ -25,7 +25,7 @@
       "source": "Page 139",
       "aims": [
         {
-          "id": "sn2iqni.0",
+          "id": "snxkgrx.0",
           "kind": "explain",
           "short": {
             "en": "Smaller glass count",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! Why do we need more smaller glasses than bigger glasses?",
-            "hi": "मैं भूल गई! बड़े गिलासों की तुलना में छोटे गिलासों की संख्या ज्यादा क्यों चाहिए?"
+            "hi": "मैं भूल गया! बड़े गिलासों की तुलना में छोटे गिलासों की संख्या ज्यादा क्यों चाहिए?"
           },
           "hints": [
             {
@@ -87,14 +87,14 @@
             "hi": "किस गिलास में बहुत थोड़ा जूस आता है?"
           },
           "opts": [
-            "bigger glass",
-            "smaller glass"
+            "smaller glass",
+            "bigger glass"
           ],
           "hiOpts": [
-            "बड़ा गिलास",
-            "छोटा गिलास"
+            "छोटा गिलास",
+            "बड़ा गिलास"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children confuse the size words and pick the bigger glass.",
             "hi": "बच्चे आकार वाले शब्दों में भ्रमित होकर बड़ा गिलास चुन लेते हैं।"
@@ -110,7 +110,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-n2iqni"
+      "id": "sch-nxkgrx"
     },
     {
       "band": "developing",
@@ -128,7 +128,7 @@
       "source": "Page 143",
       "aims": [
         {
-          "id": "s110zp3j.0",
+          "id": "sxeua7u.0",
           "kind": "explain",
           "short": {
             "en": "Litre capacity",
@@ -140,7 +140,7 @@
           },
           "forget": {
             "en": "I forgot! How much water does a 1 litre jug hold?",
-            "hi": "मैं भूल गई! 1 लीटर वाले जग में कितना पानी आता है?"
+            "hi": "मैं भूल गया! 1 लीटर वाले जग में कितना पानी आता है?"
           },
           "hints": [
             {
@@ -214,7 +214,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-110zp3j"
+      "id": "sch-xeua7u"
     },
     {
       "band": "developing",
@@ -232,7 +232,7 @@
       "source": "Page 145",
       "aims": [
         {
-          "id": "s1nxe618.0",
+          "id": "szlh36t.0",
           "kind": "explain",
           "short": {
             "en": "Heavy hand goes down",
@@ -244,7 +244,7 @@
           },
           "forget": {
             "en": "I forgot! Why does the hand holding books go lower?",
-            "hi": "मैं भूल गई! किताबें पकड़ने वाला हाथ नीचे क्यों झुक जाता है?"
+            "hi": "मैं भूल गया! किताबें पकड़ने वाला हाथ नीचे क्यों झुक जाता है?"
           },
           "hints": [
             {
@@ -318,7 +318,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-1nxe618"
+      "id": "sch-zlh36t"
     },
     {
       "band": "developing",
@@ -336,7 +336,7 @@
       "source": "Page 146",
       "aims": [
         {
-          "id": "s1vujtaa.0",
+          "id": "s1xw7izd.0",
           "kind": "explain",
           "short": {
             "en": "Matchbox weights",
@@ -348,7 +348,7 @@
           },
           "forget": {
             "en": "I forgot! What do we fill inside a matchbox to weigh things?",
-            "hi": "मैं भूल गई! चीजें तौलने के लिए हम माचिस के अंदर क्या भरते हैं?"
+            "hi": "मैं भूल गया! चीजें तौलने के लिए हम माचिस के अंदर क्या भरते हैं?"
           },
           "hints": [
             {
@@ -419,7 +419,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-1vujtaa"
+      "id": "sch-1xw7izd"
     }
   ],
   "notUsed": []

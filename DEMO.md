@@ -1,7 +1,7 @@
 # Takhti — the demo, step by step
 
 **The story in one line:** a teacher approves this week's aims once; two
-children get two different paths to them; each child teaches Munni back; the
+children get two different paths to them; each child teaches Appu back; the
 teacher sees who took which path and what the class could explain.
 
 About 6 minutes. Everything below works **with no internet** except the
@@ -19,9 +19,9 @@ optional live step (4b).
 6. Scroll to the bottom: **DEMO CLASS → Add two demo children**.
    This adds *Asha (demo)* and *Kabir (demo)*. They are labelled as demo data,
    are never synced, and **Remove the demo children** deletes both.
-7. **For Gemini to judge Teach Munni live** (the Netlify link, or `npm run
+7. **For Gemini to judge Teach Appu live** (the Netlify link, or `npm run
    dev` with no voice server): turn the **signal** on (the pill at the top
-   starts in airplane mode). The first time a child opens Teach Munni with a
+   starts in airplane mode). The first time a child opens Teach Appu with a
    signal, a *FOR A GROWN-UP* card shows the terms (only the words go — no
    recording, no name; nothing kept): tap **I'm the parent or guardian, and I
    agree**. Each demo child asks once. On Netlify, `GEMINI_API_KEY` must be
@@ -40,10 +40,10 @@ optional live step (4b).
 | 5 | Scroll to **How each child is taking this week's lessons**. | "Same aims, but look: Asha gets pictures first, Kabir goes straight into the school's lesson. Munni chose from what has worked for each child before — measured, not a label." |
 | 6 | Back to the map. Switch child to **Asha (demo)** → **The Story Fire**. | "This is Asha's phone. Her path is on screen, with the reason: 'this has worked for you on this topic'." |
 | 7 | Tap the lesson. It opens a **picture lesson** first. Play it, then the school's lesson. | "Pictures first, then the school's own lesson as the check." |
-| 8 | At the end tap **🐘 Teach Munni**. Agree to the grown-up's card once (step 7). Type or say an explanation. Point at the trace beside the phone: the T2 line says *judged by Gemini … each credit checked*, and Tier 2 lights up. | "Now Munni 'forgets', and the child teaches her back. Gemini judges which points the explanation covered — but only by quoting the child's own words, and the phone checks the quote again. What the child can't explain becomes next week's gap — never a 'wrong'." |
+| 8 | At the end tap **🐘 Teach Appu**. Agree to the grown-up's card once (step 7). Type or say an explanation. Point at the trace beside the phone: the T2 line says *judged by Gemini … each credit checked*, and Tier 2 lights up. | "Now Appu, Munni's little friend, 'forgets', and the child teaches him back. Gemini judges which points the explanation covered — but only by quoting the child's own words, and the phone checks the quote again. What the child can't explain becomes next week's gap — never a 'wrong'." |
 | 9 | Switch to **Kabir (demo)** → **The Story Fire**. | "Kabir, same lesson — no pictures step. The story works for him." |
-| 10 | *(maths, if a sums chapter is approved)* Kabir → Teach Munni on chapter 12's *Taking away tens and ones* (or chapter 4's *Finding Hidden Seeds*). | "Munni makes Kabir's own mistake — taking the smaller digit from the bigger — and he has to catch it." |
-| 11 | Back to the teacher view → **What the class could explain**. Read the green line at the top, then the ↻ lines under the borrowing points. | "For every point a child couldn't explain the first time, the teacher sees what happened next: Asha couldn't say what a borrowed ten becomes, Munni taught her again her way, and then she could. Kabir has been re-taught and Munni will ask him again. That is the loop — explain back, find the gap, re-teach, explain again — and it's measured, child by child." |
+| 10 | *(maths, if a sums chapter is approved)* Kabir → Teach Appu on chapter 12's *Taking away tens and ones* (or chapter 4's *Finding Hidden Seeds*). | "Appu makes Kabir's own mistake — taking the smaller digit from the bigger — and he has to catch it." |
+| 11 | Back to the teacher view → **What the class could explain**. Read the green line at the top, then the ↻ lines under the borrowing points. | "For every point a child couldn't explain the first time, the teacher sees what happened next: Asha couldn't say what a borrowed ten becomes, Munni taught her again her way, and then she could. Kabir has been re-taught and Appu will ask him again. That is the loop — explain back, find the gap, re-teach, explain again — and it's measured, child by child." |
 
 ## If something goes off-script
 
@@ -52,11 +52,11 @@ optional live step (4b).
 - **Both children show the same path:** you approved a lesson for a topic the
   demo children have no record on. Use the shapes chapter: tap **This week** on chapter 5, or chapter 12 (*Give and Take*) for sums.
 - **The library shows no book:** the class must be **Class 3**.
-- **Teach Munni's microphone does nothing:** type the explanation. Voice
+- **Teach Appu's microphone does nothing:** type the explanation. Voice
   needs the voice server (`npm run voice`), a signal and the reading terms —
   or, with no voice server, the phone's own recognizer (Chrome).
 - **Gemini didn't judge it (the trace says "the phone judges"):** the signal
-  is off, the grown-up's card wasn't agreed (parent page → *Teach Munni:
+  is off, the grown-up's card wasn't agreed (parent page → *Teach Appu:
   checked by Gemini*), or the site has no `GEMINI_API_KEY`. `npm run dev` reads
   the key from `voice/.env` and serves `/api` (Ask me, the syllabus, Teach
   Munni's judge on words) on the same origin, like Cloud Run.
@@ -66,15 +66,15 @@ optional live step (4b).
 ## What is real and what is staged
 
 - **Real:** the library lessons (Gemini's drafts from the real NCERT chapter,
-  passed by Takhti's checks), the paths, the teacher's cards, Teach Munni.
+  passed by Takhti's checks), the paths, the teacher's cards, Teach Appu.
 - **Staged, and labelled:** the two demo children's histories. They were
   written by the same functions a real child's answers go through, so the
   paths are what real children with those histories would get. Their Teach
-  Munni loop (Asha: gap → re-taught → explained) was also written by Teach
-  Munni's own session, heard by the phone's own rubric, with typed sentences
+  Appu loop (Asha: gap → re-taught → explained) was also written by Teach
+  Appu's own session, heard by the phone's own rubric, with typed sentences
   standing in for a child's voice.
 - **Not yet tested on real children:** Gemini hearing children read, and the
-  Teach Munni judge on children's own words. The first live check (14 Nov)
+  Teach Appu judge on children's own words. The first live check (14 Nov)
   found Gemini writing the correct word over a child's slip, so readings go
   to Sarvam (`SPEECH_PROVIDER=sarvam`); explanations are still heard and
   judged by Gemini (`TAKHTI_TEACH_HEAR=gemini`, `TAKHTI_TEACH_MODEL=

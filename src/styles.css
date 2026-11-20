@@ -1292,7 +1292,7 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 /* a clock's numbers ring themselves in the face's colour, so a hand never hides the number it points at */
 .geo.clock .num{paint-order:stroke;stroke:#333822;stroke-width:5px;stroke-linejoin:round}
 
-/* ---------- Teach Munni (ui/teach-munni.js) ---------- */
+/* ---------- Teach Appu (ui/teach-munni.js) ---------- */
 .teachchips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .teachchip{font-size:12.5px;padding:5px 10px;border-radius:14px;border:1px dashed rgba(237,230,210,.35);opacity:.8;transition:background .4s,transform .4s}
 .teachchip.is-now{border-style:solid;opacity:1}

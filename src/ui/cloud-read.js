@@ -25,7 +25,7 @@
    It never blocks the lesson: no answer in 10 s → the honest message and
    the typed fallback.
    ================================================================== */
-/* v3 (12 Nov 2026): Google's Gemini hears reading and Teach Munni
+/* v3 (12 Nov 2026): Google's Gemini hears reading and Teach Appu
    explanations, with Sarvam as the backup (voice/speech.js). Every online
    check needs v3 — a family that agreed to v1/v2 agreed to Sarvam only, so
    until they agree again everything stays on the phone. Paid Gemini tier
@@ -33,8 +33,8 @@
    check — not final. */
 const VOICE_TERMS_V = 3;
 const VOICE_TERMS = {
-  en: n => `When ${n} reads aloud in Takhti, says a word after Munni, or teaches Munni back what a lesson was about (Teach Munni), the recording goes over the internet to Takhti's voice server and to Google's Gemini, which writes down exactly what was said (if Gemini can't answer, Sarvam AI, an Indian speech service, does it instead). For Teach Munni, Gemini also checks which of the lesson's points ${n} explained. We use Google's paid service, so Google does not train its models on what ${n} says. Takhti checks the reading on this phone, shows ${n} what to fix, and Munni teaches the right way to say it. The recording is not kept — not on our server, not by us — and neither are the words. What ${n} got right or wrong, and which points ${n} explained, stays on this phone (and with the class, if you switch on class sync). Without internet, the phone's own recognizer is used, or ${n} types. You can withdraw this any time on the parent page.`,
-  hi: n => `जब ${n} तख़्ती में ज़ोर से पढ़ते हैं, मुन्नी के बाद कोई शब्द बोलते हैं, या मुन्नी को किसी पाठ की बातें वापस सिखाते हैं (मुन्नी को सिखाओ), तो वह रिकॉर्डिंग इंटरनेट से तख़्ती के वॉइस सर्वर और Google के Gemini तक जाती है, जो ठीक वही लिखता है जो बोला गया (अगर Gemini जवाब न दे, तो Sarvam AI, एक भारतीय बोली पहचानने वाली सेवा, यह काम करती है)। "मुन्नी को सिखाओ" में Gemini यह भी जाँचता है कि ${n} ने पाठ की कौन-सी बातें समझाईं। हम Google की पेड सेवा इस्तेमाल करते हैं, इसलिए Google ${n} की बातों से अपने मॉडल नहीं सिखाता। तख़्ती पढ़ना इसी फ़ोन पर जाँचती है, ${n} को बताती है क्या सुधारना है, और मुन्नी सही बोलना सिखाती है। रिकॉर्डिंग रखी नहीं जाती — न हमारे सर्वर पर, न हमारे पास — और शब्द भी नहीं। ${n} ने क्या सही किया, क्या नहीं, और कौन-सी बातें समझाईं, वह इसी फ़ोन पर रहता है (और क्लास के साथ, अगर आप क्लास सिंक चालू करते हैं)। इंटरनेट न हो तो फ़ोन की अपनी पहचान इस्तेमाल होती है, या ${n} लिखकर देते हैं। माता-पिता वाले पेज पर इसे कभी भी वापस ले सकते हैं।`
+  en: n => `When ${n} reads aloud in Takhti, says a word after Munni, or teaches Appu back what a lesson was about (Teach Appu), the recording goes over the internet to Takhti's voice server and to Google's Gemini, which writes down exactly what was said (if Gemini can't answer, Sarvam AI, an Indian speech service, does it instead). For Teach Appu, Gemini also checks which of the lesson's points ${n} explained. We use Google's paid service, so Google does not train its models on what ${n} says. Takhti checks the reading on this phone, shows ${n} what to fix, and Munni teaches the right way to say it. The recording is not kept — not on our server, not by us — and neither are the words. What ${n} got right or wrong, and which points ${n} explained, stays on this phone (and with the class, if you switch on class sync). Without internet, the phone's own recognizer is used, or ${n} types. You can withdraw this any time on the parent page.`,
+  hi: n => `जब ${n} तख़्ती में ज़ोर से पढ़ते हैं, मुन्नी के बाद कोई शब्द बोलते हैं, या अप्पू को किसी पाठ की बातें वापस सिखाते हैं (अप्पू को सिखाओ), तो वह रिकॉर्डिंग इंटरनेट से तख़्ती के वॉइस सर्वर और Google के Gemini तक जाती है, जो ठीक वही लिखता है जो बोला गया (अगर Gemini जवाब न दे, तो Sarvam AI, एक भारतीय बोली पहचानने वाली सेवा, यह काम करती है)। "अप्पू को सिखाओ" में Gemini यह भी जाँचता है कि ${n} ने पाठ की कौन-सी बातें समझाईं। हम Google की पेड सेवा इस्तेमाल करते हैं, इसलिए Google ${n} की बातों से अपने मॉडल नहीं सिखाता। तख़्ती पढ़ना इसी फ़ोन पर जाँचती है, ${n} को बताती है क्या सुधारना है, और मुन्नी सही बोलना सिखाती है। रिकॉर्डिंग रखी नहीं जाती — न हमारे सर्वर पर, न हमारे पास — और शब्द भी नहीं। ${n} ने क्या सही किया, क्या नहीं, और कौन-सी बातें समझाईं, वह इसी फ़ोन पर रहता है (और क्लास के साथ, अगर आप क्लास सिंक चालू करते हैं)। इंटरनेट न हो तो फ़ोन की अपनी पहचान इस्तेमाल होती है, या ${n} लिखकर देते हैं। माता-पिता वाले पेज पर इसे कभी भी वापस ले सकते हैं।`
 };
 
 /* Hear this turn on the voice server (Gemini, Sarvam as backup)? The current terms, a voice server, a signal. */
@@ -129,7 +129,7 @@ function cloudListen(onResult, onEnd, opts){
       const d = await res.json().catch(() => ({}));
       if(over) return;
       if(!res.ok || typeof d.transcript !== 'string' || !d.transcript.trim()) return end(onEnd, res.status === 429 ? 'cloud-limit' : d.skipped ? 'skipped' : res.ok ? 'no-speech' : 'network');
-      if(opts && opts.full) return end(onResult, d);        // Teach Munni: the transcript and the judge's verdicts
+      if(opts && opts.full) return end(onResult, d);        // Teach Appu: the transcript and the judge's verdicts
       log(2, `Reading check · written down by ${d.provider === 'gemini' ? 'Gemini' : d.provider} on the voice server${d.words ? ', word by word against the app\'s own copy of the line' : ''} — the recording is not kept — and graded here on the phone`);
       S.ctx.heardBy = d.provider;
       end(onResult, [{ transcript: d.transcript, confidence: 0.9 }]);
@@ -149,7 +149,7 @@ function cloudReadParentHTML(){
     <div style="font-size:12.5px;margin-top:6px">${t
       ? (hi ? `सहमति दी: ${String(t.at).slice(0, 10)} (शर्तें v${t.v})` : `Agreed on ${String(t.at).slice(0, 10)} (terms v${t.v})`)
       : (hi ? 'सहमति वापस ली गई — आवाज़ फ़ोन से बाहर नहीं जाती; पढ़ना फ़ोन की अपनी पहचान से या लिखकर।' : "Withdrawn — the voice doesn't leave the phone; reading uses the phone's own recognizer, or typing.")}</div>
-    ${t && t.v < VOICE_TERMS_V ? `<div style="font-size:12.5px;margin-top:6px">${hi ? 'नई शर्तें: अब Google का Gemini पढ़ना और "मुन्नी को सिखाओ" में समझाना सुनता है (Sarvam बैकअप है)। सहमत होने तक सब कुछ इसी फ़ोन पर जाँचा जाता है।' : "New in these terms: Google's Gemini now hears reading and Teach Munni explanations (Sarvam as a backup). Until you agree, everything is checked on this phone only."}</div>
+    ${t && t.v < VOICE_TERMS_V ? `<div style="font-size:12.5px;margin-top:6px">${hi ? 'नई शर्तें: अब Google का Gemini पढ़ना और "अप्पू को सिखाओ" में समझाना सुनता है (Sarvam बैकअप है)। सहमत होने तक सब कुछ इसी फ़ोन पर जाँचा जाता है।' : "New in these terms: Google's Gemini now hears reading and Teach Appu explanations (Sarvam as a backup). Until you agree, everything is checked on this phone only."}</div>
       <button class="btn" style="margin-top:6px" onclick="voiceTermsAgain()">${hi ? 'नई शर्तों से सहमत हों' : 'Agree to the new terms'}</button>` : ''}
     ${t ? (S.ctx.termsAsk
       ? `<div style="font-size:12.5px;margin-top:6px">${hi ? `वापस लेने पर ${n} की पढ़ाई की जाँच कम सटीक होगी और मुन्नी गलतियाँ उतनी अच्छी तरह नहीं सिखा पाएगी।` : `If you withdraw, ${n}'s reading is checked less closely and Munni can't teach slips as well.`}</div>

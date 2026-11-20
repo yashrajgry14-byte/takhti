@@ -25,7 +25,7 @@
       "source": "Page 180",
       "aims": [
         {
-          "id": "s1qgfkm6.0",
+          "id": "samm9d.0",
           "kind": "explain",
           "short": {
             "en": "Rangoli portions",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! How do we show two equal portions in a rangoli?",
-            "hi": "मैं भूल गई! हम रंगोली में दो बराबर हिस्से कैसे दिखाते हैं?"
+            "hi": "मैं भूल गया! हम रंगोली में दो बराबर हिस्से कैसे दिखाते हैं?"
           },
           "hints": [
             {
@@ -94,14 +94,14 @@
             "hi": "क्या हम निशान बनाकर रंगोली में दो बराबर हिस्से देख सकते हैं?"
           },
           "opts": [
-            "Yes",
-            "No"
+            "No",
+            "Yes"
           ],
           "hiOpts": [
-            "हाँ",
-            "नहीं"
+            "नहीं",
+            "हाँ"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Children might think borders do not affect symmetry.",
             "hi": "बच्चे सोच सकते हैं कि सीमाओं से सममिति पर कोई असर नहीं पड़ता।"
@@ -117,7 +117,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-1qgfkm6"
+      "id": "sch-amm9d"
     },
     {
       "band": "developing",
@@ -135,7 +135,7 @@
       "source": "Page 184",
       "aims": [
         {
-          "id": "s6ezu20.0",
+          "id": "scegkwl.0",
           "kind": "explain",
           "short": {
             "en": "Mirror perception",
@@ -147,7 +147,7 @@
           },
           "forget": {
             "en": "I forgot! How do we place counters on the other side in the mirror game?",
-            "hi": "मैं भूल गई! आईने के खेल में दूसरी तरफ गोटियाँ कैसे रखते हैं?"
+            "hi": "मैं भूल गया! आईने के खेल में दूसरी तरफ गोटियाँ कैसे रखते हैं?"
           },
           "hints": [
             {
@@ -204,14 +204,14 @@
             "hi": "क्या रवि द्वारा रखी गई गोटियाँ सोनी की गोटियों का दर्पण प्रतिरूप हैं?"
           },
           "opts": [
-            "No",
-            "Yes"
+            "Yes",
+            "No"
           ],
           "hiOpts": [
-            "नहीं",
-            "हाँ"
+            "हाँ",
+            "नहीं"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children might place counters randomly without checking reflection.",
             "hi": "बच्चे बिना परछाई की जाँच किए गोटियाँ कहीं भी रख सकते हैं।"
@@ -227,7 +227,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-6ezu20"
+      "id": "sch-cegkwl"
     },
     {
       "band": "developing",
@@ -245,7 +245,7 @@
       "source": "Page 189",
       "aims": [
         {
-          "id": "sm57h9t.0",
+          "id": "s731wbe.0",
           "kind": "explain",
           "short": {
             "en": "Read map",
@@ -257,7 +257,7 @@
           },
           "forget": {
             "en": "I forgot! How do we find locations in the fair using the map?",
-            "hi": "मैं भूल गई! नक्शे का उपयोग करके मेले में स्थान कैसे ढूँढते हैं?"
+            "hi": "मैं भूल गया! नक्शे का उपयोग करके मेले में स्थान कैसे ढूँढते हैं?"
           },
           "hints": [
             {
@@ -315,14 +315,14 @@
             "hi": "क्या नक्शा हमें स्थान ढूँढने में मदद के लिए उनके शीर्षक के साथ दृश्य दिखाता है?"
           },
           "opts": [
-            "No",
-            "Yes"
+            "Yes",
+            "No"
           ],
           "hiOpts": [
-            "नहीं",
-            "हाँ"
+            "हाँ",
+            "नहीं"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children might overlook map labels and symbols.",
             "hi": "बच्चे नक्शे के लेबल और प्रतीकों को नजरअंदाज कर सकते हैं।"
@@ -338,7 +338,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-m57h9t"
+      "id": "sch-731wbe"
     }
   ],
   "notUsed": [

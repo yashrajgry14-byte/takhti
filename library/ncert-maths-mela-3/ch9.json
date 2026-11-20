@@ -25,7 +25,7 @@
       "source": "Page 118",
       "aims": [
         {
-          "id": "sylwu95.0",
+          "id": "sy52tsi.0",
           "kind": "explain",
           "short": {
             "en": "Show hundreds and tens",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! How do I show numbers with tiles?",
-            "hi": "मैं भूल गई! टाइलों से संख्याएँ कैसे दिखाते हैं?"
+            "hi": "मैं भूल गया! टाइलों से संख्याएँ कैसे दिखाते हैं?"
           },
           "hints": [
             {
@@ -90,14 +90,14 @@
             "hi": "इस समूह में कितनी दहाई दिखाई गई हैं?"
           },
           "opts": [
-            "8",
-            "5"
+            "5",
+            "8"
           ],
           "hiOpts": [
-            "8",
-            "5"
+            "5",
+            "8"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children confuse the tens digit with the ones digit.",
             "hi": "बच्चे दहाई के अंक को इकाई के अंक से मिला देते हैं।"
@@ -112,7 +112,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-ylwu95"
+      "id": "sch-y52tsi"
     },
     {
       "band": "developing",
@@ -130,7 +130,7 @@
       "source": "Page 125",
       "aims": [
         {
-          "id": "s7ehzt9.0",
+          "id": "s1ckds7q.0",
           "kind": "explain",
           "short": {
             "en": "Make with slips",
@@ -142,7 +142,7 @@
           },
           "forget": {
             "en": "I forgot! How do we use slips to make a number?",
-            "hi": "मैं भूल गई! संख्या बनाने के लिए पर्चियों का उपयोग कैसे करते हैं?"
+            "hi": "मैं भूल गया! संख्या बनाने के लिए पर्चियों का उपयोग कैसे करते हैं?"
           },
           "hints": [
             {
@@ -193,14 +193,14 @@
             "hi": "30 के लिए दहाई की कितनी पर्चियाँ चाहिए?"
           },
           "opts": [
-            "4",
-            "3"
+            "3",
+            "4"
           ],
           "hiOpts": [
-            "4",
-            "3"
+            "3",
+            "4"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children confuse the tens digit with another place value.",
             "hi": "बच्चे दहाई के अंक को किसी अन्य स्थानीय मान से मिला देते हैं।"
@@ -215,7 +215,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-7ehzt9"
+      "id": "sch-1ckds7q"
     },
     {
       "band": "developing",
@@ -233,7 +233,7 @@
       "source": "Page 127",
       "aims": [
         {
-          "id": "scxqbtn.0",
+          "id": "s13g2hw2.0",
           "kind": "explain",
           "short": {
             "en": "Read word numerals",
@@ -245,7 +245,7 @@
           },
           "forget": {
             "en": "I forgot! How do we read numbers from words?",
-            "hi": "मैं भूल गई! शब्दों से संख्याएँ कैसे पढ़ते हैं?"
+            "hi": "मैं भूल गया! शब्दों से संख्याएँ कैसे पढ़ते हैं?"
           },
           "hints": [
             {
@@ -318,7 +318,7 @@
         }
       ],
       "subject": "read",
-      "id": "sch-cxqbtn"
+      "id": "sch-13g2hw2"
     }
   ],
   "notUsed": [

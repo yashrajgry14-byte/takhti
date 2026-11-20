@@ -20,12 +20,12 @@ phone, offline:
    cartoon or the story; Munni reading first, or hard words in pieces. After
    the school's lesson, one more question a step harder or easier, from how
    their answers went.
-3. **Then the child teaches it back.** Munni the elephant "forgets" the lesson,
-   and the child explains it out loud. For a sum, Munni makes the child's *own*
+3. **Then the child teaches it back.** Appu, Munni's little elephant friend,
+   "forgets" the lesson, and the child explains it out loud. For a sum, Appu makes the child's *own*
    habitual mistake, and the child has to catch it. Gemini judges which points
    the explanation covered, and must quote the child for each.
 4. **Gaps come back.** A point the child couldn't explain is taught again their
-   way, and Munni asks again. The teacher sees it per point, by name: who
+   way, and Appu asks again. The teacher sees it per point, by name: who
    explained it first time, who couldn't, who was taught again and then
    could — and who gets the questions right but can't explain it yet.
 
@@ -37,14 +37,14 @@ through their child's school.
 | | |
 |---|---|
 | Lessons from the textbook | Gemini drafts them in Takhti's lesson format; Takhti's checker tests every answer; the teacher approves. Gemini never decides what a child sees. |
-| Teach Munni | Gemini writes down the child's explanation and judges it, quoting the child for every point it credits (checked again on the phone). |
+| Teach Appu | Gemini writes down the child's explanation and judges it, quoting the child for every point it credits (checked again on the phone). |
 | Munni's voice | Gemini TTS, built ahead and shipped offline. |
 | Hearing a child read | Sarvam (verbatim). Our tests on deliberate misreadings (14 Nov) found Gemini writing the right word over a child's slip, so readings go to Sarvam and Gemini stays on what it judges well. |
 
 **Next to Google's Read Along:** Read Along helps a child read aloud and
 shows the teacher how accurately and fast they read. Takhti teaches the
 school's own NCERT lessons, maths included (sums, shapes, clocks), then has
-the child explain each lesson back to Munni, so the teacher sees, point by
+the child explain each lesson back to Appu, so the teacher sees, point by
 point, who can do it and who can explain it. The two fit together: Read
 Along for reading fluency, Takhti for understanding the week's lessons.
 
@@ -64,14 +64,14 @@ yet. The Android app ports the same logic to Kotlin (`ANDROID.md`).
 
 ---
 
-## The core loop: learn → teach Munni → fix the gap
+## The core loop: learn → teach Appu → fix the gap
 
 1. **Learn.** This week's lesson comes from the school's own textbook
    (Gemini drafts it, Takhti checks it, the teacher approves its aims in a
    few plain points), and each child gets their own path to those aims —
    pictures first, the cartoon, the story, or straight in if they already
    know it — chosen from what has actually worked for that child.
-2. **Teach Munni.** Elephants never forget, but Munni does, on purpose: she
+2. **Teach Appu.** Elephants never forget, but Appu does, on purpose: he
    "forgets" the aims and the child teaches them back out loud — in the
    app, at the end of a phone call, and with a parent at home.
 3. **Judge each aim.** Gemini decides which aims the explanation covered and
@@ -79,7 +79,7 @@ yet. The Android app ports the same logic to Kotlin (`ANDROID.md`).
    rubric decides. Two hints at most, then "we'll figure it out together
    later" — never "wrong".
 4. **Fix the gap.** An aim the child couldn't explain is taught again in the
-   way that works for them, then Munni forgets it again until every aim is
+   way that works for them, then Appu forgets it again until every aim is
    green. The teacher sees what the class could explain; the parent sees
    how their child explains.
 
@@ -88,7 +88,7 @@ yet. The Android app ports the same logic to Kotlin (`ANDROID.md`).
 | Google component | What it does in Takhti | Where |
 |---|---|---|
 | **Gemini API — structured output** (`gemini-4-hydrogen`, falling back to `gemini-3.8-flash` and `gemini-3.5-flash-lite`) | Turns a textbook chapter (PDF, photo or text) into lessons in Takhti's own format, one JSON schema per lesson-step type, each with its teacher-approved aims; a failed lesson goes back once with the checker's reasons | `api/syllabus.mjs`, `tools/try-syllabus.mjs`, `tools/build-library.mjs` |
-| **Gemini — audio understanding** | Writes down what a child *said* when reading aloud (बाई stays बाई, not भाई) and when explaining to Munni; the phone grades it | `voice/speech.js` |
+| **Gemini — audio understanding** | Writes down what a child *said* when reading aloud (बाई stays बाई, not भाई) and when explaining to Appu; the phone grades it | `voice/speech.js` |
 | **Gemini — the judge** | Decides which aims a child's explanation covered, quoting the child for every credit; an unquoted credit is downgraded on the server and again on the phone | `api/teachback.mjs` |
 | **Gemini TTS + Batch API** | Munni's voice, built ahead at half price and shipped offline, so a lesson never waits for the network | `tools/build-audio.mjs` |
 | **Chrome built-in AI (Prompt API, on-device Gemini Nano)** | Writes a fresh practice line for the words a child missed, on the phone, with no network — only if the model is already there, and strictly checked | `src/core/tier1.js` |
@@ -149,7 +149,7 @@ graded on the phone. Which service is one setting (`SPEECH_PROVIDER`), chosen
 on evidence: `tools/compare-speech.mjs` runs real recordings with deliberate
 slips through Gemini and Sarvam, and `tools/live-check.mjs` times every Gemini
 call against the phone's budget. On 14 Nov Sarvam kept the English slips and
-Gemini tidied them, so readings go to Sarvam; a Teach Munni explanation is
+Gemini tidied them, so readings go to Sarvam; a Teach Appu explanation is
 judged on meaning, so Gemini still hears those (`TAKHTI_TEACH_HEAR`). Munni's
 voice is built ahead with Gemini TTS and ships offline. **Say it with Munni:**
 after a slip, Munni teaches the word in pieces (भा · ई), slowly, then whole,
@@ -191,25 +191,25 @@ A help button on every question: Munni breaks it down the way a teacher would
 — make ten, tens then ones, borrow a ten, a hard word in pieces — and never
 says the answer. Still stuck? Munni calls, inside the app.
 
-### Teach Munni
-Elephants never forget — but Munni does, on purpose. After a lesson she
-forgets its aims and the child teaches them back, out loud, while each aim's
-chip turns green. For a sum, Munni makes the child's own habitual mistake and
+### Teach Appu
+Elephants never forget — but Appu, Munni's little elephant friend, does, on
+purpose. After a lesson he forgets its aims and the child teaches them back, out loud, while each aim's
+chip turns green. For a sum, Appu makes the child's own habitual mistake and
 the child catches it and explains it. Two hints at most, then "we'll figure it
-out together later"; the gap is taught again the child's way and Munni forgets
+out together later"; the gap is taught again the child's way and Appu forgets
 it again. Online, Gemini judges which aims the explanation covered and must
 quote the child for each; offline, Takhti's own rubric does. Parents see how
 their child explains; the teacher sees which aims the class could explain,
 and for each child who couldn't at first, whether they could after being
 taught again.
 
-**On a phone call, too:** at the end of a call Munni forgets up to two points
+**On a phone call, too:** at the end of a call Appu forgets up to two points
 of a topic the child is really working on (the teacher's homework, a mistake
 they keep making, or what they've practised) and the child teaches them back
 by voice — the same aims, hints and rules as the app, run by the same code.
-**And at home:** the parent's Wednesday "teach" activity asks Munni's own
-question, with her clue and what a full answer says, so a parent can listen
-the way Munni does — a point the child couldn't yet explain comes first.
+**And at home:** the parent's Wednesday "teach" activity asks Appu's own
+question, with his clue and what a full answer says, so a parent can listen
+the way Appu does — a point the child couldn't yet explain comes first.
 → `src/core/teachback.js`, `src/ui/teach-munni.js`, `api/teachback.mjs`, `voice/session.js`, `voice/circle.js`
 
 ### Munni on a phone call — Bolna
@@ -259,7 +259,7 @@ storage need a real origin).
 `api/ask.js` (answers to saved questions), `api/class-sync.mjs` (the hourly
 class sync, which needs Netlify Blobs) and `api/syllabus.mjs` (lessons from a
 chapter; set `GEMINI_API_KEY`, or run it on the voice server as
-`POST /syllabus`) and `api/teachback.mjs` (Teach Munni's Gemini judge, words
+`POST /syllabus`) and `api/teachback.mjs` (Teach Appu's Gemini judge, words
 only, the same `GEMINI_API_KEY`; the app uses it when there is no voice
 server, under the words terms a grown-up agrees to). Without them the app still
 runs on its on-device content, and classes use codes.

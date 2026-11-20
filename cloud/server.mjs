@@ -6,7 +6,7 @@
    the Tier 2 endpoints the app already calls on its own origin:
 
      POST /api/syllabus    a chapter → Gemini's draft lessons (api/syllabus.mjs)
-     POST /api/teachback   Teach Munni's judge on words (api/teachback.mjs)
+     POST /api/teachback   Teach Appu's judge on words (api/teachback.mjs)
      POST /api/class-sync  class sync, stored in a Cloud Storage bucket
      POST /api/ask         the question queue (api/ask.js; 503 without its key)
 

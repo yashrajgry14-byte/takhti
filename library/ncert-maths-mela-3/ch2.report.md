@@ -38,7 +38,7 @@ skill: shapes2d · source: Page 9
 
 **Aims kept (what the teacher approves):**
 - The child can count the sides of a shape.  ·  बच्चा किसी आकृति की भुजाएँ गिन सकता है।  
-  Munni forgets: "I forgot! How do I find out how many sides a shape has?  ·  मैं भूल गई! किसी आकृति की कितनी भुजाएँ हैं, यह कैसे पता करूँ?"
+  Munni forgets: "I forgot! How do I find out how many sides a shape has?  ·  मैं भूल गया! किसी आकृति की कितनी भुजाएँ हैं, यह कैसे पता करूँ?"
 
 **The lesson:**
 1. intro — "Shapes have sides and corners. Let us look at them.  ·  आकृतियों की भुजाएँ और कोने होते हैं। आओ इन्हें देखें।"
@@ -73,7 +73,7 @@ skill: shapes2d · source: Page 9
 
 **Aims kept (what the teacher approves):**
 - The child can name shapes of boxes and bottles.  ·  बच्चा डिब्बों और बोतलों के नाम बता सकता है।  
-  Munni forgets: "I forgot! How do I know if it is a cube or a cuboid?  ·  मैं भूल गई! कैसे पता करूँ कि यह घन है या घनाभ?"
+  Munni forgets: "I forgot! How do I know if it is a cube or a cuboid?  ·  मैं भूल गया! कैसे पता करूँ कि यह घन है या घनाभ?"
 
 **The lesson:**
 1. intro — "Boxes and cans have faces, edges and corners.  ·  डिब्बों और डिब्बियों के सतह, किनारे और कोने होते हैं।"
@@ -111,7 +111,7 @@ skill: shapes2d · source: Page 10
 
 **Aims kept (what the teacher approves):**
 - The child can pick out a cylinder from toy parts.  ·  बच्चा खिलौने के भागों में से बेलन पहचान सकता है।  
-  Munni forgets: "I forgot! How do I spot a cylinder?  ·  मैं भूल गई! बेलन को कैसे पहचानूँ?"
+  Munni forgets: "I forgot! How do I spot a cylinder?  ·  मैं भूल गया! बेलन को कैसे पहचानूँ?"
 
 **The lesson:**
 1. intro — "Toys are made of different shapes like cylinders and cones.  ·  खिलौने बेलन और शंकु जैसी आकृतियों से बनते हैं।"
@@ -146,7 +146,7 @@ skill: shapes2d · source: Page 11
 
 **Aims kept (what the teacher approves):**
 - The child can describe what shape is on top or below.  ·  बच्चा बता सकता है कि कौन सी आकृति ऊपर या नीचे है।  
-  Munni forgets: "I forgot! How do I tell which shape is placed higher?  ·  मैं भूल गई! कैसे बताऊँ कि कौन सी आकृति ऊपर है?"
+  Munni forgets: "I forgot! How do I tell which shape is placed higher?  ·  मैं भूल गया! कैसे बताऊँ कि कौन सी आकृति ऊपर है?"
 
 **The lesson:**
 1. intro — "We can stack shapes to build towers and houses.  ·  हम मीनारें और घर बनाने के लिए आकृतियों को जमा सकते हैं।"

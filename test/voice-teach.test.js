@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /* ==================================================================
-   TEACH MUNNI ON A PHONE CALL, AND AT HOME — run with: node test/voice-teach.test.js
+   TEACH APPU ON A PHONE CALL, AND AT HOME — run with: node test/voice-teach.test.js
 
    The explain-back loop reaches a child with no smartphone: at the end of
-   a call Munni "forgets" up to two of the app's own aims (content/
+   a call Appu "forgets" up to two of the app's own aims (content/
    teach.js) and the child teaches them back out loud, through the app's
    own session (core/teachback.js) — hints, "later", never "wrong", never
    evidence of mastery. What was explained goes to the child's own record
@@ -60,7 +60,7 @@ function call(brain, childId, teachFn) {
 
 (async () => {
 
-await test('a child who has practised carrying: the call ends with Teach Munni on two carrying points; none for 3–4', async () => {
+await test('a child who has practised carrying: the call ends with Teach Appu on two carrying points; none for 3–4', async () => {
   const brain = createBrain({ dataDir: tmp(), env: ENV });
   const c = kid(brain, 8, 'en', { carry: { n: 5, right: 3 } });
   const s = brain.createSession(c.id).session;
@@ -68,14 +68,14 @@ await test('a child who has practised carrying: the call ends with Teach Munni o
   assert.strictEqual(s.teach_plan.skill, 'carry');
   assert.ok(s.teach_plan.aims.length >= 1 && s.teach_plan.aims.length <= 2 && s.teach_plan.aims.every(a => /^carry\./.test(a) && !/fix/.test(a)), JSON.stringify(s.teach_plan));
   const little = kid(brain, 4, 'hi', { add10: { n: 6, right: 4 } });
-  assert.ok(!brain.createSession(little.id).session.slots.includes('teach'), 'Teach Munni for a 3–4 year old');
+  assert.ok(!brain.createSession(little.id).session.slots.includes('teach'), 'Teach Appu for a 3–4 year old');
   const fresh = kid(brain, 8, 'en', {});
   assert.ok(!brain.createSession(fresh.id).session.slots.includes('teach'), 'a topic the child never practised');
   const early = kid(brain, 6, 'en', { carry: { n: 5, right: 3 } });
   assert.ok(!brain.createSession(early.id).session.slots.includes('teach'), "a 7–8 topic for a 5–6 year old");
 });
 
-await test('on the call: Munni forgets, a muddled answer gets her written hint, a real explanation gets thanks; never "wrong"; kept in profile.teach; not mastery evidence', async () => {
+await test('on the call: Appu forgets, a muddled answer gets his written hint, a real explanation gets thanks; never "wrong"; kept in profile.teach; not mastery evidence', async () => {
   const brain = createBrain({ dataDir: tmp(), env: ENV });
   const c = kid(brain, 8, 'en', { carry: { n: 5, right: 3 } });
   const units = brain.core.T.TEACH_UNITS.carry.aims;
@@ -89,7 +89,7 @@ await test('on the call: Munni forgets, a muddled answer gets her written hint, 
   assert.ok(it, 'no teach item');
   const first = units.find(a => a.id === s.teach_plan.aims[0]);
   const ask = says.find(x => x.includes(first.forget.en));
-  assert.ok(ask && /forgot/i.test(ask), 'Munni forgets: ' + says.join(' | '));
+  assert.ok(ask && /forgot/i.test(ask), 'Appu forgets: ' + says.join(' | '));
   assert.ok(says.some(x => x.includes(first.hints[0].en)), 'her written hint after a muddled answer');
   assert.ok(says.every(x => !/\bwrong\b|\bfailed\b/i.test(x)), 'never "wrong"');
   assert.strictEqual(it.outcome, 'taught');
@@ -98,22 +98,22 @@ await test('on the call: Munni forgets, a muddled answer gets her written hint, 
   assert.ok(t && t.v === 1 && t.units.carry && Object.keys(t.units.carry.aims).length >= 1, JSON.stringify(t));
   assert.ok(Object.values(t.explained).every(v => /^[cpg]$/.test(v)));
   assert.strictEqual(after, before, 'explaining changed the skill history');
-  assert.ok(/taught Munni/.test(s.report.text) && /adding with carrying/.test(s.report.text), s.report.text);
+  assert.ok(/taught Appu/.test(s.report.text) && /adding with carrying/.test(s.report.text), s.report.text);
   assert.ok(!/wrong|failed/i.test(s.report.text));
 });
 
-await test('Hindi: Munni\'s lines and the report line in Hindi; a point not heard twice moves on without being counted', async () => {
+await test('Hindi: Appu\'s lines and the report line in Hindi; a point not heard twice moves on without being counted', async () => {
   const brain = createBrain({ dataDir: tmp(), env: ENV });
   const c = kid(brain, 8, 'hi', { borrow: { n: 6, right: 2 } });
   const { s, says, child } = call(brain, c.id, () => 'हाँ');    // one word: never enough to judge
   const it = s.items.find(x => x.kind === 'teach');
   assert.ok(it && it.teach_result, 'no teach result');
-  assert.ok(says.some(x => /भूल/.test(x)), 'Munni forgets, in Hindi');
+  assert.ok(says.some(x => /भूल/.test(x)), 'Appu forgets, in Hindi');
   assert.ok(says.some(x => x.includes('ठीक से सुनाई नहीं')), 'asked again when unsure');
   assert.ok(says.some(x => x.includes('अगली बात')), 'moved on after two');
   assert.strictEqual(it.teach_result.covered, 0);
   assert.ok(!Object.values(child.profile.teach.explained).includes('c'), 'nothing credited for "हाँ"');
-  assert.ok(/मुन्नी को/.test(s.report.text) && /फिर पूछेगी/.test(s.report.text), s.report.text);
+  assert.ok(/अप्पू को/.test(s.report.text) && /फिर पूछेगा/.test(s.report.text), s.report.text);
 });
 
 await test('a point taught on one call isn\'t asked on the next; the next point is', async () => {
@@ -131,7 +131,7 @@ await test('a point taught on one call isn\'t asked on the next; the next point 
   else assert.ok(s2.teach_plan && s2.teach_plan.aims.every(a => !covered.includes(a)), JSON.stringify(s2.teach_plan));
 });
 
-await test('at home: the Wednesday "teach" activity puts Munni\'s own question, a clue and what a full answer says — a point the child couldn\'t explain first', async () => {
+await test('at home: the Wednesday "teach" activity puts Appu\'s own question, a clue and what a full answer says — a point the child couldn\'t explain first', async () => {
   const brain = createBrain({ dataDir: tmp(), env: ENV });
   const C = brain.circle, T = brain.core.T;
   const school = brain.createSchool({ name: 'S' }).school;
@@ -160,6 +160,6 @@ await test('at home: the Wednesday "teach" activity puts Munni\'s own question, 
 });
 
 console.log(results.join('\n'));
-console.log(`\n${pass}/${pass + fail} Teach Munni call-and-home checks passed`);
+console.log(`\n${pass}/${pass + fail} Teach Appu call-and-home checks passed`);
 process.exit(fail ? 1 : 0);
 })();

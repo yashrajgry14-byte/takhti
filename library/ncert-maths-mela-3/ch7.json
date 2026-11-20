@@ -25,7 +25,7 @@
       "source": "Page 83",
       "aims": [
         {
-          "id": "s16meusb.0",
+          "id": "s1p8bp5e.0",
           "kind": "explain",
           "short": {
             "en": "Count flowers",
@@ -37,7 +37,7 @@
           },
           "forget": {
             "en": "I forgot! How do I find the total number of flowers needed for making rakhis?",
-            "hi": "मैं भूल गई! राखियाँ बनाने के लिए कुल कितने फूल चाहिए, यह कैसे पता करूँ?"
+            "hi": "मैं भूल गया! राखियाँ बनाने के लिए कुल कितने फूल चाहिए, यह कैसे पता करूँ?"
           },
           "hints": [
             {
@@ -109,7 +109,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-16meusb"
+      "id": "sch-1p8bp5e"
     },
     {
       "band": "developing",
@@ -127,7 +127,7 @@
       "source": "Page 87",
       "aims": [
         {
-          "id": "s7by4t6.0",
+          "id": "s1k57z4r.0",
           "kind": "explain",
           "short": {
             "en": "Share equally",
@@ -139,7 +139,7 @@
           },
           "forget": {
             "en": "I forgot! How do I find how many sweets each person gets when shared equally?",
-            "hi": "मैं भूल गई! बराबर बाँटने पर हर व्यक्ति को कितने लड्डू मिलेंगे, यह कैसे पता करूँ?"
+            "hi": "मैं भूल गया! बराबर बाँटने पर हर व्यक्ति को कितने लड्डू मिलेंगे, यह कैसे पता करूँ?"
           },
           "hints": [
             {
@@ -211,7 +211,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-7by4t6"
+      "id": "sch-1k57z4r"
     },
     {
       "band": "developing",
@@ -229,7 +229,7 @@
       "source": "Page 95",
       "aims": [
         {
-          "id": "s1o5tqzl.0",
+          "id": "skqau16.0",
           "kind": "explain",
           "short": {
             "en": "Skip jumps",
@@ -241,7 +241,7 @@
           },
           "forget": {
             "en": "I forgot! How do I find the number reached after taking equal skip jumps?",
-            "hi": "मैं भूल गई! एक जैसी छलांगें लगाने के बाद कौन सी संख्या आएगी, यह कैसे निकालूँ?"
+            "hi": "मैं भूल गया! एक जैसी छलांगें लगाने के बाद कौन सी संख्या आएगी, यह कैसे निकालूँ?"
           },
           "hints": [
             {
@@ -293,14 +293,14 @@
             "hi": "3 छलांगों के बाद तुम किस संख्या पर पहुँचते हो?"
           },
           "opts": [
-            "9",
-            "6"
+            "6",
+            "9"
           ],
           "hiOpts": [
-            "9",
-            "6"
+            "6",
+            "9"
           ],
-          "correct": 0,
+          "correct": 1,
           "why": {
             "en": "Children might stop at 2 jumps instead of 3.",
             "hi": "बच्चे 3 के बजाय 2 छलांगों पर रुक सकते हैं।"
@@ -315,7 +315,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-1o5tqzl"
+      "id": "sch-kqau16"
     },
     {
       "band": "developing",
@@ -333,7 +333,7 @@
       "source": "Page 102",
       "aims": [
         {
-          "id": "sbsp53b.0",
+          "id": "s10hk8cm.0",
           "kind": "explain",
           "short": {
             "en": "Count spider legs",
@@ -345,7 +345,7 @@
           },
           "forget": {
             "en": "I forgot! How do I find the total legs of several spiders?",
-            "hi": "मैं भूल गई! कई मकड़ियों के कुल पैर कैसे पता करूँ?"
+            "hi": "मैं भूल गया! कई मकड़ियों के कुल पैर कैसे पता करूँ?"
           },
           "hints": [
             {
@@ -395,14 +395,14 @@
             "hi": "उनके कुल कितने पैर हैं?"
           },
           "opts": [
-            "13",
-            "40"
+            "40",
+            "13"
           ],
           "hiOpts": [
-            "13",
-            "40"
+            "40",
+            "13"
           ],
-          "correct": 1,
+          "correct": 0,
           "why": {
             "en": "Children might add 5 and 8 instead of multiplying them.",
             "hi": "बच्चे गुणा करने के बजाय 5 और 8 को जोड़ सकते हैं।"
@@ -417,7 +417,7 @@
         }
       ],
       "subject": "math",
-      "id": "sch-bsp53b"
+      "id": "sch-10hk8cm"
     }
   ],
   "notUsed": []

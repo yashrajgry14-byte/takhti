@@ -13,7 +13,7 @@
    The app (synced)        POST /circle/sync             parent's tick + this phone's key
    The app (reading)       POST /reading/asr             the reading terms; one line written down, nothing kept
    The teacher view        POST /syllabus                a chapter → Gemini's draft lessons (api/syllabus.mjs), checked on the phone
-   The app (Teach Munni)   POST /teach/judge             the terms; an explanation written down, then judged by Gemini; nothing kept
+   The app (Teach Appu)   POST /teach/judge             the terms; an explanation written down, then judged by Gemini; nothing kept
                            POST /reading/tts             Munni says a short teaching line (Sarvam / ElevenLabs)
    The circle's grown-ups  GET  /circle/p|t|c/:token     unguessable link (parent, tutor, class teacher)
    Families                GET  /voice/card/:session     unguessable link
@@ -227,7 +227,7 @@ function createServer(opts) {
         return send(res, r.status, r.json);
       }
 
-      /* ---- Teach Munni: the child's explanation, written down (voice/speech.js) and judged by Gemini (api/teachback.mjs) ---- */
+      /* ---- Teach Appu: the child's explanation, written down (voice/speech.js) and judged by Gemini (api/teachback.mjs) ---- */
       if (p === '/teach/judge') {
         res.setHeader('Access-Control-Allow-Origin', env.TAKHTI_APP_ORIGIN || '*');
         res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');

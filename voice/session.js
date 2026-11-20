@@ -326,10 +326,10 @@ function planSession(core, child, opts) {
       const sp = T.skillHasProblem(sk) ? T.skillProblem(sk, 1) : null;
       if (sp && SPOKEN_OPS[sp.op] && sp.c == null && slots.includes('math') && sk !== homework) { slots[slots.indexOf('math')] = 'twin'; twin = sk; break; }
     }
-    // Teach Munni, last: Munni "forgets" up to two points and the child
+    // Teach Appu, last: Appu "forgets" up to two points and the child
     // teaches them back out loud — the app's own aims (content/teach.js),
     // on a topic this call or this child is really working on, and only
-    // points the child hasn't taught her yet. A voice-only phone is where
+    // points the child hasn't taught him yet. A voice-only phone is where
     // explaining matters most: there is nothing to tap.
     let teach = null;
     if (b.id !== 'pre') {
@@ -452,7 +452,7 @@ function buildItem(core, child, s, slot, storyBank) {
       return { kind: 'home', expect: 'yesno', home_id: h.id, answer: true, prompt: fill(L.homeAsk, lang, { topic: h.topic[lang] || h.topic.en }) };
     }
     if (slot === 'teach') {
-      // the app's own Teach Munni session (core/teachback.js), started here
+      // the app's own Teach Appu session (core/teachback.js), started here
       const tp = s.teach_plan, u = tp && T.TEACH_UNITS[tp.skill];
       if (!u) return null;
       const aims = u.aims.filter(a => tp.aims.includes(a.id)).map(a => Object.assign({}, a, { skill: tp.skill }));
@@ -643,7 +643,7 @@ function answer(core, child, s, storyBank, said) {
     return done('answered', yn === true ? L.homeYes[lang] : L.homeNo[lang]);
   }
 
-  /* ---- Teach Munni: the child explains a point Munni "forgot" ----
+  /* ---- Teach Appu: the child explains a point Appu "forgot" ----
      The app's own session (core/teachback.js): covered → thanks; partly or
      missing → hint 1, then hint 2; still not → "we'll figure it out
      together later". Never "wrong", and never evidence of mastery: a

@@ -1,20 +1,21 @@
 /* ==================================================================
-   TEACH MUNNI — the content (aims, Munni's acts, the rubric words)
+   TEACH APPU — the content (aims, Appu's acts, the rubric words)
 
-   Elephants never forget. Munni does, on purpose: after a lesson she
+   Elephants never forget. Appu does, on purpose: after a lesson he
    "forgets" its aims and the child teaches them back out loud
-   (core/teachback.js runs it, ui/teach-munni.js draws it).
+   (core/teachback.js runs it, ui/teach-munni.js draws it). Appu is a
+   little elephant, a boy — Munni's friend; Munni is the one who teaches.
 
    A unit is one topic's AIMS — the 3–5 plain points a teacher would
    approve ("knows to borrow when the top ones digit is smaller"). The
-   same list does three jobs: it is what the teacher approves, what Munni
+   same list does three jobs: it is what the teacher approves, what Appu
    draws out of the child one point at a time, and what the teacher sees
    results for.
 
-   Each aim carries everything Munni will ever say about it, written
+   Each aim carries everything Appu will ever say about it, written
    ahead, in Hindi and English — the model that judges a child's
    explanation never writes a word the child hears:
-     forget  Munni's "I forgot!" question
+     forget  Appu's "I forgot!" question
      hints   two nudges, never the explanation itself
      ideas   what a full explanation contains: a description (for the
              judge) and the words that show it (for the offline judge,
@@ -23,19 +24,19 @@
    hints would already pass as the explanation — that is how "never the
    answer" is checked, not promised.
 
-   A 'fix' aim is different: Munni works a sum and makes a real mistake —
+   A 'fix' aim is different: Appu works a sum and makes a real mistake —
    this child's own habit when the twin has found one (core/twin.js),
    else the commonest one for the skill — and the child catches it and
-   explains it. Its sum, its options and Munni's working come from
+   explains it. Its sum, its options and Appu's working come from
    skillProblem() and the mistakes engine (core/mathgen.js) at run time;
-   what Munni says while making each mistake is in TEACH_ACTS below, and
+   what Appu says while making each mistake is in TEACH_ACTS below, and
    what an explanation of each mistake must say is in TEACH_FIX_IDEAS.
    ================================================================== */
 
-/* ---------- Munni's own lines (every one ships in both languages) ---------- */
+/* ---------- Appu's own lines (every one ships in both languages) ---------- */
 const TEACH_LINES = {
-  intro:   { en: 'Elephants never forget… but I forgot everything we just learnt! Will you teach me?', hi: 'हाथी कभी नहीं भूलते… पर मैं तो अभी का सीखा सब भूल गई! तुम मुझे सिखाओगे?' },
-  again:   { en: 'Oops… I forgot again! Can you teach me this once more?',                           hi: 'उफ़… मैं फिर भूल गई! एक बार और सिखाओगे?' },
+  intro:   { en: 'I’m Appu! Elephants never forget… but I forgot everything we just learnt! Will you teach me?', hi: 'मैं अप्पू हूँ! हाथी कभी नहीं भूलते… पर मैं तो अभी का सीखा सब भूल गया! तुम मुझे सिखाओगे?' },
+  again:   { en: 'Oops… I forgot again! Can you teach me this once more?',                           hi: 'उफ़… मैं फिर भूल गया! एक बार और सिखाओगे?' },
   fixIntro:{ en: 'Wait — I tried one all by myself. Is my answer right?',                             hi: 'रुको — मैंने एक सवाल ख़ुद किया। क्या मेरा जवाब सही है?' },
   fixCaught:{ en: 'Oh no, so I slipped! Where did I slip? Teach me!',                                 hi: 'अरे, तो मुझसे गड़बड़ हुई! कहाँ गड़बड़ हुई? मुझे सिखाओ!' },
   fixAgree:{ en: 'Hmm, are you sure? Let’s look at it again.',                                       hi: 'हम्म, पक्का? चलो फिर से देखते हैं।' },
@@ -45,12 +46,12 @@ const TEACH_LINES = {
   unsure:  { en: 'I couldn’t quite hear you. Can you tell me again?',                                 hi: 'मुझे ठीक से सुनाई नहीं दिया। फिर से बताओगे?' },
   gap:     { en: 'That’s a tricky one! We’ll figure it out together later.',                         hi: 'यह तो मुश्किल है! हम बाद में मिलकर समझेंगे।' },
   done:    { en: 'You taught me {n} of {m} things! Thank you, teacher!',                              hi: 'तुमने मुझे {m} में से {n} बातें सिखाईं! शुक्रिया, टीचर!' },
-  doneAll: { en: 'You taught me everything! Now I will never forget. Thank you, teacher!',            hi: 'तुमने मुझे सब सिखा दिया! अब मैं कभी नहीं भूलूँगी। शुक्रिया, टीचर!' },
+  doneAll: { en: 'You taught me everything! Now I will never forget. Thank you, teacher!',            hi: 'तुमने मुझे सब सिखा दिया! अब मैं कभी नहीं भूलूँगा। शुक्रिया, टीचर!' },
   praise: [
     { en: 'Oh! Now I remember!',            hi: 'अरे! अब याद आ गया!' },
     { en: 'Yes! That makes sense now!',     hi: 'हाँ! अब समझ आया!' },
     { en: 'You are a great teacher!',       hi: 'तुम तो बहुत अच्छे टीचर हो!' },
-    { en: 'Got it — thank you!',            hi: 'समझ गई — शुक्रिया!' }
+    { en: 'Got it — thank you!',            hi: 'समझ गया — शुक्रिया!' }
   ]
 };
 
@@ -75,7 +76,7 @@ const TEACH_UNITS = {
       ideas: [ { en: 'no — it is the same answer (8) both ways', hi: 'नहीं — दोनों तरह से जवाब एक ही (8) है',
                  words: ['same', 'equal', '8', 'eight', 'aath', 'barabar', 'wahi', 'vahi', 'आठ', 'बराबर', 'वही', 'एक ही', 'same answer'] } ] },
     { id: 'add10.fix', kind: 'fix', skill: 'add10',
-      short: { en: 'Fix Munni’s sum', hi: 'मुन्नी का सवाल ठीक करो' },
+      short: { en: 'Fix Appu’s sum', hi: 'अप्पू का सवाल ठीक करो' },
       point: { en: 'Can find and explain a mistake in an adding sum', hi: 'जोड़ के सवाल में गड़बड़ ढूँढकर समझा सकते हैं' } }
   ] },
 
@@ -83,7 +84,7 @@ const TEACH_UNITS = {
     { id: 'carry.ones', kind: 'explain',
       short: { en: 'Ones first', hi: 'पहले इकाई' },
       point: { en: 'Starts adding from the ones', hi: 'जोड़ इकाई से शुरू करते हैं' },
-      forget: { en: 'I want to add 38 and 24. Which digits do I add first? I forgot!', hi: 'मुझे 38 और 24 जोड़ना है। पहले कौन से अंक जोड़ूँ? मैं भूल गई!' },
+      forget: { en: 'I want to add 38 and 24. Which digits do I add first? I forgot!', hi: 'मुझे 38 और 24 जोड़ना है। पहले कौन से अंक जोड़ूँ? मैं भूल गया!' },
       hints: [ { en: 'Which column holds the small loose things, not the bundles?', hi: 'किस कॉलम में छोटी-छोटी खुली चीज़ें होती हैं, बंडल नहीं?' },
                { en: 'Look at 38. Which digit tells you how many are loose, not in bundles?', hi: '38 को देखो। कौन सा अंक बताता है कि कितनी चीज़ें खुली हैं, बंडल में नहीं?' } ],
       ideas: [ { en: 'start with the ones (8 and 4)', hi: 'इकाई से शुरू करो (8 और 4)',
@@ -97,12 +98,12 @@ const TEACH_UNITS = {
       ideas: [ { en: 'write 2, and carry the 1 ten over to the tens', hi: '2 लिखो, और 1 दहाई को दहाई वाले कॉलम में ले जाओ',
                  words: ['carry', 'carried', 'tens', 'ten', 'hasil', 'haasil', 'dahai', 'हासिल', 'दहाई', 'one ten', '1 ten', 'upar', 'ऊपर', 'le jao', 'ले जाओ'] } ] },
     { id: 'carry.fix', kind: 'fix', skill: 'carry',
-      short: { en: 'Fix Munni’s sum', hi: 'मुन्नी का सवाल ठीक करो' },
+      short: { en: 'Fix Appu’s sum', hi: 'अप्पू का सवाल ठीक करो' },
       point: { en: 'Can find and explain a carrying mistake', hi: 'हासिल वाली गड़बड़ ढूँढकर समझा सकते हैं' } },
     { id: 'carry.tens', kind: 'explain',
       short: { en: 'Add the extra one', hi: 'अतिरिक्त एक जोड़ो' },
       point: { en: 'Adds the carried ten in with the tens', hi: 'हासिल वाली दहाई को दहाइयों के साथ जोड़ते हैं' },
-      forget: { en: 'Now the tens: 3 and 2 make 5. Is that all? I think I forgot something…', hi: 'अब दहाई: 3 और 2 मिलकर 5। बस इतना? लगता है मैं कुछ भूल गई…' },
+      forget: { en: 'Now the tens: 3 and 2 make 5. Is that all? I think I forgot something…', hi: 'अब दहाई: 3 और 2 मिलकर 5। बस इतना? लगता है मैं कुछ भूल गया…' },
       hints: [ { en: 'Remember the bundle we moved a moment ago? Where is it now?', hi: 'वह बंडल याद है जो अभी हमने खिसकाया था? वह अब कहाँ है?' },
                { en: 'Count everything sitting in the tens column, even the small one on top.', hi: 'दहाई वाले कॉलम में जो कुछ है सब गिनो, ऊपर वाला छोटा भी।' } ],
       ideas: [ { en: 'add the carried 1 too, so the tens make 6', hi: 'हासिल का 1 भी जोड़ो, तो दहाई 6 बनती है',
@@ -113,7 +114,7 @@ const TEACH_UNITS = {
     { id: 'borrow.when', kind: 'explain',
       short: { en: 'When to borrow', hi: 'कब उधार लें' },
       point: { en: 'Knows to borrow when the top ones digit is smaller', hi: 'जानते हैं कि ऊपर की इकाई छोटी हो तो उधार लेते हैं' },
-      forget: { en: 'I have 52 take away 27. Ones first: 2 take away 7… but 2 is so small! I forgot what to do. Can you teach me?', hi: 'मेरे पास 52 में से 27 घटाना है। पहले इकाई: 2 में से 7… पर 2 तो बहुत छोटा है! मैं भूल गई क्या करना है। तुम सिखाओगे?' },
+      forget: { en: 'I have 52 take away 27. Ones first: 2 take away 7… but 2 is so small! I forgot what to do. Can you teach me?', hi: 'मेरे पास 52 में से 27 घटाना है। पहले इकाई: 2 में से 7… पर 2 तो बहुत छोटा है! मैं भूल गया क्या करना है। तुम सिखाओगे?' },
       hints: [ { en: 'Look next door at the 5. Could the 2 ask it for help?', hi: 'बगल में 5 को देखो। क्या 2 उससे मदद माँग सकता है?' },
                { en: 'What do we call it when the ones ask the next column for one bundle?', hi: 'जब इकाई अगले कॉलम से एक बंडल माँगती है, उसे क्या कहते हैं?' } ],
       ideas: [ { en: 'borrow a ten from the tens', hi: 'दहाई से एक दस उधार लो',
@@ -127,7 +128,7 @@ const TEACH_UNITS = {
       ideas: [ { en: 'the 2 becomes 12, because the ten is ten ones', hi: '2 का 12 हो जाता है, क्योंकि एक दहाई दस इकाई है',
                  words: ['12', 'twelve', 'barah', 'baarah', 'बारह', 'ten ones', '10 ones', 'दस इकाई', '10 इकाई'] } ] },
     { id: 'borrow.fix', kind: 'fix', skill: 'borrow',
-      short: { en: 'Fix Munni’s sum', hi: 'मुन्नी का सवाल ठीक करो' },
+      short: { en: 'Fix Appu’s sum', hi: 'अप्पू का सवाल ठीक करो' },
       point: { en: 'Can find and explain a borrowing mistake', hi: 'उधार वाली गड़बड़ ढूँढकर समझा सकते हैं' } },
     { id: 'borrow.check', kind: 'explain',
       short: { en: 'Check by adding', hi: 'जोड़कर जाँचो' },
@@ -173,9 +174,9 @@ const TEACH_UNITS = {
   ] }
 };
 
-/* ---------- 'fix' aims: which mistake Munni acts out, per skill ----------
+/* ---------- 'fix' aims: which mistake Appu acts out, per skill ----------
    The twin's habit wins when it has one; otherwise the first of these the
-   sum allows. Only mistakes Munni can act out AND a child can explain are
+   sum allows. Only mistakes Appu can act out AND a child can explain are
    listed (TEACH_ACTS × TEACH_FIX_IDEAS). */
 const TEACH_FIX_DEFAULT = {
   add10: ['countincl', 'wrongop'], bonds10: ['countincl'], count20: ['countincl'],
@@ -185,8 +186,8 @@ const TEACH_FIX_DEFAULT = {
   divshare: ['divmult'], bodmas: ['lefttoright'], twostep3: ['lefttoright']
 };
 
-/* What Munni says as she makes the mistake: her working, in the first
-   person, ending in her answer. Never the right answer (the test checks). */
+/* What Appu says as he makes the mistake: his working, in the first
+   person, ending in his answer. Never the right answer (the test checks). */
 const TEACH_ACTS = {
   nocarry: (p, w, hi) => { const a1 = p.a % 10, b1 = p.b % 10, at = (p.a - a1) / 10, bt = (p.b - b1) / 10, s = a1 + b1;
     return hi ? `${p.a} और ${p.b}। इकाई में ${a1} और ${b1} मिलकर ${s} — मैंने ${s % 10} लिखा। दहाई में ${at} और ${bt} मिलकर ${at + bt}। तो जवाब ${w}!`

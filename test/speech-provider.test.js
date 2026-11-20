@@ -23,7 +23,7 @@
    · the phone: prebuilt audio → the live backup → the phone's own voice;
      a .wav pack plays; older (v2) terms send nothing; a skipped check
      never blocks the lesson (honest message, typing, the line comes back)
-   · Teach Munni hears with the same provider and order
+   · Teach Appu hears with the same provider and order
    · tools/compare-speech.mjs: where each provider misjudged, and the
      switch-back advice when Gemini hides children's Hindi slips
    ================================================================== */
@@ -178,10 +178,10 @@ const stand = http.createServer((req, res) => {
   let limited = 0;
   for(let i = 0; i < 5; i++) if((await vs.post('/reading/asr', { consent: true, lang: 'hi', mime: 'audio/webm', audio })).status === 429) limited++;
   check('a limit per address on the reading check', limited >= 1, limited);
-  // Teach Munni hears with the same provider and order
+  // Teach Appu hears with the same provider and order
   reset(); G.hear = 'fail';
   const tj = await vs.post('/teach/judge', { consent: true, lang: 'hi', mime: 'audio/webm', audio, ask: 'borrow.when', aims: [{ id: 'borrow.when', kind: 'explain' }] });
-  check('Teach Munni hears the same way: Gemini failing → Sarvam wrote the explanation down', tj.status === 200 && tj.body.provider === 'sarvam' && tj.body.transcript === G.sarvamSaid, JSON.stringify(tj));
+  check('Teach Appu hears the same way: Gemini failing → Sarvam wrote the explanation down', tj.status === 200 && tj.body.provider === 'sarvam' && tj.body.transcript === G.sarvamSaid, JSON.stringify(tj));
   vs.server.close();
   // readings to Sarvam, explanations to Gemini: TAKHTI_TEACH_HEAR
   vs = await boot({ ...GEM, ...SAR, SPEECH_PROVIDER: 'sarvam', TAKHTI_TEACH_HEAR: 'gemini' });

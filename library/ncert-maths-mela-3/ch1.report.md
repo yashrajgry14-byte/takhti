@@ -22,7 +22,7 @@ skill: count20 · source: Page 1
 
 **Aims kept (what the teacher approves):**
 - The child can make tally marks for counted objects.  ·  बच्चा गिनी गई वस्तुओं के लिए मिलान चिह्न बना सकता है।  
-  Munni forgets: "I forgot! How do we keep track of cows using marks on the wall?  ·  मैं भूल गई! दीवार पर निशान लगाकर हम गायों का हिसाब कैसे रखते हैं?"
+  Munni forgets: "I forgot! How do we keep track of cows using marks on the wall?  ·  मैं भूल गया! दीवार पर निशान लगाकर हम गायों का हिसाब कैसे रखते हैं?"
 
 **The lesson:**
 1. intro — "Let us count cows using tally marks on the wall.  ·  आओ दीवार पर मिलान चिह्न लगाकर गायें गिनें।"
@@ -58,7 +58,7 @@ skill: read3 · source: Page 3
 
 **Aims kept (what the teacher approves):**
 - The child can count letters in animal names.  ·  बच्चा जानवरों के नामों में अक्षर गिन सकता है।  
-  Munni forgets: "I forgot! How do we find the letter count among animals?  ·  मैं भूल गई! जानवरों के नाम में अक्षर कैसे ढूंढते हैं?"
+  Munni forgets: "I forgot! How do we find the letter count among animals?  ·  मैं भूल गया! जानवरों के नाम में अक्षर कैसे ढूंढते हैं?"
 
 **The lesson:**
 1. intro — "Let us count the letters in animal names.  ·  आओ जानवरों के नामों में अक्षर गिनें।"
@@ -126,7 +126,7 @@ skill: e2-compre · source: Page 7
 
 **Aims kept (what the teacher approves):**
 - The child can group objects based on whether they need power.  ·  बच्चा वस्तुओं को इस आधार पर समूहबद्ध कर सकता है कि उन्हें शक्ति चाहिए या नहीं।  
-  Munni forgets: "I forgot! How do we sort household objects into groups?  ·  मैं भूल गई! घरेलू वस्तुओं को समूहों में कैसे छाँटते हैं?"
+  Munni forgets: "I forgot! How do we sort household objects into groups?  ·  मैं भूल गया! घरेलू वस्तुओं को समूहों में कैसे छाँटते हैं?"
 
 **The lesson:**
 1. intro — "Let us sort household objects into groups.  ·  आओ घरेलू वस्तुओं को समूहों में छाँटें।"
