@@ -1810,7 +1810,7 @@ app is a client of it, and only when a parent says so.
 
 ## Testing
 
-`npm test` runs 47 suites. Two methods: **vm** (real source in an isolated
+`npm test` runs 48 suites. Two methods: **vm** (real source in an isolated
 context, real functions) and **jsdom** (the real `index.html`/CSS/JS over a
 local HTTP server — `file://` is an opaque origin where `localStorage` throws).
 
@@ -1827,6 +1827,7 @@ local HTTP server — `file://` is an opaque origin where `localStorage` throws)
 | `shell-integration` | jsdom | the real `playGame()` → `go()` → `AFTER` chain |
 | `mute` | jsdom | muted `speak()` still finishes scenes; mute is per child |
 | `jungle` | jsdom | arrival → onboarding → map; band-gated places; SRS routing and first sentence; map and dashboard with and without SRS history |
+| `classes` | jsdom | the class decides what is taught: onboarding asks the class after the age (the usual class pre-picked, one tap to change, 11–16 offered), every class's Write screen (Nursery–UKG trace, Class 1 trace then paper, Class 2 paper then letters, Class 3–10 paper or dictation and never a trace pad), "Not now" to the camera → dictation for Class 3+, dictation graded and recorded, the Sand Patch label, an old profile keeping its band, child and teacher classes agreeing, the planner's floor (no pre-primary skill from Class 3; add2 in reach at Class 5, out at Class 10), the parent's class stepper |
 | `self-listen` | jsdom | the recording lifecycle and the privacy claim |
 | `srs` | vm | interval maths |
 | `dda` | vm | age-band thresholds, and "unsure" for recognizer doubt |
