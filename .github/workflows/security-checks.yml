@@ -17,6 +17,10 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Check staging smoke and administrator provisioning syntax
+        run: |
+          node --check tools/smoke-school-auth.mjs
+          node --check tools/provision-class-access.mjs
       - name: Signed identity, tenant isolation, and guardian authorization tests
         run: node --test test/class-security.test.mjs
       - name: Full Takhti regression suite
