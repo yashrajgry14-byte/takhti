@@ -18,10 +18,11 @@
        the parent's switch, a story played start to end (counting, the
        pick as evidence, a wrong pick shown kindly, the end screen that
        waits, a star the first time only), "Again" and "Another", Hindi,
-       and no lesson/child data sent to an unrelated network endpoint
+       and no network used by a story
    ================================================================== */
 const fs = require('fs'), path = require('path'), http = require('http'), vm = require('vm');
 const { JSDOM, VirtualConsole } = require('jsdom');
+const { installVoice } = require('./_helpers/voice-stub');
 
 let failures = 0;
 const checks = [];
@@ -33,7 +34,7 @@ const root = path.resolve(__dirname, '..');
 {
   const c = {}; vm.createContext(c);
   vm.runInContext(fs.readFileSync(path.join(root, 'src/content/stories.js'), 'utf8') + ';this.T=STORY_TPLS;this.B=storyBuild;this.F=storyTplsFor;this.N=NUMW;', c);
-  const MAXN = { nur: 6, lkg: 10, ukg: 10 };
+  const MAXN = { nur: 6, lkg: 10, ukg: 10 };   // UKG's sums stay inside 10
   const faults = [], slots = {}, made = { nur: new Set(), lkg: new Set(), ukg: new Set() };
   let built = 0;
   const isHi = s => /[ऀ-ॿ]/.test(s);
@@ -50,7 +51,18 @@ const root = path.resolve(__dirname, '..');
         picks++;
         if(j.opts.length !== 2 || ![0, 1].includes(j.right)) faults.push(`${id}: a pick needs two pictures and a right one`);
         if(JSON.stringify(j.opts[0]) === JSON.stringify(j.opts[1])) faults.push(`${id}: both pictures the same`);
-        j.opts.forEach(o => { if(o.group && (o.n < 1 || o.n > MAXN[cls])) faults.push(`${id}/${cls}: a group of ${o.n}`); });
+        j.opts.forEach(o => { if(o.group && (o.n < 1 || o.n > MAXN[cls])) faults.push(`${id}/${cls}: a group of ${o.n}`);
+                              if(o.num != null && (o.num < 0 || o.num > MAXN[cls])) faults.push(`${id}/${cls}: the number ${o.num}`); });
+        if(j.opts[0].num != null && j.opts[0].num === j.opts[1].num) faults.push(`${id}: both numbers the same`);
+        // UKG's own: the right number really is the sum / what is left; the blended word is the right picture
+        if(id === 'add'){ const a = st.scenes[0].stage.items.length, ab = st.scenes[1].stage.items.length;
+          if(j.opts[j.right].num !== ab || !j.keep || ab - a < 1) faults.push(`add: ${a} and ${ab - a} isn't ${j.opts[j.right].num}`); }
+        if(id === 'take'){ const n = st.scenes[0].stage.items.filter(x => x.ic !== '🐘').length, gone = st.scenes[1].stage.items.filter(x => x.anim === 'gone').length;
+          if(j.opts[j.right].num !== n - gone || !j.keep || gone < 1 || n - gone < 1) faults.push(`take: ${n} take away ${gone} isn't ${j.opts[j.right].num}`); }
+        if(id === 'blend'){ const last = st.scenes[st.scenes.length - 1].stage.items[0];
+          if(j.opts[j.right].ic !== last.ic || j.opts.some(o => o.word)) faults.push(`blend: the right picture isn't ${last.label} (or a word is printed under it)`);
+          // the word itself is never said before the pick — only its sounds
+          st.scenes.slice(0, k + 1).forEach(x => { if(new RegExp(`(^|[^\\p{L}])${last.label}([^\\p{L}]|$)`, 'u').test(x.say[lang]) || (x.join && x.join.t === 'say' && x.join.word[lang].includes(last.label))) faults.push(`blend: "${last.label}" said before the pick`); }); }
         if(!j.praise.en || !isHi(j.praise.hi) || !j.show.en || !isHi(j.show.hi)) faults.push(`${id}: praise / kind correction not bilingual`);
         (slots[id] = slots[id] || new Set()).add(j.right);
         // the counted / named number really is the right group
@@ -73,6 +85,17 @@ const root = path.resolve(__dirname, '..');
   check('the same seed gives the same story; another seed a different one',
     JSON.stringify(c.B('fall', 77, { cls:'lkg', lang:'en' })) === JSON.stringify(c.B('fall', 77, { cls:'lkg', lang:'en' }))
     && new Set([1, 2, 3, 4, 5, 6].map(s => JSON.stringify(c.B('fall', s * 99991, { cls:'lkg', lang:'en' }).scenes[0]))).size > 2, '');
+  check("UKG gets its own stories — adding and taking away with pictures, blending sounds — and Nursery/LKG don't",
+    ['add', 'take', 'blend'].every(x => made.ukg.has(x) && !made.lkg.has(x) && !made.nur.has(x)), [...made.ukg].join(','));
+  check('UKG\'s stories are evidence for UKG\'s own skills (u-addpic, u-subpic, u-blend)',
+    c.B('add', 3, { cls:'ukg', lang:'en' }).skill === 'u-addpic' && c.B('take', 3, { cls:'ukg', lang:'hi' }).skill === 'u-subpic' && c.B('blend', 3, { cls:'ukg', lang:'hi' }).skill === 'u-blend', '');
+  {
+    const bl = vm.runInContext('STORY_BLENDS', c), snd = vm.runInContext('STORY_SOUND', c);
+    const bad = [].concat(...['en', 'hi'].map(l => bl[l].filter(p => p.odd.w[0] !== p.w[0] || p.odd.w === p.w || p.s.join('') !== p.w.replace(/[^\p{L}]/gu, '').slice(0, l === 'en' ? 3 : 9) || (l === 'en' && p.s.some(x => !snd[x])))));
+    check('a blended word and its other picture start with the same sound (so blending, not the first sound, picks it); English sounds are said as sounds ("kuh"), not letter names',
+      bad.length === 0 && c.B('blend', 1, { cls:'ukg', lang:'en' }).scenes[0].say.en.includes('…') && !/Listen: [a-z]… [a-z]…/.test(JSON.stringify(c.B('blend', 1, { cls:'ukg', lang:'en' }))), JSON.stringify(bad));
+  }
+  check('"first sounds" says the sound too, not only the letter\'s name (c → "kuh")', /"kuh"/.test(c.B('letter', [...Array(400).keys()].find(sd => c.B('letter', sd, { cls:'lkg', lang:'en' }).scenes[0].stage.big === 'c') || 0, { cls:'lkg', lang:'en' }).scenes[0].say.en), '');
   check("each story's pick is evidence for a real pre-primary skill (Nursery g −3, LKG up to −2)",
     ['nur', 'lkg'].every(cls => c.F(cls).every(id => /^(n|l)-/.test(c.T[id].skill({ cls, lang:'en' })) && (cls !== 'nur' || /^n-/.test(c.T[id].skill({ cls, lang:'en' }))))), '');
   check('first sounds follow the language: English letters, Hindi स्वर',
@@ -102,9 +125,8 @@ server.listen(0, '127.0.0.1', () => {
     url: `http://127.0.0.1:${server.address().port}/index.html`,
     runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true,
     beforeParse(w){
-      // a voice that really finishes each line, quickly
-      w.speechSynthesis = { getVoices: () => [], speak: u => { spoken.push(u && u.text); setTimeout(() => u && u.onend && u.onend(), 5); }, cancel: () => {}, addEventListener: () => {} };
-      w.SpeechSynthesisUtterance = function(t){ this.text = t; };
+      // a voice that really finishes each line, quickly (Google TTS, stood in — test/_helpers/voice-stub.js)
+      installVoice(w, spoken);
       w.navigator.vibrate = () => {};
       const ctx2d = new Proxy({}, { get: (t, k) => k in t ? t[k] : (k === 'measureText' ? () => ({ width: 10 }) : k === 'getImageData' ? () => ({ data: new Uint8ClampedArray(4) }) : () => {}), set: (t, k, v) => (t[k] = v, true) });
       w.HTMLCanvasElement.prototype.getContext = () => ctx2d;
@@ -120,15 +142,6 @@ server.listen(0, '127.0.0.1', () => {
 
   w.addEventListener('load', async () => {
     try{
-      // Isolate Story Time behavior from external online audio services.
-      // A deterministic Google-TTS-compatible playback stub preserves
-      // speech completion and captures narrated lines without browser TTS.
-      w.__storySpoken = spoken;
-      E(`speak = function(text, lang, onDone) {
-        window.__storySpoken.push(String(text));
-        if (onDone) setTimeout(onDone, 5);
-        return Promise.resolve();
-      }`);
       E(`arrSkip(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance(); arrReply(0); arrAdvance();`);
 
       /* ---- who lands where ---- */
@@ -193,7 +206,7 @@ server.listen(0, '127.0.0.1', () => {
       check('…the grown-up card and the thing to do at home, in Hindi', /बड़ों के लिए/.test(w.document.body.textContent) && /पूछें/.test(w.document.body.textContent), '');
       await sleep(2500);
       check('…and it waits there: no next story starts by itself', E('S.ctx.phase') === 'end' && E('S.screen') === 'story', E('S.ctx.phase'));
-      check('a story uses no network at all', fetched.filter(u => !/fonts\.googleapis|audio\//.test(u)).length === 0, fetched.join(' | '));
+      check('a story uses no network but Munni\'s voice (Google speech, /api/tts) and her recorded pack', fetched.filter(u => !/fonts\.googleapis|audio\/|\/api\/tts$/.test(u)).length === 0, fetched.join(' | '));
       w.fetch = realFetch;
 
       const seed = E('S.ctx.st.seed');
@@ -217,6 +230,21 @@ server.listen(0, '127.0.0.1', () => {
         && await until(() => spoken.some(t => /This one is/.test(t)), 5000) && !spoken.some(t => /wrong/i.test(t)), spoken.join(' | '));
       check('…and the story goes on to its end', await until(() => E('S.ctx.phase') === 'end'), E('S.ctx.phase'));
       E(`storyStart('sizes', S.ctx.st.seed)`); E(`S.ctx.run = -1; S.ctx.st && (S.ctx.phase = 'end');`);
+      E(`storyHome()`);
+
+      /* ---- UKG's own: adding with the picture still on screen ---- */
+      child('ukg', 5);
+      check('UKG\'s home offers its own stories first (adding, taking away, blending — never shown yet)', ['add', 'take', 'blend'].includes(E('storyOrder()[0]')), E('JSON.stringify(storyOrder())'));
+      E(`storyStart('add')`);
+      check('"More friends come!" reaches its question', await until(() => E('S.ctx.phase') === 'pick', 30000), E('S.ctx.phase'));
+      const ra = E('S.ctx.st.scenes[S.ctx.i].join.right'), sum = E('S.ctx.st.scenes[S.ctx.i].join.opts[S.ctx.st.scenes[S.ctx.i].join.right].num');
+      check('…the birds stay on screen while the child picks a number (adding WITH pictures), two numbers to choose from',
+        $$('#ststage .st-it').length === sum && $$('.st-opts.low .st-numcard').length === 2, `${$$('#ststage .st-it').length} pictures, sum ${sum}`);
+      $$('.st-opt')[ra].click();
+      check('…the first tap is evidence for "adding with pictures" (u-addpic)', E(`JSON.stringify(S.skillHistory['u-addpic'])`) === JSON.stringify({ n: 1, right: 1 }), E(`JSON.stringify(S.skillHistory['u-addpic'])`));
+      check('…then everyone counts them together, after the answer', await until(() => E('S.ctx.phase') === 'count', 20000), E('S.ctx.phase'));
+      for(let k = 0; k < sum; k++){ $('#ststage').click(); await sleep(450); }
+      check('…and the story ends on "a + b = sum"', await until(() => E('S.ctx.phase') === 'end', 20000) && E('S.ctx.st.scenes[S.ctx.st.scenes.length - 1].stage.big').endsWith('= ' + sum), E('S.ctx.phase'));
       E(`storyHome()`);
 
       /* ---- say it aloud: nothing is recorded ---- */

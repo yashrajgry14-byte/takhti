@@ -1,7 +1,7 @@
 /* ==================================================================
    Takhti on Google Cloud Run — one service, no dependencies.
 
-   It serves the app itself (index.html, src/, icons/, audio/ — and
+   It serves the app itself (index.html, src/, icons/, audio/, video/ — and
    nothing else from the repo: never voice/, api/, tools/ or a .env) and
    the Tier 2 endpoints the app already calls on its own origin:
 
@@ -42,12 +42,13 @@ const {verifyIdToken,bearerToken,authorizeClass} = await import('../api/lib/clas
 
 /* ---------- the app's files: a whitelist, never the whole repo ---------- */
 const FILES = new Set(['/index.html', '/sw.js', '/manifest.webmanifest']);
-const DIRS = ['/src/', '/icons/', '/fonts/', '/audio/'];
+const DIRS = ['/src/', '/icons/', '/fonts/', '/audio/', '/video/'];
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.ico': 'image/x-icon',
-  '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ogg': 'audio/ogg', '.woff2': 'font/woff2'
+  '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.ogg': 'audio/ogg', '.woff2': 'font/woff2',
+  '.mp4': 'video/mp4', '.webm': 'video/webm'
 };
 
 async function serveFile(req, res, urlPath){
@@ -73,6 +74,18 @@ async function serveFile(req, res, urlPath){
       'ETag': etag, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer'
     };
     if(req.headers['if-none-match'] === etag){ res.writeHead(304, head); res.end(); return true; }
+    // a filmed clip (video/, ui/watch.js): a player asks for byte ranges (Safari won't play without them)
+    const range = /^\/video\/.+\.(mp4|webm)$/.test(p) && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if(range){
+      let a = range[1] === '' ? Math.max(0, st.size - Number(range[2] || 0)) : Number(range[1]);
+      let b = range[1] !== '' && range[2] !== '' ? Math.min(Number(range[2]), st.size - 1) : st.size - 1;
+      if(!(a <= b) || a >= st.size){ res.writeHead(416, { 'Content-Range': `bytes */${st.size}` }); res.end(); return true; }
+      const all = await readFile(file);
+      res.writeHead(206, { ...head, 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${a}-${b}/${st.size}`, 'Content-Length': b - a + 1 });
+      res.end(req.method === 'HEAD' ? undefined : all.subarray(a, b + 1));
+      return true;
+    }
+    if(p.startsWith('/video/')) head['Accept-Ranges'] = 'bytes';
     const body = await readFile(file);
     res.writeHead(200, head);
     res.end(req.method === 'HEAD' ? undefined : body);

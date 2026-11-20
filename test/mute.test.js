@@ -34,27 +34,25 @@ function check(name, pass, detail){
 console.log('=== speak(): the callback contract when muted ===');
 {
   const ctx = {
-    console, Intl, setTimeout, clearTimeout, TextEncoder, DataView, Uint8Array, Int32Array,
+    console, Intl, setTimeout, clearTimeout, TextEncoder, DataView, Uint8Array, Int32Array, AbortController,
     S: { lang:'en', muted:false, _voiceNoted:false },
     band: () => ({ speechRate: 0.85 }),
     log: () => {},
-    AbortController,
-    fetch: async url => {
-      if(String(url)==='/api/tts') { googleRequests++; return {ok:true,json:async()=>({audio:'dGVzdA==',mime:'audio/mpeg',provider:'google'})}; }
-      throw new Error('not available in the test');
-    },
+    // since PR #9 speech is Google TTS online (POST /api/tts); a manifest fetch has no pack here
+    fetch: (url) => { if(/\/api\/tts$/.test(String(url))){ ttsCalled = true; return Promise.resolve({ ok: true, json: async () => ({ audio: 'SUQz', mime: 'audio/mpeg', provider: 'test' }) }); }
+                      return Promise.reject(new Error('no manifest in this test')); },
   };
+  let ttsCalled = false;
   vm.createContext(ctx);
   ctx.window = ctx;   // speech.js checks `'speechSynthesis' in window` — window IS this context, as in a real page
 
   let speakCalled = false;
-  let googleRequests = 0;
   ctx.speechSynthesis = {
     cancel(){}, getVoices(){ return []; }, addEventListener(){}, removeEventListener(){},
     speak(u){ speakCalled = true; if(u.onend) u.onend(); }
   };
   ctx.SpeechSynthesisUtterance = function(text){ this.text = text; };
-  ctx.Audio = function(){ this.play = () => { setTimeout(() => this.onended && this.onended(), 0); return Promise.resolve(); }; this.pause = () => {}; };
+  ctx.Audio = function(){ this.play = () => { setTimeout(() => this.onended && this.onended(), 5); return Promise.resolve(); }; this.pause = () => {}; };
 
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','src/core/voice.js'),'utf8'), ctx);
   vm.runInContext(fs.readFileSync(path.join(__dirname,'..','src/core/speech.js'),'utf8'), ctx);
@@ -70,20 +68,21 @@ console.log('=== speak(): the callback contract when muted ===');
   // fires synchronously within this same tick — no need to wait a turn.
   check('speak() calls onDone exactly once, synchronously, when S.muted is true',
     doneCalled === 1, `onDone called ${doneCalled} time(s)`);
-  check('muted speech neither calls Google nor browser TTS', googleRequests === 0 && speakCalled === false, `Google requests: ${googleRequests}, browser TTS: ${speakCalled}`);
+  check('speak() never reaches real TTS when muted (no Google request, no device voice)', speakCalled === false && ttsCalled === false, `device voice: ${speakCalled} · Google TTS: ${ttsCalled}`);
 
   console.log('--- not muted: speak() genuinely attempts real speech ---');
   ctx.S.muted = false;
-  speakCalled = false;
+  speakCalled = false; ttsCalled = false;
   let doneCalled2 = 0;
   return X.speak('Hello again', 'en', () => { doneCalled2++; }).then(() => {
-    // Voice is now online-first. Assert Google /api/tts was requested,
-    // and no browser voice (including Microsoft Heera) was invoked.
+    // playRecorded() rejects (no manifest, no fetch), so speak() falls
+    // through to speakDevice(), which queues the utterance after a 70ms
+    // beat (see speech.js's own comment on why: Chrome drops an
+    // utterance queued in the same tick as cancel()).
     setTimeout(() => {
-      check('speak() uses Google TTS when not muted, never browser speechSynthesis',
-        googleRequests === 1 && speakCalled === false,
-        `Google requests: ${googleRequests}, browser speech: ${speakCalled}`);
-      check('onDone still fires exactly once via the real TTS onend path when not muted',
+      check('speak() reaches real TTS when NOT muted — Google TTS, never the device voice (the muted branch is not just always a no-op)',
+        ttsCalled === true && speakCalled === false, `Google TTS: ${ttsCalled} · device voice: ${speakCalled}`);
+      check('onDone still fires exactly once via the real TTS ended path when not muted',
         doneCalled2 === 1, `onDone called ${doneCalled2} time(s)`);
       runPass2();
     }, 150);

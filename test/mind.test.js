@@ -21,6 +21,7 @@
    ================================================================== */
 const fs = require('fs'), os = require('os'), path = require('path'), http = require('http'), vm = require('vm');
 const { JSDOM, VirtualConsole } = require('jsdom');
+const { installVoice } = require('./_helpers/voice-stub');
 
 let failures = 0;
 const checks = [];
@@ -132,8 +133,7 @@ appServer.listen(0, '127.0.0.1', async () => {
   const spoken = [];
   const dom = new JSDOM(html, { virtualConsole: vc, url: `http://127.0.0.1:${appServer.address().port}/index.html`, runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true,
     beforeParse(w){
-      w.SpeechSynthesisUtterance = function(t){ this.text = t; };
-      w.speechSynthesis = { getVoices: () => [], cancel: () => {}, addEventListener: () => {}, speak: u => { spoken.push(u.text); setTimeout(() => u.onend && u.onend(), 0); } };
+      installVoice(w, spoken);   // Google speech stood in: test/_helpers/voice-stub.js
       w.navigator.vibrate = () => {};
     } });
   const w = dom.window, E = c => w.eval(c), $ = s => w.document.querySelector(s), $$ = s => [...w.document.querySelectorAll(s)];

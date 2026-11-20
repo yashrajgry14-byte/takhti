@@ -17,6 +17,7 @@
    ================================================================== */
 const fs = require('fs'), os = require('os'), path = require('path'), http = require('http'), vm = require('vm');
 const { JSDOM, VirtualConsole } = require('jsdom');
+const { installVoice } = require('./_helpers/voice-stub');
 const { createBrain } = require('../voice/brain');
 const { createServer } = require('../voice/server');
 
@@ -151,9 +152,7 @@ function boot(port, voiceBase){
     runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true,
     beforeParse(w){
       // speech finishes at once, so the steps play through
-      w.SpeechSynthesisUtterance = function(t){ this.text = t; };
-      w.speechSynthesis = { getVoices: () => [], cancel: () => {}, addEventListener: () => {},
-        speak: u => { spoken.push(u.text); setTimeout(() => u.onend && u.onend(), 0); } };
+      installVoice(w, spoken);   // Google speech stood in: test/_helpers/voice-stub.js
       w.navigator.vibrate = () => {};
       if(voiceBase){
         w.TAKHTI_VOICE = voiceBase;
@@ -185,15 +184,7 @@ appServer.listen(0, '127.0.0.1', () => fakeBolna.listen(0, '127.0.0.1', async ()
     /* -- no voice server: instant help still works, offline -- */
     const A = boot(port, null);
     await new Promise(r => A.w.addEventListener('load', r));
-    // Google-first speech is an online API, not speechSynthesis. Stub the
-    // audio completion only, preserving the exact child-facing explanation.
-    A.w.__spokenLines = A.spoken;
-    A.w.eval(`speak = function(text, lang, onDone) {
-      window.__spokenLines.push(String(text));
-      if(onDone) setTimeout(onDone, 0);
-      return Promise.resolve();
-    }`);
-    const E = c => A.w.eval(c), $ = s => A.w.document.querySelector(s), $ = s => [...A.w.document.querySelectorAll(s)];
+    const E = c => A.w.eval(c), $ = s => A.w.document.querySelector(s), $$ = s => [...A.w.document.querySelectorAll(s)];
     await newChild(A);
     E(`go('map')`);
     check('no Ask Munni button on the map (nothing is being asked)', !$('#askfab'), '');

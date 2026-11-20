@@ -55,11 +55,16 @@ Along for reading fluency, Takhti for understanding the week's lessons.
 arithmetic and shapes, in Hindi and English. **Each age uses it its own way:**
 Nursery–LKG get Story Time (short stories told by Munni, with moments to tap
 and count, pick a picture or say it aloud — no menus to read); UKG adds
-Munni's pick of what to do; Class 1 up gets the full jungle map. A parent can
-switch the simple home on or off; how long a child plays is up to the parent.
+Munni's pick of what to do and its own stories (adding, taking away, blending
+sounds); Class 1 up gets the full jungle map, and up to Class 2 Munni reads
+every question and choice aloud. Five short videos teach the hardest topics
+(tens and ones, carrying, borrowing, the मात्रा, the clock) and stop to ask
+the child; a filmed teacher replaces each animated version once the team
+films it (`video/SCRIPTS.md`). A parent can switch the simple home and the
+reading aloud on or off; how long a child plays is up to the parent.
 **Next:** more books, more classes, every Indian language.
 
-**Build status:** web prototype on `main` (offline shell `takhti-v95`, 51 test
+**Build status:** web prototype on `main` (offline shell `takhti-v96`, 54 test
 suites). The lesson library was built with live Gemini calls; Gemini's hearing,
 judging and voice have been run live (`tools/live-check.mjs`); the voice server
 has had its first live Bolna call. Nothing has been tried with real children

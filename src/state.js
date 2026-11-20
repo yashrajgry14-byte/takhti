@@ -45,6 +45,8 @@ function newProfile(name){
     gameBest: {},          // shellKind -> this child's own best score, see src/games/game-core.js's gameEnd()
     muted: false,          // per child, not per device — see core/speech.js's speak()/ui/elephant.js's trumpet()
     home: null,            // the home screen a parent chose: 'simple' (stories, Munni's pick) or 'map'; null = by class — Nursery–UKG simple (ui/story-time.js)
+    readAloud: null,       // Munni reads each screen's question and choices aloud: 'on' | 'off'; null = by class — Nursery to Class 2 on (ui/voice-first.js)
+    videos: null,          // Munni's videos: {n: plays per video, day: last day each was finished, log: the pause answers} — content/videos.js, ui/watch.js
     stories: null,         // Story Time: {n: plays per story, day: last day each was finished, log: the picks} — content/stories.js, ui/story-time.js
     avatar: null,          // the animal a child taps to say who they are, see ui/onboarding.js
     demo: false,           // a demo child (core/demo.js): plainly named, never synced, removed as a pair

@@ -156,6 +156,8 @@ function videoLibraryHTML(){
     <div class="display" style="font-size:24px;margin:4px 0 2px;">📺 ${hi?'तस्वीरों की झोपड़ी':'The Picture Hut'}</div>
     <div class="muted">${hi?'छोटे कार्टून — हर एक के अंत में एक सवाल':'Short cartoons — each one ends with a question for you'}</div>
 
+    ${typeof watchShelfHTML === 'function' ? watchShelfHTML() : ''}
+
     ${rec && recSkill ? `
       <div class="hero-video-card glass-card">
         <div class="hero-kicker">⭐ ${L(rec.reason)}</div>
