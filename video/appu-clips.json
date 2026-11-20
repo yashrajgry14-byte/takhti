@@ -1,0 +1,11 @@
+{
+  "about": "Cartoons of Appu making one mistake (ui/teach-munni.js, Teach Appu). Keyed by the mistake's id (content/teach.js TEACH_ACTS). When Appu's mistake has a clip, his sum becomes the clip's sum (a op b), the clip stops at `pause` (the second his 'is that right?' ends) while the child taps an answer, then carries on with the fix and ends on the question the mic answers. A clip with `child` says that child's name and plays only for the child whose first name it is, in the clip's own language; without `child` it plays for anyone in `lang`. See video/SCRIPTS.md.",
+  "clips": {
+    "smallbig": [
+      { "src": "video/appu-smallbig-kabir-hi.mp4", "lang": "hi", "child": "Kabir", "a": 52, "b": 27, "op": "−", "pause": 24.7 }
+    ],
+    "noborrowback": [
+      { "src": "video/appu-noborrowback-asha-en.mp4", "lang": "en", "child": "Asha", "a": 61, "b": 24, "op": "−", "pause": 30.0 }
+    ]
+  }
+}
