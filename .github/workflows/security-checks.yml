@@ -20,7 +20,7 @@ jobs:
       - name: Signed identity, tenant isolation, and guardian authorization tests
         run: node --test test/class-security.test.mjs
       - name: Full Takhti regression suite
-        run: npm test
+        run: node tools/run-regression-tests.mjs
       - name: Full dependency audit (including development tools)
         if: always()
         run: npm audit --audit-level=high
