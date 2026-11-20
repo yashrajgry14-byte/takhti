@@ -17,11 +17,11 @@ if(base.protocol!=='https:' || !base.hostname.startsWith('takhti-auth-staging-')
 const {TEACHER_EMAIL,TEACHER_PASSWORD,GUARDIAN_EMAIL,GUARDIAN_PASSWORD,
        FIREBASE_PROJECT_ID,TEACHER_UID,GUARDIAN_UID}=process.env;
 if(!TEACHER_EMAIL||!TEACHER_PASSWORD||!GUARDIAN_EMAIL||!GUARDIAN_PASSWORD||
-   FIREBASE_PROJECT_ID!=='gen-lang-client-0604938251'){
-  console.error('Provide both test credentials and FIREBASE_PROJECT_ID=gen-lang-client-0604938251 in Cloud Shell.');
+   (FIREBASE_PROJECT_ID && FIREBASE_PROJECT_ID!==expectedProject)){
+  console.error('Provide both test credentials in Cloud Shell. Any configured Firebase project must match '+expectedProject+'.');
   process.exit(2);
 }
-const code='ABC123',child='TESTCHILD01';
+const expectedProject='gen-lang-client-0604938251',code='ABC123',child='TESTCHILD01';
 const results=[];
 const assert=(label,ok)=>{results.push({label,ok});console.log((ok?'PASS':'FAIL')+' '+label);};
 const post=async(url,body,token)=>{
@@ -40,7 +40,7 @@ const signIn=async(apiKey,email,password,uid)=>{
     {email,password,returnSecureToken:true});
   if(r.status!==200||!r.json.idToken)throw new Error('Firebase login failed for a test account (HTTP '+r.status+')');
   const claims=decodeClaims(r.json.idToken);
-  if(claims.aud!==FIREBASE_PROJECT_ID || (uid&&r.json.localId!==uid))throw new Error('Firebase project or UID mismatch');
+  if(claims.aud!==expectedProject || (uid&&r.json.localId!==uid))throw new Error('Firebase project or UID mismatch');
   return {token:r.json.idToken,verified:claims.email_verified===true};
 };
 try{
