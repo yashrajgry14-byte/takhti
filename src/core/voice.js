@@ -118,8 +118,8 @@ async function requestSpeech(url, text, lang, pace, timeoutMs){
     return {src:'data:'+(d.mime || 'audio/mpeg')+';base64,'+d.audio,provider:d.provider || 'voice server'};
   }finally{clearTimeout(timer);}
 }
-async function playOnlineSource(url,text,lang,onDone,pace,requestId){
-  const key = url+'|'+lang+'|'+text;
+async function playOnlineSource(url,text,lang,onDone,pace,requestId,onPlaybackFailure){
+  const key = url+'|'+lang+'|'+pace+'|'+text;
   let data = LIVE_TTS.get(key);
   if(!data){
     try{data = await requestSpeech(url,text,lang,pace,LIVE_TTS_MS);}catch(e){return false;}
@@ -135,19 +135,19 @@ async function playOnlineSource(url,text,lang,onDone,pace,requestId){
     const finish = () => { if(finished || requestId !== SPEECH_REQUEST) return;
       finished = true; if(LIVE_AUDIO===a) LIVE_AUDIO=null; if(onDone) onDone(); };
     a.onended = finish;
-    a.onerror = finish;
+    a.onerror = () => { if(finished || requestId !== SPEECH_REQUEST) return; finished = true; if(LIVE_AUDIO===a) LIVE_AUDIO=null; log(null,'Audio playback error · trying next speech provider'); if(onPlaybackFailure) onPlaybackFailure(); else if(onDone) onDone(); };
     a.playbackRate = 1; // Google generates natural pace; no pitch distortion
     await a.play();
     log(0,'TTS · '+data.provider);
     return true;
   }catch(e){ return false; }
 }
-async function playLive(text,lang,onDone,pace,requestId){
+async function playLive(text,lang,onDone,pace,requestId,onPlaybackFailure){
   if(!text || !String(text).trim() || String(text).length>240) return false;
-  return playOnlineSource('/api/tts',String(text),lang,onDone,pace,requestId);
+  return playOnlineSource('/api/tts',String(text),lang,onDone,pace,requestId,onPlaybackFailure);
 }
-async function playBackup(text,lang,onDone,pace,requestId){
+async function playBackup(text,lang,onDone,pace,requestId,onPlaybackFailure){
   if(!(typeof TALK_URL!=='undefined' && TALK_URL) || !text || String(text).length>160) return false;
-  return playOnlineSource(TALK_URL+'/reading/tts',String(text),lang,onDone,pace,requestId);
+  return playOnlineSource(TALK_URL+'/reading/tts',String(text),lang,onDone,pace,requestId,onPlaybackFailure);
 }
 function voicePackLoaded(lang){return !!(VOICE_MANIFEST[lang] && Object.keys(VOICE_MANIFEST[lang]).length);}
