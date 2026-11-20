@@ -46,19 +46,21 @@ export function bearerToken(req){
 export function authorizeClass(body,access){
   if(!body || typeof body!=='object' || !access || access.active!==true) return {ok:false,status:403};
   const code=String(body.code||'').toUpperCase();
+  const schoolId=String(access.schoolId||'');
+  if(!/^[A-Za-z0-9_-]{6,64}$/.test(schoolId)) return {ok:false,status:403};
   if(!/^[A-Z0-9]{6}$/.test(code)) return {ok:false,status:400};
   const kids=body.children && typeof body.children==='object' && !Array.isArray(body.children) ? Object.keys(body.children) : [];
   if(access.role==='teacher'){
     if(!Array.isArray(access.classes) || !access.classes.includes(code)) return {ok:false,status:403};
     if(kids.length) return {ok:false,status:403};
-    return {ok:true,role:'teacher',code};
+    return {ok:true,role:'teacher',code,schoolId};
   }
   if(access.role==='guardian'){
     if(body.teacherKey || body.homework || body.lessons || body.roster) return {ok:false,status:403};
     const grants=Array.isArray(access.children)?access.children:[];
     const allowed=new Set(grants.filter(g=>g && g.code===code && g.consent===true && typeof g.id==='string').map(g=>g.id));
     if(!allowed.size || kids.some(id=>!allowed.has(id))) return {ok:false,status:403};
-    return {ok:true,role:'guardian',code,children:allowed};
+    return {ok:true,role:'guardian',code,schoolId,children:allowed};
   }
   return {ok:false,status:403};
 }
