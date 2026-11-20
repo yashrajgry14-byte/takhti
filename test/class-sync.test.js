@@ -47,6 +47,6 @@ const {createHash}=require('node:crypto');
     assert.equal(r.status,503);
   });
   test('malformed class code denied by authorization layer',()=>{
-    assert.equal(authorizeClass({code:'BAD!',children:{}},{role:'teacher',active:true,classes:['BAD!']}).status,400);
+    assert.equal(authorizeClass({code:'BAD!',children:{}},{role:'teacher',active:true,schoolId:'school-one',classes:['BAD!']}).status,400);
   });
 })().catch(e=>{console.error(e);process.exitCode=1;});
