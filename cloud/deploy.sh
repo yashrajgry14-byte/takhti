@@ -14,7 +14,7 @@ echo "Project $PROJECT · region $REGION · service $SERVICE"
 
 echo "1/5 Turning on Cloud Run, Cloud Build, Artifact Registry, Secret Manager, Cloud Storage…"
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
-  secretmanager.googleapis.com storage.googleapis.com --project "$PROJECT"
+  secretmanager.googleapis.com storage.googleapis.com texttospeech.googleapis.com --project "$PROJECT"
 
 PROJECT_NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
 SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"   # the identity Cloud Run runs as
