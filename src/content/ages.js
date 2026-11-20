@@ -148,6 +148,14 @@ const STAGES = {
 const MAX_AGE = 16;
 
 const classById = id => CLASSES.find(k => k.id === id) || null;
+/* Classes 6–10 are built (content/upper.js) but not offered (21 Nov 2026): their
+   lessons haven't been tried with children or reviewed by a subject teacher. No
+   picker — the child's class or age, the parent's, the teacher's roster or
+   syllabus — goes past Class 5 (age 10). Their content stays in the code;
+   raise this to 10 to offer them again. */
+const CLASS_SHOWN_MAX = 5;
+const AGE_SHOWN_MAX = Math.min(MAX_AGE, CLASS_SHOWN_MAX + 5);
+const classesShown = () => CLASSES.filter(k => k.g <= CLASS_SHOWN_MAX);
 
 /* The usual class for an age in India (Class 1 at six). Only a guess:
    it is offered pre-selected on the class screen, and it stands in for

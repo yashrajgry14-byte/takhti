@@ -652,7 +652,7 @@ function setTarget(k, d){
   render();
 }
 function setParentAge(d){
-  S.age = Math.max(3, Math.min(MAX_AGE, (S.age||6) + d));
+  S.age = Math.max(3, Math.min(AGE_SHOWN_MAX, (S.age||6) + d));
   // the band may have narrowed — pull current levels back inside its window
   S.levels.read  = clampLevel('read',  S.levels.read);
   S.levels.write = clampLevel('write', S.levels.write);
@@ -668,8 +668,8 @@ function setParentAge(d){
    starts higher lifts a child sitting below its start. */
 function setParentClass(d){
   if(S.clsBy === 'school') return;   // the school's roster sets it (core/class-sync.js)
-  const i = CLASSES.findIndex(k => k.id === classFor(S).id);
-  const k = CLASSES[Math.max(0, Math.min(CLASSES.length - 1, i + d))];
+  const shown = classesShown(), i = shown.findIndex(k => k.id === classFor(S).id);
+  const k = shown[Math.max(0, Math.min(shown.length - 1, i < 0 ? shown.length - 1 : i + d))];
   setChildClass(k.id);
   log(0, `Parent set class → ${k.en} · band "${band().id}" · stage ${band().stage}`);
   saveSoon();

@@ -173,7 +173,7 @@ function teacherHTML(){
 function rosterHTML(code, roster){
   const hi = S.lang === 'hi';
   const r = readClassShared(code)._roster || {};
-  const opt = (sel, none) => `<option value="">${none}</option>` + CLASSES.map(k => `<option value="${k.id}" ${k.id === sel ? 'selected' : ''}>${hi ? k.hi : k.en}</option>`).join('');
+  const opt = (sel, none) => `<option value="">${none}</option>` + classesShown().map(k => `<option value="${k.id}" ${k.id === sel ? 'selected' : ''}>${hi ? k.hi : k.en}</option>`).join('');
   return `
     <div class="kicker2" style="margin-top:12px">${hi ? 'यह कक्षा है' : 'THIS CLASS IS'}</div>
     <select class="input" id="tgrade" onchange="teacherSetGrade(this.value)">${opt(r.cls, hi ? '— कक्षा चुनें —' : '— pick the class —')}</select>
@@ -283,7 +283,7 @@ function syllabusHTML(code){
 
     <div class="row" style="gap:8px;margin-top:10px">
       <select class="input" style="flex:1" onchange="S.ctx.sylCls=this.value;render()">
-        ${SYL_CLASSES.map(k => `<option value="${k.id}" ${k.id === cls.id ? 'selected' : ''}>${hi ? k.hi : k.en}</option>`).join('')}
+        ${SYL_CLASSES.filter(k => k.g <= CLASS_SHOWN_MAX).map(k => `<option value="${k.id}" ${k.id === cls.id ? 'selected' : ''}>${hi ? k.hi : k.en}</option>`).join('')}
       </select>
       <select class="input" style="width:auto" onchange="S.ctx.sylCount=Number(this.value)">
         ${[2,3,4,5].map(n => `<option value="${n}" ${n === (c.sylCount || 3) ? 'selected' : ''}>${n} ${hi ? 'पाठ' : 'lessons'}</option>`).join('')}

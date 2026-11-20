@@ -73,16 +73,15 @@ server.listen(0, '127.0.0.1', () => {
       tap($$('.ob-av').find(b => b.getAttribute('onclick').includes("'tiger'")));
       tap($$('.ob-cakebtn')[7]);                    // 10 candles
       tap($('.ob-go'));
-      check('after the age, onboarding asks the class', E(`S.ob && S.ob.step`) === 'cls' && $$('.ob-clsbtn').length === 13, `${E('JSON.stringify(S.ob)')} · ${$$('.ob-clsbtn').length} buttons`);
+      check('after the age, onboarding asks the class — Nursery to Class 5 only (Classes 6–10 not offered yet: CLASS_SHOWN_MAX)', E(`S.ob && S.ob.step`) === 'cls' && $$('.ob-clsbtn').length === 8 && !$$('.ob-clsbtn').some(b => /Class (6|7|8|9|10)$/.test(b.textContent)), `${E('JSON.stringify(S.ob)')} · ${$$('.ob-clsbtn').length} buttons`);
       check('the usual class for 10 (Class 5) is already picked', ($('.ob-clsbtn.sel') || {}).textContent === 'Class 5', ($('.ob-clsbtn.sel') || {}).textContent);
       tap($$('.ob-clsbtn').find(b => b.textContent === 'Class 4'));
       check('a child changes the class with one tap', ($('.ob-clsbtn.sel') || {}).textContent === 'Class 4', ($('.ob-clsbtn.sel') || {}).textContent);
       tap($('.ob-go'));
       check('the class is saved, and onboarding goes on to the game pick', E('S.cls') === 'c4' && E('S.screen') === 'pick', `${E('S.cls')} / ${E('S.screen')}`);
       check("levels are seeded from the class's band", E(`JSON.stringify(S.levels)`) === JSON.stringify(E(`bandFor({cls:'c4'}).start`)), E(`JSON.stringify(S.levels)`));
-      check('older children can give their age (11–16)', true);   // set below via obPickAge
       E(`S.ob = { step:'age' }; go('onboard');`);
-      check('the age screen offers 11 to 16 for older children', $$('.ob-agechip').map(b => b.textContent).join(',') === '11,12,13,14,15,16', $$('.ob-agechip').map(b => b.textContent).join(','));
+      check('the age screen stops at 10 — no 11 to 16 while Classes 6–10 aren\'t offered', $$('.ob-agechip').length === 0 && !$('.ob-older'), $$('.ob-agechip').map(b => b.textContent).join(','));
       E(`S.ob = null; S.game = 'cricket';`);
 
       /* ---- class picks the band; age only the pace ---- */
@@ -168,8 +167,12 @@ server.listen(0, '127.0.0.1', () => {
       check('moving a child down to UKG pulls levels inside the UKG band', E(`S.levels.read <= 3 && S.levels.write <= 3 && S.levels.math <= 3`) === true, E('JSON.stringify(S.levels)'));
       E(`S.cls = 'c4'; setParentClass(1);`);
       check('the parent dashboard steps the class one at a time (Class 4 → Class 5)', E('S.cls') === 'c5', E('S.cls'));
-      E(`S.cls = 'c10'; setParentClass(1);`);
-      check('…and stops at Class 10', E('S.cls') === 'c10', E('S.cls'));
+      E(`S.cls = 'c5'; setParentClass(1);`);
+      check('…and stops at Class 5 (Classes 6–10 not offered yet)', E('S.cls') === 'c5', E('S.cls'));
+      E(`S.cls = 'c8'; setParentClass(-1);`);
+      check('…a child already set to a hidden class is brought back to Class 5, never further up', E('S.cls') === 'c5', E('S.cls'));
+      E(`S.age = 10; setParentAge(1);`);
+      check('…and the parent\'s age stops at 10', E('S.age') === 10, E('S.age'));
       E(`go('parent')`);
 
       /* ---- Classes 6–10 at Counting Stones (content/upper.js) ---- */
@@ -201,7 +204,7 @@ server.listen(0, '127.0.0.1', () => {
       E(`CLASS_AUTH.token='test-signed-identity'; CLASS_AUTH.expires=Date.now()+60000; CLASS_AUTH.role='teacher'; CLASS_AUTH.classes=['ROS123'];`);
       E(`setChildClass('c2'); S.classCode = 'ROS123'; mirrorToClassNow(S); S.ctx.tcode = 'ROS123'; go('teacher');`);
       const grade = $('#tgrade');
-      check('the teacher view asks which class this class code is', !!grade && grade.options.length === 14, grade ? String(grade.options.length) : 'none');
+      check('the teacher view asks which class this class code is — Nursery to Class 5 (with "pick the class")', !!grade && grade.options.length === 9 && ![...grade.options].some(o => /^c(6|7|8|9|10)$/.test(o.value)), grade ? String(grade.options.length) : 'none');
       grade.value = 'c5'; grade.dispatchEvent(new w.Event('change'));
       check("picking Class 5 sets every linked child on this phone to Class 5, marked as the school's", E('S.cls') === 'c5' && E('S.clsBy') === 'school' && E(`readClassShared('ROS123')._roster.cls`) === 'c5', `${E('S.cls')} / ${E('S.clsBy')}`);
       const childSel = $$('details select').find(x => x.getAttribute('onchange').includes('teacherSetChildGrade'));
