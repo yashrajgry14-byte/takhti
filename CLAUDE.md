@@ -2032,6 +2032,14 @@ Honest edges of what's built:
    keeps the first 6 s. Hearing: every model wrote the line's "भाई" for the
    planted "बाई" (Hydrogen with the line took 34 s), as on 14 Nov — readings
    stay off Gemini. The live link (Cloud Run) has no reading check anyway.
+   Drafting the same day (`try-syllabus`, a Class 3 shapes chapter):
+   Hydrogen and 3.8 Flash each hung their full minute, flash-lite drafted
+   in 16 s and repaired in 6 s — 3 of 3 usable (1 first time, 2 after the
+   repair round), 136 s in all. So the live link runs drafting
+   flash-lite first (`GEMINI_MODEL=gemini-3.5-flash-lite`,
+   `GEMINI_FALLBACK_MODEL=gemini-4-hydrogen`) and judging on Hydrogen
+   (`TAKHTI_TEACH_MODEL=gemini-4-hydrogen`) — set on the service, not in
+   the code's defaults.
    The tests run against a stand-in; `tools/live-check.mjs` and
    `tools/try-syllabus.mjs` with the team's key are what show its real speed
    and quality — run them before the demo.
