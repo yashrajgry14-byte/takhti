@@ -57,6 +57,16 @@ test('guardian may update only own child; teacher may assign homework',async()=>
   assert.equal(r.status,200);
   assert.equal(r.json.homework.note,'Practice');
 });
+test('identical class code from different schools is stored separately',async()=>{
+  const s=store();
+  const schoolA=authorizeClass({code:'SCH001',children:{alice:{}}},guardian);
+  const schoolB=authorizeClass({code:'SCH001',children:{alice:{}}},{...guardian,schoolId:'school-two'});
+  assert.equal((await syncCore(s,{code:'SCH001',children:{alice:{childName:'School A',at:1}}},schoolA)).status,200);
+  assert.equal((await syncCore(s,{code:'SCH001',children:{alice:{childName:'School B',at:1}}},schoolB)).status,200);
+  assert.equal(s.items.size,2);
+  assert.equal(s.items.get('class-school-one-SCH001').children.alice.childName,'School A');
+  assert.equal(s.items.get('class-school-two-SCH001').children.alice.childName,'School B');
+});
 test('Firebase token verifier checks actual RSA signature, audience, issuer and expiry',async()=>{
   const {privateKey,publicKey}=generateKeyPairSync('rsa',{modulusLength:2048});
   const kid='test-key-1234', project='sample-project', now=Math.floor(Date.now()/1000);
