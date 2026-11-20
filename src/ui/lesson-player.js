@@ -466,10 +466,10 @@ function lessonListHTML(){
   ${schoolLessonsHTML()}
   ${typeof teachAgainHTML === 'function' ? teachAgainHTML() : ''}
 
-  <div class="muted">${S.lang==='hi'
+  <div class="muted lesmeta">${S.lang==='hi'
     ? `हर कहानी तुम्हारे ${g.hi} से बनी है।`
     : `Every story is told with your ${g.en}.`}</div>
-  <div class="muted" style="font-size:12px;margin-top:2px">${S.lang==='hi'
+  <div class="muted lescount" style="font-size:12px;margin-top:2px">${S.lang==='hi'
     ? `तुम्हारी उम्र के लिए ${total} में से ${mine.length} कहानियाँ`
     : `${mine.length} of ${total} stories for your age`}</div>
   <div class="leslist">

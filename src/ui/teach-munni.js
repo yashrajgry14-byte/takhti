@@ -292,7 +292,7 @@ function teachHTML(){
       : judging ? (hi ? '🤔 सोच रही हूँ…' : '🤔 Thinking…')
       : (hi ? '🎤 छुओ और समझाओ' : '🎤 Tap and explain')}</button>
     ${TEACH.msg ? `<div class="retry" style="font-size:12.5px;margin-top:6px">${attr(TEACH.msg)}</div>` : ''}
-    ${!TALK_URL && !S.online ? `<div class="muted" style="font-size:12px;margin-top:6px">${hi ? 'सिग्नल नहीं: यही फ़ोन जाँचता है। सिग्नल हो तो Gemini जाँचता है।' : 'No signal: this phone checks it. With a signal, Gemini checks it.'}</div>`
+    ${!TALK_URL && !S.online ? `<div class="muted netnote" style="font-size:12px;margin-top:6px">${hi ? 'सिग्नल नहीं: यही फ़ोन जाँचता है। सिग्नल हो तो Gemini जाँचता है।' : 'No signal: this phone checks it. With a signal, Gemini checks it.'}</div>`
       : teachWordsOk() && S.online ? `<div class="muted" style="font-size:12px;margin-top:6px">${hi ? 'Gemini जाँचता है कि कौन-सी बात समझाई — तुम्हारे अपने शब्दों से।' : 'Gemini checks which points you explained — from your own words.'}</div>` : ''}
     ${TEACH.typing ? `<div class="row" style="gap:6px;margin-top:8px">
       <input class="input" id="teachtxt" placeholder="${hi ? 'यहाँ लिखकर समझाओ' : 'Or type it here'}" autocomplete="off">
