@@ -31,6 +31,7 @@ function goHub(){
 
 function runOpening(){
   const phase = S.ctx.phase || 0;
+  if(phase === 2 && typeof wcCountUp === 'function') wcCountUp();
   if(phase === 0){
     S.visits++;
     S.lastOpen = dayKey();

@@ -14,7 +14,7 @@ function weekStrip(){
   const today = dayIndex();
   return `<div class="week">${plan.map((f,i)=>`
     <div class="day ${i===today?'today':''} ${i<today?'done':''}">
-      <b>${f.ic}</b>${DAYNAMES[S.lang][i]}
+      ${i<today?'<i class="day-tick" aria-hidden="true">✓</i>':''}<b>${f.ic}</b>${DAYNAMES[S.lang][i]}
     </div>`).join('')}</div>`;
 }
 function shell(kicker, inner){
@@ -62,18 +62,32 @@ quiz(g){
 },
 
 anim(g){
-  const sc = scenes(g);
+  const sc = watchScenes(g);
   const i = Math.min(S.ctx.scene||0, sc.length-1);
-  setReadText(L(sc[i].cap));
+  const cur = sc[i], gs = cur.guess, hi = S.lang === 'hi';
+  const picked = S.ctx.guess != null;
+  setReadText(L(cur.cap));
+  const guessHTML = gs ? `<div class="wc-guess" role="group">${gs.opts.map(o => `
+      <button class="wc-opt" onclick="wcGuess('${attr(o)}')">${o}${gs.unit?`<small>${gs.unit}</small>`:''}</button>`).join('')}</div>` : '';
+  const result = (cur.reveal && picked) ? (S.ctx.guess === cur.reveal.right
+      ? `<div class="wc-result ok">⭐ ${hi?'तुमने सही अंदाज़ा लगाया!':'You guessed it!'}</div>`
+      : `<div class="wc-result">${hi?`बहुत पास! जवाब है ${cur.reveal.right}।`:`So close! It is ${cur.reveal.right}.`}</div>`) : '';
+  const waiting = gs && !picked;
   return `
-    <div class="player">
-      <div class="scene" key="${i}">${sc[i].art}</div>
-      <div class="caption">${L(sc[i].cap)}</div>
-    </div>
-    <div class="pbar">${sc.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join('')}</div>
-    <div class="row" style="margin-top:10px">
-      <button class="btn ghost" onclick="S.ctx.scene=0;render();playScenes()">↻ ${S.lang==='hi'?'फिर से':'Replay'}</button>
-      ${i<sc.length-1?`<button class="btn" onclick="stepScene()">${t('next')} →</button>`:''}
+    <div class="wc" style="--wcA:${g.accent}">
+      <div class="wc-stage player" onclick="wcTap()">
+        <span class="wc-sun" aria-hidden="true"></span><span class="wc-ground" aria-hidden="true"></span>
+        <span class="wc-step">${i+1} / ${sc.length}</span>
+        <button class="wc-hear" onclick="event.stopPropagation();narrateScene()" aria-label="${hi?'सुनो':'Hear it'}">🔊</button>
+        <div class="scene" key="${i}">${cur.art}</div>
+      </div>
+      <div class="wc-say"><span class="wc-munni">${typeof munniSmall==='function'?munniSmall():'🐘'}</span><span class="caption">${L(cur.cap)}</span></div>
+      ${guessHTML}${result}
+      <div class="pbar">${sc.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join('')}</div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn ghost" onclick="wcReplay()">↻ ${hi?'फिर से':'Replay'}</button>
+        ${i<sc.length-1 && !waiting?`<button class="btn" onclick="stepScene()">${t('next')} →</button>`:''}
+      </div>
     </div>`;
 },
 
@@ -166,9 +180,10 @@ function scenes(g){
   if(a.tpl==='count') return [
     {art:`<div style="font-size:60px" class="grow">${a.ic}</div>`,
      cap:{en:`Let us count the ${a.th.en}.`, hi:`आओ ${a.th.hi} गिनें।`}},
-    {art:row(a.n, a.ic, a.one?0:-1),
+    {art:`<div class="shapes wc-count">${[...Array(a.n)].map((_,i)=>
+       `<b style="animation-delay:${i*0.12}s;${a.one&&i===0?'filter:drop-shadow(0 0 7px #F0A02A)':''}">${a.ic}<em>${i+1}</em></b>`).join('')}</div>`,
      cap:{en:`One… two… three… all the way to ${a.n}.`, hi:`एक… दो… तीन… ${a.n} तक।`}},
-    {art:`<div style="text-align:center"><div class="counter">${a.n}</div><div style="font-size:26px">${a.ic}</div></div>`,
+    {art:`<div class="wc-big"><b class="counter countup" data-to="${a.n}">${a.n}</b><span class="wc-ic">${a.ic}</span></div>`,
      cap: a.one
        ? {en:`${a.n} chits, and only 1 is the chor. That is 1 out of ${a.n}.`, hi:`${a.n} पर्चियाँ, चोर सिर्फ़ 1। यानी ${a.n} में से 1।`}
        : {en:`${a.n} ${a.th.en}. Remember that number!`, hi:`${a.n} ${a.th.hi}। यह संख्या याद रखो!`}}
@@ -189,11 +204,9 @@ function scenes(g){
   if(a.tpl==='measure') return [
     {art:`<div style="font-size:56px" class="grow">${a.ic}</div>`,
      cap:{en:`How big is ${a.th.en}?`, hi:`${a.th.hi} कितनी बड़ी है?`}},
-    {art:`<div style="text-align:center"><div class="bar"><u></u></div>
-          <div style="margin-top:9px;font-size:20px">📏</div></div>`,
+    {art:wcRuler(a),
      cap:{en:'Let us measure it, step by step…', hi:'आओ इसे नापें, कदम-कदम…'}},
-    {art:`<div style="text-align:center"><div class="counter">${a.n}</div>
-          <div style="font-size:15px;color:var(--chalk-dim)">${L(a.u)}</div></div>`,
+    {art:`<div class="wc-big"><span class="wc-ic">${a.ic}</span><b class="counter countup" data-to="${a.n}">${a.n}</b><small>${L(a.u)}</small></div>`,
      cap:{en:`${a.n} ${a.u.en}. Now you know!`, hi:`${a.n} ${a.u.hi}। अब तुम्हें पता है!`}}
   ];
 
@@ -224,6 +237,71 @@ function scenes(g){
   ];
 }
 
+
+/* The Watch card's scenes: scenes() above, with one stop before the last
+   for measure and count — the child guesses first, then the last scene
+   shows the real number (counted up on screen). A guess is a bit of fun
+   before the answer, never marked and never recorded; a wrong guess is
+   "So close! It is 3." The other templates have nothing to guess. */
+function watchScenes(g){
+  const sc = scenes(g), a = ANIM[g.id];
+  if(!a || (a.tpl !== 'measure' && a.tpl !== 'count') || !a.n) return sc;
+  const n = a.n;
+  let opts = a.tpl === 'measure' ? [n, n * 2, Math.max(1, Math.round(n / 2))] : [n, n + 2, Math.max(1, n - 2)];
+  opts = [...new Set(opts)];
+  for(let k = n + 1; opts.length < 3; k++) if(!opts.includes(k)) opts.push(k);
+  const rot = seedOf(g.id + 'guess') % 3;
+  opts = opts.slice(rot).concat(opts.slice(0, rot)).map(String);
+  const unit = a.u ? L(a.u) : '';
+  const ask = a.tpl === 'measure'
+    ? { en:`Your guess! How many ${a.u.en}?`, hi:`तुम्हारा अंदाज़ा! कितने ${a.u.hi}?` }
+    : { en:`Your guess! How many ${a.th.en}?`, hi:`तुम्हारा अंदाज़ा! ${a.th.hi} कितने हैं?` };
+  const last = Object.assign({}, sc[sc.length - 1], { reveal: { right: String(n) } });
+  return sc.slice(0, -1).concat([{ art: `<div class="wc-think">${a.ic}<span>?</span></div>`, cap: ask, guess: { opts, unit } }, last]);
+}
+/* A ruler drawn for the measure scene: the thing travels along it while the
+   marks fill in — 0 to n, every mark up to 10, every fifth after that. */
+function wcRuler(a){
+  const n = a.n, step = n <= 10 ? 1 : 5, marks = [];
+  for(let k = 0; k <= n; k += step) marks.push(k);
+  if(marks[marks.length - 1] !== n) marks.push(n);
+  return `<div class="wc-ruler">
+    <div class="wc-track"><i class="wc-fill"></i><b class="wc-runner">${a.ic}</b></div>
+    <div class="wc-marks">${marks.map(k => `<span style="left:${(k / n * 100).toFixed(1)}%">${k}</span>`).join('')}</div>
+    <div class="wc-unit">📏 ${L(a.u)}</div>
+  </div>`;
+}
+function wcGuess(o){
+  if(S.ctx.guess != null) return;
+  S.ctx.guess = String(o);
+  const sc = watchScenes(gameById(S.game));
+  const last = sc[sc.length - 1], right = last.reveal && S.ctx.guess === last.reveal.right;
+  log(0, `Watch · guessed ${o} · ${right ? 'right' : 'it was ' + (last.reveal && last.reveal.right)} · a guess, not recorded`);
+  S.ctx.scene = sc.length - 1; render();
+  if(right) cheer(); else if(typeof sfxPop === 'function') sfxPop();
+  const hi = S.lang === 'hi';
+  speak(right ? (hi ? 'तुमने सही अंदाज़ा लगाया!' : 'You guessed it!') : (hi ? `बहुत पास! जवाब है ${last.reveal.right}।` : `So close! It is ${last.reveal.right}.`), null, () => narrateScene());
+}
+function wcReplay(){ S.ctx.scene = 0; S.ctx.guess = null; render(); playScenes(); }
+/* Tap the stage: the picture jumps. Just for fun. */
+function wcTap(){
+  const el = document.querySelector('.wc-stage .scene');
+  if(!el) return;
+  el.classList.remove('wc-boing'); void el.offsetWidth; el.classList.add('wc-boing');
+  if(typeof sfxPop === 'function') sfxPop();
+}
+/* The last scene's number counts up from 0 (reduced motion: shown at once). */
+function wcCountUp(){
+  const el = document.querySelector('.wc .countup:not([data-done])');
+  if(!el) return;
+  el.setAttribute('data-done', '1');
+  const to = +el.dataset.to || 0;
+  if(!to || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+  const t0 = performance.now(), dur = Math.min(1200, 300 + to * 60);
+  const tick = now => { const k = Math.min(1, (now - t0) / dur); el.textContent = Math.round(to * k); if(k < 1 && document.body.contains(el)) requestAnimationFrame(tick); };
+  el.textContent = '0'; requestAnimationFrame(tick);
+}
+
 /* a second, smaller fact under whatever today's daily card is — never
    shown on a 'fact' day, since the card itself already is one */
 function factStrip(g){
@@ -232,10 +310,12 @@ function factStrip(g){
   const i = S.ctx.stripIdx % list.length;
   const txt = L(list[i]);
   return `<div class="factstrip">
-    <div class="fsline" data-say="${attr(txt)}" onclick="sayEl(this)">
-      <span class="fsic">${g.ic}</span><span class="fstxt">${txt}</span><span class="fsplay">🔊</span>
+    <div class="fsline" key="fs${i}" data-say="${attr(txt)}" onclick="sayEl(this)">
+      <span class="fsic">${g.ic}</span>
+      <span class="fsbody"><span class="fskick">${S.lang==='hi'?'क्या तुम्हें पता था?':'Did you know?'}</span><span class="fstxt">${txt}</span></span>
+      <span class="fsplay" aria-label="${S.lang==='hi'?'सुनो':'Hear it'}">🔊</span>
     </div>
-    ${list.length>1?`<button class="fsmore" onclick="nextStripFact(${list.length})">✨ ${S.lang==='hi'?'एक और':'One more'}</button>`:''}
+    ${list.length>1?`<button class="fsmore" onclick="nextStripFact(${list.length})">✨ ${S.lang==='hi'?'एक और':'One more'}<small>${i+1}/${list.length}</small></button>`:''}
   </div>`;
 }
 function nextStripFact(len){
@@ -260,11 +340,12 @@ function narrateScene(onDone){
    short beat — a fixed tick used to cut off longer Hindi captions mid-line. */
 function playScenes(){
   clearTimeout(S._sceneTimer);
-  const g = gameById(S.game), total = scenes(g).length;
+  const g = gameById(S.game), sc = watchScenes(g), total = sc.length;
   const tick = () => {
     if(S.screen!=='open') return;
     narrateScene(() => {
       if(S.screen!=='open' || (S.ctx.scene||0) >= total-1) return;   // stop at the last scene
+      if(sc[S.ctx.scene||0] && sc[S.ctx.scene||0].guess && S.ctx.guess == null) return;   // wait for the child's guess
       S._sceneTimer = setTimeout(() => {
         S.ctx.scene=(S.ctx.scene||0)+1; render();
         tick();

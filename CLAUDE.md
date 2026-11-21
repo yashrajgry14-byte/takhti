@@ -92,7 +92,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js, ui/playful.js
 ```
 
-`sw.js` caches the app shell as `takhti-v103` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v104` (recorded narration lives in a
 separate `takhti-audio-v2`, filmed clips in `takhti-video-v1` (kept the first time
 each plays), bumped only when a line is rendered again in a new
 voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship
@@ -1363,6 +1363,19 @@ those the routing is the review. The parent dashboard's **REMEMBERED**
 section shows `srsStats()` in plain words, with an empty state.
 
 ## Daily cards
+
+**The Watch card** (`CARD.anim`, 21 Nov): a small stage tinted by the
+child's game (`--wcA`, `theme-play.css`), Munni saying each line in a
+bubble under it, a 🔊 to hear it again, and tapping the stage makes the
+picture jump (`wcTap()`). For measure and count games `watchScenes()` adds
+one stop before the last scene: **the child guesses** from three numbers
+(the answer, double, half — or ±2 for counting), then the last scene shows
+the real number counting up (`wcCountUp()`). "You guessed it!" or "So
+close! It is 3." — never "wrong", and a guess is never recorded. Autoplay
+waits at the guess (`playScenes()`); *Replay* clears it. Measure games get
+a ruler drawn to scale with the thing travelling along it (`wcRuler()`),
+counting games numbered items. The week strip ticks the days done, and the
+fact under the card is its own card with *One more* below it.
 
 `weekPlan()` orders the formats by this child's needs for the week;
 `dayIndex()` picks today's from the **real weekday** (plus `S.day`, a demo
