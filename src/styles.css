@@ -1497,3 +1497,7 @@ html.live .netswitch, html.live #netpill{display:none}
   font-family:'Baloo 2',system-ui,sans-serif;font-size:13px;font-weight:700;color:#2A2118;letter-spacing:0}
 .statusrow #langbtn span{padding:3px 10px 2px;border-radius:999px;opacity:.6}
 .statusrow #langbtn span.on{background:#2A2118;color:#fff;opacity:1}
+/* Class 1–2 shape hunt: geometry.js's own drawing on the story stage */
+.st-geo{display:block;color:#3B2F25}
+.st-geo svg{width:min(52vw,220px);height:auto;display:block}
+.st-geo.row svg{width:min(76vw,300px)}

@@ -372,6 +372,10 @@ function storyNext(){
   const st = S.ctx.st;
   // a read-along goes on to the next story of the bank; anything else to Munni's next pick
   if(st.tpl === 'readalong') return storyStart('readalong', readAlongSeed((st.read + 1) % STORY_READS.length));
+  // a maths story goes on to the next maths story, a shape hunt to the next hunt
+  if(st.tpl === 'solvealong') return storyStart('solvealong', mathStorySeed((st.sum.theme + 1) % STORY_SUMS.length));
+  if(st.tpl === 'shapehunt') return storyStart('shapehunt', (storyRec().n.shapehunt || 0) + 1);
+  if(st.tpl === 'money') return storyStart('money', (storyRec().n.money || 0) + 1);
   const o = storyOrder().filter(id => id !== st.tpl); storyStart(o[0] || st.tpl);
 }
 /* A read-along story's seed: which story (its place in the bank), and how
@@ -474,6 +478,34 @@ function readAlongShelfHTML(){
         </button>`).join('')}
     </div>`;
 }
+
+/* ---------- Class 1–2: maths stories and the shape hunt ---------- */
+/* A maths story's seed: its theme, then adding or taking away, which
+   alternates with how many maths stories were finished (storySumOf). */
+function mathStorySeed(theme){ return theme + STORY_SUMS.length * (storyRec().n.solvealong || 0); }
+/* The Picture Hut's shelf of maths stories, and the shape hunt. */
+function mathStoryShelfHTML(){
+  if(!storyTplsFor(band().cls).includes('solvealong')) return '';
+  return `
+    <div class="theater-h">🧮 ${L2('Maths stories with Munni', 'मुन्नी के साथ गणित की कहानियाँ')}</div>
+    <div class="video-grid">
+      ${STORY_SUMS.map((th, i) => `
+        <button class="watch-card glass-card" onclick="storyStart('solvealong',${mathStorySeed(i)})">
+          <span class="wc-thumb">${th.ic}</span>
+          <span class="vc-title">${TX(th.title)}</span>
+        </button>`).join('')}
+      <button class="watch-card glass-card" onclick="storyStart('money',${storyRec().n.money || 0})">
+        <span class="wc-thumb">💰</span>
+        <span class="vc-title">${TX(STORY_TPLS.money.title)}</span>
+      </button>
+      <button class="watch-card glass-card" onclick="storyStart('shapehunt',${storyRec().n.shapehunt || 0})">
+        <span class="wc-thumb">🔺</span>
+        <span class="vc-title">${TX(STORY_TPLS.shapehunt.title)}</span>
+      </button>
+    </div>`;
+}
+/* The Counting Stones' button: the next maths story. */
+function mathStoryNext(){ storyStart('solvealong', mathStorySeed((storyRec().n.solvealong || 0) % STORY_SUMS.length)); }
 
 /* The Reading Tree's button: the next story in the bank. */
 function readAlongNext(){ storyStart('readalong', readAlongSeed((storyRec().n.readalong || 0) % STORY_READS.length)); }
