@@ -502,6 +502,18 @@ circle**.
 
 ## The teacher view
 
+**Sign-in, and the demo class (21 Nov).** Since PR #11 a real class opens
+only for a server-verified teacher (`teacherVerified()`). Without one, the
+screen offers *Open the demo class*: a class code starting `DEMO`
+(`TEACHER_DEMO_RE`, DEMO01…) opens anyway, labelled as the demo class, and
+while it draws, `readClassShared()` returns only the labelled demo children
+(`demoOnlyRows()`, `TEACHER_DEMO_VIEW`) — no other child on the phone, none
+from another phone. The sync switch, *Sync now* and progress codes are left
+out, and `toggleClassSync()` refuses without a sign-in. Writes read
+`localStorage` themselves, so the filter never drops a record. So the demo
+works on a deploy with no Firebase, and a real code (ABC123) stays locked.
+`test/demo.test.js` checks all of it.
+
 `ui/teacher.js`, behind the parent PIN. Reads the class-code mirror for a code
 — children on this phone, plus children on other phones whose parent sent a
 progress code (see **Between phones**) — lists them, and lets a teacher pick the skill the class got wrong:

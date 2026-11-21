@@ -47,6 +47,10 @@ optional live step (4b).
 
 ## Recording checklist
 
+- No school sign-in is needed: the teacher view shows *Open the demo class*
+  (DEMO01). It shows only Asha (demo) and Kabir (demo), never the child you
+  onboarded, and nothing syncs. A real class code stays locked.
+
 - Record from the **Cloud Run link** with the **signal on**. About 830 Hindi
   and 920 English lines have no recording yet; they only speak through
   Google's voice when online. With the signal off, Munni is silent on those

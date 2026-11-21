@@ -40,18 +40,59 @@ function teacherSkillOptions(){
     .sort((a,b) => a.g - b.g || a.en.localeCompare(b.en));
 }
 
-function teacherHTML(){
+/* The demo class, without a school sign-in. PR #11 keeps every real
+   class behind a server-verified teacher login. A class code that starts
+   with DEMO (DEMO01…) still opens without one, and while it is on screen
+   the class mirror is read through demoOnlyRows(): only the labelled demo
+   children (core/demo.js) are shown — never another child on this phone,
+   never a child from another phone — and nothing in it can sync (the sync
+   switch, "Sync now" and progress codes are left out). So a demo or a
+   pitch works on a build with no Firebase, and a real class still can't be
+   opened by knowing its code. */
+const TEACHER_DEMO_RE = /^DEMO[A-Z0-9]{2}$/;
+let TEACHER_DEMO_VIEW = '';
+function teacherVerified(){ return typeof classAuthToken === 'function' && !!classAuthToken() && CLASS_AUTH.role === 'teacher'; }
+function teacherDemoCode(code){ return TEACHER_DEMO_RE.test(String(code || '')); }
+function demoOnlyRows(all){
+  const ids = new Set((S.profiles || []).filter(p => p && p.demo).map(p => p.id));
+  const out = {};
+  for(const [k, v] of Object.entries(all || {})) if(k.startsWith('_') || ids.has(k)) out[k] = v;
+  return out;
+}
+
+function teacherLockedHTML(){
   const hi = S.lang === 'hi';
-  // The parent PIN is not a teacher credential. Never render local/remote
-  // class records until the school has verified a teacher identity.
-  if(typeof classAuthToken !== 'function' || !classAuthToken() || CLASS_AUTH.role !== 'teacher')
-    return '<button class="back" onclick="go(\'map\')">← Back</button><h3>Teacher account required</h3>'+
-      (typeof classAuthHTML === 'function' ? classAuthHTML() : '<p>Sign in to access class data.</p>');
+  return `<button class="back" onclick="go('map')">← ${t('back')}</button>
+  <h3>${hi ? 'शिक्षक खाता ज़रूरी है' : 'Teacher account required'}</h3>
+  ${typeof classAuthHTML === 'function' ? classAuthHTML() : '<p>Sign in to access class data.</p>'}
+  <div class="paper" style="margin-top:10px">
+    <div class="kicker2">${hi ? 'डेमो कक्षा' : 'DEMO CLASS'}</div>
+    <div class="muted" style="font-size:12.5px">${hi
+      ? 'बिना साइन-इन के: सिर्फ़ दो डेमो बच्चे, असली बच्चे नहीं। कुछ सिंक नहीं होता।'
+      : 'No sign-in needed: two labelled demo children, not real children. Nothing is synced.'}</div>
+    <button class="btn ghost" style="margin-top:8px" onclick="teacherSetCode('DEMO01')">${hi ? 'डेमो कक्षा खोलो' : 'Open the demo class'}</button>
+  </div>`;
+}
+
+function teacherHTML(){
   const code = teacherCode();
-  if(code && !CLASS_AUTH.classes.includes(code))
-    return '<button class="back" onclick="go(\'map\')">← Back</button>'+
-      '<h3>Choose an assigned class</h3>'+classAuthHTML()+
-      CLASS_AUTH.classes.map(c=>'<button class="btn" onclick="teacherSetCode(\''+attr(c)+'\')">'+attr(c)+'</button>').join('');
+  if(teacherVerified()){
+    if(code && !CLASS_AUTH.classes.includes(code))
+      return '<button class="back" onclick="go(\'map\')">← Back</button>'+
+        '<h3>Choose an assigned class</h3>'+classAuthHTML()+
+        CLASS_AUTH.classes.map(c=>'<button class="btn" onclick="teacherSetCode(\''+attr(c)+'\')">'+attr(c)+'</button>').join('');
+    return teacherBodyHTML(code, false);
+  }
+  // The parent PIN is not a teacher credential: without a verified
+  // teacher, only the demo class (demo children only) is ever rendered.
+  if(!teacherDemoCode(code)) return teacherLockedHTML();
+  TEACHER_DEMO_VIEW = code;
+  try{ return teacherBodyHTML(code, true); }
+  finally{ TEACHER_DEMO_VIEW = ''; }
+}
+
+function teacherBodyHTML(code, demo){
+  const hi = S.lang === 'hi';
   const roster = code ? teacherRoster(code) : [];
   const skillId = S.ctx.tskill || '';
   const results = skillId && roster.length ? tDiagnose([skillId], roster, code) : [];
@@ -67,7 +108,10 @@ function teacherHTML(){
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
   <div class="display" style="font-size:22px;margin:4px 0">🧑‍🏫 ${hi?'शिक्षकों के लिए':'For teachers'}</div>
-  ${typeof classAuthHTML === 'function' ? classAuthHTML() : ''}
+  ${demo ? `<div class="card" style="margin:6px 0;padding:10px;font-size:12.5px"><b>${hi ? 'डेमो कक्षा' : 'Demo class'}</b> · ${hi
+      ? 'बिना स्कूल साइन-इन के। सिर्फ़ डेमो बच्चे दिखते हैं, कुछ सिंक नहीं होता। असली कक्षा के लिए स्कूल खाते से साइन इन करें।'
+      : 'No school sign-in. Only the labelled demo children are shown, and nothing is synced. A real class needs a school account.'}</div>`
+    : (typeof classAuthHTML === 'function' ? classAuthHTML() : '')}
   <div class="muted" style="font-size:12.5px">${hi
     ? 'इस फ़ोन पर कक्षा कोड से जुड़े बच्चे, और दूसरे फ़ोनों के वे बच्चे जिनके माता-पिता ने सिंक चालू किया या प्रगति कोड भेजा।'
     : 'Children on this phone linked to the class code, plus children on other phones whose parent switched sync on or sent a progress code.'}</div>
@@ -82,7 +126,7 @@ function teacherHTML(){
       : (hi ? 'इस कोड से अभी कोई बच्चा नहीं जुड़ा।' : 'No children linked to this code yet.')}</div>` : ''}
     ${code ? rosterHTML(code, roster) : ''}
 
-    ${code ? `
+    ${code && !demo ? `
     <div class="metric" style="margin-top:10px">
       <div><b>${hi?'इस कक्षा को सिंक रखो (हर घंटे)':'Keep this class synced (every hour)'}</b>
         <div style="font-size:12.5px;opacity:.7">${hi
@@ -95,6 +139,7 @@ function teacherHTML(){
       <button class="btn ghost" style="width:auto;padding:8px 14px" onclick="syncNow('${code}')">🔄 ${hi?'अभी सिंक करो':'Sync now'}</button>
     </div>` : ''}` : ''}
 
+    ${demo ? '' : `
     <div class="kicker2" style="margin-top:12px">${hi?'या कोड से: दूसरे फ़ोन का प्रगति कोड':"OR BY CODE: A CHILD'S PROGRESS CODE"}</div>
     <textarea class="input sharecode" id="rcode" placeholder="TKR1…"></textarea>
     ${S.ctx.rMsg ? `<div class="${S.ctx.rOk?'muted':'retry'}" style="font-size:12.5px;margin-top:6px">${S.ctx.rMsg}</div>` : ''}
@@ -103,6 +148,7 @@ function teacherHTML(){
       ? 'माता-पिता अपने डैशबोर्ड से यह कोड WhatsApp/SMS पर भेजते हैं।'
       : 'Parents send this from their dashboard, over WhatsApp or SMS.'}</div>
 
+    `}
     ${roster.length ? `
     <div class="kicker2" style="margin-top:14px">${hi?'कक्षा ने क्या गलत किया?':'WHAT DID THE CLASS GET WRONG?'}</div>
     <select class="input" onchange="S.ctx.tskill=this.value;render()">
@@ -219,7 +265,9 @@ function demoOff(){ demoRemove(); render(); }
 
 function teacherSetCode(v){
   const code = (v || '').trim().toUpperCase();
-  if(!/^[A-Z0-9]{6}$/.test(code) || !classAuthToken() || CLASS_AUTH.role !== 'teacher' || !CLASS_AUTH.classes.includes(code)) return;
+  if(!/^[A-Z0-9]{6}$/.test(code)) return;
+  const ok = teacherVerified() ? CLASS_AUTH.classes.includes(code) : teacherDemoCode(code);   // the demo class, see TEACHER_DEMO_RE
+  if(!ok) return;
   S.ctx.tcode = code; S.ctx.tskill = '';
   render();
 }
@@ -257,6 +305,7 @@ function teacherSyncIfOn(code){
   if(S.syncClasses.includes(code)) syncNow(code); else render();
 }
 function toggleClassSync(code){
+  if(!teacherVerified()) return;   // the demo class never syncs
   S.syncClasses = S.syncClasses.includes(code) ? S.syncClasses.filter(c => c !== code) : [...S.syncClasses, code];
   if(S.syncClasses.includes(code) && !S.syncKeys[code]) S.syncKeys = { ...S.syncKeys, [code]: newTeacherKey() };
   log(0, `Teacher view · class ${code} sync ${S.syncClasses.includes(code) ? 'on' : 'off'}`);

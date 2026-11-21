@@ -34,8 +34,24 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     [...win.document.querySelectorAll('.ob-av')][0].click(); [...win.document.querySelectorAll('.ob-cakebtn')][5].click(); win.document.querySelector('.ob-go').click();
     E(`S.game = S.game || 'cricket'; S.name = 'Riya'; S.age = 8; S.classCode = 'DEMO01'; go('map');
       S.ctx.tcode = 'DEMO01'; S.ctx.sylCls = 'c3'; go('teacher')`);
-    check('anonymous users cannot enter even the teacher demo dashboard',
-      /Teacher account required/.test(screen()) && !btn(/Add two demo children/), screen().slice(0,150));
+    // Without a school sign-in (PR #11) only a DEMO… class opens, and it
+    // shows only the labelled demo children — never Riya, never synced.
+    const mirror = () => E(`JSON.stringify(Object.keys(readClassShared('DEMO01')).sort())`);
+    check('without a sign-in, the DEMO class opens — labelled, nothing to sync, no progress codes, and not a real child in it',
+      /Demo class · No school sign-in/.test(screen()) && !!btn(/Add two demo children/) && !/Keep this class synced/.test(screen())
+        && !/PROGRESS CODE/.test(screen()) && !/Riya/.test(screen()) && /No children linked to this code yet/.test(screen()), screen().slice(0, 400));
+    E(`mirrorToClassNow(); render()`);
+    check('…Riya is in the class mirror, yet not on the demo screen (the filter only reads, while it draws)', JSON.parse(mirror()).includes(E(`S.id`)) && !/Riya/.test(screen()), mirror());
+    btn(/Add two demo children/).click(); await wait(20);
+    check('…the demo children appear, and only them', /2 linked: Asha \(demo\), Kabir \(demo\)/.test(screen()) && !/Riya/.test(screen()), screen().slice(0, 500));
+    E(`toggleClassSync('DEMO01')`);
+    check('…and the demo class can\'t be switched to sync', E(`S.syncClasses.includes('DEMO01')`) === false, '');
+    E(`demoRemove(); go('teacher'); S.ctx.tcode = 'ABC123'; render()`); await wait(20);
+    check('a real class code stays locked without a sign-in, and teacherSetCode() refuses it', /Teacher account required/.test(screen()) && !!btn(/Open the demo class/)
+      && (E(`teacherSetCode('ABC123'); S.ctx.tcode`) === 'ABC123') && /Teacher account required/.test(screen()), screen().slice(0, 300));
+    btn(/Open the demo class/).click(); await wait(20);
+    check('"Open the demo class" opens DEMO01', E(`S.ctx.tcode`) === 'DEMO01' && /Demo class · No school sign-in/.test(screen()), screen().slice(0, 200));
+    E(`go('map'); S.ctx.tcode = 'DEMO01'; go('teacher')`);
     E(`CLASS_AUTH.token='test-approved-session'; CLASS_AUTH.expires=Date.now()+600000;
       CLASS_AUTH.role='teacher'; CLASS_AUTH.classes=['DEMO01']; CLASS_AUTH.email='teacher@example.test'; render()`);
     await wait(20);
