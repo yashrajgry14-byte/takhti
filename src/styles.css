@@ -158,57 +158,97 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 .greet small{display:block;font-family:'Mukta';font-size:14px;font-weight:500;color:var(--chalk-dim);margin-top:3px}
 @keyframes slidein{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
 
-.arena{position:relative;height:236px;margin:14px -4px 0;border-radius:20px;overflow:hidden;
-  background:radial-gradient(120% 90% at 50% 110%, var(--gAccent,#3FBB78) 0%, transparent 62%), #0F2420;
-  border:1px solid rgba(237,230,210,.12)}
-.ground{position:absolute;left:0;right:0;bottom:44px;height:2px;background:rgba(237,230,210,.18)}
-.crowd{position:absolute;left:0;right:0;bottom:46px;font-size:13px;letter-spacing:6px;opacity:.3;text-align:center}
-.actor{position:absolute;bottom:44px;font-size:52px;line-height:1;transform-origin:bottom center}
-.proj{position:absolute;bottom:64px;font-size:30px;line-height:1;will-change:transform}
+/* The scene: sky, a soft sun, a ground band in the game's colour. Tall
+   enough to fill the phone, so the opening isn't a strip with a gap
+   under it. Everything stays inside the frame — nothing is drawn
+   across the scene (the old "glass crack" lines read as scribbles). */
+.arena{position:relative;height:clamp(270px,46vh,350px);margin:14px -4px 0;border-radius:22px;overflow:hidden;
+  background:linear-gradient(180deg,#183A33 0%,#0F2420 70%);
+  border:1px solid rgba(237,230,210,.12);isolation:isolate}
+.arena:before{content:'';position:absolute;right:-30px;top:-34px;width:150px;height:150px;border-radius:50%;
+  background:radial-gradient(circle,rgba(240,160,42,.32) 0%,rgba(240,160,42,0) 68%);z-index:0}
+.ground{position:absolute;left:0;right:0;bottom:0;height:52px;z-index:0;
+  background:linear-gradient(180deg,var(--gAccent,#3FBB78) 0%,rgba(0,0,0,.06) 100%);
+  border-top:2px solid var(--gLine,rgba(237,230,210,.22))}
+.actor{position:absolute;bottom:48px;font-size:56px;line-height:1;transform-origin:bottom center;z-index:2}
+.proj{position:absolute;bottom:72px;font-size:32px;line-height:1;will-change:transform,left,bottom;z-index:3;
+  transform:translate(-50%,0)}
 
-/* --- LAUNCH: wind up, strike, ball flies at the camera --- */
-.a-launch{left:10%;animation:windup 1.5s cubic-bezier(.3,1.4,.5,1) both}
-@keyframes windup{0%{transform:scale(1) rotate(0)}35%{transform:scale(1.04) rotate(-16deg)}
-  48%{transform:scale(1.12) rotate(14deg)}62%{transform:scale(1) rotate(0)}100%{transform:scale(1) rotate(0)}}
-.p-launch{left:19%;animation:fly 1.5s cubic-bezier(.45,0,.75,1) both}
-@keyframes fly{0%,40%{transform:translate(0,0) scale(.9) rotate(0);opacity:1}
-  70%{transform:translate(90px,-72px) scale(1.7) rotate(420deg)}
-  100%{transform:translate(120px,26px) scale(9) rotate(900deg);opacity:.96}}
-
-/* --- CHASE: two runners, one tags the other --- */
-.a-chase{left:-14%;animation:dash 1.5s cubic-bezier(.4,0,.5,1) both}
-.a-chase2{left:-32%;animation:dash 1.5s cubic-bezier(.4,0,.5,1) both;animation-delay:.1s}
-@keyframes dash{0%{transform:translateX(0) scaleX(1)}
-  55%{transform:translateX(150px) scaleX(1)}
-  72%{transform:translateX(190px) scaleX(1.1) rotate(-8deg)}
-  100%{transform:translateX(230px) scale(3.4);opacity:.9}}
-.dust{position:absolute;bottom:44px;left:8%;font-size:20px;opacity:0;animation:puff 1.5s ease both;animation-delay:.5s}
-@keyframes puff{0%{opacity:0;transform:scale(.4)}40%{opacity:.55}100%{opacity:0;transform:translateX(-24px) scale(1.6)}}
-
-/* --- REVEAL: pops out from hiding, or everything freezes --- */
-.a-reveal{left:50%;margin-left:-26px;animation:peek 1.5s cubic-bezier(.34,1.7,.5,1) both}
-@keyframes peek{0%{transform:translateY(60px) scale(.5);opacity:0}
-  45%{transform:translateY(-6px) scale(1.15);opacity:1}
-  60%{transform:translateY(0) scale(1)}
-  100%{transform:translateY(-8px) scale(4.6);opacity:.95}}
-.hidebox{position:absolute;bottom:36px;left:50%;margin-left:-52px;font-size:44px;opacity:.5}
-
-.bubble{position:absolute;top:14px;left:14px;right:14px;background:rgba(237,230,210,.94);color:#16302B;
-  font-family:'Baloo 2';font-size:15px;padding:9px 13px;border-radius:14px 14px 14px 3px;
-  animation:pop2 .45s cubic-bezier(.3,1.6,.5,1) both;z-index:3}
+/* "Watch this…" — a small tag in the corner, not a banner over the scene */
+.scene-tag{position:absolute;top:12px;left:12px;z-index:7;display:inline-flex;align-items:center;gap:7px;
+  font-family:'Baloo 2';font-size:14px;font-weight:600;line-height:1;padding:7px 12px 6px 9px;border-radius:999px;
+  background:rgba(237,230,210,.92);color:#16302B;box-shadow:0 3px 10px rgba(0,0,0,.18);
+  animation:pop2 .45s cubic-bezier(.3,1.6,.5,1) both}
+.scene-tag i{width:9px;height:9px;border-radius:50%;background:var(--rani,#E8447C);animation:tagdot 1s ease-in-out infinite}
+.scene-tag.hit i{background:var(--marigold,#F0A02A);animation:none}
+@keyframes tagdot{50%{opacity:.25}}
 @keyframes pop2{from{opacity:0;transform:scale(.7) translateY(-6px)}to{opacity:1;transform:none}}
 
-/* --- IMPACT --- */
-.flash{position:absolute;inset:0;background:#EDE6D2;opacity:0;animation:flash .5s ease both;z-index:4;pointer-events:none}
-@keyframes flash{0%{opacity:0}18%{opacity:.85}100%{opacity:0}}
-.crack{position:absolute;inset:0;z-index:5;pointer-events:none;animation:crackin .6s ease both}
-@keyframes crackin{0%{opacity:0;transform:scale(.6)}30%{opacity:1;transform:scale(1)}100%{opacity:.55;transform:scale(1)}}
-.shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97) both}
-@keyframes shake{10%,90%{transform:translate(-2px,1px)}20%,80%{transform:translate(4px,-2px)}
-  30%,50%,70%{transform:translate(-6px,2px)}40%,60%{transform:translate(6px,-1px)}100%{transform:none}}
+/* --- LAUNCH: wind up, strike, the ball arcs into the target --- */
+.goal{position:absolute;left:78%;bottom:58%;width:58px;height:58px;margin:0 0 -29px -29px;border-radius:50%;z-index:1;
+  background:radial-gradient(circle,var(--gSolid,#3FBB78) 0 22%,transparent 23% 42%,var(--gSolid,#3FBB78) 43% 56%,transparent 57%);
+  opacity:.75;animation:goalin .6s ease both}
+@keyframes goalin{from{opacity:0;transform:scale(.4)}to{opacity:.75;transform:none}}
+.a-launch{left:9%;animation:windup 1.5s cubic-bezier(.3,1.4,.5,1) both;animation-delay:.25s}
+@keyframes windup{0%{transform:scale(1) rotate(0)}35%{transform:scale(1.04) rotate(-16deg)}
+  48%{transform:scale(1.12) rotate(14deg)}62%,100%{transform:scale(1) rotate(0)}}
+.p-launch{left:22%;animation:arc 1.5s cubic-bezier(.4,0,.6,1) both;animation-delay:.25s}
+@keyframes arc{0%,42%{left:22%;bottom:72px;transform:translate(-50%,0) rotate(0) scale(1)}
+  72%{left:52%;bottom:80%;transform:translate(-50%,0) rotate(300deg) scale(1.25)}
+  100%{left:78%;bottom:calc(58% - 16px);transform:translate(-50%,0) rotate(560deg) scale(1.15)}}
+.still .p-launch{left:78%;bottom:calc(58% - 16px);transform:translate(-50%,0) scale(1.15);animation:none}
+.still .a-launch{animation:none}
+
+/* --- CHASE: one runs, the other catches up and tags --- */
+.a-chase{left:-16%;animation:dash 1.5s cubic-bezier(.4,0,.5,1) both;animation-delay:.25s}
+.a-chase2{left:-4%;animation:flee 1.5s cubic-bezier(.4,0,.6,1) both;animation-delay:.2s}
+@keyframes dash{0%{left:-16%}70%{left:44%}100%{left:50%;transform:scale(1.15) rotate(-6deg)}}
+@keyframes flee{0%{left:-4%}70%{left:56%}100%{left:64%;transform:rotate(10deg)}}
+.still .a-chase{left:50%;transform:scale(1.15) rotate(-6deg);animation:none}
+.still .a-chase2{left:64%;transform:rotate(10deg);animation:none}
+.dust{position:absolute;bottom:48px;left:30%;font-size:22px;opacity:0;z-index:1;animation:puff 1.5s ease both;animation-delay:.7s}
+@keyframes puff{0%{opacity:0;transform:scale(.4)}40%{opacity:.6}100%{opacity:0;transform:translateX(-30px) scale(1.6)}}
+.still .dust{display:none}
+
+/* --- REVEAL: pops out from where it was hiding --- */
+.hidebox{position:absolute;bottom:40px;left:50%;font-size:64px;line-height:1;opacity:.8;transform:translateX(-50%);z-index:3}
+.a-reveal{left:50%;margin-left:-28px;animation:peek 1.5s cubic-bezier(.34,1.7,.5,1) both;animation-delay:.25s}
+@keyframes peek{0%{transform:translateY(40px) scale(.5);opacity:0}
+  45%{transform:translateY(-70px) scale(1.15);opacity:1}
+  60%,100%{transform:translateY(-58px) scale(1.25);opacity:1}}
+.still .a-reveal{transform:translateY(-58px) scale(1.25);animation:none}
+
+/* --- IMPACT: a ring and short rays from the spot where it happened,
+   inside the frame, then a little confetti --- */
+.flash{position:absolute;inset:0;background:#EDE6D2;opacity:0;animation:flash .45s ease both;z-index:4;pointer-events:none}
+@keyframes flash{0%{opacity:0}18%{opacity:.6}100%{opacity:0}}
+.burst{position:absolute;left:var(--bx,50%);bottom:var(--by,40%);width:0;height:0;z-index:5;pointer-events:none}
+.burst:before,.burst:after{content:'';position:absolute;left:-60px;top:-60px;width:120px;height:120px;border-radius:50%;
+  border:3px solid var(--gSolid,#F0A02A);animation:ring .7s ease-out both}
+.burst:after{animation-delay:.12s;border-width:2px;opacity:.6}
+@keyframes ring{from{transform:scale(.2);opacity:1}to{transform:scale(1.3);opacity:0}}
+.burst b{position:absolute;left:-2px;top:0;width:4px;height:22px;border-radius:3px;background:var(--gSolid,#F0A02A);
+  transform-origin:2px 0;transform:rotate(var(--r)) translateY(26px);animation:ray .6s ease-out both}
+@keyframes ray{from{transform:rotate(var(--r)) translateY(8px) scaleY(.3);opacity:1}
+  to{transform:rotate(var(--r)) translateY(44px) scaleY(1);opacity:0}}
+.burst em{position:absolute;left:-17px;top:-78px;font-size:34px;font-style:normal;line-height:1;animation:starpop .7s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes starpop{from{transform:scale(0) rotate(-40deg)}to{transform:scale(1) rotate(0)}}
+.shake{animation:shake .45s cubic-bezier(.36,.07,.19,.97) both}
+@keyframes shake{10%,90%{transform:translate(-1px,1px)}20%,80%{transform:translate(3px,-1px)}
+  30%,50%,70%{transform:translate(-4px,1px)}40%,60%{transform:translate(4px,-1px)}100%{transform:none}}
 .confetti{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
 .confetti i{position:absolute;top:-12px;width:7px;height:11px;border-radius:2px;animation:fall 1.4s linear both}
-@keyframes fall{to{transform:translateY(280px) rotate(540deg);opacity:0}}
+@keyframes fall{to{transform:translateY(360px) rotate(540deg);opacity:0}}
+
+/* under the scene: what is coming, and a small way past it */
+.open-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:0 2px}
+.open-next{font-size:14px;color:var(--chalk-dim);display:flex;align-items:center;gap:8px}
+.open-next .dots{display:inline-flex;gap:4px}
+.open-next .dots i{width:6px;height:6px;border-radius:50%;background:var(--marigold,#F0A02A);animation:dotup 1s ease-in-out infinite}
+.open-next .dots i:nth-child(2){animation-delay:.15s}.open-next .dots i:nth-child(3){animation-delay:.3s}
+@keyframes dotup{0%,60%,100%{transform:none;opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+.skipbtn{flex:none;font-family:'Baloo 2';font-size:14px;font-weight:600;padding:8px 16px;border-radius:999px;cursor:pointer;
+  background:transparent;color:var(--chalk-dim);border:1px solid rgba(237,230,210,.22)}
 
 /* --- the card that lands after impact --- */
 .reveal{animation:cardup .55s cubic-bezier(.3,1.3,.5,1) both}
