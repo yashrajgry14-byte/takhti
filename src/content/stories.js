@@ -862,6 +862,266 @@ Object.assign(STORY_TPLS, {
   }
 });
 
+/* Class 1–2: maths stories ("solve along"). A word problem told as a story:
+   the words light up as Munni reads each line, the things arrive or go away
+   on the stage, then the child answers with the picture still there. The
+   numbers are worked out here, so the right answer is right by
+   construction; the other answer is the real mistake — adding when some
+   went away, taking away when more came (wrongop). */
+const STORY_SUMS = [
+  { ic:'🐦', bg:'tree', title:both('Birds on the tree', 'पेड़ पर चिड़ियाँ'),
+    start:a => both(`${a} birds sit on a tree.`, `पेड़ पर ${a} चिड़ियाँ बैठी हैं।`),
+    add:b => both(`${b} more birds fly in.`, `${b} और चिड़ियाँ उड़कर आईं।`),
+    addQ:both('How many birds are on the tree now?', 'अब पेड़ पर कितनी चिड़ियाँ हैं?'),
+    sub:b => both(`${b} birds fly away.`, `${b} चिड़ियाँ उड़ गईं।`),
+    subQ:both('How many birds are left on the tree?', 'पेड़ पर कितनी चिड़ियाँ बचीं?') },
+  { ic:'🥭', bg:'room', title:both('The mango basket', 'आम की टोकरी'),
+    start:a => both(`There are ${a} mangoes in a basket.`, `टोकरी में ${a} आम हैं।`),
+    add:b => both(`Amma puts in ${b} more.`, `अम्मा ने ${b} आम और रखे।`),
+    addQ:both('How many mangoes are in the basket now?', 'अब टोकरी में कितने आम हैं?'),
+    sub:b => both(`Ravi eats ${b} mangoes.`, `रवि ने ${b} आम खा लिए।`),
+    subQ:both('How many mangoes are left in the basket?', 'टोकरी में कितने आम बचे?') },
+  { ic:'🐟', bg:'pond', title:both('Fish in the pond', 'तालाब की मछलियाँ'),
+    start:a => both(`${a} fish swim in the pond.`, `तालाब में ${a} मछलियाँ तैर रही हैं।`),
+    add:b => both(`${b} more fish come.`, `${b} और मछलियाँ आ गईं।`),
+    addQ:both('How many fish are in the pond now?', 'अब तालाब में कितनी मछलियाँ हैं?'),
+    sub:b => both(`${b} fish swim away.`, `${b} मछलियाँ दूर तैर गईं।`),
+    subQ:both('How many fish are left in the pond?', 'तालाब में कितनी मछलियाँ बचीं?') },
+  { ic:'🎈', bg:'sky', title:both("Meena's balloons", 'मीना के गुब्बारे'),
+    start:a => both(`Meena has ${a} balloons.`, `मीना के पास ${a} गुब्बारे हैं।`),
+    add:b => both(`Papa gives her ${b} more.`, `पापा ने उसे ${b} गुब्बारे और दिए।`),
+    addQ:both('How many balloons does Meena have now?', 'अब मीना के पास कितने गुब्बारे हैं?'),
+    sub:b => both(`${b} balloons go pop!`, `${b} गुब्बारे फूट गए!`),
+    subQ:both('How many balloons are left?', 'मीना के पास कितने गुब्बारे बचे?') },
+  { ic:'🍬', bg:'room', title:both("Dadi's sweets", 'दादी की मिठाइयाँ'),
+    start:a => both(`There are ${a} sweets on a plate.`, `थाली में ${a} मिठाइयाँ हैं।`),
+    add:b => both(`Dadi brings ${b} more.`, `दादी ${b} मिठाइयाँ और लाईं।`),
+    addQ:both('How many sweets are on the plate now?', 'अब थाली में कितनी मिठाइयाँ हैं?'),
+    sub:b => both(`The children eat ${b} sweets.`, `बच्चों ने ${b} मिठाइयाँ खा लीं।`),
+    subQ:both('How many sweets are left on the plate?', 'थाली में कितनी मिठाइयाँ बचीं?') }
+];
+/* Which word problem a seed is: the theme, then adding or taking away
+   (so the shelf's cards play the story they show, and a replay alternates). */
+const storySumOf = seed => ({ theme: seed % STORY_SUMS.length, op: Math.floor(seed / STORY_SUMS.length) % 2 ? 'sub' : 'add' });
+/* Class 1: within 10, one picture per thing. Class 2: a two-digit group
+   (a tagged picture) and a few more — never carrying or borrowing, which
+   have their own cartoons and videos. */
+function storySumNumbers(r, cls, op){
+  const ri = (lo, hi) => lo + Math.floor(r() * (hi - lo + 1));
+  if(cls === 'c2'){
+    const b = ri(2, 7), tens = ri(1, 5);
+    const ones = op === 'add' ? ri(0, 9 - b) : ri(b, 9);
+    return { a: tens * 10 + ones, b };
+  }
+  if(op === 'add'){ const a = ri(2, 8); return { a, b: ri(2, 10 - a) }; }
+  const a = ri(4, 10); return { a, b: ri(2, a - 1) };
+}
+
+/* Class 1–2: Munni's shape hunt — teach on one shape, ask on another (the
+   way the checker wants school lessons too). Drawn and checked by
+   content/geometry.js: the answer is read off the drawing (geoExpect), and
+   the other answer is the real mistake — the count just heard for the
+   teaching shape, or the look-alike in a row (square for rectangle). */
+const STORY_GEO_NAMES = { square: both('square', 'वर्ग'), rectangle: both('rectangle', 'आयत'), triangle: both('triangle', 'त्रिभुज') };
+const STORY_GEO_SHAPES = { square: { kind:'square', s:4 }, rectangle: { kind:'rectangle', w:6, h:3 }, triangle: { kind:'triangle', sides:[4, 4, 4] } };
+const STORY_GEO_PAIRS = [['square', 'triangle'], ['triangle', 'square'], ['triangle', 'rectangle'], ['rectangle', 'triangle']];
+const storyGeo = (b, row) => `<span class="st-geo${row ? ' row' : ''}">${geoArt(b)}</span>`;
+
+Object.assign(STORY_TPLS, {
+  solvealong: {
+    classes: ['c1', 'c2'], ic: '🧮',
+    skill: o => {
+      const op = storySumOf(o.seed || 0).op;
+      return o.cls === 'c2' ? (op === 'add' ? 'add2' : 'sub2') : (op === 'add' ? 'add10' : 'sub10');
+    },
+    title: both('A maths story', 'गणित की कहानी'),
+    build(r, o){
+      const { theme, op } = storySumOf(o.seed || 0), th = STORY_SUMS[theme];
+      const { a, b } = storySumNumbers(r, o.cls, op);
+      const s = op === 'add' ? a + b : a - b;
+      // the real slip: the other operation
+      let wrong = op === 'add' ? a - b : a + b;
+      if(wrong === s || wrong < 0) wrong = s + 1;
+      const right = r() < 0.5 ? 0 : 1, pair = [s, wrong]; if(right) pair.reverse();
+      const big = o.cls === 'c2';
+      const one = (i, anim, d) => ({ id: 'o' + i, ic: th.ic, x: 22 + (i % 5) * 14, y: 52 + Math.floor(i / 5) * 16, size: 38, anim, d });
+      const few = (i, anim, d) => ({ id: 'm' + i, ic: th.ic, x: 60 + (i % 4) * 9, y: 50 + Math.floor(i / 4) * 14, size: 32, anim, d });
+      const grp = num => ({ id: 'grp', ic: th.ic, num, x: 32, y: 60, size: 76, anim: 'bob' });
+      const range = n => [...Array(n).keys()];
+      let first, second, after, final;
+      if(!big){
+        first = range(a).map(i => one(i, 'pop', i * 0.08));
+        if(op === 'add'){
+          second = range(a).map(i => one(i, 'bob')).concat(range(b).map(i => one(a + i, 'fly', i * 0.15)));
+          after = range(a + b).map(i => one(i, 'bob'));
+        } else {
+          second = range(a).map(i => one(i, i >= a - b ? 'gone' : 'bob', i >= a - b ? (i - a + b) * 0.2 : 0));
+          after = range(a - b).map(i => one(i, 'bob'));
+        }
+        final = after;
+      } else {
+        first = [grp(a)];
+        if(op === 'add'){
+          second = [grp(a)].concat(range(b).map(i => few(i, 'fly', i * 0.15)));
+          after = [grp(a)].concat(range(b).map(i => few(i, 'bob')));
+          final = [grp(s)];
+        } else {
+          second = [grp(a)].concat(range(b).map(i => few(i, 'gone', 0.3 + i * 0.15)));
+          after = [grp('?')];
+          final = [grp(s)];
+        }
+      }
+      const l1 = th.start(a), l2 = th[op](b), q = op === 'add' ? th.addQ : th.subQ;
+      const sum = op === 'add' ? `${a} + ${b} = ${s}` : `${a} − ${b} = ${s}`;
+      const why = op === 'add' ? both('More came, so we add', 'और आए, इसलिए जोड़ते हैं') : both('Some went away, so we take away', 'कुछ चले गए, इसलिए घटाते हैं');
+      return {
+        bg: th.bg, sum: { theme, op, a, b, s },
+        scenes: [
+          { say: both(`${th.title.en}. A maths story — listen, and watch.`, `${th.title.hi}। गणित की एक कहानी — सुनो, और देखो।`),
+            stage: { items: [{ id: 'title', ic: th.ic, x: 50, y: 54, size: 96, anim: 'pop' }] } },
+          { say: l1, stage: { line: l1, items: first } },
+          { say: l2, stage: { line: l2, items: second } },
+          { say: q, stage: { line: q, items: after },
+            join: { t: 'pick', keep: true, opts: pair.map(x => ({ num: x })), right,
+                    praise: both(`Yes! ${sum}.`, `हाँ! ${sum}।`),
+                    show: both(`It's ${s}. ${why.en}: ${sum}.`, `${s} है। ${why.hi}: ${sum}।`) } },
+          { say: op === 'add' ? both(`${a} plus ${b} is ${s}.`, `${a} और ${b} मिलकर ${s}।`) : both(`${a} take away ${b} leaves ${s}.`, `${a} में से ${b} गए, बचे ${s}।`),
+            stage: { big: sum, items: final.map(it => Object.assign({}, it, { y: it.y + 8 })) } }
+        ],
+        grownup: both(`Tell your own story with spoons or stones: "${a} spoons, ${b} more come — how many now?"`,
+                      `चम्मच या कंकड़ से अपनी कहानी बनाएँ: "${a} चम्मच, ${b} और आए — अब कितने?"`),
+        home: both('At dinner, make a story sum with rotis or fruit, and let your child work it out.',
+                   'खाने के समय रोटी या फलों से एक कहानी वाला सवाल बनाएँ, और बच्चे को हल करने दें।')
+      };
+    }
+  },
+
+  shapehunt: {
+    classes: ['c1', 'c2'], ic: '🔺',
+    skill: () => 'shapes2d',
+    title: both("Munni's shape hunt", 'मुन्नी की आकार खोज'),
+    build(r, o){
+      const N = STORY_GEO_NAMES, seed = o.seed || 0;
+      if(seed % 2 === 0){
+        // count the sides of a shape Munni didn't just count
+        const [A, B] = STORY_GEO_PAIRS[Math.floor(seed / 2) % STORY_GEO_PAIRS.length];
+        const nA = geoExpect(Object.assign({ t:'figure', ask:'sides' }, STORY_GEO_SHAPES[A]));
+        const qb = Object.assign({ t:'figure', ask:'sides' }, STORY_GEO_SHAPES[B]), nB = geoExpect(qb);
+        const right = r() < 0.5 ? 0 : 1, pair = [nB, nA]; if(right) pair.reverse();
+        const counts = n => [...Array(n).keys()].map(i => i + 1).join(', ');
+        return {
+          bg: 'plain', shape: { kind: 'sides', teach: A, ask: B, n: nB },
+          scenes: [
+            { say: both(`Munni's shape hunt! This is a ${N[A].en}. Count its sides with Munni: ${counts(nA)}. A ${N[A].en} has ${nA} sides.`,
+                        `मुन्नी की आकार खोज! यह ${N[A].hi} है। मुन्नी के साथ इसकी भुजाएँ गिनो: ${counts(nA)}। ${N[A].hi} की ${nA} भुजाएँ होती हैं।`),
+              stage: { items: [{ id: 'shA', ic: storyGeo(Object.assign({ t:'figure' }, STORY_GEO_SHAPES[A])), x: 50, y: 50, size: 16, anim: 'pop' }] } },
+            { say: both('Now look at this new shape. How many sides does it have? Count them!', 'अब यह नया आकार देखो। इसकी कितनी भुजाएँ हैं? गिनो!'),
+              stage: { items: [{ id: 'shB', ic: storyGeo(qb), x: 50, y: 46, size: 16, anim: 'pop' }] },
+              join: { t:'pick', keep: true, opts: pair.map(x => ({ num: x })), right,
+                      praise: both(`Yes! It has ${nB} sides — it is a ${N[B].en}.`, `हाँ! इसकी ${nB} भुजाएँ हैं — यह ${N[B].hi} है।`),
+                      show: both(`It has ${nB} sides. Count them with your finger: ${counts(nB)}.`, `इसकी ${nB} भुजाएँ हैं। उँगली से गिनो: ${counts(nB)}।`) } },
+            { say: both(`A ${N[A].en} has ${nA} sides, and a ${N[B].en} has ${nB}. Shapes are everywhere — look around you!`,
+                        `${N[A].hi} की ${nA} भुजाएँ, और ${N[B].hi} की ${nB}। आकार हर जगह हैं — चारों ओर देखो!`),
+              stage: { items: [{ id: 'shA', ic: storyGeo(Object.assign({ t:'figure' }, STORY_GEO_SHAPES[A])), x: 28, y: 52, size: 16, anim: 'bob' },
+                               { id: 'shB', ic: storyGeo(Object.assign({ t:'figure' }, STORY_GEO_SHAPES[B])), x: 72, y: 52, size: 16, anim: 'bob' }] } }
+          ],
+          grownup: both(`Find shapes at home together — a window, a roti, a samosa — and count their sides.`, `घर में साथ मिलकर आकार ढूँढें — खिड़की, रोटी, समोसा — और उनकी भुजाएँ गिनें।`),
+          home: both('Make a triangle and a square with sticks or straws, and count the sides.', 'तीलियों या स्ट्रॉ से एक त्रिभुज और एक वर्ग बनाएँ, और भुजाएँ गिनें।')
+        };
+      }
+      // find the shape in a row of two: the square and the rectangle look alike
+      const find = Math.floor(seed / 2) % 2 ? 'square' : 'rectangle';
+      const sq = { kind:'square', s:3 }, rect = { kind:'rectangle', w:5, h:2 };
+      const items = r() < 0.5 ? [sq, rect] : [rect, sq];
+      const row = { t:'figures', items, find };
+      const at = geoExpect(row);                                   // 1 or 2, read off the row
+      const teach = find === 'square'
+        ? both('This is a square. All its 4 sides are the same length.', 'यह वर्ग है। इसकी चारों भुजाएँ बराबर लंबी होती हैं।')
+        : both('This is a rectangle. Its long sides are the same, and its short sides are the same.', 'यह आयत है। इसकी लंबी भुजाएँ बराबर हैं, और छोटी भुजाएँ बराबर हैं।');
+      const shown = find === 'square' ? { kind:'square', s:4 } : { kind:'rectangle', w:6, h:3 };
+      return {
+        bg: 'plain', shape: { kind: 'find', find, at },
+        scenes: [
+          { say: both(`Munni's shape hunt! ${teach.en}`, `मुन्नी की आकार खोज! ${teach.hi}`),
+            stage: { items: [{ id: 'shA', ic: storyGeo(Object.assign({ t:'figure' }, shown)), x: 50, y: 50, size: 16, anim: 'pop' }] } },
+          { say: both(`Which one is the ${N[find].en}? Tap its number.`, `इनमें ${N[find].hi} कौन सा है? उसका नंबर छुओ।`),
+            stage: { items: [{ id: 'row', ic: storyGeo(row, true), x: 50, y: 46, size: 16, anim: 'pop' }] },
+            join: { t:'pick', keep: true, opts: [{ num: 1 }, { num: 2 }], right: at - 1,
+                    praise: both(`Yes! Number ${at} is the ${N[find].en}.`, `हाँ! नंबर ${at} ${N[find].hi} है।`),
+                    show: both(`It's number ${at}. ${teach.en.replace(/^This is an? \w+\. /, '')}`, `नंबर ${at}। ${teach.hi.replace(/^यह \S+ है। /, '')}`) } },
+          { say: both(`You found the ${N[find].en}! A square and a rectangle both have 4 sides — look at how long they are.`, `तुमने ${N[find].hi} ढूँढ लिया! वर्ग और आयत दोनों की 4 भुजाएँ होती हैं — उनकी लंबाई देखो।`),
+            stage: { items: [{ id: 'row', ic: storyGeo(row, true), x: 50, y: 50, size: 16, anim: 'bob' }] } }
+        ],
+        grownup: both('Look at a door, a book and a tile together: which are squares, which are rectangles?', 'साथ में दरवाज़ा, किताब और टाइल देखें: कौन से वर्ग हैं, कौन से आयत?'),
+        home: both('Cut a square and a rectangle from old paper and ask which is which.', 'पुराने कागज़ से एक वर्ग और एक आयत काटें और पूछें कौन सा क्या है।')
+      };
+    }
+  }
+});
+
+/* Class 1–2: Munni's money box. Plain coins and notes drawn here (a circle
+   or a note with its value — never a copy of a real coin's design), how
+   much is each, then how much in all. The answer is added up from what is
+   drawn; the other answer is the real slip — counting the coins instead of
+   adding what each is worth (so at least one is worth more than ₹1). */
+function storyMoneySVG(v){
+  return `<svg viewBox="0 0 60 60" width="1em" height="1em" role="img" aria-label="₹${v} coin"><circle cx="30" cy="30" r="27" fill="#E9C46A" stroke="#B8892E" stroke-width="4"/><circle cx="30" cy="30" r="20" fill="none" stroke="#B8892E" stroke-width="1.5" opacity=".6"/><text x="30" y="38" text-anchor="middle" font-size="${v >= 10 ? 19 : 22}" font-weight="800" fill="#5A3E12" font-family="Mukta,system-ui,sans-serif">₹${v}</text></svg>`;
+}
+function storyNoteSVG(v){
+  const fill = { 10: '#E8A87C', 20: '#F6D365', 50: '#8FD3C1' }[v] || '#CDE7B0';
+  return `<svg viewBox="0 0 100 52" width="1.9em" height="1em" role="img" aria-label="₹${v} note"><rect x="2" y="2" width="96" height="48" rx="6" fill="${fill}" stroke="#6B5B3E" stroke-width="3"/><circle cx="76" cy="26" r="13" fill="none" stroke="#6B5B3E" stroke-width="1.5" opacity=".5"/><text x="36" y="35" text-anchor="middle" font-size="24" font-weight="800" fill="#3B2F25" font-family="Mukta,system-ui,sans-serif">₹${v}</text></svg>`;
+}
+const STORY_MONEY = {
+  c1: { coins: [1, 2, 5], notes: [], n: [2, 3], max: 10 },
+  c2: { coins: [1, 2, 5, 10], notes: [10, 20, 50], n: [3, 4], max: 99 }
+};
+function storyMoneyPick(r, cls){
+  const m = STORY_MONEY[cls === 'c2' ? 'c2' : 'c1'];
+  for(let k = 0; k < 200; k++){
+    const n = m.n[0] + Math.floor(r() * (m.n[1] - m.n[0] + 1));
+    const all = m.coins.map(v => ({ v, note: false })).concat(m.notes.map(v => ({ v, note: true })));
+    const pick = [...Array(n)].map(() => all[Math.floor(r() * all.length)]).sort((x, y) => y.v - x.v);
+    const total = pick.reduce((t, p) => t + p.v, 0);
+    if(total <= m.max && pick.some(p => p.v > 1) && total !== n) return { pick, total };
+  }
+  return { pick: [{ v: 5, note: false }, { v: 2, note: false }, { v: 1, note: false }], total: 8 };
+}
+const storyRupees = (v, hi) => hi ? `${v} ${v === 1 ? 'रुपया' : 'रुपये'}` : `${v} ${v === 1 ? 'rupee' : 'rupees'}`;
+const storyAndList = (xs, and) => xs.length < 2 ? xs.join('') : xs.slice(0, -1).join(', ') + ` ${and} ` + xs[xs.length - 1];
+
+STORY_TPLS.money = {
+  classes: ['c1', 'c2'], ic: '💰',
+  skill: () => 'money2',
+  title: both("Munni's money box", 'मुन्नी की गुल्लक'),
+  build(r, o){
+    const { pick, total } = storyMoneyPick(r, o.cls);
+    const n = pick.length, right = r() < 0.5 ? 0 : 1;
+    const opts = [{ txt: '₹' + total }, { txt: '₹' + n }]; if(right) opts.reverse();
+    const items = anim => pick.map((p, i) => ({ id: 'mo' + i, ic: p.note ? storyNoteSVG(p.v) : storyMoneySVG(p.v),
+      x: 50 + (i - (n - 1) / 2) * (p.note ? 24 : 20), y: 56, size: p.note ? 54 : 58, anim, d: i * 0.15 }));
+    const plus = pick.map(p => p.v).join(' + ');
+    const each = both(storyAndList(pick.map(p => storyRupees(p.v, false)), 'and'), storyAndList(pick.map(p => storyRupees(p.v, true)), 'और'));
+    return {
+      bg: 'room', money: { values: pick.map(p => p.v), total, n },
+      scenes: [
+        { say: both("Munni's money box! Munni has saved some money. Let's look.", 'मुन्नी की गुल्लक! मुन्नी ने कुछ पैसे बचाए हैं। चलो देखें।'),
+          stage: { items: [{ id: 'box', ic: '🐷', x: 50, y: 54, size: 96, anim: 'pop' }] } },
+        { say: both(`Look at each one: ${each.en}.`, `हर एक को देखो: ${each.hi}।`),
+          stage: { items: items('pop') } },
+        { say: both('How much money does Munni have in all? Add what each one is worth!', 'मुन्नी के पास कुल कितने पैसे हैं? हर एक की कीमत जोड़ो!'),
+          stage: { items: items('bob') },
+          join: { t: 'pick', keep: true, opts, right,
+                  praise: both(`Yes! ${plus} = ${total}. That's ${storyRupees(total, false)}!`, `हाँ! ${plus} = ${total}। कुल ${storyRupees(total, true)}!`),
+                  show: both(`It's ₹${total}. Add what each one is worth, not how many there are: ${plus} = ${total}.`, `₹${total} है। गिनती नहीं, हर एक की कीमत जोड़ो: ${plus} = ${total}।`) } },
+        { say: both(`₹${total} in all! Munni can buy a banana for the jungle.`, `कुल ₹${total}! मुन्नी जंगल के लिए केले ले सकती है।`),
+          stage: { big: '₹' + total, items: items('bob').map(it => Object.assign({}, it, { y: 68 })) } }
+      ],
+      grownup: both('Put a few real coins on the table and add up together what they are worth.', 'मेज़ पर कुछ असली सिक्के रखें और साथ मिलकर उनकी कीमत जोड़ें।'),
+      home: both('Let your child "buy" something at home with play money, and count the change together.', 'घर पर खेल वाले पैसों से बच्चे को कुछ "खरीदने" दें, और साथ में हिसाब लगाएँ।')
+    };
+  }
+};
+
 /* Which templates this class gets. */
 function storyTplsFor(cls, lang){
   return Object.keys(STORY_TPLS).filter(id => STORY_TPLS[id].classes.includes(cls) && (!lang || !STORY_TPLS[id].langs || STORY_TPLS[id].langs.includes(lang)));

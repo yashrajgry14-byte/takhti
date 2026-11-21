@@ -160,6 +160,7 @@ function videoLibraryHTML(){
 
     ${typeof watchShelfHTML === 'function' ? watchShelfHTML() : ''}
     ${typeof readAlongShelfHTML === 'function' ? readAlongShelfHTML() : ''}
+    ${typeof mathStoryShelfHTML === 'function' ? mathStoryShelfHTML() : ''}
 
     ${rec && recSkill ? `
       <div class="hero-video-card glass-card">

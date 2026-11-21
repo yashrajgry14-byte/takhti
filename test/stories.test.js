@@ -155,8 +155,66 @@ const root = path.resolve(__dirname, '..');
   check('the right card or picture is in both slots for every new story', Object.values(slots).every(x => x.size === 2), JSON.stringify(Object.fromEntries(Object.entries(slots).map(([k, v]) => [k, [...v]]))));
   check('UKG gets the number train, sight words and व्यंजन (व्यंजन only in Hindi); Class 1–2 get the read-along; Nursery/LKG none of them',
     ['order', 'sight', 'vyanjan'].every(x => c.F('ukg').includes(x)) && c.F('ukg', 'en').includes('sight') && !c.F('ukg', 'en').includes('vyanjan') && c.F('ukg', 'hi').includes('vyanjan')
-    && c.F('c1').join() === 'readalong' && c.F('c2').join() === 'readalong' && !['order', 'sight', 'vyanjan', 'readalong'].some(x => c.F('nur').includes(x) || c.F('lkg').includes(x)), '');
+    && c.F('c1').includes('readalong') && c.F('c2').includes('readalong') && !['order', 'sight', 'vyanjan', 'readalong'].some(x => c.F('nur').includes(x) || c.F('lkg').includes(x)), '');
   check('each read-along story is chosen by its seed (the shelf\'s cards play the story they show)', c.R.every((p, i) => c.B('readalong', i, { cls:'c1', lang:'en' }).read === i && c.B('readalong', i + c.R.length * 3, { cls:'c1', lang:'en' }).read === i), '');
+}
+
+/* ---------------- Class 1–2 maths stories and the shape hunt (21 Nov) ---------------- */
+{
+  const c = {}; vm.createContext(c);
+  vm.runInContext(fs.readFileSync(path.join(root, 'src/content/geometry.js'), 'utf8') + fs.readFileSync(path.join(root, 'src/content/stories.js'), 'utf8')
+    + ';this.B=storyBuild;this.F=storyTplsFor;this.SS=STORY_SUMS;this.GE=geoExpect;', c);
+  const isHi = x => /[ऀ-ॿ]/.test(x), nums = x => (String(x).match(/\d+/g) || []).map(Number);
+  const faults = [], slots = { solvealong: new Set(), shapehunt: new Set() }, ops = new Set(), kinds = new Set();
+  for(let seed = 0; seed < 400; seed++) for(const cls of ['c1', 'c2']) for(const lang of ['en', 'hi']){
+    const st = c.B('solvealong', seed, { cls, lang }), { op, a, b, s: ans } = st.sum, j = st.scenes[3].join;
+    ops.add(op);
+    if(ans !== (op === 'add' ? a + b : a - b) || j.opts[j.right].num !== ans) faults.push(`sum ${a}${op}${b}: right ${j.opts[j.right].num}`);
+    const other = j.opts[1 - j.right].num;
+    if(other === ans || other < 0 || (other !== (op === 'add' ? a - b : a + b) && other !== ans + 1)) faults.push(`sum ${a}${op}${b}: other answer ${other}`);
+    if(cls === 'c1' && (a + (op === 'add' ? b : 0) > 10 || b < 2)) faults.push(`c1 out of range ${a} ${op} ${b}`);
+    if(cls === 'c2' && (a < 10 || a > 69 || (op === 'add' ? a % 10 + b > 9 : a % 10 < b))) faults.push(`c2 carries/borrows ${a} ${op} ${b}`);
+    if(st.skill !== (cls === 'c2' ? (op === 'add' ? 'add2' : 'sub2') : (op === 'add' ? 'add10' : 'sub10'))) faults.push('skill ' + st.skill);
+    // the answer is never said before the pick (unless it is one of the story's own numbers)
+    for(const sc of st.scenes.slice(0, 4)) for(const L of ['en', 'hi']) if(nums(sc.say[L]).some(n => n === ans && n !== a && n !== b)) faults.push(`says ${ans} before the pick: ${sc.say[L]}`);
+    if(!st.scenes.slice(1, 4).every(sc => sc.say.en && isHi(sc.say.hi) && sc.stage.line === sc.say)) faults.push('lines: both languages, read word by word');
+    if(op === 'add' ? !/now/.test(st.scenes[3].say.en) : !/left/.test(st.scenes[3].say.en)) faults.push('question: ' + st.scenes[3].say.en);
+    if(cls === 'c1' && (st.scenes[1].stage.items.length !== a || st.scenes[3].stage.items.length !== ans)) faults.push(`c1 pictures ${st.scenes[1].stage.items.length}/${a}, ${st.scenes[3].stage.items.length}/${ans}`);
+    if(!j.keep) faults.push('the picture must stay for the question');
+    if(JSON.stringify(st).match(/undefined|NaN|null/)) faults.push('a hole');
+    slots.solvealong.add(j.right);
+    const sh = c.B('shapehunt', seed, { cls, lang }), sj = sh.scenes[1].join;
+    kinds.add(sh.shape.kind);
+    if(sh.shape.kind === 'sides'){
+      const taught = { square: 4, rectangle: 4, triangle: 3 }[sh.shape.teach];
+      if(sj.opts[sj.right].num !== sh.shape.n || sh.shape.n !== c.GE({ t:'figure', kind: sh.shape.ask, ask:'sides', ...(sh.shape.ask === 'square' ? { s:4 } : sh.shape.ask === 'rectangle' ? { w:6, h:3 } : { sides:[4,4,4] }) }) || sj.opts[1 - sj.right].num !== taught || taught === sh.shape.n) faults.push('shape sides ' + JSON.stringify(sh.shape));
+      if(/square|rectangle|triangle|वर्ग|आयत|त्रिभुज/i.test(sh.scenes[1].say.en + sh.scenes[1].say.hi)) faults.push('the sides question names its shape');
+    } else {
+      const svg = sh.scenes[1].stage.items[0].ic;
+      if(sj.right !== sh.shape.at - 1 || !/<svg/.test(svg)) faults.push('shape find ' + JSON.stringify(sh.shape));
+    }
+    if(!sh.scenes.every(sc => sc.say.en && isHi(sc.say.hi)) || !/<svg/.test(sh.scenes[0].stage.items[0].ic) || sh.skill !== 'shapes2d') faults.push('shape hunt: both languages, drawn, shapes2d');
+    slots.shapehunt.add(sj.right);
+  }
+  check('Class 1–2 maths stories: the answer is the sum or the difference, the other answer the other operation (the real slip), never said before the question; Class 1 within 10 with a picture per thing, Class 2 two-digit without carrying or borrowing; the right skill (add10/sub10, add2/sub2); both languages, read word by word, the picture kept for the question',
+    faults.filter(f => !f.startsWith('shape')).length === 0 && ops.size === 2, faults.filter(f => !f.startsWith('shape')).slice(0, 4).join(' | '));
+  check('the shape hunt: teach on one shape, ask on another — the count read off the drawing, the other answer the count just heard, the question never naming the shape; or find the square or rectangle in a row with its look-alike, read off the row (both kinds)',
+    faults.filter(f => f.startsWith('shape')).length === 0 && kinds.size === 2, faults.filter(f => f.startsWith('shape')).slice(0, 4).join(' | '));
+  const mf = [], mslots = new Set();
+  for(let seed = 0; seed < 400; seed++) for(const cls of ['c1', 'c2']) for(const lang of ['en', 'hi']){
+    const st = c.B('money', seed, { cls, lang }), m = st.money, j = st.scenes[2].join, drawn = st.scenes[2].stage.items;
+    const sum = m.values.reduce((t, v) => t + v, 0);
+    if(m.total !== sum || j.opts[j.right].txt !== '₹' + sum || j.opts[1 - j.right].txt !== '₹' + drawn.length || drawn.length === sum) mf.push(`money ${m.values}: ${j.opts.map(o => o.txt)}`);
+    if(drawn.length !== m.values.length || drawn.some((it, i) => !it.ic.includes('₹' + m.values[i] + '<'))) mf.push('money: the drawing doesn\'t show the values');
+    if(sum > (cls === 'c2' ? 99 : 10) || !m.values.some(v => v > 1)) mf.push(`money out of range ${m.values}`);
+    for(const sc of st.scenes.slice(0, 3)) for(const L of ['en', 'hi']) if(nums(sc.say[L]).includes(sum)) mf.push(`says ${sum} before the pick: ${sc.say[L]}`);
+    if(!st.scenes.every(sc => sc.say.en && isHi(sc.say.hi)) || st.skill !== 'money2' || !j.keep) mf.push('money: both languages, money2, picture kept');
+    mslots.add(j.right);
+  }
+  check('Munni\'s money box: the coins and notes drawn with their values, the answer what they add up to, the other answer the number of coins (the real slip), never said before the question; Class 1 within ₹10, Class 2 within ₹99; money2', mf.length === 0 && mslots.size === 2, mf.slice(0, 4).join(' | '));
+  check('the right answer is in both slots for both', slots.solvealong.size === 2 && slots.shapehunt.size === 2, '');
+  check('Class 1–2 get the maths stories, the money box and the shape hunt, no other class does', ['c1', 'c2'].every(k => ['solvealong', 'shapehunt', 'money'].every(t => c.F(k).includes(t))) && !['nur', 'lkg', 'ukg', 'c3'].some(k => ['solvealong', 'shapehunt', 'money'].some(t => c.F(k).includes(t))), '');
+  check('a maths story\'s seed picks its theme and operation (the shelf\'s cards play the story they show)', c.SS.every((th, i) => c.B('solvealong', i, { cls:'c1', lang:'en' }).sum.theme === i && c.B('solvealong', i, { cls:'c1', lang:'en' }).sum.op === 'add' && c.B('solvealong', i + 5, { cls:'c1', lang:'en' }).sum.op === 'sub'), '');
 }
 
 /* ---------------- the app ---------------- */
@@ -343,6 +401,44 @@ server.listen(0, '127.0.0.1', () => {
       check('"Another story" on a read-along is the next story in the shelf', E('S.ctx.st.tpl') === 'readalong' && E('S.ctx.st.read') === 3, E('S.ctx.st.read'));
       E(`storyHome()`);
       check('…and home goes back to the Picture Hut, not to Munni\'s home', E('S.screen') === 'theater', E('S.screen'));
+
+      /* ---- Class 2: a maths story and the shape hunt, from the Picture Hut and the Counting Stones ---- */
+      child('c2', 7);
+      E(`go('theater')`);
+      check('Class 2\'s Picture Hut has a "Maths stories with Munni" shelf: five stories, the money box and the shape hunt',
+        $$('.watch-card').filter(b => /storyStart\('solvealong'/.test(b.getAttribute('onclick'))).length === 5 && ['money', 'shapehunt'].every(t => !!$$('.watch-card').find(b => new RegExp(`storyStart\\('${t}'`).test(b.getAttribute('onclick')))), '');
+      $$('.watch-card').find(b => /storyStart\('solvealong',1\)/.test(b.getAttribute('onclick'))).click();
+      check('…a card plays the story it shows (the mango basket, adding)', E('S.screen') === 'story' && E('S.ctx.st.sum.theme') === 1 && E('S.ctx.st.sum.op') === 'add', E('JSON.stringify(S.ctx.st && S.ctx.st.sum)'));
+      check('…its lines light up word by word as Munni reads them', await until(() => $$('#ststage .st-line .stw.lit').length >= 1, 20000), '');
+      check('…then the question, the picture still on the stage, two numbers to tap', await until(() => E('S.ctx.phase') === 'pick', 30000) && $$('#ststage .st-it').length >= 1 && $$('.st-opt .st-numcard').length === 2, E('S.ctx.phase'));
+      $$('.st-opt')[E('S.ctx.st.scenes[S.ctx.i].join.right')].click();
+      check('…the first tap is evidence for two-digit adding (add2)', E(`JSON.stringify(S.skillHistory['add2'])`) === JSON.stringify({ n: 1, right: 1 }), E(`JSON.stringify(S.skillHistory['add2'])`));
+      check('…then the number sentence on the stage, and the end screen', await until(() => E('S.ctx.phase') === 'end', 30000) && E('S.ctx.st.scenes[4].stage.big') === E('`${S.ctx.st.sum.a} + ${S.ctx.st.sum.b} = ${S.ctx.st.sum.s}`'), E('S.ctx.phase'));
+      E(`storyNext()`);
+      check('"Another story" is the next maths story', E('S.ctx.st.tpl') === 'solvealong' && E('S.ctx.st.sum.theme') === 2, E('S.ctx.st.sum && S.ctx.st.sum.theme'));
+      E(`storyHome()`);
+      check('…home goes back to the Picture Hut', E('S.screen') === 'theater', E('S.screen'));
+      E(`go('math')`);
+      const mb = $$('button').find(b => /mathStoryNext/.test(b.getAttribute('onclick') || ''));
+      check('the Counting Stones have a "maths story" button below the answers', !!mb && !!$('.opts') && ($('.opts').compareDocumentPosition(mb) & 4) !== 0, '');
+      mb.click();
+      check('…which plays a maths story, and home comes back to the Counting Stones', E('S.ctx.st.tpl') === 'solvealong' && (E(`storyHome()`), E('S.screen') === 'math'), E('S.screen'));
+      E(`go('theater')`);
+      $$('.watch-card').find(b => /storyStart\('shapehunt'/.test(b.getAttribute('onclick'))).click();
+      check('the shape hunt draws its shape on the stage (geometry.js\'s own drawing)', await until(() => $$('#ststage .st-geo svg').length >= 1, 10000), '');
+      check('…and asks with the drawing still there, two numbers to tap', await until(() => E('S.ctx.phase') === 'pick', 30000) && $$('#ststage .st-geo svg').length >= 1 && $$('.st-opt').length === 2, E('S.ctx.phase'));
+      $$('.st-opt')[1 - E('S.ctx.st.scenes[S.ctx.i].join.right')].click();
+      check('…the first tap is evidence for flat shapes (shapes2d), a wrong one shown kindly', E(`JSON.stringify(S.skillHistory['shapes2d'])`) === JSON.stringify({ n: 1, right: 0 }) && $$('.st-opt')[E('S.ctx.st.scenes[S.ctx.i].join.right')].classList.contains('st-right'), E(`JSON.stringify(S.skillHistory['shapes2d'])`));
+      E(`storyHome()`);
+      E(`go('theater')`);
+      $$('.watch-card').find(b => /storyStart\('money'/.test(b.getAttribute('onclick'))).click();
+      check('Munni\'s money box: the coins drawn on the stage, then how much in all, two amounts to tap', await until(() => E('S.ctx.phase') === 'pick', 30000) && $$('#ststage .st-it svg').length === E('S.ctx.st.money.n') && $$('.st-opt .st-wordcard').length === 2, E('S.ctx.phase'));
+      $$('.st-opt')[E('S.ctx.st.scenes[S.ctx.i].join.right')].click();
+      check('…the first tap is evidence for money (money2)', E(`JSON.stringify(S.skillHistory['money2'])`) === JSON.stringify({ n: 1, right: 1 }), E(`JSON.stringify(S.skillHistory['money2'])`));
+      E(`storyHome()`);
+      child('c3', 8);
+      E(`go('math')`);
+      check('Class 3 gets no maths-story button (the stories are for Class 1–2)', !$$('button').find(b => /mathStoryNext/.test(b.getAttribute('onclick') || '')), '');
 
       /* ---- Class 7: no Picture Hut ---- */
       child('c7', 12);
