@@ -619,3 +619,83 @@
 .screen[data-kid=grown] .gp-learn > .gp-h + .kicker2{display:none}   /* the card already says it */
 .screen[data-kid=grown] .stepbtn[style*="width:auto"]{border-radius:99px;font-family:'Mukta',system-ui,sans-serif;font-size:14px;font-weight:600;padding:0 14px!important}
 .screen[data-kid=grown] .row input,.screen[data-kid=grown] .row select{min-height:40px}
+
+/* ===== The daily Watch card (ui/cards.js CARD.anim, 21 Nov) =====
+   A small stage tinted by the child's game (--wcA), Munni saying the line
+   under it, a guess before the answer, and the week strip with ticks. */
+.wc{--wcA:#F0A02A}
+.wc .wc-stage.player{height:208px;border-radius:22px;border:2px solid color-mix(in srgb,var(--wcA) 45%,#fff);
+  background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--wcA) 22%,#fff) 0%,#FFFDF7 62%);
+  box-shadow:0 10px 24px -14px color-mix(in srgb,var(--wcA) 70%,#000),inset 0 -2px 0 rgba(0,0,0,.04);cursor:pointer;overflow:hidden}
+.wc .wc-ground{position:absolute;left:-10%;right:-10%;bottom:-38px;height:70px;border-radius:50%;
+  background:color-mix(in srgb,var(--wcA) 26%,#F4ECDA)}
+.wc .wc-sun{position:absolute;top:14px;right:52px;width:30px;height:30px;border-radius:50%;
+  background:radial-gradient(circle,#FFE08A 0 45%,rgba(255,224,138,0) 70%);animation:wcGlow 3s ease-in-out infinite}
+@keyframes wcGlow{50%{transform:scale(1.25);opacity:.75}}
+.wc .wc-step{position:absolute;top:10px;left:12px;z-index:2;font:700 11px/1 'Baloo 2',system-ui;letter-spacing:.04em;
+  padding:5px 9px;border-radius:99px;background:rgba(255,255,255,.85);color:#6B5A44;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.wc .wc-hear{position:absolute;top:7px;right:9px;z-index:2;width:36px;height:36px;border-radius:50%;border:0;
+  background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.12);font-size:16px;cursor:pointer}
+.wc .wc-hear:active{transform:scale(.92)}
+.wc .scene{z-index:1;padding:30px 12px 18px}
+.wc .scene.wc-boing{animation:wcBoing .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes wcBoing{0%{transform:scale(1)}35%{transform:scale(1.14) translateY(-10px)}70%{transform:scale(.96)}100%{transform:scale(1)}}
+.wc .wc-say{display:flex;align-items:flex-start;gap:9px;margin-top:10px}
+.wc .wc-munni{flex:0 0 40px;width:40px;height:40px}
+.wc .wc-munni svg{width:40px;height:40px}
+.wc .wc-say .caption{position:relative;flex:1;padding:10px 13px;border-radius:16px 16px 16px 4px;background:#fff;
+  border:1.5px solid color-mix(in srgb,var(--wcA) 35%,#EDE3CF);color:#2A2118;font-size:14.5px;line-height:1.45;
+  animation:sfade .35s ease both}
+.wc .wc-guess{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:11px}
+.wc .wc-opt{border:0;border-radius:18px;padding:13px 4px 10px;background:#fff;cursor:pointer;
+  font:800 26px/1 'Baloo 2',system-ui;color:#2A2118;box-shadow:0 4px 0 color-mix(in srgb,var(--wcA) 55%,#C9B89A),0 6px 14px -8px rgba(0,0,0,.25);
+  animation:flyin .45s cubic-bezier(.3,1.5,.5,1) both}
+.wc .wc-opt:nth-child(2){animation-delay:.08s}.wc .wc-opt:nth-child(3){animation-delay:.16s}
+.wc .wc-opt small{display:block;font:600 11px/1.2 system-ui;color:#8A7A62;margin-top:4px}
+.wc .wc-opt:active{transform:translateY(3px);box-shadow:0 1px 0 color-mix(in srgb,var(--wcA) 55%,#C9B89A)}
+.wc .wc-result{margin-top:10px;text-align:center;font:700 15px/1.3 'Baloo 2',system-ui;color:#7A5A1E;
+  padding:8px 10px;border-radius:14px;background:#FFF4DC;animation:sfade .35s ease both}
+.wc .wc-result.ok{background:#E3F6E5;color:#2E7D3A}
+.wc .wc-think{font-size:62px;position:relative;animation:bob 1.6s ease-in-out infinite}
+.wc .wc-think span{position:absolute;top:-14px;right:-26px;font:800 34px 'Baloo 2';color:var(--wcA);animation:bob 1.2s ease-in-out infinite reverse}
+.wc .wc-big{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.wc .wc-big .counter{font-size:72px;line-height:1;color:color-mix(in srgb,var(--wcA) 80%,#7A4A00);animation:sfade .4s ease both}
+.wc .wc-big small{flex-basis:100%;text-align:center;font:600 15px system-ui;color:#7B6B54;margin-top:-4px}
+.wc .wc-ic{font-size:44px;animation:bob 1.8s ease-in-out infinite}
+.wc .wc-count b{position:relative;font-size:24px}
+.wc .wc-count b em{position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);font:700 10px/1 system-ui;font-style:normal;color:#8A7A62}
+.wc .wc-count{row-gap:16px;max-width:260px}
+.wc .wc-ruler{width:250px;max-width:86%}
+.wc .wc-track{position:relative;height:14px;border-radius:99px;background:#F1E7D3;overflow:visible}
+.wc .wc-fill{position:absolute;inset:0;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--wcA) 60%,#fff),var(--wcA));
+  transform-origin:left;animation:fill 2.2s ease both}
+.wc .wc-runner{position:absolute;top:-34px;left:0;font-size:28px;transform:translateX(-50%);animation:wcRun 2.2s ease both}
+@keyframes wcRun{from{left:0}to{left:100%}}
+.wc .wc-marks{position:relative;height:22px;margin-top:6px}
+.wc .wc-marks span{position:absolute;transform:translateX(-50%);font:700 11px/1 system-ui;color:#7B6B54;padding-top:6px}
+.wc .wc-marks span::before{content:'';position:absolute;top:0;left:50%;width:2px;height:5px;background:#C9B89A}
+.wc .wc-unit{text-align:center;font:600 12px system-ui;color:#8A7A62;margin-top:2px}
+.wc .pbar{height:6px;margin-top:12px}
+.wc .pbar i.on{background:var(--wcA)}
+/* the week: done days ticked, today lifted */
+.day{position:relative}
+.day.today{transform:translateY(-3px);box-shadow:0 6px 14px -8px rgba(224,138,0,.8)}
+.day .day-tick{position:absolute;top:-6px;right:-4px;width:16px;height:16px;border-radius:50%;background:#4CAF50;color:#fff;
+  font:800 10px/16px system-ui;font-style:normal;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+/* the fact under the card */
+.factstrip .fsline{border-radius:18px;padding:10px 12px;gap:11px;animation:sfade .35s ease both}
+.factstrip .fsic{width:40px;height:40px;flex:0 0 40px;border-radius:50%;display:grid;place-items:center;font-size:22px;
+  background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.factstrip .fsbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.factstrip .fskick{font:800 10.5px/1 'Baloo 2',system-ui;letter-spacing:.06em;text-transform:uppercase;color:#B26A00}
+.factstrip .fstxt{font-size:14px;line-height:1.4}
+.factstrip .fsplay{width:32px;height:32px;flex:0 0 32px;border-radius:50%;display:grid;place-items:center;background:#fff;font-size:14px}
+.factstrip .fsmore{display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:16px;padding:9px 12px;font-weight:700}
+.factstrip .fsmore small{font-size:10px;opacity:.65;font-weight:600}
+@media (prefers-reduced-motion: reduce){
+  .wc .wc-fill,.wc .wc-runner,.wc .wc-opt,.wc .wc-think,.wc .wc-think span,.wc .wc-ic,.wc .wc-sun{animation:none}
+  .wc .wc-runner{left:100%}
+}
+.factstrip{flex-direction:column;align-items:stretch;gap:7px}
+.factstrip .fsmore{flex-direction:row;align-self:flex-end;gap:7px;padding:7px 14px}
+.wc .wc-munni,.wc .wc-munni svg{width:46px;height:46px;flex-basis:46px}
