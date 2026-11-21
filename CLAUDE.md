@@ -92,7 +92,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js, ui/playful.js
 ```
 
-`sw.js` caches the app shell as `takhti-v97` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v100` (recorded narration lives in a
 separate `takhti-audio-v2`, filmed clips in `takhti-video-v1` (kept the first time
 each plays), bumped only when a line is rendered again in a new
 voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship
@@ -474,6 +474,18 @@ also arrives (and is withdrawn) through the sync — see **The learning
 circle**.
 
 ## The teacher view
+
+**Sign-in, and the demo class (21 Nov).** Since PR #11 a real class opens
+only for a server-verified teacher (`teacherVerified()`). Without one, the
+screen offers *Open the demo class*: a class code starting `DEMO`
+(`TEACHER_DEMO_RE`, DEMO01…) opens anyway, labelled as the demo class, and
+while it draws, `readClassShared()` returns only the labelled demo children
+(`demoOnlyRows()`, `TEACHER_DEMO_VIEW`) — no other child on the phone, none
+from another phone. The sync switch, *Sync now* and progress codes are left
+out, and `toggleClassSync()` refuses without a sign-in. Writes read
+`localStorage` themselves, so the filter never drops a record. So the demo
+works on a deploy with no Firebase, and a real code (ABC123) stays locked.
+`test/demo.test.js` checks all of it.
 
 `ui/teacher.js`, behind the parent PIN. Reads the class-code mirror for a code
 — children on this phone, plus children on other phones whose parent sent a

@@ -347,7 +347,11 @@ function readClassShared(classCode){
   if(!classCode) return {};
   try{
     const raw = localStorage.getItem(classMirrorKey(classCode));
-    return raw ? JSON.parse(raw) : {};
+    const all = raw ? JSON.parse(raw) : {};
+    // The teacher view's demo class (ui/teacher.js) reads only the demo
+    // children while it draws; every write reads localStorage itself.
+    return (typeof TEACHER_DEMO_VIEW !== 'undefined' && TEACHER_DEMO_VIEW && TEACHER_DEMO_VIEW === classCode && typeof demoOnlyRows === 'function')
+      ? demoOnlyRows(all) : all;
   }catch(e){ return {}; }
 }
 
