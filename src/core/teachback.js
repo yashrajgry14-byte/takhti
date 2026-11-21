@@ -397,6 +397,22 @@ function teachAdvance(s, lead){
   } else s.line = tJoin(lead, teachPrompt(s.items[s.i]));
 }
 
+/* A child may catch the arithmetic before explaining the mechanism:
+   "9x3 is 27 not 36" is correct, but it does not yet explain Appu's
+   group-counting mistake. Acknowledge the valid correction and ask for
+   reasoning instead of treating the turn as a completely missed answer. */
+function teachFixCorrectedResult(it, text){
+  if(!it || !it.fix || it.phase !== 'why') return false;
+  const f=it.fix, p=f.p||{};
+  if(!Number.isInteger(p.a)||!Number.isInteger(p.b)||!Number.isInteger(f.ans)) return false;
+  const signs={ '+':'\\+', '−':'[−-]', '-':'[−-]', '×':'[×xX*]', '*':'[×xX*]', '÷':'[÷/]' };
+  const op=signs[p.op];
+  if(!op) return false;
+  const expression=new RegExp('(?:^|\\\\D)'+p.a+'\\\\s*'+op+'\\\\s*'+p.b+'(?=\\\\D|$)');
+  const answer=new RegExp('(?:^|\\\\D)'+f.ans+'(?=\\\\D|$)');
+  return expression.test(String(text||'')) && answer.test(String(text||''));
+}
+
 /* The child explained something. `verdicts` (optional) are the online
    judge's, already grounded; without them the offline rubric decides. */
 function teachHeard(s, text, verdicts, how){
@@ -410,6 +426,18 @@ function teachHeard(s, text, verdicts, how){
     if(other === it || other.state !== 'todo' || other.fix) continue;
     const ov = verdicts && verdicts[other.aim.id] ? verdicts[other.aim.id] : teachRubric(other.aim.ideas, text).verdict;
     if(ov === 'covered') other.state = 'covered';
+  }
+  if(v !== 'covered' && it.fix && it.hints === 0 && teachFixCorrectedResult(it, text)){
+    // Preserve the learning objective: knowing 27 is not yet an explanation
+    // of *why* Appu got 36. One conversational nudge, with no false credit.
+    it.hints++; it.first = false;
+    const p=it.fix.p, ans=it.fix.ans;
+    s.hint = {
+      en: `Yes! ${p.a} × ${p.b} is ${ans}. Can you show me how you worked it out, and which step Appu mixed up?`,
+      hi: `बिलकुल! ${p.a} × ${p.b} = ${ans}। तुमने यह कैसे निकाला, और अप्पू किस कदम पर उलझा?`
+    };
+    s.line = s.hint;
+    return 'partly';
   }
   if(v === 'covered'){
     it.state = 'covered';
