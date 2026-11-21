@@ -306,6 +306,14 @@ async function teachType(){
 }
 async function teachText(text, how){
   if(!TEACH) return;
+  // A correct arithmetic result without the reasoning is a quick, local
+  // follow-up, not an expensive 9-second Gemini wait. Ask how they reached
+  // it immediately; still use the online judge for conceptual explanations.
+  const it=teachItem(TEACH.s);
+  if(it && it.fix && it.hints===0 && teachFixCorrectedResult(it,text)
+    && teachRubric(teachIdeas(it),text).verdict !== 'covered'){
+    return teachJudged({transcript:text,judge:null,provider:how});
+  }
   const url = text.trim() ? teachJudgeUrl() : '';
   if(url){
     TEACH.busy = 'judge'; render();

@@ -114,6 +114,29 @@ function box(){
   check('this child\'s own habit wins: after taking the smaller digit from the bigger twice, Appu acts out exactly that',
     E(`(() => { const f = teachFixFor('borrow', 99); return f.mistake === 'smallbig' && f.habit === true; })()`), E(`JSON.stringify([twinHabit('borrow'), teachFixFor('borrow', 99).mistake])`));
 
+  // Regression: Appu should acknowledge a correct answer, not repeat a generic
+  // prompt, when the child still needs to explain WHY the multiplication was wrong.
+  const sample = `var correctionSample = {
+    items:[{aim:{id:'tables.fix'},fix:{p:{a:9,b:3,op:'×'},ans:27,wrong:36,
+      ideas:TEACH_FIX_IDEAS.groupcount},phase:'why',state:'todo',hints:0,unsure:0,first:true}],
+    i:0,done:false,heard:[],hint:null,line:{en:'Where did I slip?',hi:'कहाँ गड़बड़ हुई?'}
+  }`;
+  E(sample);
+  check('Appu acknowledges a correct 9x3=27 correction and asks how, without awarding mastery',
+    E(`teachHeard(correctionSample,'9x3 is 27 not 36')`) === 'partly'
+      && E(`correctionSample.items[0].state === 'todo' && correctionSample.items[0].hints === 1
+        && correctionSample.heard[0].verdict === 'partly'
+        && /9 × 3 is 27/.test(correctionSample.line.en)
+        && /how you worked it out/.test(correctionSample.line.en)`),
+    E(`JSON.stringify([correctionSample.line.en,correctionSample.items[0].state])`));
+  check('Appu advances once the child explains the multiplication concept',
+    E(`teachHeard(correctionSample,'three groups of nine make twenty seven')`) === 'covered'
+      && E(`correctionSample.done && correctionSample.items[0].state === 'covered'`), E(`correctionSample.line.en`));
+  E(sample.replace('var correctionSample','var wrongSample'));
+  check('an incorrect numerical answer is not treated as a valid correction',
+    E(`teachHeard(wrongSample,'9x3 is 36')`) !== 'partly' ||
+      E(`!(/Yes! 9/.test(wrongSample.line.en))`), E(`wrongSample.line.en`));
+
   // a whole session
   E(`S.twin = null; S.skillHistory = {}; S.teach = null; var U = teachUnitBuiltin('borrow'); var s = teachBegin(U)`);
   check('a session starts with "Elephants never forget…" and the first point\'s question, in both languages',

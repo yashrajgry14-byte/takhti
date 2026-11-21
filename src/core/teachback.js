@@ -397,6 +397,24 @@ function teachAdvance(s, lead){
   } else s.line = tJoin(lead, teachPrompt(s.items[s.i]));
 }
 
+/* A child may catch the arithmetic before explaining the mechanism:
+   "9x3 is 27 not 36" is correct, but it does not yet explain Appu's
+   group-counting mistake. Acknowledge the valid correction and ask for
+   reasoning instead of treating the turn as a completely missed answer. */
+function teachFixCorrectedResult(it, text){
+  if(!it || !it.fix || it.phase !== 'why') return false;
+  const f=it.fix, p=f.p||{};
+  if(!Number.isInteger(p.a)||!Number.isInteger(p.b)||!Number.isInteger(f.ans)) return false;
+  const ops={ '+':['+'], '−':['−','-'], '-':['−','-'],
+    '×':['×','x','X','*'], '*':['×','x','X','*'], '÷':['÷','/'] }[p.op];
+  if(!ops) return false;
+  // Tokenize rather than interpolating escaped regular expressions. This
+  // handles "9x3", "9 × 3", and "9*3" without matching numbers inside 19.
+  const tokens=String(text||'').match(/\d+|[+−×xX*÷\/\-]/g)||[];
+  return tokens.includes(String(f.ans)) && tokens.some((token,i)=>
+    token===String(p.a) && ops.includes(tokens[i+1]) && tokens[i+2]===String(p.b));
+}
+
 /* The child explained something. `verdicts` (optional) are the online
    judge's, already grounded; without them the offline rubric decides. */
 function teachHeard(s, text, verdicts, how){
@@ -410,6 +428,20 @@ function teachHeard(s, text, verdicts, how){
     if(other === it || other.state !== 'todo' || other.fix) continue;
     const ov = verdicts && verdicts[other.aim.id] ? verdicts[other.aim.id] : teachRubric(other.aim.ideas, text).verdict;
     if(ov === 'covered') other.state = 'covered';
+  }
+  if(v !== 'covered' && it.fix && it.hints === 0 && teachFixCorrectedResult(it, text)){
+    // Preserve the learning objective: knowing 27 is not yet an explanation
+    // of *why* Appu got 36. One conversational nudge, with no false credit.
+    it.hints++; it.first = false;
+    s.heard[s.heard.length - 1].verdict = 'partly';
+    const p=it.fix.p, ans=it.fix.ans;
+    const op=String(p.op || '×');
+    s.hint = {
+      en: `Yes! ${p.a} ${op} ${p.b} is ${ans}. Can you show me how you worked it out, and which step Appu mixed up?`,
+      hi: `बिलकुल! ${p.a} ${op} ${p.b} = ${ans}। तुमने यह कैसे निकाला, और अप्पू किस कदम पर उलझा?`
+    };
+    s.line = s.hint;
+    return 'partly';
   }
   if(v === 'covered'){
     it.state = 'covered';
