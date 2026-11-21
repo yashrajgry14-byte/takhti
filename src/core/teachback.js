@@ -405,7 +405,7 @@ function teachFixCorrectedResult(it, text){
   if(!it || !it.fix || it.phase !== 'why') return false;
   const f=it.fix, p=f.p||{};
   if(!Number.isInteger(p.a)||!Number.isInteger(p.b)||!Number.isInteger(f.ans)) return false;
-  const signs={ '+':'\\+', '−':'[−-]', '-':'[−-]', '×':'[×xX*]', '*':'[×xX*]', '÷':'[÷/]' };
+  const signs={ '+':'[+]', '−':'[−-]', '-':'[−-]', '×':'[×xX*]', '*':'[×xX*]', '÷':'[÷/]' };
   const op=signs[p.op];
   if(!op) return false;
   const expression=new RegExp('(?:^|\\\\D)'+p.a+'\\\\s*'+op+'\\\\s*'+p.b+'(?=\\\\D|$)');
@@ -431,10 +431,12 @@ function teachHeard(s, text, verdicts, how){
     // Preserve the learning objective: knowing 27 is not yet an explanation
     // of *why* Appu got 36. One conversational nudge, with no false credit.
     it.hints++; it.first = false;
+    s.heard[s.heard.length - 1].verdict = 'partly';
     const p=it.fix.p, ans=it.fix.ans;
+    const op=String(p.op || '×');
     s.hint = {
-      en: `Yes! ${p.a} × ${p.b} is ${ans}. Can you show me how you worked it out, and which step Appu mixed up?`,
-      hi: `बिलकुल! ${p.a} × ${p.b} = ${ans}। तुमने यह कैसे निकाला, और अप्पू किस कदम पर उलझा?`
+      en: `Yes! ${p.a} ${op} ${p.b} is ${ans}. Can you show me how you worked it out, and which step Appu mixed up?`,
+      hi: `बिलकुल! ${p.a} ${op} ${p.b} = ${ans}। तुमने यह कैसे निकाला, और अप्पू किस कदम पर उलझा?`
     };
     s.line = s.hint;
     return 'partly';
