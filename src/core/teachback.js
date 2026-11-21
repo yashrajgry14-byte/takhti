@@ -405,12 +405,14 @@ function teachFixCorrectedResult(it, text){
   if(!it || !it.fix || it.phase !== 'why') return false;
   const f=it.fix, p=f.p||{};
   if(!Number.isInteger(p.a)||!Number.isInteger(p.b)||!Number.isInteger(f.ans)) return false;
-  const signs={ '+':'[+]', '−':'[−-]', '-':'[−-]', '×':'[×xX*]', '*':'[×xX*]', '÷':'[÷/]' };
-  const op=signs[p.op];
-  if(!op) return false;
-  const expression=new RegExp('(?:^|\\\\D)'+p.a+'\\\\s*'+op+'\\\\s*'+p.b+'(?=\\\\D|$)');
-  const answer=new RegExp('(?:^|\\\\D)'+f.ans+'(?=\\\\D|$)');
-  return expression.test(String(text||'')) && answer.test(String(text||''));
+  const ops={ '+':['+'], '−':['−','-'], '-':['−','-'],
+    '×':['×','x','X','*'], '*':['×','x','X','*'], '÷':['÷','/'] }[p.op];
+  if(!ops) return false;
+  // Tokenize rather than interpolating escaped regular expressions. This
+  // handles "9x3", "9 × 3", and "9*3" without matching numbers inside 19.
+  const tokens=String(text||'').match(/\d+|[+−×xX*÷/\-]/g)||[];
+  return tokens.includes(String(f.ans)) && tokens.some((token,i)=>
+    token===String(p.a) && ops.includes(tokens[i+1]) && tokens[i+2]===String(p.b));
 }
 
 /* The child explained something. `verdicts` (optional) are the online
