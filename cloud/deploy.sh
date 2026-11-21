@@ -49,18 +49,23 @@ done
 echo "5/5 Building and deploying (a few minutes the first time)…"
 # Firebase Authentication must be configured separately. Never silently
 # treat the parent PIN or a class code as an identity. Unconfigured sync fails closed.
-# --update-env-vars, not --set-env-vars: --set removes every other setting,
-# so each redeploy undid the models set by hand (GEMINI_MODEL=flash-lite
-# first for drafting, TAKHTI_TEACH_MODEL) and drafting went back to a
-# model that hangs for a minute. To drop a setting: --remove-env-vars.
-AUTH_VARS="TAKHTI_SYNC_BUCKET=${BUCKET}"
+# The models: drafting starts on flash-lite (Hydrogen as drafting's first
+# model hung for over a minute on 20 Nov); Teach Appu's judge starts on
+# Hydrogen (3–4.5 s). Override any of them by exporting it before running.
+# --update-env-vars (not --set-env-vars) so a redeploy keeps every variable
+# already set on the service by hand. Values are joined with "@" (gcloud's
+# ^@^ delimiter) because GEMINI_FALLBACK_MODEL may itself be a comma list.
+ENV_VARS="TAKHTI_SYNC_BUCKET=${BUCKET}"
+ENV_VARS="${ENV_VARS}@GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.5-flash-lite}"
+ENV_VARS="${ENV_VARS}@GEMINI_FALLBACK_MODEL=${GEMINI_FALLBACK_MODEL:-gemini-4-hydrogen}"
+ENV_VARS="${ENV_VARS}@TAKHTI_TEACH_MODEL=${TAKHTI_TEACH_MODEL:-gemini-4-hydrogen}"
 if [ -n "${FIREBASE_PROJECT_ID:-}" ] && [ -n "${FIREBASE_WEB_API_KEY:-}" ]; then
-  AUTH_VARS="${AUTH_VARS},FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID},FIREBASE_WEB_API_KEY=${FIREBASE_WEB_API_KEY}"
+  ENV_VARS="${ENV_VARS}@FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}@FIREBASE_WEB_API_KEY=${FIREBASE_WEB_API_KEY}"
 fi
 gcloud run deploy "$SERVICE" --source . --project "$PROJECT" --region "$REGION" \
   --allow-unauthenticated \
   --set-secrets "GEMINI_API_KEY=${SECRET}:latest" \
-  --update-env-vars "$AUTH_VARS" \
+  --update-env-vars "^@^${ENV_VARS}" \
   --timeout 300 --memory 512Mi --cpu 1 --min-instances 0 --max-instances 3 \
   --quiet
 

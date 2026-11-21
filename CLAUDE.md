@@ -92,7 +92,7 @@ ui/self-listen.js, ui/talk-munni.js, ui/cloud-read.js, ui/say-it.js, ui/circle.j
 app.js, ui/playful.js
 ```
 
-`sw.js` caches the app shell as `takhti-v102` (recorded narration lives in a
+`sw.js` caches the app shell as `takhti-v103` (recorded narration lives in a
 separate `takhti-audio-v2`, filmed clips in `takhti-video-v1` (kept the first time
 each plays), bumped only when a line is rendered again in a new
 voice — `build-audio.mjs --force` keeps the filename). **Bump `CACHE` whenever you ship

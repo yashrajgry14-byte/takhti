@@ -63,7 +63,16 @@ function demoAdd(code){
     S.profiles.push(p);
     mirrorToClassNow(p);
   }
-  log(0, `Demo class · added ${DEMO_KIDS.map(k => k.name).join(' and ')} to class ${code} · their records were written by the mind's and the twin's own functions · never synced`);
+  // The demo children are 8, so a class with no grade set yet becomes Class 3 —
+  // the teacher's "This class is" box and the syllabus card then both start
+  // there (and on its book, Maths Mela 3) instead of empty and Class 2. A class
+  // the teacher already set is left alone.
+  let graded = '';
+  if(typeof setSchoolClass === 'function' && typeof readClassShared === 'function' && !(readClassShared(code)._roster || {}).cls){
+    setSchoolClass(code, 'c3');
+    graded = ' · the class had no grade, so it is now Class 3 (the demo children are 8)';
+  }
+  log(0, `Demo class · added ${DEMO_KIDS.map(k => k.name).join(' and ')} to class ${code} · their records were written by the mind's and the twin's own functions · never synced${graded}`);
   save();
   return { ok: true };
 }
