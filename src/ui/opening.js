@@ -38,7 +38,7 @@ function runOpening(){
     saveSoon();
     const g = gameById(S.game);
     // the greeting is spoken, not just printed — this is the moment the app feels alive
-    setTimeout(()=> speak(GREETS[S.lang][(S.visits-1)%GREETS[S.lang].length](S.name)), 260);
+    setTimeout(()=> speak(GREETS[S.lang][(S.ctx.helloAt ?? S.visits-1)%GREETS[S.lang].length](S.name)), 260);
     log(0, `Opening · ${g.type} timeline · greeting spoken via on-device TTS`);
     setTimeout(()=>{                       // motion, then impact
       if(S.screen!=='open') return;

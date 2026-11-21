@@ -217,6 +217,16 @@ to `map`. `S.lastOpen` records the day. The pick screen promises "every day
 will start with it" — this is what keeps that true. `switchProfile()` uses the
 same routing (or onboarding, for a profile missing an avatar/age).
 
+**The opening's scene** (`VIEWS.open`, 21 Nov): a tall sky-and-ground frame
+in the game's colour with a small "Watch this…" tag in the corner. A launch
+game's ball arcs into a target ring; a chase ends with the tag; a reveal pops
+out of its hiding place. At impact (phase 1) the scene stays where it ended
+(`.still`, no replay), and a ring, short rays and a ⭐ come from the spot it
+happened (`--bx`/`--by`), with confetti — nothing drawn across the frame
+(the old "glass crack" lines read as scribbles). Under it: "your card for
+today is coming" and a small *Skip →*. The greeting is picked once per
+opening (`S.ctx.helloAt`), so it no longer changes between phases.
+
 **The jungle map** (`jungle-map.js`) is the hub every screen returns to. Seven
 places, gated by the child's age band (`mapVisible()`), never appearing and
 disappearing between visits:

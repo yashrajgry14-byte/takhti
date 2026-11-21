@@ -66,38 +66,43 @@ open(){
   const g = gameById(S.game);
   const phase = S.ctx.phase || 0;
   const name = S.name;
-  const hello = GREETS[S.lang][S.visits % GREETS[S.lang].length](name);
+  // the greeting is chosen once per opening: runOpening() counts the visit
+  // after the first frame, and the line mustn't change mid-scene
+  if(S.ctx.helloAt == null) S.ctx.helloAt = S.visits;
+  const hello = GREETS[S.lang][S.ctx.helloAt % GREETS[S.lang].length](name);
 
   if(phase < 2){
-    let scene = '';
-    if(g.type==='launch') scene = `
+    const hi = S.lang==='hi';
+    // where the moment of impact happens, so the burst comes from there
+    let scene = '', bx = '50%', by = '40%';
+    if(g.type==='launch'){ scene = `
+      <div class="goal"></div>
       <div class="actor a-launch">${g.actor}</div>
-      <div class="proj p-launch">${g.proj}</div>`;
-    else if(g.type==='chase') scene = `
+      <div class="proj p-launch">${g.proj}</div>`; bx = '78%'; by = '58%'; }
+    else if(g.type==='chase'){ scene = `
       <div class="dust">💨</div>
       <div class="actor a-chase2">${g.actor2||'🏃'}</div>
-      <div class="actor a-chase">${g.actor}</div>`;
-    else scene = `
-      <div class="hidebox">${g.hide||'🌳'}</div>
-      <div class="actor a-reveal">${g.actor}</div>`;
+      <div class="actor a-chase">${g.actor}</div>`; bx = '62%'; by = '96px'; }
+    else { scene = `
+      <div class="actor a-reveal">${g.actor}</div>
+      <div class="hidebox">${g.hide||'🌳'}</div>`; by = '150px'; }
+    const tag = phase===1 ? (hi?'आज का कार्ड!':'Today\'s card!') : (hi?'देखो ज़रा…':'Watch this…');
     return `
-    <div class="greet">${hello}<small>${S.lang==='hi'?g.hi:g.en} ${g.ic}</small></div>
-    <div class="arena" id="arena" style="--gAccent:${g.accent}33">
-      <div class="bubble">${S.lang==='hi'?'देखो ज़रा…':'Watch this…'}</div>
-      <div class="ground"></div><div class="crowd">▪▪▪▪▪▪▪▪▪▪▪▪</div>
+    <div class="greet">${hello}<small>${g.ic} ${hi?g.hi:g.en}</small></div>
+    <div class="arena${phase===1?' still':''}" id="arena"
+         style="--gAccent:${g.accent}55;--gSolid:${g.accent};--gLine:${g.accent};--bx:${bx};--by:${by}">
+      <div class="scene-tag${phase===1?' hit':''}"><i></i>${tag}</div>
+      <div class="ground"></div>
       ${scene}
       ${phase===1?`<div class="flash"></div>
-        <svg class="crack" viewBox="0 0 300 236" preserveAspectRatio="none" fill="none"
-             stroke="${g.accent}" stroke-width="2.5" stroke-linecap="round">
-          <path d="M150 118 L96 40 M150 118 L214 34 M150 118 L58 96 M150 118 L252 132
-                   M150 118 L104 206 M150 118 L206 202 M96 40 L74 16 M214 34 L238 12
-                   M58 96 L26 82 M252 132 L286 150 M104 206 L88 232 M206 202 L226 228" opacity=".9"/>
-          <circle cx="150" cy="118" r="17" fill="${g.accent}" opacity=".35" stroke="none"/>
-        </svg>
+        <div class="burst">${[...Array(10)].map((_,i)=>`<b style="--r:${i*36}deg"></b>`).join('')}<em>⭐</em></div>
         <div class="confetti">${[...Array(14)].map((_,i)=>
-          `<i style="left:${6+i*6.6}%;background:${[g.accent,'#F0A02A','#EDE6D2','#E8447C'][i%4]};animation-delay:${(i%5)*.08}s"></i>`).join('')}</div>`:''}
+          `<i style="left:${6+i*6.6}%;background:${[g.accent,'#F0A02A','#2F5ECC','#E8447C'][i%4]};animation-delay:${(i%5)*.08}s"></i>`).join('')}</div>`:''}
     </div>
-    <button class="btn ghost" style="margin-top:14px" onclick="skipOpening()">${S.lang==='hi'?'छोड़ो, आगे चलो':'Skip'}</button>`;
+    <div class="open-foot">
+      <div class="open-next"><span class="dots"><i></i><i></i><i></i></span>${hi?'आज का कार्ड आ रहा है':'Your card for today is coming'}</div>
+      <button class="skipbtn" onclick="skipOpening()">${hi?'छोड़ो →':'Skip →'}</button>
+    </div>`;
   }
 
   /* phase 2 — whatever today's format knocked loose */

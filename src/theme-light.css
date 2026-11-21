@@ -51,7 +51,7 @@ body{
 .back{color:#6E6355}
 
 /* dark panels inside the app become soft cards */
-.padwrap,.player,.field,.mathstage,.panelstage,.arena{
+.padwrap,.player,.field,.mathstage,.panelstage{
   background:rgba(255,255,255,.75);border-color:rgba(42,33,24,.14)}
 .caption{color:#2A2118;background:linear-gradient(transparent,rgba(255,255,255,.92) 45%)}
 #guide{opacity:.16}
@@ -96,7 +96,11 @@ body{
 .notice{color:#6E6355}
 
 /* speech bubbles and the mascot need a touch more weight on light ground */
-.bubble{background:#16302B;color:#F3EEE0}
+.scene-tag{background:#16302B;color:#F3EEE0}
+/* the opening's scene: a daylight sky over the game's own ground */
+.arena{background:linear-gradient(180deg,#D7ECF7 0%,#F4F8F2 72%);border-color:rgba(42,33,24,.12)}
+.arena:before{background:radial-gradient(circle,rgba(255,196,64,.55) 0%,rgba(255,196,64,0) 68%)}
+.skipbtn{border-color:rgba(42,33,24,.2);color:#6E6355;background:rgba(255,255,255,.6)}
 
 
 .elephbubble{background:#16302B;color:#F3EEE0}
