@@ -347,7 +347,7 @@ math(){
   <div class="opts" style="margin-top:12px">
     ${p.opts.map(o=>`<button class="opt ${S.ctx.picked!=null&&o===p.ans?'right':''} ${S.ctx.picked===o&&o!==p.ans?'wrong':''}" onclick="answerMath(${o})">${o}</button>`).join('')}
   </div>
-  ${storyTplsFor(band().cls).includes('solvealong') ? `<button class="btn leaf" style="margin-top:10px;width:100%" onclick="mathStoryNext()">🧮 ${S.lang==='hi'?'मुन्नी के साथ गणित की एक कहानी':'A maths story with Munni'}</button>` : ''}
+  ${['solvealong', 'measure'].some(t => storyTplsFor(band().cls).includes(t)) ? `<button class="btn leaf" style="margin-top:10px;width:100%" onclick="mathStoryNext()">🧮 ${S.lang==='hi'?'मुन्नी के साथ गणित की एक कहानी':'A maths story with Munni'}</button>` : ''}
   ${S.ctx.msg? `<div class="feedback" style="text-align:center;margin-top:14px">${S.ctx.msg}</div>`:''}
   ${twinTipHTML(p)}
   ${mindIdeaHTML()}

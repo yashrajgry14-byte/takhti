@@ -52,7 +52,7 @@ function storyCls(){ const c = band().cls; return storyTplsFor(c).length ? c : '
 function storyList(){
   const cls = storyCls(), lang = S.lang === 'hi' ? 'hi' : 'en';
   const own = storyTplsFor(cls, lang);
-  return (cls === 'c1' || cls === 'c2') ? own.concat(storyTplsFor('ukg', lang).filter(id => !own.includes(id))) : own;
+  return ['c1', 'c2', 'c3'].includes(cls) ? own.concat(storyTplsFor('ukg', lang).filter(id => !own.includes(id))) : own;
 }
 
 /* Today's stories, best first. Munni's pick is the one whose skill this
@@ -376,6 +376,7 @@ function storyNext(){
   if(st.tpl === 'solvealong') return storyStart('solvealong', mathStorySeed((st.sum.theme + 1) % STORY_SUMS.length));
   if(st.tpl === 'shapehunt') return storyStart('shapehunt', (storyRec().n.shapehunt || 0) + 1);
   if(st.tpl === 'money') return storyStart('money', (storyRec().n.money || 0) + 1);
+  if(st.tpl === 'measure') return storyStart('measure', (storyRec().n.measure || 0) + 1);
   const o = storyOrder().filter(id => id !== st.tpl); storyStart(o[0] || st.tpl);
 }
 /* A read-along story's seed: which story (its place in the bank), and how
@@ -485,10 +486,18 @@ function readAlongShelfHTML(){
 function mathStorySeed(theme){ return theme + STORY_SUMS.length * (storyRec().n.solvealong || 0); }
 /* The Picture Hut's shelf of maths stories, and the shape hunt. */
 function mathStoryShelfHTML(){
-  if(!storyTplsFor(band().cls).includes('solvealong')) return '';
+  const mine = storyTplsFor(band().cls), card = (tpl, ic) => `
+      <button class="watch-card glass-card" onclick="storyStart('${tpl}',${storyRec().n[tpl] || 0})">
+        <span class="wc-thumb">${ic}</span>
+        <span class="vc-title">${TX(STORY_TPLS[tpl].title)}</span>
+      </button>`;
+  if(!mine.includes('solvealong')) return mine.includes('measure') ? `
+    <div class="theater-h">🧮 ${L2('Maths stories with Munni', 'मुन्नी के साथ गणित की कहानियाँ')}</div>
+    <div class="video-grid">${card('measure', '📏')}</div>` : '';
   return `
     <div class="theater-h">🧮 ${L2('Maths stories with Munni', 'मुन्नी के साथ गणित की कहानियाँ')}</div>
     <div class="video-grid">
+      ${mine.includes('measure') ? card('measure', '📏') : ''}
       ${STORY_SUMS.map((th, i) => `
         <button class="watch-card glass-card" onclick="storyStart('solvealong',${mathStorySeed(i)})">
           <span class="wc-thumb">${th.ic}</span>
@@ -505,7 +514,10 @@ function mathStoryShelfHTML(){
     </div>`;
 }
 /* The Counting Stones' button: the next maths story. */
-function mathStoryNext(){ storyStart('solvealong', mathStorySeed((storyRec().n.solvealong || 0) % STORY_SUMS.length)); }
+function mathStoryNext(){
+  if(!storyTplsFor(band().cls).includes('solvealong')) return storyStart('measure', storyRec().n.measure || 0);   // Class 3: the ruler
+  storyStart('solvealong', mathStorySeed((storyRec().n.solvealong || 0) % STORY_SUMS.length));
+}
 
 /* The Reading Tree's button: the next story in the bank. */
 function readAlongNext(){ storyStart('readalong', readAlongSeed((storyRec().n.readalong || 0) % STORY_READS.length)); }

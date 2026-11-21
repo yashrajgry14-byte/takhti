@@ -1122,6 +1122,93 @@ STORY_TPLS.money = {
   }
 };
 
+/* Class 2–3: Munni's ruler (measure3). A ruler drawn here, to scale, a
+   thing laid along it; the answer read off the drawing. The other answer is
+   the real slip: counting the marks instead of the spaces (one more), or
+   reading the number at the end when the thing doesn't start at 0. Or two
+   things on two rulers: which is longer? — the one that ends further along
+   isn't, when it started later. */
+const STORY_RULER_THINGS = {
+  pencil: { name: both('pencil', 'पेंसिल'), f: true,  fill: '#F4C542', tip: true },
+  ribbon: { name: both('ribbon', 'रिबन'),   f: false, fill: '#E8779C' },
+  stick:  { name: both('stick', 'डंडी'),    f: true,  fill: '#A9744F' },
+  crayon: { name: both('crayon', 'क्रेयॉन'), f: false, fill: '#5DA9E9', tip: true }
+};
+/* Hindi agrees with the thing: पेंसिल लंबी है, रिबन लंबा है. */
+const storyHiG = (thing, f, m) => STORY_RULER_THINGS[thing].f ? f : m;
+function storyRulerSVG(rows, N){
+  const W = 300, x0 = 12, sc = (W - 2 * x0) / N, H = 62 * rows.length + 6;
+  const g = rows.map((r, k) => {
+    const y = 6 + k * 62, th = STORY_RULER_THINGS[r.thing];
+    const xa = x0 + r.s * sc, xb = x0 + (r.s + r.L) * sc;
+    const tip = th.tip ? `<polygon points="${xb - 10},${y + 4} ${xb},${y + 11} ${xb - 10},${y + 18}" fill="#E9D3A6" stroke="#5B4636" stroke-width="1.2"/>` : '';
+    const body = `<rect x="${xa}" y="${y + 4}" width="${Math.max(4, xb - xa - (th.tip ? 10 : 0))}" height="14" rx="3" fill="${th.fill}" stroke="#5B4636" stroke-width="1.2"/>${tip}`;
+    const ticks = [...Array(N + 1).keys()].map(i => `<line x1="${x0 + i * sc}" y1="${y + 24}" x2="${x0 + i * sc}" y2="${y + 34}" stroke="#3B2F25" stroke-width="1.4"/><text x="${x0 + i * sc}" y="${y + 47}" text-anchor="middle" font-size="11" fill="#3B2F25" font-family="Mukta,system-ui,sans-serif">${i}</text>`).join('');
+    const label = rows.length > 1 ? `<text x="${W - 4}" y="${y + 16}" text-anchor="end" font-size="13" font-weight="800" fill="#3B2F25">${k + 1}</text>` : '';
+    return `${body}<rect x="${x0 - 4}" y="${y + 22}" width="${W - 2 * x0 + 8}" height="30" rx="4" fill="#FFF3C4" stroke="#C9A227" stroke-width="1.2" opacity=".9"/>${ticks}${label}`;
+  }).join('');
+  return `<span class="st-geo row"><svg class="geo" viewBox="0 0 ${W} ${H}" width="${W}" role="img" aria-label="a ruler">${g}</svg></span>`;
+}
+
+STORY_TPLS.measure = {
+  classes: ['c2', 'c3'], ic: '📏',
+  skill: () => 'measure3',
+  title: both("Munni's ruler", 'मुन्नी का पैमाना'),
+  build(r, o){
+    const seed = o.seed || 0, kind = ['zero', 'offset', 'longer'][seed % 3], N = 12;
+    const ri = (lo, hi) => lo + Math.floor(r() * (hi - lo + 1));
+    const things = Object.keys(STORY_RULER_THINGS), T = STORY_RULER_THINGS;
+    const pick2 = () => { const a = things[ri(0, 3)]; let b = things[ri(0, 3)]; if(b === a) b = things[(things.indexOf(a) + 1) % 4]; return [a, b]; };
+    const [tA, tB] = pick2();
+    const at = (id, rows, y) => ({ id, ic: storyRulerSVG(rows, N), x: 50, y: y || 50, size: 16, anim: 'pop' });
+    // small seeds (the shelf passes play counts) start the random stream alike, so the play count turns the slot too
+    const right = (r() < 0.5 ? 0 : 1) ^ (Math.floor(seed / 3) % 2);
+    const end = (scenes, ans, home) => ({ bg: 'plain', measure: Object.assign({ kind }, ans), scenes,
+      grownup: both('Measure a spoon, a book and a shoe together with a ruler — start at 0!', 'साथ मिलकर पैमाने से चम्मच, किताब और जूता नापें — 0 से शुरू करें!'),
+      home: home || both('Make a paper ruler with 10 equal spaces and measure things at home.', 'कागज़ पर 10 बराबर खानों वाला पैमाना बनाएँ और घर की चीज़ें नापें।') });
+    if(kind === 'longer'){
+      // A starts at 0; B starts later and ends further along, but is shorter
+      const LA = ri(6, 8), sB = ri(3, 4), LB = ri(Math.max(3, LA - sB + 1), LA - 1);
+      const A = { thing: tA, s: 0, L: LA }, B = { thing: tB, s: sB, L: LB };
+      const rows = right ? [B, A] : [A, B];                 // the longer one is on ruler 1 or ruler 2
+      const opts = [{ num: 1 }, { num: 2 }], longer = right, nA = right + 1, nB = 2 - right;
+      return end([
+        { say: both(`Munni's ruler! A ruler tells us how long things are. Here are a ${T[tA].name.en} and a ${T[tB].name.en}.`, `मुन्नी का पैमाना! पैमाना बताता है कि चीज़ कितनी लंबी है। ये रहे: ${T[tA].name.hi} और ${T[tB].name.hi}।`),
+          stage: { items: [at('rul', rows)] } },
+        { say: both('Which one is longer? Look where each one starts and where it ends. Tap its number.', 'किसकी लंबाई ज़्यादा है? देखो हर एक कहाँ से शुरू होकर कहाँ खत्म होता है। उसका नंबर छुओ।'),
+          stage: { items: [at('rul', rows)] },
+          join: { t: 'pick', keep: true, opts, right: longer,
+                  praise: both(`Yes! Number ${nA} is ${LA} spaces long, and number ${nB} only ${LB}.`, `हाँ! नंबर ${nA} की लंबाई ${LA} खाने है, और नंबर ${nB} की सिर्फ़ ${LB}।`),
+                  show: both(`It's number ${nA}. Number ${nB} ends further along, but it starts at ${sB}: count its spaces — only ${LB}.`, `नंबर ${nA}। नंबर ${nB} आगे खत्म ${storyHiG(tB, 'होती', 'होता')} है, पर ${sB} से शुरू ${storyHiG(tB, 'होती', 'होता')} है: उसके खाने गिनो — सिर्फ़ ${LB}।`) } },
+        { say: both('Where a thing ends is not enough — count the spaces from where it starts!', 'कोई चीज़ कहाँ खत्म होती है, इतना काफ़ी नहीं — जहाँ से शुरू होती है, वहाँ से खाने गिनो!'),
+          stage: { items: [at('rul', rows)] } }
+      ], { s: sB, L: LB, LA, longerAt: nA });
+    }
+    // read one length: from 0, or from a later mark
+    const s = kind === 'zero' ? 0 : ri(1, 3), L = ri(3, 8), ex = { thing: tB, s: 0, L: L === 5 ? 6 : 5 };
+    const ans = L, wrong = kind === 'zero' ? L + 1 : s + L;   // counting the marks; reading the end number
+    const pair = [ans, wrong]; if(right) pair.reverse();
+    const teach = kind === 'zero'
+      ? both(`Look: the ${T[tB].name.en} starts at 0. Count the spaces, not the lines: it is ${ex.L} centimetres long.`, `देखो: ${T[tB].name.hi} 0 से शुरू ${storyHiG(tB, 'होती', 'होता')} है। लकीरें नहीं, खाने गिनो: यह ${ex.L} सेंटीमीटर ${storyHiG(tB, 'लंबी', 'लंबा')} है।`)
+      : both(`Look: the ${T[tB].name.en} starts at 0 and ends at ${ex.L}, so it is ${ex.L} centimetres long. But a thing doesn't always start at 0!`, `देखो: ${T[tB].name.hi} 0 से शुरू होकर ${ex.L} पर खत्म ${storyHiG(tB, 'होती', 'होता')} है, तो यह ${ex.L} सेंटीमीटर ${storyHiG(tB, 'लंबी', 'लंबा')} है। पर हर चीज़ 0 से शुरू नहीं होती!`);
+    return end([
+      { say: both(`Munni's ruler! ${teach.en}`, `मुन्नी का पैमाना! ${teach.hi}`),
+        stage: { items: [at('ex', [ex])] } },
+      { say: kind === 'zero'
+          ? both(`Now the ${T[tA].name.en}. How many centimetres long is it?`, `अब ${T[tA].name.hi}। यह कितने सेंटीमीटर ${storyHiG(tA, 'लंबी', 'लंबा')} है?`)
+          : both(`This ${T[tA].name.en} starts at ${s}. How many centimetres long is it? Count the spaces!`, `यह ${T[tA].name.hi} ${s} से शुरू ${storyHiG(tA, 'होती', 'होता')} है। यह कितने सेंटीमीटर ${storyHiG(tA, 'लंबी', 'लंबा')} है? खाने गिनो!`),
+        stage: { items: [at('rul', [{ thing: tA, s, L }])] },
+        join: { t: 'pick', keep: true, opts: pair.map(x => ({ num: x })), right,
+                praise: both(`Yes! It is ${L} centimetres long.`, `हाँ! यह ${L} सेंटीमीटर ${storyHiG(tA, 'लंबी', 'लंबा')} है।`),
+                show: kind === 'zero'
+                  ? both(`It's ${L}. Count the spaces between the lines, not the lines: ${L} spaces.`, `${L} है। लकीरें नहीं, उनके बीच के खाने गिनो: ${L} खाने।`)
+                  : both(`It's ${L}. It ends at ${s + L}, but it starts at ${s}: ${s + L} take away ${s} is ${L}.`, `${L} है। यह ${s + L} पर खत्म ${storyHiG(tA, 'होती', 'होता')} है, पर ${s} से शुरू ${storyHiG(tA, 'होती', 'होता')} है: ${s + L} में से ${s} घटाओ, ${L}।`) } },
+      { say: both('Count the spaces from where it starts — that is how long it is!', 'जहाँ से शुरू हो, वहाँ से खाने गिनो — वही उसकी लंबाई है!'),
+        stage: { items: [at('rul', [{ thing: tA, s, L }])] } }
+    ], { s, L, wrong });
+  }
+};
+
 /* Which templates this class gets. */
 function storyTplsFor(cls, lang){
   return Object.keys(STORY_TPLS).filter(id => STORY_TPLS[id].classes.includes(cls) && (!lang || !STORY_TPLS[id].langs || STORY_TPLS[id].langs.includes(lang)));
