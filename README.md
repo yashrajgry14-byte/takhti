@@ -64,7 +64,7 @@ films it (`video/SCRIPTS.md`). A parent can switch the simple home and the
 reading aloud on or off; how long a child plays is up to the parent.
 **Next:** more books, more classes, every Indian language.
 
-**Build status:** web prototype on `main` (offline shell `takhti-v100`, 54 test
+**Build status:** web prototype on `main` (offline shell `takhti-v101`, 54 test
 suites). The lesson library was built with live Gemini calls; Gemini's hearing,
 judging and voice have been run live (`tools/live-check.mjs`); the voice server
 has had its first live Bolna call. Nothing has been tried with real children
