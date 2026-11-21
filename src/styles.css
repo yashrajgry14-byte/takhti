@@ -49,7 +49,10 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 
 /* ---------- page frame ---------- */
 .stage{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:392px 1fr;gap:26px;align-items:start}
-@media(max-width:900px){.stage{grid-template-columns:1fr}}
+/* minmax(0,1fr), not 1fr: a 1fr track grows to its content's min-content, and the
+   Picture Hut's scrolling rows (series, theme pills) stretched the phone to
+   652px on a 412px screen, cutting every card off. */
+@media(max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}}
 
 .brandbar{max-width:1120px;margin:0 auto 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .logomark{

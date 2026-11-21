@@ -25,7 +25,7 @@ function pictureHutOpen(){ return !(band().g >= 6); }
 function cartoonSkills(){
   if(!pictureHutOpen()) return [];
   const gmax = CARTOON_MAX_GRADE[band().id] || 1;
-  return SKILLS.filter(s => s.g >= 1 && s.g <= gmax && skillHasProblem(s.id));
+  return SKILLS.filter(s => s.g >= 1 && s.g <= gmax && skillHasProblem(s.id) && cartoonable(s.id));
 }
 
 function getVideoCatalog(child, themeFilter){
@@ -49,7 +49,7 @@ function getVideoCatalog(child, themeFilter){
 function recommendNextVideo(child){
   const c = child || S;
   const hw = personalizeContentForHomework(c);
-  if(hw && hw.storySkill && skillById(hw.storySkill)){
+  if(hw && hw.storySkill && skillById(hw.storySkill) && cartoonable(hw.storySkill) && skillHasProblem(hw.storySkill)){
     return { skillId: hw.storySkill, themeId: 'sports',
              reason: { en:'Your homework, as a cartoon!', hi:'तुम्हारा गृहकार्य, कार्टून में!' } };
   }
