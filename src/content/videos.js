@@ -74,7 +74,7 @@ const VIDEOS = [
     home: vidT('Ask: "17 plus 5 — do we need to carry?"', 'पूछें: "17 जमा 5 — क्या हासिल लेना पड़ेगा?"') },
 
   /* ---------- taking away with borrowing ---------- */
-  { id:'v-borrow', skill:'borrow', classes:['c2','c3'], ic:'➖', obj:'🥢',
+  { id:'v-borrow', skill:'borrow', classes:['c2','c3'], ic:'✂️', obj:'🥢',
     title: vidT('Borrowing a ten', 'उधार लेना'),
     scenes: [
       { say: vidT('52 take away 27. Ones first: 2 take away 7.', '52 में से 27। पहले इकाई: 2 में से 7।'), art:{ t:'column', a:52, b:27, op:'−', mark:'ones' },

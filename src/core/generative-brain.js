@@ -89,14 +89,24 @@ function genCartoonSvgKeyframe(theme, game, sceneIndex){
       <text x="50" y="40" font-size="14">✨</text><text x="310" y="45" font-size="14">✨</text>
       <g transform="translate(${75 + offsetX}, ${95 + bounceY})">
         <text x="0" y="0" font-size="40" text-anchor="middle" dominant-baseline="middle">${game.actor}</text>
-        <text x="32" y="-22" font-size="26" text-anchor="middle" dominant-baseline="middle">${game.proj}</text>
+        <text x="32" y="-22" font-size="26" text-anchor="middle" dominant-baseline="middle">${gameObj(game)}</text>
       </g>
       ${gauriSmall('x="245" y="62" width="60" height="60"', 'cartoon-gauri')}
     </svg>`;
 }
 
+/* Skills whose skillProblem() is a plain sum that doesn't show the skill,
+   so an episode would be titled one thing and ask another: "Counting to
+   20" asked 11 + 8, "Hundreds" asked 1 + 3 in Class 2–3, "Rupees and
+   paise" a sum with no ₹, "Tens and ones" a sum with no tens or ones
+   asked about. They get no cartoon (Munni's video teaches tens and ones,
+   Counting Stones the rest) until an episode can ask the skill itself. */
+const CARTOON_NOT = ['count20', 'place2', 'place3', 'money2'];
+function cartoonable(skillId){ return !CARTOON_NOT.includes(skillId); }
+
 function generateCartoonBlueprint(child, skillId, options){
   options = options || {};
+  if(!cartoonable(skillId)) return null;
   const c = child || S;
   const seed = seedOf((c.id || c.name || 'x') + '|vid|' + skillId + '|' + dayKey());
   const q = skillProblem(skillId, seed);

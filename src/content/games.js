@@ -72,3 +72,10 @@ const GREETS = {
   en:[n=>`Hey ${n}! What's up?`, n=>`${n}! You came back!`, n=>`Good to see you, ${n}!`, n=>`Ready, ${n}?`],
   hi:[n=>`अरे ${n}! क्या हाल है?`, n=>`${n}! तुम आ गए!`, n=>`तुम्हें देखकर अच्छा लगा, ${n}!`, n=>`तैयार हो, ${n}?`]
 };
+
+/* The object a cartoon or a counting picture shows for a game. Launch games
+   have one (proj: the ball, the arrow); chase and reveal games don't, and
+   the Picture Hut printed "undefined" in every scene for those nine games
+   (kabaddi, kho kho, chupan chupai…) — so fall back to what each game does
+   have: the hiding place, the second runner, its icon. */
+function gameObj(g){ return (g && (g.proj || g.hide || g.actor2 || g.ic)) || '⭐'; }

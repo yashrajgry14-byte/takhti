@@ -488,7 +488,16 @@ again*, the grown-up line), never rolling on. No timers.
   exercise that skill at the child's band: carrying carries, borrowing
   borrows, BODMAS is `a + b × c` with the add-first mistake as a distractor.
   Options are shuffled; every wrong option is a real mistake for that skill.
-  Skills that aren't a single arithmetic question get no episode (`null`).
+  Skills that aren't a single arithmetic question get no episode (`null`),
+  and so do the skills in `CARTOON_NOT` (`count20`, `place2`, `place3`,
+  `money2`, 21 Nov): their `skillProblem()` is a plain sum that doesn't show
+  the skill ("Hundreds" asked 1 + 3 in Class 2–3), so `cartoonable()` keeps
+  them off the shelf, the series and the recommendation.
+- **The scene's object** is `gameObj(g)` (`content/games.js`): `proj`, else
+  the game's hiding place, second runner or icon. Nine chase and reveal games
+  have no `proj`, and until 21 Nov every scene of their cartoons printed
+  "undefined"; `test/video-generator.test.js` renders every game's every
+  scene at three ages and fails on "undefined", NaN or [object …].
 - **The answer is real evidence**: `noteSkillAttempt()` (the diagnostic's
   skill history) and `record('math')` (level, goals, SRS). The card is
   awarded only for a right answer, once (`awardCard()`, stable ids), kept in

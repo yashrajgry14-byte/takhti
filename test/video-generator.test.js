@@ -47,7 +47,7 @@ const LOAD_LIST = [
 for(const f of LOAD_LIST) vm.runInContext(fs.readFileSync(f,'utf8'), ctx, {filename:f});
 vm.runInContext(`globalThis.__ = { generateCartoonBlueprint, getVideoCatalog, recommendNextVideo, cartoonSeriesFor,
   cartoonSkills, startCartoonVideo, videoNextScene, videoAnswer, endCartoonVideo, theaterStop, setTheaterTheme,
-  videoPlayerHTML, videoLibraryHTML, skillById, THEMES, S };`, ctx);
+  videoPlayerHTML, videoLibraryHTML, skillById, THEMES, S, GAMES, gameObj, cartoonable, CARTOON_NOT };`, ctx);
 const X = ctx.__, S = ctx.S;
 
 let failures = 0;
@@ -131,8 +131,35 @@ const lib = X.videoLibraryHTML();
 check('the shelf renders an "All" pill plus one per theme', X.THEMES.every(th => lib.includes(`setTheaterTheme('${th.id}')`)) && lib.includes(`setTheaterTheme('all')`), 'pills missing');
 check('the shelf renders the recommended episode and the catalog', lib.includes('hero-video-card') && (lib.match(/class="video-card/g) || []).length === X.getVideoCatalog(S,'all').length, 'shelf incomplete');
 
+// 21 Nov: nine chase/reveal games had no object emoji (proj), and every
+// scene of their cartoons printed "undefined". Every game, every episode the
+// shelf offers, every scene: no undefined, NaN or [object …] on screen.
+{
+  const save = { game: S.game, age: S.age, active: S.activeVideo };
+  const bad = [];
+  for(const age of [6, 8, 10]){ S.age = age;
+    for(const g of X.GAMES){
+      if(!X.gameObj(g)) bad.push(g.id + ': no object');
+      for(const v of X.getVideoCatalog(S, 'all')){
+        const vid = X.generateCartoonBlueprint(S, v.skillId, { themeId: v.themeId, gameId: g.id });
+        if(!vid){ bad.push(`${v.skillId}: offered but no episode`); continue; }
+        for(let i = 0; i < vid.scenes.length; i++){
+          S.activeVideo = { data: vid, sceneIdx: i, picked: null, right: false };
+          const h = X.videoPlayerHTML(), m = h.match(/undefined|NaN|\[object/);
+          if(m) bad.push(`${g.id} · ${v.skillId} · scene ${i}: ${h.slice(Math.max(0, h.indexOf(m[0]) - 60), h.indexOf(m[0]) + 12).replace(/\s+/g, ' ')}`);
+        }
+      }
+    }
+  }
+  Object.assign(S, { game: save.game, age: save.age, activeVideo: save.active });
+  check('every game\'s cartoons, every scene, at three ages: nothing prints "undefined"', !bad.length, bad.slice(0, 3).join(' | '));
+  check('a skill whose sum doesn\'t show it (Counting to 20, Tens and ones, Hundreds, Rupees) gets no episode and isn\'t on the shelf',
+    X.CARTOON_NOT.every(id => X.generateCartoonBlueprint(S, id) === null) && [6, 8, 10].every(a => { S.age = a; return !X.getVideoCatalog(S, 'all').some(v => !X.cartoonable(v.skillId)); }), X.CARTOON_NOT.join());
+  S.age = save.age;
+}
 console.log('\n' + '-'.repeat(70));
 checks.forEach(c => console.log(`  ${c.pass?'PASS':'FAIL'}  ${c.name}${c.pass?'':'  → '+c.detail}`));
 console.log('-'.repeat(70));
+
 console.log(`${checks.length-failures}/${checks.length} checks passed`);
 process.exitCode = failures ? 1 : 0;

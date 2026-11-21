@@ -113,7 +113,7 @@ function videoPlayerHTML(){
     <div class="video-stage glass-card" style="border-radius:18px;padding:14px;margin:8px 0;border:2px solid ${accent};">
       <div style="font-size:13px;font-weight:bold;color:${accent};margin-bottom:6px">${L(scene.title)}</div>
       ${scene.svg}
-      ${scene.beat ? `<div class="lesart">${lesArt(scene.beat, v.game.proj)}</div>` : ''}
+      ${scene.beat ? `<div class="lesart">${lesArt(scene.beat, gameObj(v.game))}</div>` : ''}
       <div class="video-subtitles">
         ${isCheck ? `<div class="video-q">❓ ${L(scene.question)}</div>` : ''}
         ${L(scene.narration)}
