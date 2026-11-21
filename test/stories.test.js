@@ -212,6 +212,28 @@ const root = path.resolve(__dirname, '..');
     mslots.add(j.right);
   }
   check('Munni\'s money box: the coins and notes drawn with their values, the answer what they add up to, the other answer the number of coins (the real slip), never said before the question; Class 1 within ₹10, Class 2 within ₹99; money2', mf.length === 0 && mslots.size === 2, mf.slice(0, 4).join(' | '));
+  const rf = [], rslots = { zero: new Set(), offset: new Set(), longer: new Set() };
+  for(let seed = 0; seed < 300; seed++) for(const cls of ['c2', 'c3']) for(const lang of ['en', 'hi']){
+    const st = c.B('measure', seed, { cls, lang }), m = st.measure, j = st.scenes[1].join;
+    const svg = st.scenes[1].stage.items[0].ic, ticks = (svg.match(/<line /g) || []).length;
+    if(m.kind === 'longer'){
+      if(j.opts[j.right].num !== m.longerAt || !(m.LA > m.L && m.s + m.L > m.LA)) faults.push('measure longer ' + JSON.stringify(m));
+      if(ticks !== 26) rf.push('two rulers 0–12');
+    } else {
+      if(j.opts[j.right].num !== m.L || j.opts[1 - j.right].num !== m.wrong || m.wrong !== (m.kind === 'zero' ? m.L + 1 : m.s + m.L) || m.wrong === m.L) rf.push('measure read ' + JSON.stringify(m));
+      if(m.kind === 'zero' ? m.s !== 0 : m.s < 1) rf.push('start ' + JSON.stringify(m));
+      if(m.s + m.L > 12 || ticks !== 13) rf.push('off the ruler ' + JSON.stringify(m));
+      for(const sc of st.scenes.slice(0, 2)) for(const L of ['en', 'hi']) if(nums(sc.say[L]).includes(m.L) && m.L !== m.s && !(sc === st.scenes[0])) rf.push(`says ${m.L} before the pick`);
+      // the teaching ruler isn't the asked one
+      if(st.scenes[0].stage.items[0].ic === svg) rf.push('taught on the same drawing');
+    }
+    if(!st.scenes.every(sc => sc.say.en && isHi(sc.say.hi)) || st.skill !== 'measure3' || !j.keep) rf.push('measure: both languages, measure3, the ruler kept');
+    if(lang === 'hi' && /रिबन|क्रेयॉन/.test(st.scenes[1].say.hi) && /लंबी है\?/.test(st.scenes[1].say.hi)) rf.push('Hindi gender: ' + st.scenes[1].say.hi);
+    rslots[m.kind].add(j.right);
+  }
+  check('Munni\'s ruler (Class 2–3): read off the drawn ruler — the length from 0 (the other answer one more: the marks counted), from a later mark (the other answer the end number), or which of two is longer (the one ending further along started later); never said before the question, taught on another ruler; Hindi agrees with the thing (रिबन लंबा, पेंसिल लंबी); measure3',
+    rf.length === 0 && !faults.some(f => f.startsWith('measure')) && Object.values(rslots).every(x => x.size === 2), rf.concat(faults.filter(f => f.startsWith('measure'))).slice(0, 4).join(' | ') + ' ' + JSON.stringify(Object.fromEntries(Object.entries(rslots).map(([k, v]) => [k, [...v]]))));
+  check('the ruler is for Class 2–3 only', ['c2', 'c3'].every(k => c.F(k).includes('measure')) && !['ukg', 'c1', 'c4'].some(k => c.F(k).includes('measure')), '');
   check('the right answer is in both slots for both', slots.solvealong.size === 2 && slots.shapehunt.size === 2, '');
   check('Class 1–2 get the maths stories, the money box and the shape hunt, no other class does', ['c1', 'c2'].every(k => ['solvealong', 'shapehunt', 'money'].every(t => c.F(k).includes(t))) && !['nur', 'lkg', 'ukg', 'c3'].some(k => ['solvealong', 'shapehunt', 'money'].some(t => c.F(k).includes(t))), '');
   check('a maths story\'s seed picks its theme and operation (the shelf\'s cards play the story they show)', c.SS.every((th, i) => c.B('solvealong', i, { cls:'c1', lang:'en' }).sum.theme === i && c.B('solvealong', i, { cls:'c1', lang:'en' }).sum.op === 'add' && c.B('solvealong', i + 5, { cls:'c1', lang:'en' }).sum.op === 'sub'), '');
@@ -437,8 +459,19 @@ server.listen(0, '127.0.0.1', () => {
       check('…the first tap is evidence for money (money2)', E(`JSON.stringify(S.skillHistory['money2'])`) === JSON.stringify({ n: 1, right: 1 }), E(`JSON.stringify(S.skillHistory['money2'])`));
       E(`storyHome()`);
       child('c3', 8);
+      E(`go('theater')`);
+      check('Class 3\'s Picture Hut has the ruler, not Class 1–2\'s word problems', !!$$('.watch-card').find(b => /storyStart\('measure'/.test(b.getAttribute('onclick'))) && !$$('.watch-card').find(b => /storyStart\('solvealong'/.test(b.getAttribute('onclick'))), '');
       E(`go('math')`);
-      check('Class 3 gets no maths-story button (the stories are for Class 1–2)', !$$('button').find(b => /mathStoryNext/.test(b.getAttribute('onclick') || '')), '');
+      const m3 = $$('button').find(b => /mathStoryNext/.test(b.getAttribute('onclick') || ''));
+      check('Class 3\'s Counting Stones button plays the ruler', !!m3 && (m3.click(), E('S.ctx.st.tpl') === 'measure'), E('S.ctx.st && S.ctx.st.tpl'));
+      check('…the ruler drawn on the stage, then the question with it still there', await until(() => E('S.ctx.phase') === 'pick', 30000) && $$('#ststage .st-geo svg').length === 1 && $$('.st-opt').length === 2, E('S.ctx.phase'));
+      $$('.st-opt')[E('S.ctx.st.scenes[S.ctx.i].join.right')].click();
+      check('…the first tap is evidence for measuring (measure3)', E(`JSON.stringify(S.skillHistory['measure3'])`) === JSON.stringify({ n: 1, right: 1 }), E(`JSON.stringify(S.skillHistory['measure3'])`));
+      E(`storyHome()`);
+      check('…and home goes back to the Counting Stones', E('S.screen') === 'math', E('S.screen'));
+      child('c4', 9);
+      E(`go('math')`);
+      check('Class 4 gets no maths-story button', !$$('button').find(b => /mathStoryNext/.test(b.getAttribute('onclick') || '')), '');
 
       /* ---- Class 7: no Picture Hut ---- */
       child('c7', 12);
