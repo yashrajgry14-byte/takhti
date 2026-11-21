@@ -498,3 +498,124 @@
 .screen[data-band=fluent] .levelline::before{content:'🏅 '}
 .screen[data-band=fluent] .back{width:auto;height:auto;padding:7px 14px 6px;border-radius:999px;font-size:14px;gap:4px;color:#fff}
 .screen[data-band=fluent] .back::before{display:none}
+
+/* ==================================================================
+   GROWN-UP PAGES (21 Nov) — the parent and teacher pages
+   (data-kid="grown", set by src/ui/playful.js). The same idea as the
+   child side, for adults: one calm light palette instead of a dark
+   wall; a summary first (src/ui/views.js parent(), src/ui/teacher.js
+   teacherHTML()); white cards with plain sentence-case headings; real
+   switches; readable grey; 44 px tap targets; rare settings and the
+   long consent text folded away (<details class="gp-fold">). No
+   bounce, no confetti colours — buttons are quiet ink or outline.
+   Everything is scoped to the grown-up screens; the child side is untouched.
+   ================================================================== */
+.screen[data-kid=grown]{
+  --g-bg:#F6F2EA; --g-card:#FFFFFF; --g-line:#ECE4D6; --g-ink:#22303A; --g-ink-2:#5F6B73;
+  --g-accent:#1F6F5C; --g-accent-soft:#E3F1EC; --g-warn:#B5651D; --g-warn-soft:#FBEFE3;
+  background:var(--g-bg)}
+.screen[data-kid=grown] #screen{color:var(--g-ink);font-family:'Mukta',system-ui,sans-serif;font-size:14.5px}
+.screen[data-kid=grown] h2,.screen[data-kid=grown] h3,.screen[data-kid=grown] h4,
+.screen[data-kid=grown] .gp-h,.screen[data-kid=grown] .metric b,.screen[data-kid=grown] .display{
+  font-family:'Baloo 2','Mukta',system-ui,sans-serif;color:var(--g-ink);letter-spacing:0}
+
+/* page head and back */
+.screen[data-kid=grown] .back{background:var(--g-card);border:1px solid var(--g-line);box-shadow:none;font-size:14px;color:var(--g-ink)}
+.screen[data-kid=grown] .gp-pagehead h2{margin:2px 0 2px;font-size:22px;font-weight:700}
+.screen[data-kid=grown] .gp-sub{font-size:13px;color:var(--g-ink-2);line-height:1.45}
+
+/* cards: white, quiet, one heading each */
+.screen[data-kid=grown] .paper{background:var(--g-card);color:var(--g-ink);border:1px solid var(--g-line);
+  border-radius:16px;padding:14px 16px;margin:12px 0 0;box-shadow:0 1px 2px rgba(34,48,58,.04)}
+.screen[data-kid=grown] .gp-h{display:block;margin:0 0 6px;font-size:17px;font-weight:700}
+.screen[data-kid=grown] .gp-h small{display:block;font-family:'Mukta',system-ui,sans-serif;font-weight:400;font-size:12.5px;color:var(--g-ink-2)}
+/* the older section labels inside a card: sentence-sized, not tiny code */
+.screen[data-kid=grown] .kicker2{font-family:'Mukta',system-ui,sans-serif;font-size:12px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--g-ink-2);opacity:1;margin:14px 0 2px}
+.screen[data-kid=grown] .paper > .kicker2:first-child{font-family:'Baloo 2',system-ui,sans-serif;font-size:17px;text-transform:none;
+  letter-spacing:0;color:var(--g-ink);margin:0 0 4px}
+.screen[data-kid=grown] .paper > b:first-child{font-family:'Baloo 2',system-ui,sans-serif;font-size:17px}
+.screen[data-kid=grown] .muted,.screen[data-kid=grown] .paper [style*="opacity"]{color:var(--g-ink-2);opacity:1!important}
+.screen[data-kid=grown] .paper p{margin:4px 0 10px}
+
+/* rows */
+.screen[data-kid=grown] .metric{border-bottom:1px solid var(--g-line);padding:12px 0;gap:12px}
+.screen[data-kid=grown] .metric:last-child{border-bottom:0}
+.screen[data-kid=grown] .metric b{font-size:15.5px;font-weight:600}
+.screen[data-kid=grown] .metric > div:first-child{flex:1;min-width:0}
+.screen[data-kid=grown] .bar{background:#EEE7DA;height:6px;border-radius:99px}
+.screen[data-kid=grown] .bar i{background:var(--g-accent);border-radius:99px}
+.screen[data-kid=grown] .agechip{background:var(--g-accent-soft);color:var(--g-accent);font-family:'Mukta',system-ui,sans-serif;
+  font-size:12px;font-weight:600;letter-spacing:0;padding:2px 9px;border-radius:99px}
+
+/* controls: real switches, round steppers, quiet buttons */
+.screen[data-kid=grown] .toggle{flex:0 0 auto;width:48px;height:28px;border-radius:99px;background:#CFC7B8;position:relative;padding:0;border:0}
+.screen[data-kid=grown] .toggle span{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);transform:none;transition:transform .2s}
+.screen[data-kid=grown] .toggle.on{background:var(--g-accent)}
+.screen[data-kid=grown] .toggle.on span{transform:translateX(20px)}
+.screen[data-kid=grown] .stepbtn{width:36px;height:36px;border-radius:50%;background:var(--g-card);border:1px solid #D5CCBC;
+  color:var(--g-ink);font-size:18px;box-shadow:none}
+.screen[data-kid=grown] .btn{background:var(--g-ink);color:#fff;border:0;border-bottom:0;border-radius:12px;font-size:15px;font-weight:600;
+  min-height:44px;padding:10px 16px;box-shadow:none;text-shadow:none;font-family:'Mukta',system-ui,sans-serif}
+.screen[data-kid=grown] .btn:active{transform:translateY(1px)}
+.screen[data-kid=grown] .btn.ghost,.screen[data-kid=grown] .paper .btn.ghost{background:var(--g-card);color:var(--g-ink);
+  border:1px solid #D5CCBC;border-bottom:1px solid #D5CCBC}
+.screen[data-kid=grown] .btn.leaf{background:var(--g-accent)}
+.screen[data-kid=grown] .btn + .btn{margin-top:8px}
+.screen[data-kid=grown] .row .btn + .btn{margin-top:0}
+
+/* inputs */
+.screen[data-kid=grown] .paper .input,.screen[data-kid=grown] .paper input:not([type=checkbox]):not([type=range]),
+.screen[data-kid=grown] .paper textarea,.screen[data-kid=grown] .paper select,.screen[data-kid=grown] .input{
+  background:#FBF9F5;color:var(--g-ink);border:1px solid #D5CCBC;border-radius:10px;min-height:44px;font-size:15px;
+  font-family:'Mukta',system-ui,sans-serif;box-shadow:none;margin:4px 0}
+.screen[data-kid=grown] .paper .input:focus,.screen[data-kid=grown] .paper select:focus,.screen[data-kid=grown] .paper textarea:focus,
+.screen[data-kid=grown] .paper input:focus{outline:2px solid var(--g-accent);outline-offset:1px;background:#fff}
+.screen[data-kid=grown] .retry{background:var(--g-warn-soft);border-color:#EBCDAF;color:#7A4513}
+.screen[data-kid=grown] .card{background:#FBF9F5;border:1px solid var(--g-line);color:var(--g-ink)}
+
+/* the summary at the top */
+.screen[data-kid=grown] .gp-hero{background:linear-gradient(160deg,#1F4F45,#22303A);color:#fff;border-radius:18px;padding:16px;margin-top:4px}
+.screen[data-kid=grown] .gp-hero-top{display:flex;align-items:center;gap:12px}
+.screen[data-kid=grown] .gp-avatar{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:26px;flex:0 0 auto}
+.screen[data-kid=grown] .gp-who{flex:1;min-width:0}
+.screen[data-kid=grown] .gp-who h3{color:#fff;margin:0;font-size:20px;font-weight:700}
+.screen[data-kid=grown] .gp-hero .gp-sub{color:rgba(255,255,255,.75)}
+.screen[data-kid=grown] .gp-listen{flex:0 0 auto;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.25);
+  border-radius:99px;padding:8px 14px;font-weight:600;font-size:14px;min-height:40px;cursor:pointer;font-family:'Mukta',system-ui,sans-serif}
+.screen[data-kid=grown] .gp-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.screen[data-kid=grown] .gp-tile{background:rgba(255,255,255,.1);border-radius:12px;padding:10px;min-width:0}
+.screen[data-kid=grown] .gp-tile-k{font-size:12px;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.screen[data-kid=grown] .gp-tile-v{font-family:'Baloo 2',system-ui,sans-serif;font-size:24px;font-weight:700;line-height:1.15;color:#fff}
+.screen[data-kid=grown] .gp-tile-v.gp-mono{font-family:var(--mono);font-size:17px;letter-spacing:1px;padding:4px 0}
+.screen[data-kid=grown] .gp-tile-s{font-size:11.5px;color:rgba(255,255,255,.7);line-height:1.3}
+.screen[data-kid=grown] .gp-hero .bar{background:rgba(255,255,255,.18);margin-top:6px}
+.screen[data-kid=grown] .gp-hero .bar i{background:#8FD9B6}
+.screen[data-kid=grown] .gp-today{margin-top:12px;font-size:13px;color:rgba(255,255,255,.85)}
+.screen[data-kid=grown] .gp-classhero{margin-top:12px}
+.screen[data-kid=grown] .gp-classhero .gp-tiles{margin-top:0}
+
+/* folded sections: the rare settings and the long consent text */
+.screen[data-kid=grown] details.gp-fold > summary{list-style:none;cursor:pointer;position:relative;padding-right:28px;margin:0}
+.screen[data-kid=grown] details.gp-fold > summary::-webkit-details-marker{display:none}
+.screen[data-kid=grown] details.gp-fold > summary::after{content:'';position:absolute;right:4px;top:8px;width:9px;height:9px;
+  border-right:2px solid var(--g-ink-2);border-bottom:2px solid var(--g-ink-2);transform:rotate(45deg);transition:transform .2s}
+.screen[data-kid=grown] details.gp-fold[open] > summary{margin-bottom:6px}
+.screen[data-kid=grown] details.gp-fold[open] > summary::after{transform:rotate(-135deg);top:12px}
+/* consent text inside them reads as body copy, not a wall */
+.screen[data-kid=grown] .teachterms div,.screen[data-kid=grown] .metric [style*="line-height:1.5"]{line-height:1.55}
+
+/* tables (what Takhti covers) and the teacher's bars */
+.screen[data-kid=grown] .covtable th,.screen[data-kid=grown] .covtable td{border-bottom:1px solid var(--g-line);padding:6px 4px;color:var(--g-ink)}
+.screen[data-kid=grown] .teachbar{background:#EEE7DA}
+.screen[data-kid=grown] .teachloop,.screen[data-kid=grown] .teachdid{color:var(--g-accent)}
+.screen[data-kid=grown] .teachloop-sum{background:var(--g-accent-soft);color:#174C40;border-left:3px solid var(--g-accent);border-radius:8px}
+.screen[data-kid=grown] .sharecode{font-family:var(--mono);font-size:12px}
+.screen[data-kid=grown] .gp-hero .bar,.screen[data-kid=grown] .gp-today .bar{width:100%}
+.screen[data-kid=grown] .gp-tile-k{white-space:normal;line-height:1.25}
+.screen[data-kid=grown] .back{font-family:'Mukta',system-ui,sans-serif;font-weight:600}
+.screen[data-kid=grown] .gp-pagehead{margin-top:2px}
+.screen[data-kid=grown] .gp-learn > .gp-h + .kicker2{display:none}   /* the card already says it */
+.screen[data-kid=grown] .stepbtn[style*="width:auto"]{border-radius:99px;font-family:'Mukta',system-ui,sans-serif;font-size:14px;font-weight:600;padding:0 14px!important}
+.screen[data-kid=grown] .row input,.screen[data-kid=grown] .row select{min-height:40px}

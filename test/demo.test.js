@@ -56,7 +56,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
       CLASS_AUTH.role='teacher'; CLASS_AUTH.classes=['DEMO01']; CLASS_AUTH.email='teacher@example.test'; render()`);
     await wait(20);
     check('the teacher view offers the demo class, and says plainly what it is (not real children, never synced)',
-      /DEMO CLASS/.test(screen()) && /aren't real children, are never synced/.test(screen()) && !!btn(/Add two demo children/), screen().slice(-500));
+      /DEMO CLASS/i.test(screen()) && /aren't real children, are never synced/.test(screen()) && !!btn(/Add two demo children/), screen().slice(-500));
     btn(/Add two demo children/).click();
     await wait(20);
     const kids = JSON.parse(E(`JSON.stringify(S.profiles.filter(p => p.demo).map(p => ({ name: p.name, age: p.age, code: p.classCode, sync: p.syncOn, avatar: p.avatar })))`));

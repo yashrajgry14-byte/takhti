@@ -105,18 +105,34 @@ function teacherBodyHTML(code, demo){
   const queue = contentQueue(3).slice(0, 5);
   const cell = c => c ? `${c.done}/${c.n}` : '—';
 
+  const linked = roster.length;
+  const synced = code && S.syncClasses.includes(code);
+  const rcls = code ? ((readClassShared(code)._roster || {}).cls || '') : '';
+  const rk = rcls && typeof classById === 'function' ? classById(rcls) : null;
+  /* Grown-up pages (21 Nov): the teacher's week first — the class at a glance,
+     this week's lessons, how each child is taking them, what they could
+     explain, then gaps and homework; the rarer tools fold away below
+     (theme-play.css, GROWN-UP PAGES). */
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
-  <div class="display" style="font-size:22px;margin:4px 0">🧑‍🏫 ${hi?'शिक्षकों के लिए':'For teachers'}</div>
+  <div class="gp-pagehead"><h2>🧑‍🏫 ${hi?'शिक्षकों के लिए':'For teachers'}</h2>
+  <div class="gp-sub">${hi
+    ? 'इस फ़ोन पर कक्षा कोड से जुड़े बच्चे, और दूसरे फ़ोनों के वे बच्चे जिनके माता-पिता ने सिंक चालू किया या प्रगति कोड भेजा।'
+    : 'Children on this phone linked to the class code, plus children on other phones whose parent switched sync on or sent a progress code.'}</div>
+</div>
   ${demo ? `<div class="card" style="margin:6px 0;padding:10px;font-size:12.5px"><b>${hi ? 'डेमो कक्षा' : 'Demo class'}</b> · ${hi
       ? 'बिना स्कूल साइन-इन के। सिर्फ़ डेमो बच्चे दिखते हैं, कुछ सिंक नहीं होता। असली कक्षा के लिए स्कूल खाते से साइन इन करें।'
       : 'No school sign-in. Only the labelled demo children are shown, and nothing is synced. A real class needs a school account.'}</div>`
     : (typeof classAuthHTML === 'function' ? classAuthHTML() : '')}
-  <div class="muted" style="font-size:12.5px">${hi
-    ? 'इस फ़ोन पर कक्षा कोड से जुड़े बच्चे, और दूसरे फ़ोनों के वे बच्चे जिनके माता-पिता ने सिंक चालू किया या प्रगति कोड भेजा।'
-    : 'Children on this phone linked to the class code, plus children on other phones whose parent switched sync on or sent a progress code.'}</div>
+  ${code ? `<div class="gp-hero gp-classhero">
+    <div class="gp-tiles">
+      <div class="gp-tile"><div class="gp-tile-k">${hi?'कक्षा कोड':'Class code'}</div><div class="gp-tile-v gp-mono">${attr(code)}</div><div class="gp-tile-s">${rk ? (hi?rk.hi:rk.en) : (hi?'कक्षा चुनें':'class not set')}</div></div>
+      <div class="gp-tile"><div class="gp-tile-k">${hi?'बच्चे':'Children'}</div><div class="gp-tile-v">${linked}</div><div class="gp-tile-s">${hi?'जुड़े हुए':'linked'}</div></div>
+      <div class="gp-tile"><div class="gp-tile-k">${hi?'सिंक':'Sync'}</div><div class="gp-tile-v">${synced ? (hi?'चालू':'On') : (hi?'बंद':'Off')}</div><div class="gp-tile-s">${hwLive ? (hi?'गृहकार्य दिया':'homework set') : (hi?'कोई गृहकार्य नहीं':'no homework')}</div></div>
+    </div></div>` : ''}
 
-  <div class="paper" style="margin-top:10px">
+  <section class="paper gp-card">
+    <h4 class="gp-h">${hi?'आपकी कक्षा':'Your class'}</h4>
     <div class="kicker2">${hi?'कक्षा का कोड':'CLASS CODE'}</div>
     <input class="input" id="tcode" maxlength="6" value="${attr(code)}" placeholder="${hi?'6 अक्षर का कोड':'6-character code'}"
       style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-family:var(--mono)" autocomplete="off">
@@ -139,16 +155,14 @@ function teacherBodyHTML(code, demo){
       <button class="btn ghost" style="width:auto;padding:8px 14px" onclick="syncNow('${code}')">🔄 ${hi?'अभी सिंक करो':'Sync now'}</button>
     </div>` : ''}` : ''}
 
-    ${demo ? '' : `
-    <div class="kicker2" style="margin-top:12px">${hi?'या कोड से: दूसरे फ़ोन का प्रगति कोड':"OR BY CODE: A CHILD'S PROGRESS CODE"}</div>
-    <textarea class="input sharecode" id="rcode" placeholder="TKR1…"></textarea>
-    ${S.ctx.rMsg ? `<div class="${S.ctx.rOk?'muted':'retry'}" style="font-size:12.5px;margin-top:6px">${S.ctx.rMsg}</div>` : ''}
-    <button class="btn ghost" style="margin-top:8px" onclick="teacherImport($('rcode').value)">${hi?'बच्चा जोड़ो':'Add to class'}</button>
-    <div style="font-size:12px;opacity:.7;margin-top:4px">${hi
-      ? 'माता-पिता अपने डैशबोर्ड से यह कोड WhatsApp/SMS पर भेजते हैं।'
-      : 'Parents send this from their dashboard, over WhatsApp or SMS.'}</div>
+  </section>
 
-    `}
+  ${code ? syllabusHTML(code) : ''}
+  ${code ? planTeacherHTML(code) : ''}
+  ${code && typeof teachTeacherHTML === 'function' ? teachTeacherHTML(code) : ''}
+
+  ${roster.length || hwLive ? `<section class="paper gp-card">
+    <h4 class="gp-h">${hi?'कमियाँ और गृहकार्य':'Gaps & homework'}</h4>
     ${roster.length ? `
     <div class="kicker2" style="margin-top:14px">${hi?'कक्षा ने क्या गलत किया?':'WHAT DID THE CLASS GET WRONG?'}</div>
     <select class="input" onchange="S.ctx.tskill=this.value;render()">
@@ -186,14 +200,20 @@ function teacherBodyHTML(code, demo){
       </div>
       ${S.ctx.shared ? `<div class="muted" style="font-size:12px;margin-top:4px">${S.ctx.shared}</div>` : ''}
     </div>` : ''}
-  </div>
+  </section>` : ''}
 
-  ${code ? syllabusHTML(code) : ''}
-  ${code ? planTeacherHTML(code) : ''}
-  ${code && typeof teachTeacherHTML === 'function' ? teachTeacherHTML(code) : ''}
+  ${demo ? '' : `<details class="paper gp-card gp-fold">
+    <summary class="gp-h">${hi?'दूसरे फ़ोन से बच्चा जोड़ें':'Add a child by progress code'}<small>${hi?'माता-पिता WhatsApp/SMS से भेजते हैं':'Parents send it over WhatsApp or SMS'}</small></summary>
+    <textarea class="input sharecode" id="rcode" placeholder="TKR1…"></textarea>
+    ${S.ctx.rMsg ? `<div class="${S.ctx.rOk?'muted':'retry'}" style="font-size:12.5px;margin-top:6px">${S.ctx.rMsg}</div>` : ''}
+    <button class="btn ghost" style="margin-top:8px" onclick="teacherImport($('rcode').value)">${hi?'बच्चा जोड़ो':'Add to class'}</button>
+    <div style="font-size:12px;opacity:.7;margin-top:4px">${hi
+      ? 'माता-पिता अपने डैशबोर्ड से यह कोड WhatsApp/SMS पर भेजते हैं।'
+      : 'Parents send this from their dashboard, over WhatsApp or SMS.'}</div>
+  </details>`}
 
-  <div class="paper" style="margin-top:12px">
-    <div class="kicker2">${hi?'तख़्ती क्या सिखाती है':'WHAT TAKHTI COVERS'}</div>
+  <details class="paper gp-card gp-fold">
+    <summary class="gp-h">${hi?'तख़्ती क्या सिखाती है':'What Takhti covers'}<small>${hi ? `${cov.total} में से ${cov.taught} कौशल (${cov.pct}%)` : `${cov.taught} of ${cov.total} skills (${cov.pct}%)`}</small></summary>
     <div style="font-size:12.5px;opacity:.75;margin-bottom:6px">${hi
       ? `कौशल-ग्राफ़ के ${cov.total} में से ${cov.taught} कौशल आज सिखाए जा सकते हैं (${cov.pct}%)।`
       : `${cov.taught} of the ${cov.total} skills in the graph can be taught today (${cov.pct}%).`}</div>
@@ -207,7 +227,7 @@ function teacherBodyHTML(code, demo){
     ${queue.length ? `
       <div class="kicker2" style="margin-top:12px">${hi?'अभी नहीं सिखा सकते':'NOT TAUGHT YET'}</div>
       ${queue.map(q => `<div style="font-size:12.5px;opacity:.8">${q.grade} · ${STRAND_NAME[q.strand][hi?'hi':'en']} · ${attr(q.en)}${q.blocks ? (hi?` · ${q.blocks} कौशल इस पर टिके`:` · ${q.blocks} skill(s) build on it`) : ''}</div>`).join('')}` : ''}
-  </div>
+  </details>
   ${code ? demoHTML() : ''}`;
 }
 
@@ -249,7 +269,7 @@ function teacherSetChildGrade(childId, cls){
 function demoHTML(){
   const hi = S.lang === 'hi', have = demoKids(), full = S.profiles.length + DEMO_KIDS.length > MAX_PROFILES;
   return `<div class="paper" style="margin-top:12px">
-    <div class="kicker2">🎬 ${hi ? 'डेमो कक्षा' : 'DEMO CLASS'}</div>
+    <div class="kicker2">🎬 ${hi ? 'डेमो कक्षा' : 'Demo class'}</div>
     <div style="font-size:12.5px;opacity:.8">${hi
       ? 'नए बच्चे का कोई रिकॉर्ड नहीं होता, इसलिए हर नए बच्चे को एक-सा रास्ता मिलता है। यह दो डेमो बच्चे जोड़ता है जिनके रिकॉर्ड अलग हैं — आशा को चित्र और कार्टून से समझ आता है, कबीर को कहानी से — ताकि एक ही मंज़ूर पाठ पर दो अलग रास्ते दिखें। ये असली बच्चे नहीं हैं, कभी सिंक नहीं होते, और एक टैप में हट जाते हैं।'
       : "A new child has no record, so every new child gets the same path. This adds two demo children whose records differ — pictures and cartoons stick for Asha, the story for Kabir — so one approved lesson shows two different paths. They aren't real children, are never synced, and go in one tap."}</div>
@@ -325,7 +345,7 @@ function syllabusHTML(code){
                         shape: hi ? '✓ जवाब चित्र से जाँचा' : '✓ answer checked against the drawing',
                         teacher: hi ? '👀 यह जवाब आप जाँच लें' : '👀 please check this answer yourself' })[k] || '';
   return `<div class="paper" style="margin-top:12px">
-    <div class="kicker2">📚 ${hi ? 'आपके पाठ्यक्रम से इस हफ़्ते के पाठ' : "THIS WEEK'S LESSONS FROM YOUR SYLLABUS"}</div>
+    <div class="kicker2">📚 ${hi ? 'आपके पाठ्यक्रम से इस हफ़्ते के पाठ' : "This week's lessons from your syllabus"}</div>
     <div style="font-size:12.5px;opacity:.8">${hi
       ? 'एक अध्याय दें — PDF, किताब के पन्ने की फ़ोटो, या उसका पाठ। Gemini छोटे पाठ बनाता है, तख़्ती हर पाठ का गणित, उम्र के हिसाब से संख्याएँ, वाक्यों की लंबाई और जवाब जाँचती है, और आप हर पाठ के उद्देश्य मंज़ूर करते हैं। बच्चे इन्हें कहानी की आग पर खेलते हैं।'
       : "Give it one chapter — a PDF, a photo of the textbook page, or its text. Gemini drafts short lessons, Takhti checks every one (the arithmetic, numbers for the age, sentence lengths, that each answer is really right and not given away), and you approve each lesson's aims. Children play them at the Story Fire."}</div>
@@ -592,7 +612,7 @@ function planTeacherHTML(code){
   }).filter(Boolean);
   if(!cards.length) return '';
   return `<div class="paper" style="margin-top:12px">
-    <div class="kicker2">🧭 ${hi ? 'इस हफ़्ते के पाठ — हर बच्चे का अपना रास्ता' : 'HOW EACH CHILD IS TAKING THIS WEEK’S LESSONS'}</div>
+    <div class="kicker2">🧭 ${hi ? 'इस हफ़्ते के पाठ — हर बच्चे का अपना रास्ता' : 'How each child is taking this week’s lessons'}</div>
     <div style="font-size:12.5px;opacity:.75">${hi ? 'उद्देश्य वही जो आपने मंज़ूर किए; हर बच्चे का तरीक़ा मुन्नी उसी के रिकॉर्ड से चुनती है। अंक = पूरे हुए क़दम।' : 'The same aims you approved; Munni picks each child’s way from what has worked for them. The numbers are steps done.'}</div>
     ${cards.join('')}
   </div>`;

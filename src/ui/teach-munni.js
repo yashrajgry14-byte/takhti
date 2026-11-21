@@ -537,7 +537,7 @@ function teachTeacherHTML(code){
     return parts.length ? `<div class="teachdid">✎ ${parts.join(' · ')}</div>` : '';
   };
   return `<div class="paper" style="margin-top:12px">
-    <div class="kicker2">🐘 ${hi ? 'बच्चे क्या समझा पाए ("अप्पू को सिखाओ")' : 'WHAT THE CLASS COULD EXPLAIN (TEACH APPU)'}</div>
+    <div class="kicker2">🐘 ${hi ? 'बच्चे क्या समझा पाए ("अप्पू को सिखाओ")' : 'What the class could explain (Teach Appu)'}</div>
     <div style="font-size:12.5px;opacity:.75;margin-bottom:6px">${hi ? 'हर बात के लिए: कितने बच्चों ने अपने शब्दों में समझाई, कितनों ने थोड़ी, कितनों के लिए अप्पू फिर पूछेगा — और जो पहली बार नहीं समझा पाए, उनका आगे क्या हुआ।' : 'For each point: how many children explained it in their own words, partly, or still to come — and, for those who couldn\'t at first, what happened next.'}</div>
     ${head}
     ${list.map(([aim, r]) => { const n = r.c + r.p + r.g; return `<div class="teachrow">

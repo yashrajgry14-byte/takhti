@@ -82,6 +82,20 @@ function box(){
   check('…something else is "missing", one word or nothing is "unsure" (ask again, keep nothing)', R('I like elephants a lot') === 'missing' && R('um') === 'unsure' && R('') === 'unsure', '');
   check('…two ideas, one said, is "partly"; Devanagari digits count as digits',
     E(`teachRubric(TWO, 'just add them up').verdict`) === 'partly' && E(`teachRubric(TWO, 'add them and you get ४३ back').verdict`) === 'covered', E(`teachRubric(TWO, 'add them and you get ४३ back').verdict`));
+  // A drafted aim's thin word list (Maths Mela 3 ch12 and ch5, as built) takes the
+  // other ways a child says the same idea — and its question and hints still don't pass.
+  const OPEN = [{ en: 'convert one rod into ten single units', hi: 'एक छड़ को दस इकाइयों में बदलो', words: ['convert', 'units', 'badlo'] }];
+  const CORNER = [{ en: 'square corner', hi: 'चौकोर कोना', words: ['chaukore kona', 'चौकोर कोना'] }];
+  const V = (ideas, t) => E(`teachRubric(${JSON.stringify(ideas)}, ${JSON.stringify(t)}).verdict`);
+  check('…a thin drafted list still hears "it becomes ten ones" and an English "square corner" / "right angle"; an unrelated sentence still misses',
+    V(OPEN, 'take one ten, it becomes ten ones') === 'covered' && V(OPEN, 'convert the rod into units') === 'covered'
+    && V(CORNER, 'it is a square corner') === 'covered' && V(CORNER, 'it is a right angle') === 'covered'
+    && V(OPEN, 'I just take away the numbers') === 'missing' && V(CORNER, 'it is a pointy corner') === 'missing',
+    [V(OPEN, 'take one ten, it becomes ten ones'), V(CORNER, 'it is a square corner'), V(OPEN, 'I just take away the numbers')]);
+  check('…and those added words count against a giveaway too: a hint saying "break the ten into ones" fails the check',
+    E(`teachCheckAim({ id: 'x.0', kind: 'explain', short: { en: 'Open a ten', hi: 'दहाई खोलो' }, point: { en: 'Open a ten to subtract.', hi: 'घटाने के लिए दहाई खोलो।' },
+      forget: { en: 'I forgot! What do we do when there are not enough ones?', hi: 'मैं भूल गया! जब इकाई कम हों तो क्या करते हैं?' },
+      hints: [{ en: 'Break the ten into ones!', hi: 'दहाई देखो।' }, { en: 'Look at the tens.', hi: 'दहाई देखो।' }], ideas: ${JSON.stringify(OPEN)} }).some(e => /hint 1 \\(en\\)/.test(e))`), '');
 
   // Appu's mistake
   const fixBad = E(`(() => { const out = [];
@@ -447,16 +461,16 @@ function box(){
     const tv = app.screen();
     check('the mirror carries the loop too — letters only', app.E(`(() => { const l = readClassShared('CLS777')[S.id].loop; return l['borrow.when'] === 'c' && l['borrow.ten'] === 'grc' && Object.values(l).every(v => /^[cpgr]{1,3}$/.test(v)); })()`), app.E(`JSON.stringify(readClassShared('CLS777')[S.id])`));
     check('the teacher sees the loop across the class: of the points not explained at first, how many were explained after Munni taught them again',
-      /couldn't explain the first time \(3\): 1 explained after Munni taught them again/.test(tv) && /1 re-taught and still to be asked/.test(tv) && /1 not re-taught yet/.test(tv), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 700));
+      /couldn't explain the first time \(3\): 1 explained after Munni taught them again/.test(tv) && /1 re-taught and still to be asked/.test(tv) && /1 not re-taught yet/.test(tv), tv.slice(tv.search(/WHAT THE CLASS/i), tv.search(/WHAT THE CLASS/i) + 700));
     check('…and per point, by name: explained after re-teaching (Jai), re-taught and to ask again (Ravi), not re-taught yet (Ravi)',
-      /explained after re-teaching: Jai/.test(tv) && /re-taught, to ask again: Ravi/.test(tv) && /not re-taught yet: Ravi/.test(tv) && !!app.$('.teachloop-sum'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 900));
+      /explained after re-teaching: Jai/.test(tv) && /re-taught, to ask again: Ravi/.test(tv) && /not re-taught yet: Ravi/.test(tv) && !!app.$('.teachloop-sum'), tv.slice(tv.search(/WHAT THE CLASS/i), tv.search(/WHAT THE CLASS/i) + 900));
     check('doing it next to explaining it, per point and by name: Asha gets it right but can\'t explain it yet; Jai explains it but his answers aren\'t right yet',
-      /gets it right, can't explain it yet: Asha/.test(tv) && /explains it, answers not right yet: Jai/.test(tv) && !!app.$('.teachdid'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 900));
+      /gets it right, can't explain it yet: Asha/.test(tv) && /explains it, answers not right yet: Jai/.test(tv) && !!app.$('.teachdid'), tv.slice(tv.search(/WHAT THE CLASS/i), tv.search(/WHAT THE CLASS/i) + 900));
     app.E(`S.lang = 'hi'; render()`);
     check('…in Hindi too', /मुन्नी के फिर सिखाने के बाद समझा पाए/.test(app.screen()) && /फिर सिखाने के बाद समझाई: Jai/.test(app.screen()) && /सही करते हैं, पर अभी समझा नहीं पाते: Asha/.test(app.screen()), app.screen().slice(app.screen().indexOf('अप्पू को सिखाओ'), app.screen().indexOf('अप्पू को सिखाओ') + 500));
     app.E(`S.lang = 'en'; render()`);
     check('the teacher view: what the class could explain, point by point (the hardest first)',
-      /WHAT THE CLASS COULD EXPLAIN/.test(tv) && /Knows to borrow when the top ones digit is smaller/.test(tv) && /1 explained · 0 partly · 2 still to come/.test(tv) && !!app.$('.teachbar'), tv.slice(tv.indexOf('WHAT THE CLASS'), tv.indexOf('WHAT THE CLASS') + 400));
+      /WHAT THE CLASS COULD EXPLAIN/i.test(tv) && /Knows to borrow when the top ones digit is smaller/.test(tv) && /1 explained · 0 partly · 2 still to come/.test(tv) && !!app.$('.teachbar'), tv.slice(tv.search(/WHAT THE CLASS/i), tv.search(/WHAT THE CLASS/i) + 400));
     const { syncCore } = await import(pathToFileURL(path.join(root, 'api/class-sync.mjs')).href);
     const mem = new Map(), st = { get: async k => mem.get(k) || null, setJSON: async (k, v) => mem.set(k, JSON.parse(JSON.stringify(v))) };
     const { authorizeClass } = await import(pathToFileURL(path.join(root, 'api/lib/class-auth.mjs')).href);

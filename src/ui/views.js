@@ -447,97 +447,104 @@ askquiz(){
 /* ---------- PARENT ---------- */
 parent(){
   const pct = m => S.attempts[m]? Math.round(S.correct[m]/S.attempts[m]*100) : 0;
-  const row = (label,m) => `<div class="metric"><div><b>${label}</b><div style="font-size:12.5px;opacity:.65">${t('level')} ${S.levels[m]} · ${competencyName(m,S.levels[m])} · ${S.attempts[m]} tries</div></div>
+  const row = (label,m) => `<div class="metric"><div><b>${label}</b><div style="font-size:12.5px;opacity:.65">${t('level')} ${S.levels[m]} · ${competencyName(m,S.levels[m])} · ${S.attempts[m]} ${S.lang==='hi'?'बार':'tries'}</div></div>
     <div style="text-align:right"><b>${pct(m)}%</b><div class="bar"><i style="width:${pct(m)}%"></i></div></div></div>`;
   const target = (label,k,unit) => {
     // same profile-created-before-goals-existed gap as bumpToday() — default rather than throw
     const now = (S.today && S.today[k]) || 0;
     const max = (S.targets && S.targets[k]) || 5;
     return `<div class="metric">
-      <div><b>${label}</b><div style="font-size:12.5px;opacity:.65">${now} of ${max} ${unit} done today</div></div>
+      <div><b>${label}</b><div style="font-size:12.5px;opacity:.65">${S.lang==='hi' ? `आज ${max} में से ${now} ${unit}` : `${now} of ${max} ${unit} done today`}</div></div>
       <div style="display:flex;align-items:center;gap:9px">
         <button class="stepbtn" onclick="setTarget('${k}',-1)">−</button>
         <b style="min-width:20px;text-align:center">${max}</b>
         <button class="stepbtn" onclick="setTarget('${k}',1)">+</button>
       </div></div>`;
   };
+  const hi = S.lang === 'hi', n = attr(S.name || '');
+  const tile = (label, m, ic) => `<div class="gp-tile"><div class="gp-tile-k">${ic} ${label}</div><div class="gp-tile-v">${S.attempts[m] ? pct(m) + '%' : '—'}</div>
+    <div class="gp-tile-s">${S.attempts[m] ? `${t('level')} ${S.levels[m]} · ${S.attempts[m]} ${hi ? 'बार' : 'tries'}` : (hi ? 'अभी शुरू नहीं' : 'not started yet')}</div>
+    <div class="bar"><i style="width:${pct(m)}%"></i></div></div>`;
+  const GOALS = ['read', 'write', 'math', 'facts'];
+  const todayDone = GOALS.reduce((a, k) => a + Math.min((S.today && S.today[k]) || 0, (S.targets && S.targets[k]) || 5), 0);
+  const todayGoal = GOALS.reduce((a, k) => a + ((S.targets && S.targets[k]) || 5), 0);
+  /* Grown-up pages (21 Nov): a parent comes to ask "how is my child doing?" —
+     that leads; settings and consent fold away underneath (theme-play.css, GROWN-UP PAGES). */
   return `
   <button class="back" onclick="go('map')">← ${t('back')}</button>
-  <div class="paper">
-    <h3>${S.name}${S.lang==='hi'?' का दिन':"'s day"}</h3>
-    <div style="font-size:13px;opacity:.7;margin-bottom:8px">${S.lang==='hi'?'सुनने के लिए दबाएँ':'Tap to hear this read aloud'}</div>
-    <button class="btn indigo" style="background:#2A2118;color:#F3EEE0;margin-bottom:10px" onclick="readReport()">🔊 सुनें / Listen</button>
-
-    <div class="kicker2">${S.lang==='hi'?'उम्र':'AGE'}</div>
-    <div class="metric">
-      <div><b>${S.age||6} ${S.lang==='hi'?'साल':'yrs'}</b>
-        <div style="font-size:12.5px;opacity:.65">${S.lang==='hi'?'मुन्नी की बोलने की रफ़्तार':"Munni's speaking pace"}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:9px">
-        <button class="stepbtn" onclick="setParentAge(-1)">−</button>
-        <b style="min-width:20px;text-align:center">${S.age||6}</b>
-        <button class="stepbtn" onclick="setParentAge(1)">+</button>
-      </div>
+  <div class="gp-hero">
+    <div class="gp-hero-top">
+      <div class="gp-avatar">${S.avatar && typeof avatarById === 'function' ? avatarById(S.avatar).ic : attr((S.name || '?').slice(0, 1).toUpperCase())}</div>
+      <div class="gp-who"><h3>${hi ? `${n} का दिन` : `${n}'s day`}</h3>
+        <div class="gp-sub">${hi ? band().clsHi : band().clsEn} · ${S.age || 6} ${hi ? 'साल' : 'years'}${S.classCode ? ` · ${hi ? 'कक्षा कोड' : 'class code'} ${attr(S.classCode)}` : ''}</div></div>
+      <button class="gp-listen" onclick="readReport()" aria-label="${hi ? 'सुनें' : 'Listen'}">🔊 ${hi ? 'सुनें' : 'Listen'}</button>
     </div>
-    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'कक्षा':'CLASS'}</div>
-    <div class="metric">
-      <div><b>${S.lang==='hi'?band().clsHi:band().clsEn}</b>
-        <div style="margin-top:3px"><span class="agechip">${S.lang==='hi'?band().stageHi:band().stageEn}</span>${
-          S.clsBy === 'school' ? `<span style="font-size:12px;opacity:.7;margin-left:6px">🏫 ${S.lang==='hi'?'स्कूल ने तय की':'set by the school'}</span>`
-          : S.cls ? '' : `<span style="font-size:12px;opacity:.6;margin-left:6px">${S.lang==='hi'?'(उम्र से अंदाज़ा)':'(guessed from age)'}</span>`}</div>
-      </div>
-      ${S.clsBy === 'school' ? '' : `<div style="display:flex;align-items:center;gap:9px">
-        <button class="stepbtn" onclick="setParentClass(-1)">−</button>
-        <button class="stepbtn" onclick="setParentClass(1)">+</button>
-      </div>`}
-    </div>
-    <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin:4px 0 2px">${S.lang==='hi'
-      ? 'कक्षा तय करती है कि क्या सिखाया जाए; उम्र बस यह कि मुन्नी कैसे बोले। तख़्ती उसी कक्षा के भीतर बच्चे के हिसाब से ढल जाती है।'
-      : 'Class decides what is taught; age only how Munni speaks. Takhti adapts to your child within their class.'}${S.clsBy === 'school'
-      ? (S.lang==='hi' ? ' कक्षा बदलनी हो तो शिक्षक से कहें।' : ' To change the class, ask the teacher.') : ''}</div>
-    ${typeof simpleHomeParentHTML === 'function' ? simpleHomeParentHTML() : ''}
-    ${typeof readAloudParentHTML === 'function' ? readAloudParentHTML() : ''}
+    <div class="gp-tiles">${tile(t('read'), 'read', '📖')}${tile(t('write'), 'write', '✏️')}${tile(t('count'), 'math', '🔢')}</div>
+    <div class="gp-today"><span>${hi ? `आज के लक्ष्य: ${todayGoal} में से ${todayDone}` : `Today's goals: ${todayDone} of ${todayGoal}`}</span>
+      <div class="bar"><i style="width:${todayGoal ? Math.round(todayDone / todayGoal * 100) : 0}%"></i></div></div>
+  </div>
 
-    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'आवाज़':'SOUND'}</div>
-    <div class="metric">
-      <div><b>${S.lang==='hi'?'आवाज़ और असर':'Sound & narration'}</b>
-        <div style="font-size:12.5px;opacity:.65">${S.lang==='hi'
-          ? 'मुन्नी की आवाज़ें और पढ़कर सुनाना — बंद होने पर भी हर पाठ पहले जैसा चलता है'
-          : "Munni's sounds and read-aloud narration — every lesson still runs the same with this off"}</div>
-      </div>
-      <button class="toggle ${S.muted?'':'on'}" onclick="toggleMuted()" aria-label="${S.muted?'unmute':'mute'}"><span></span></button>
-    </div>
+  <section class="paper gp-card">
+    <h4 class="gp-h">${hi ? 'आज के लक्ष्य' : "Today's goals"}</h4>
+    ${target(S.lang==='hi'?'बोलकर पढ़ना':'Sentences read aloud','read',S.lang==='hi'?'वाक्य':'sentences')}
+    ${target(S.lang==='hi'?'लिखना':'Sentences written','write',S.lang==='hi'?'वाक्य':'sentences')}
+    ${target(S.lang==='hi'?'गणित':'Sums learned','math',S.lang==='hi'?'सवाल':'sums')}
+    ${target(S.lang==='hi'?'नई बातें':'New things learned','facts',S.lang==='hi'?'बातें':'facts')}
 
-    ${talkSetUp() ? talkParentHTML() : ''}
-    ${cloudReadParentHTML()}
-    ${typeof teachWordsParentHTML === 'function' ? teachWordsParentHTML() : ''}
-    ${typeof circleParentHTML === 'function' ? circleParentHTML() : ''}
-    ${mindParentHTML()}
-    ${typeof teachParentHTML === 'function' ? teachParentHTML() : ''}
+  </section>
 
-    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'बिना इंटरनेट':'WITHOUT INTERNET'}</div>
+  <section class="paper gp-card">
+    <h4 class="gp-h">${hi ? 'प्रगति' : 'Progress'}</h4>
+    ${row(t('read'),'read')}
+    ${row(t('write'),'write')}
+    ${row(t('count'),'math')}
+    <div class="metric"><div><b>${S.lang==='hi'?'पूछे गए सवाल':'Questions asked'}</b><div style="font-size:12.5px;opacity:.65">${S.answered.length} answered · ${S.queue.length} waiting for signal</div></div></div>
+
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'याद रहा':'REMEMBERED'}</div>
     ${(() => {
-      const d = S.ctx.dev;
-      if(!d) return `<div class="muted" style="font-size:12.5px">${S.lang==='hi'?'जाँच रहे हैं…':'Checking this phone…'}</div>`;
-      const word = st => ({
-        available:   S.lang==='hi' ? 'तैयार ✓' : 'ready ✓',
-        downloadable:S.lang==='hi' ? 'डाउनलोड हो सकता है' : 'can be downloaded',
-        downloading: S.lang==='hi' ? 'डाउनलोड हो रहा है…' : 'downloading…',
-        unavailable: S.lang==='hi' ? 'इस ब्राउज़र में नहीं' : 'not on this browser'
-      })[st] || st;
-      const canGet = d.en === 'downloadable' || d.hi === 'downloadable';
-      return `<div class="metric"><div><b>${S.lang==='hi'?'बोलकर पढ़ना':'Reading aloud'}</b>
-          <div style="font-size:12.5px;opacity:.7">English: ${word(d.en)} · हिंदी: ${word(d.hi)}</div></div></div>
-        ${canGet ? `<button class="btn ghost" onclick="getOfflineReading()">⬇️ ${S.lang==='hi'?'ऑफ़लाइन पढ़ना डाउनलोड करो':'Download offline reading'}</button>` : ''}
-        <div class="metric"><div><b>${S.lang==='hi'?'नए अभ्यास वाक्य':'Fresh practice lines'}</b>
-          <div style="font-size:12.5px;opacity:.7">${d.model === 'available'
-            ? (S.lang==='hi'?'फ़ोन का अपना AI मॉडल + वाक्य-भंडार':"this phone's own AI model + the sentence bank")
-            : (S.lang==='hi'?'वाक्य-भंडार (इस ब्राउज़र में फ़ोन का AI मॉडल नहीं)':'the sentence bank (no on-device AI model in this browser)')}</div></div></div>
-        <div style="font-size:12px;opacity:.7">${S.lang==='hi'
-          ? 'फ़ोन पर ही पहचान हो तो बच्चे की आवाज़ फ़ोन से बाहर नहीं जाती।'
-          : "When recognition runs on the phone, your child's voice never leaves it."}</div>`;
+      // Plain language on purpose: what the child has held onto — never
+      // "due", "review", a step number or an interval (core/srs.js's
+      // internals stay internal; the child never sees them either).
+      const srs = srsStats(S);
+      if(!srs.total) return `<div style="font-size:13px;opacity:.7">${S.lang==='hi'
+        ? 'अभी दिखाने को कुछ नहीं — बच्चा जैसे-जैसे अभ्यास करेगा, यह यहाँ दिखने लगेगा।'
+        : 'Nothing to show yet — this fills in as your child practises things more than once.'}</div>`;
+      const pct = Math.round(srs.mastered / srs.total * 100);
+      return `<div class="metric">
+        <div><b>${S.lang==='hi'?'हमेशा के लिए याद':'Stuck for good'}</b>
+          <div style="font-size:12.5px;opacity:.65">${S.lang==='hi'
+            ? `${srs.total} में से ${srs.mastered} चीज़ें`
+            : `${srs.mastered} of ${srs.total} things practised`}</div>
+        </div>
+        <div style="text-align:right"><b>${pct}%</b><div class="bar"><i style="width:${pct}%"></i></div></div>
+      </div>
+      <div style="font-size:12px;opacity:.7;margin-top:6px">${S.lang==='hi'
+        ? 'बाकी अपने आप, समय-समय पर लौटकर आती हैं — बच्चे को इसका पता भी नहीं चलता।'
+        : 'The rest come back around on their own, further apart each time — your child never sees a review screen.'}</div>`;
     })()}
 
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'जीते हुए कार्ड':'CARDS EARNED'}</div>
+    ${S.cards.length
+      ? `<div class="cardshelf">${S.cards.map(c=>`<span class="earned-card" title="${attr(S.lang==='hi'?c.titleHi:c.titleEn)}">${c.actor||'⭐'}<small>${S.lang==='hi'?c.titleHi:c.titleEn}</small></span>`).join('')}</div>`
+      : `<div style="font-size:13px;opacity:.7">${S.lang==='hi'
+          ? 'अभी कोई कार्ड नहीं। कहानी या कार्टून में सही जवाब देकर बच्चा कार्ड जीतता है।'
+          : 'None yet. Your child earns a card by getting a story or cartoon checkpoint right.'}</div>`}
+
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'कॉपी की तस्वीरें':'NOTEBOOK SHELF'}</div>
+    ${S.photos.length
+      ? `<div class="gallery">${S.photos.slice(0,9).map(p=>`<img src="${p.img}" title="${p.line} · ${p.score}%">`).join('')}</div>
+         <div style="font-size:12px;opacity:.7;margin-top:6px">${S.photos.length} ${S.lang==='hi'?'तस्वीरें इसी फ़ोन में':'photos, stored only on this phone'}</div>`
+      : `<div style="font-size:13px;opacity:.7">${S.lang==='hi'?'अभी कोई तस्वीर नहीं। बच्चा कागज़ पर लिखकर तस्वीर लेगा तो यहाँ दिखेगी।':'No photos yet. When your child writes on paper and photographs it, it appears here.'}</div>`}
+  </section>
+
+  <section class="paper gp-card gp-learn">
+    <h4 class="gp-h">${hi ? `${n} कैसे सीखते हैं` : `How ${n} learns`}</h4>
+    ${mindParentHTML()}
+    ${typeof teachParentHTML === 'function' ? teachParentHTML() : ''}
+  </section>
+
+  <section class="paper gp-card">
+    <h4 class="gp-h">${hi ? 'स्कूल और शिक्षक' : 'School & teacher'}</h4>
     <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'कक्षा का कोड':'CLASS CODE'}</div>
     ${S.classCode ? `
     <div class="metric">
@@ -595,53 +602,80 @@ parent(){
     ${S.ctx.hwMsg ? `<div class="${S.ctx.hwOk?'muted':'retry'}" style="font-size:12.5px;margin-top:6px">${S.ctx.hwMsg}</div>` : ''}
     <button class="btn ghost" style="margin-top:8px" onclick="receiveHomework($('hwcode').value)">${S.lang==='hi'?'गृहकार्य जोड़ो':'Add homework'}</button>
 
-    <div class="kicker2">${S.lang==='hi'?'आज का लक्ष्य':"TODAY'S TARGET"}</div>
-    ${target(S.lang==='hi'?'बोलकर पढ़ना':'Sentences read aloud','read',S.lang==='hi'?'वाक्य':'sentences')}
-    ${target(S.lang==='hi'?'लिखना':'Sentences written','write',S.lang==='hi'?'वाक्य':'sentences')}
-    ${target(S.lang==='hi'?'गणित':'Sums learned','math',S.lang==='hi'?'सवाल':'sums')}
-    ${target(S.lang==='hi'?'नई बातें':'New things learned','facts',S.lang==='hi'?'बातें':'facts')}
+  </section>
 
-    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'प्रगति':'PROGRESS'}</div>
-    ${row(t('read'),'read')}
-    ${row(t('write'),'write')}
-    ${row(t('count'),'math')}
-    <div class="metric"><div><b>${S.lang==='hi'?'पूछे गए सवाल':'Questions asked'}</b><div style="font-size:12.5px;opacity:.65">${S.answered.length} answered · ${S.queue.length} waiting for signal</div></div></div>
-
-    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'याद रहा':'REMEMBERED'}</div>
-    ${(() => {
-      // Plain language on purpose: what the child has held onto — never
-      // "due", "review", a step number or an interval (core/srs.js's
-      // internals stay internal; the child never sees them either).
-      const srs = srsStats(S);
-      if(!srs.total) return `<div style="font-size:13px;opacity:.7">${S.lang==='hi'
-        ? 'अभी दिखाने को कुछ नहीं — बच्चा जैसे-जैसे अभ्यास करेगा, यह यहाँ दिखने लगेगा।'
-        : 'Nothing to show yet — this fills in as your child practises things more than once.'}</div>`;
-      const pct = Math.round(srs.mastered / srs.total * 100);
-      return `<div class="metric">
-        <div><b>${S.lang==='hi'?'हमेशा के लिए याद':'Stuck for good'}</b>
-          <div style="font-size:12.5px;opacity:.65">${S.lang==='hi'
-            ? `${srs.total} में से ${srs.mastered} चीज़ें`
-            : `${srs.mastered} of ${srs.total} things practised`}</div>
-        </div>
-        <div style="text-align:right"><b>${pct}%</b><div class="bar"><i style="width:${pct}%"></i></div></div>
+  <details class="paper gp-card gp-fold">
+    <summary class="gp-h">${hi ? 'सेटिंग्स' : 'Settings'}<small>${hi ? 'उम्र, कक्षा, होम स्क्रीन, आवाज़, ऑफ़लाइन' : 'Age, class, home screen, sound, offline'}</small></summary>
+    <div class="kicker2">${S.lang==='hi'?'उम्र':'AGE'}</div>
+    <div class="metric">
+      <div><b>${S.age||6} ${S.lang==='hi'?'साल':'yrs'}</b>
+        <div style="font-size:12.5px;opacity:.65">${S.lang==='hi'?'मुन्नी की बोलने की रफ़्तार':"Munni's speaking pace"}</div>
       </div>
-      <div style="font-size:12px;opacity:.7;margin-top:6px">${S.lang==='hi'
-        ? 'बाकी अपने आप, समय-समय पर लौटकर आती हैं — बच्चे को इसका पता भी नहीं चलता।'
-        : 'The rest come back around on their own, further apart each time — your child never sees a review screen.'}</div>`;
+      <div style="display:flex;align-items:center;gap:9px">
+        <button class="stepbtn" onclick="setParentAge(-1)">−</button>
+        <b style="min-width:20px;text-align:center">${S.age||6}</b>
+        <button class="stepbtn" onclick="setParentAge(1)">+</button>
+      </div>
+    </div>
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'कक्षा':'CLASS'}</div>
+    <div class="metric">
+      <div><b>${S.lang==='hi'?band().clsHi:band().clsEn}</b>
+        <div style="margin-top:3px"><span class="agechip">${S.lang==='hi'?band().stageHi:band().stageEn}</span>${
+          S.clsBy === 'school' ? `<span style="font-size:12px;opacity:.7;margin-left:6px">🏫 ${S.lang==='hi'?'स्कूल ने तय की':'set by the school'}</span>`
+          : S.cls ? '' : `<span style="font-size:12px;opacity:.6;margin-left:6px">${S.lang==='hi'?'(उम्र से अंदाज़ा)':'(guessed from age)'}</span>`}</div>
+      </div>
+      ${S.clsBy === 'school' ? '' : `<div style="display:flex;align-items:center;gap:9px">
+        <button class="stepbtn" onclick="setParentClass(-1)">−</button>
+        <button class="stepbtn" onclick="setParentClass(1)">+</button>
+      </div>`}
+    </div>
+    <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin:4px 0 2px">${S.lang==='hi'
+      ? 'कक्षा तय करती है कि क्या सिखाया जाए; उम्र बस यह कि मुन्नी कैसे बोले। तख़्ती उसी कक्षा के भीतर बच्चे के हिसाब से ढल जाती है।'
+      : 'Class decides what is taught; age only how Munni speaks. Takhti adapts to your child within their class.'}${S.clsBy === 'school'
+      ? (S.lang==='hi' ? ' कक्षा बदलनी हो तो शिक्षक से कहें।' : ' To change the class, ask the teacher.') : ''}</div>
+    ${typeof simpleHomeParentHTML === 'function' ? simpleHomeParentHTML() : ''}
+    ${typeof readAloudParentHTML === 'function' ? readAloudParentHTML() : ''}
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'आवाज़':'SOUND'}</div>
+    <div class="metric">
+      <div><b>${S.lang==='hi'?'आवाज़ और असर':'Sound & narration'}</b>
+        <div style="font-size:12.5px;opacity:.65">${S.lang==='hi'
+          ? 'मुन्नी की आवाज़ें और पढ़कर सुनाना — बंद होने पर भी हर पाठ पहले जैसा चलता है'
+          : "Munni's sounds and read-aloud narration — every lesson still runs the same with this off"}</div>
+      </div>
+      <button class="toggle ${S.muted?'':'on'}" onclick="toggleMuted()" aria-label="${S.muted?'unmute':'mute'}"><span></span></button>
+    </div>
+
+    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'बिना इंटरनेट':'WITHOUT INTERNET'}</div>
+    ${(() => {
+      const d = S.ctx.dev;
+      if(!d) return `<div class="muted" style="font-size:12.5px">${S.lang==='hi'?'जाँच रहे हैं…':'Checking this phone…'}</div>`;
+      const word = st => ({
+        available:   S.lang==='hi' ? 'तैयार ✓' : 'ready ✓',
+        downloadable:S.lang==='hi' ? 'डाउनलोड हो सकता है' : 'can be downloaded',
+        downloading: S.lang==='hi' ? 'डाउनलोड हो रहा है…' : 'downloading…',
+        unavailable: S.lang==='hi' ? 'इस ब्राउज़र में नहीं' : 'not on this browser'
+      })[st] || st;
+      const canGet = d.en === 'downloadable' || d.hi === 'downloadable';
+      return `<div class="metric"><div><b>${S.lang==='hi'?'बोलकर पढ़ना':'Reading aloud'}</b>
+          <div style="font-size:12.5px;opacity:.7">English: ${word(d.en)} · हिंदी: ${word(d.hi)}</div></div></div>
+        ${canGet ? `<button class="btn ghost" onclick="getOfflineReading()">⬇️ ${S.lang==='hi'?'ऑफ़लाइन पढ़ना डाउनलोड करो':'Download offline reading'}</button>` : ''}
+        <div class="metric"><div><b>${S.lang==='hi'?'नए अभ्यास वाक्य':'Fresh practice lines'}</b>
+          <div style="font-size:12.5px;opacity:.7">${d.model === 'available'
+            ? (S.lang==='hi'?'फ़ोन का अपना AI मॉडल + वाक्य-भंडार':"this phone's own AI model + the sentence bank")
+            : (S.lang==='hi'?'वाक्य-भंडार (इस ब्राउज़र में फ़ोन का AI मॉडल नहीं)':'the sentence bank (no on-device AI model in this browser)')}</div></div></div>
+        <div style="font-size:12px;opacity:.7">${S.lang==='hi'
+          ? 'फ़ोन पर ही पहचान हो तो बच्चे की आवाज़ फ़ोन से बाहर नहीं जाती।'
+          : "When recognition runs on the phone, your child's voice never leaves it."}</div>`;
     })()}
 
-    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'जीते हुए कार्ड':'CARDS EARNED'}</div>
-    ${S.cards.length
-      ? `<div class="cardshelf">${S.cards.map(c=>`<span class="earned-card" title="${attr(S.lang==='hi'?c.titleHi:c.titleEn)}">${c.actor||'⭐'}<small>${S.lang==='hi'?c.titleHi:c.titleEn}</small></span>`).join('')}</div>`
-      : `<div style="font-size:13px;opacity:.7">${S.lang==='hi'
-          ? 'अभी कोई कार्ड नहीं। कहानी या कार्टून में सही जवाब देकर बच्चा कार्ड जीतता है।'
-          : 'None yet. Your child earns a card by getting a story or cartoon checkpoint right.'}</div>`}
+  </details>
 
-    <div class="kicker2" style="margin-top:14px">${S.lang==='hi'?'कॉपी की तस्वीरें':'NOTEBOOK SHELF'}</div>
-    ${S.photos.length
-      ? `<div class="gallery">${S.photos.slice(0,9).map(p=>`<img src="${p.img}" title="${p.line} · ${p.score}%">`).join('')}</div>
-         <div style="font-size:12px;opacity:.7;margin-top:6px">${S.photos.length} ${S.lang==='hi'?'तस्वीरें इसी फ़ोन में':'photos, stored only on this phone'}</div>`
-      : `<div style="font-size:13px;opacity:.7">${S.lang==='hi'?'अभी कोई तस्वीर नहीं। बच्चा कागज़ पर लिखकर तस्वीर लेगा तो यहाँ दिखेगी।':'No photos yet. When your child writes on paper and photographs it, it appears here.'}</div>`}
+  <details class="paper gp-card gp-fold">
+    <summary class="gp-h">${hi ? 'निजता और अनुमतियाँ' : 'Privacy & permissions'}<small>${hi ? 'क्या फ़ोन से बाहर जाता है, और आपकी सहमति' : 'What leaves this phone, and what you agreed to'}</small></summary>
+    ${talkSetUp() ? talkParentHTML() : ''}
+    ${cloudReadParentHTML()}
+    ${typeof teachWordsParentHTML === 'function' ? teachWordsParentHTML() : ''}
+    ${typeof circleParentHTML === 'function' ? circleParentHTML() : ''}
     <div style="font-size:12px;opacity:.7;margin-top:6px">${S.lang==='hi'
       ? 'पढ़ते समय की आवाज़ भी वैसी ही रहती है — सिर्फ़ उसी स्क्रीन पर बजती है, न सेव होती है, न कहीं भेजी जाती है।'
       : "Same with the reading screen's self-listen clip — it only ever plays back on that screen, never saved, never sent anywhere."}</div>
@@ -649,7 +683,7 @@ parent(){
     <div style="font-size:12.5px;opacity:.7;line-height:1.5;margin-top:12px">${S.lang==='hi'
       ? 'कोई स्ट्रीक नहीं, कोई दबाव नहीं। तख़्ती बच्चों को याद दिलाने वाले संदेश नहीं भेजती।'
       : 'No streaks, no daily pressure. Takhti does not send reminders to children.'}</div>
-  </div>
+  </details>
   ${typeof classAuthHTML === 'function' ? classAuthHTML() : ''}
   <button class="btn ghost" style="margin-top:12px" onclick="go('teacher')">🧑‍🏫 ${S.lang==='hi'?'शिक्षकों के लिए →':'For teachers →'}</button>`;
 }

@@ -305,7 +305,7 @@ check('…with nothing in it a child said, read or wrote (only the keys w, k, g,
     await wait(20);
     const rows = [...win.document.querySelectorAll('.planrow')].map(x => x.textContent.trim());
     check('the teacher view groups the class by path for this week\'s lesson: pictures first (Asha), straight into the school\'s lesson (Kabir), something underneath first (Meena), already knew it (Ravi)',
-      /HOW EACH CHILD IS TAKING THIS WEEK/.test(screen()) && rows.length === 4
+      /HOW EACH CHILD IS TAKING THIS WEEK/i.test(screen()) && rows.length === 4
         && rows.some(r => /Pictures first: Asha/.test(r)) && rows.some(r => /Straight into the school’s lesson: Kabir 1\/2/.test(r))
         && rows.some(r => /Something underneath first: Two-digit addition: Meena 0\/3/.test(r)) && rows.some(r => /Already knew it.*Ravi/.test(r)), JSON.stringify(rows));
     E(`S.lang = 'hi'; render()`);

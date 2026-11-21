@@ -497,13 +497,13 @@ const NOT_IN_TEXT = (() => { const x = clone(READ); x.title = { en:'The kite day
     // 3. teacher syllabus tools are only visible after verified school sign-in.
     E(`go('teacher')`);
     check('anonymous visitors cannot see the teacher syllabus or class records',
-      /Teacher account required/.test(screen()) && !/THIS WEEK'S LESSONS FROM YOUR SYLLABUS/.test(screen()), screen().slice(0, 150));
+      /Teacher account required/.test(screen()) && !/THIS WEEK'S LESSONS FROM YOUR SYLLABUS/i.test(screen()), screen().slice(0, 150));
     // Simulate the role response from /api/class-identity for UI-only tests.
     // Actual signature and tenant checks run separately in class-security.test.mjs.
     E(`CLASS_AUTH.token = 'test-approved-session'; CLASS_AUTH.expires = Date.now()+600000;
       CLASS_AUTH.role = 'teacher'; CLASS_AUTH.classes = ['CLS001']; CLASS_AUTH.email = 'teacher@example.test';
       S.ctx.tcode = 'CLS001'; S.online = true; render()`);
-    check('the teacher view has the syllabus card, in both languages', /THIS WEEK'S LESSONS FROM YOUR SYLLABUS/.test(screen()) && /Choose a PDF or photo/.test(screen()), screen().slice(0, 300));
+    check('the teacher view has the syllabus card, in both languages', /THIS WEEK'S LESSONS FROM YOUR SYLLABUS/i.test(screen()) && /Choose a PDF or photo/.test(screen()), screen().slice(0, 300));
     E(`S.ctx.sylText = ${JSON.stringify('Chapter 4. Subtraction. Ravi had 45 mangoes and gave away 20. '.repeat(3))}; S.ctx.sylCls = 'c2'; S.ctx.sylCount = 4`);
     E(`sylGo()`);
     for(let i = 0; i < 200 && E(`!!S.ctx.sylBusy`); i++) await wait(10);
