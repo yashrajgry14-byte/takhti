@@ -9,7 +9,7 @@
 
    Bump CACHE when you ship changes, or phones will keep the old copy.
    ================================================================== */
-const CACHE = 'takhti-v104';
+const CACHE = 'takhti-v105';
 // Recorded audio clips are named by a hash of their text (see core/voice.js),
 // so they live in a cache of their own that the version cleanup below never
 // touches: bumping CACHE on a normal deploy must not re-download tens of MB
