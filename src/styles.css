@@ -404,6 +404,9 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 
 /* ---------- trace panel ---------- */
 .side{position:sticky;top:22px}
+/* the judge panel: hidden unless the address has ?judge (core/log.js) */
+html:not(.show-judge) .side{display:none}
+@media(min-width:901px){html:not(.show-judge) .stage{grid-template-columns:392px;justify-content:center}}
 .tierlist{display:grid;gap:9px;margin-bottom:16px}
 .tier{border-radius:14px;padding:12px 14px;border:1px solid rgba(237,230,210,.13);background:rgba(255,255,255,.03);transition:border-color .25s, background .25s}
 .tier.hot{border-color:var(--marigold);background:rgba(240,160,42,.09)}
@@ -1481,3 +1484,16 @@ h1,h2,h3,.display{font-family:'Baloo 2',cursive;font-weight:700;letter-spacing:.
 .stw.now{background:#FFE27A;color:#2A2118}
 .stw.hl{color:#E8447C;text-decoration:underline;text-underline-offset:4px}
 @media (prefers-reduced-motion: reduce){.st-munni-sm.enter,.st-munni-sm.talking .hm-munni,.st-stage::before,.st-stage::after{animation:none!important}}
+
+/* ---- the top of the phone (21 Nov 2026) ----
+   The live link (html.live, src/app.js) is always online: no signal switch,
+   no airplane pill. The language switch sits above every screen (the arrival
+   scene used to slide up over it) and says both languages, the one in use marked. */
+html.live .netswitch, html.live #netpill{display:none}
+.statusrow{position:relative;z-index:5}
+.screen .arrival{margin-top:0}
+.statusrow #langbtn{display:inline-flex;gap:2px;padding:3px;border-radius:999px;background:#fff;
+  border:2px solid rgba(42,33,24,.12);box-shadow:0 3px 0 rgba(42,33,24,.08);cursor:pointer;
+  font-family:'Baloo 2',system-ui,sans-serif;font-size:13px;font-weight:700;color:#2A2118;letter-spacing:0}
+.statusrow #langbtn span{padding:3px 10px 2px;border-radius:999px;opacity:.6}
+.statusrow #langbtn span.on{background:#2A2118;color:#fff;opacity:1}
