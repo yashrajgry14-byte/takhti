@@ -410,7 +410,7 @@ function teachFixCorrectedResult(it, text){
   if(!ops) return false;
   // Tokenize rather than interpolating escaped regular expressions. This
   // handles "9x3", "9 × 3", and "9*3" without matching numbers inside 19.
-  const tokens=String(text||'').match(/\d+|[+−×xX*÷/\-]/g)||[];
+  const tokens=String(text||'').match(/\d+|[+−×xX*÷\/\-]/g)||[];
   return tokens.includes(String(f.ans)) && tokens.some((token,i)=>
     token===String(p.a) && ops.includes(tokens[i+1]) && tokens[i+2]===String(p.b));
 }
